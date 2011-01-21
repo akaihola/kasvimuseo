@@ -1,0 +1,9 @@
+/lib/python2.6
+/bin
+/include
+*.pyc
+/original_data
+/src
+*.org
+*.sqlite
+/ipy_conf.py
