@@ -1,17 +1,11 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Kasvimuseo 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-21 03:46-0600\n"
-"PO-Revision-Date: 2011-01-21 11:47+0200\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2011-01-21 14:49-0600\n"
+"PO-Revision-Date: 2011-01-21 22:50+0200\n"
+"Last-Translator: Antti Kaihola <akaihol+kasvit@ambitone.com>\n"
+"Language-Team: Finnish <akaihol+kasvit@ambitone.com>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -86,9 +80,13 @@ msgstr ""
 msgid "Taimiväli"
 msgstr ""
 
-#: models.py:78 models.py:79
-msgid "species"
+#: models.py:78
+msgid "(one) species"
 msgstr "laji"
+
+#: models.py:79
+msgid "(all) species"
+msgstr "lajit"
 
 #: models.py:85
 msgid "SukuNimi"

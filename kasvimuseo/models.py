@@ -75,8 +75,8 @@ class Species(models.Model):
         return self.name_fi
 
     class Meta:
-        verbose_name = _(u'species')
-        verbose_name_plural = _(u'species')
+        verbose_name = _(u'(one) species')
+        verbose_name_plural = _(u'(all) species')
 
 
 class Contact(models.Model):
