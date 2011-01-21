@@ -17,6 +17,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
 
     'gunicorn',
+    'south',
 
     'indexer',
     'paging',
