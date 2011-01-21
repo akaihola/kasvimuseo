@@ -1,0 +1,2 @@
+recursive-include */locale *.po
+recursive-include */locale *.mo
