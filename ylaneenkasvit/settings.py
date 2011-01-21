@@ -28,5 +28,5 @@ ROOT_URLCONF = 'ylaneenkasvit.urls'
 
 ADMIN_MEDIA_PREFIX = '/admin/media/'
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+DEBUG = False
+TEMPLATE_DEBUG = True
