@@ -1,0 +1,281 @@
+# -*- coding: utf-8 -*-
+
+from django.db import models
+from django.utils.translation import ugettext as _
+
+
+PLANT_TYPE_CHOICES = ((1, u'Perenna'),)
+
+
+class Species(models.Model):
+    external_id = models.IntegerField(
+        verbose_name=_(u'LajiNro'))
+    type = models.IntegerField(
+        choices=PLANT_TYPE_CHOICES)
+    genus = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Sukunimi'))
+    group = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Ryhmä'),
+        blank=True)
+    species = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Laji'),
+        blank=True)
+    subspecies = models.CharField(
+        max_length=40,
+        verbose_name=_(u'AlalajiMuoto'),
+        blank=True)
+    variety = models.CharField(
+        max_length=40,
+        verbose_name=_(u'lajike'),
+        blank=True)
+    name_fi = models.CharField(
+        max_length=40,
+        verbose_name=_(u'SuomalainenNimi'))
+    name_sv = models.CharField(
+        max_length=40,
+        verbose_name=_(u'RuotsinkielinenNimi'),
+        blank=True)
+    name_local = models.CharField(
+        max_length=40,
+        verbose_name=_(u'PaikallinenNimi'),
+        blank=True)
+    abbr_fi = models.CharField(
+        max_length=20,
+        verbose_name=_(u'Lyhenne_suomalainen'))
+    abbr_scientific = models.CharField(
+        max_length=20,
+        verbose_name=_(u'Lyhenne_tieteellinen'))
+    height = models.CharField(
+        max_length=40,
+        verbose_name=_(u'korkeuscm'),
+        blank=True)
+    width = models.CharField(
+        max_length=40,
+        verbose_name=_(u'leveyscm'),
+        blank=True)
+    flower_color = models.CharField(
+        max_length=40,
+        verbose_name=_(u'kukinnanväri'),
+        blank=True)
+    flowering_time = models.CharField(
+        max_length=20,
+        verbose_name=_(u'kukintaAika'),
+        blank=True)
+    substrate = models.TextField(
+        verbose_name=_(u'Kasvualusta'),
+        blank=True)
+    spacing = models.TextField(
+        verbose_name=_(u'Taimiväli'),
+        blank=True)
+
+    def __unicode__(self):
+        return self.name_fi
+
+    class Meta:
+        verbose_name = _(u'species')
+        verbose_name_plural = _(u'species')
+
+
+class Contact(models.Model):
+    last_name = models.CharField(
+        max_length=40,
+        verbose_name=_(u'SukuNimi'))
+    first_name = models.CharField(
+        max_length=40,
+        verbose_name=_(u'EtuNimi'))
+    phone = models.CharField(
+        max_length=40,
+        verbose_name=_(u'LankaPuh'),
+        blank=True)
+    mobile = models.CharField(
+        max_length=40,
+        verbose_name=_(u'MatkaPuh'),
+        blank=True)
+    email = models.EmailField(
+        verbose_name=_(u'SähköPosti'),
+        blank=True)
+    street = models.CharField(
+        max_length=80,
+        verbose_name=_(u'KatuOsoite'),
+        blank=True)
+    number = models.CharField(
+        max_length=20,
+        verbose_name=_(u'N:o'),
+        blank=True)
+    apartment = models.CharField(
+        max_length=20,
+        verbose_name=_(u'as'),
+        blank=True)
+    zipcode = models.CharField(
+        max_length=5,
+        verbose_name=_(u'PostiNro'),
+        blank=True)
+    city = models.CharField(
+        max_length=40,
+        verbose_name=_(u'PostiToimiPaikka'),
+        blank=True)
+    description = models.TextField(
+        verbose_name=_(u'Lisätieto'),
+        blank=True)
+
+    def __unicode__(self):
+        return u'%s, %s' % (self.last_name, self.first_name)
+
+    class Meta:
+        verbose_name = _(u'contact')
+        verbose_name_plural = _(u'contacts')
+
+
+class Location(models.Model):
+    external_id = models.IntegerField(
+        verbose_name=_(u'YhteysNro'))
+    name = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Talo'))
+    alias = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Toinen nimitys'))
+    village = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Kylä'),
+        blank=True)
+    area = models.CharField(
+        max_length=40,
+        verbose_name=_(u'Asuinalue'),
+        blank=True)
+    street = models.CharField(
+        max_length=80,
+        verbose_name=_(u'KatuOsoite'),
+        blank=True)
+    number = models.CharField(
+        max_length=20,
+        verbose_name=_(u'N:o'),
+        blank=True)
+    apartment = models.CharField(
+        max_length=20,
+        verbose_name=_(u'as'),
+        blank=True)
+    zipcode = models.CharField(
+        max_length=5,
+        verbose_name=_(u'PostiNro'),
+        blank=True)
+    city = models.CharField(
+        max_length=40,
+        verbose_name=_(u'PostiToimiPaikka'),
+        blank=True)
+    history = models.TextField(
+        verbose_name=_(u'Historia'),
+        help_text=_(u'Tietoja talon ja puutarhan historiasta'),
+        blank=True)
+    contacts = models.ManyToManyField(Contact)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _(u'location')
+        verbose_name_plural = _(u'locations')
+
+
+class Observation(models.Model):
+    external_id = models.IntegerField(
+        null=True, blank=True,
+        verbose_name=_(u'YläneNro'))
+    origin = models.ForeignKey(
+        Location,
+        verbose_name=_(u'Kasvin alkuperä'))
+    species = models.ForeignKey(
+        Species,
+        verbose_name=_(u'Kasvilaji'))
+    date = models.DateField(
+        verbose_name=_(u'Havaintopäivä'))
+    characteristics = models.TextField(
+        verbose_name=_(u'Tuntomerkkejä'),
+        help_text=_(u'Miltä se näyttää?'),
+        blank=True)
+    nickname = models.TextField(
+        verbose_name=_(u'Kutsumanimi'),
+        blank=True)
+    history = models.TextField(
+        verbose_name=_(u'Viljelyhistoria'),
+        help_text=_(
+            u'Tietoja alkuperästä ja viljelyhistoriasta: '
+            u'Kuinka kauan se on kasvanut nykyisellä paikallaan? '
+            u'Mistä se on alun perin saatu? '
+            u'Arviolta millä vuosikymmenellä sen tiedetään kasvaneen? '
+            u'Kuka sitä on viljellyt?'),
+        blank=True)
+    stories = models.TextField(
+        verbose_name=_(u'Tarinat'),
+        help_text=_(u'Kasviin liittyvä tarina, tapahtuma'),
+        blank=True)
+    pictures = models.TextField(
+        verbose_name=_(u'Kuvat'),
+        blank=True)
+
+    def __unicode__(self):
+        return '%s: %s / %s' % (self.pvm, self.laji, self.sijainti)
+
+    class Meta:
+        verbose_name = _(u'observation')
+        verbose_name_plural = _(u'observations')
+
+
+class Plot(models.Model):
+    name = models.CharField(max_length=80,
+                            verbose_name=_(u'name'))
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _(u'garden plot')
+        verbose_name_plural = _(u'garden plots')
+
+
+class Bed(models.Model):
+    plot = models.ForeignKey(Plot, null=True)
+    name = models.CharField(max_length=80,
+                            verbose_name=_('name'))
+    description = models.TextField()
+
+    def __unicode__(self):
+        if self.plot:
+            return '%s/%s' % (self.plot, self.name)
+        return self.name
+
+    class Meta:
+        verbose_name = _(u'bed')
+        verbose_name_plural = _(u'beds')
+
+
+class Planting(models.Model):
+    observation = models.ForeignKey(Observation)
+    Bed = models.ForeignKey(Bed)
+    planting_date = models.DateField()
+    count = models.IntegerField(default=1)
+    removal_date = models.DateField(null=True, blank=True)
+
+    def __unicode__(self):
+        return '%s: %s' % (self.pvm, self.havainto)
+
+    class Meta:
+        verbose_name = _(u'planting')
+        verbose_name_plural = _(u'plantings')
+
+
+class Care(models.Model):
+    planting = models.ForeignKey(Planting)
+    date = models.DateField()
+    description = models.TextField()
+    count = models.IntegerField(default=1)
+
+    def __unicode__(self):
+        return '%s: %s / %s' % (self.pvm, self.planting, self.toimenpide)
+
+    class Meta:
+        verbose_name = _(u'care')
+        verbose_name_plural = _(u'care')

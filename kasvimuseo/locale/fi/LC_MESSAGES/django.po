@@ -1,0 +1,270 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-01-21 03:46-0600\n"
+"PO-Revision-Date: 2011-01-21 11:47+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+
+#: models.py:12
+msgid "LajiNro"
+msgstr ""
+
+#: models.py:17
+msgid "Sukunimi"
+msgstr ""
+
+#: models.py:20
+msgid "Ryhmä"
+msgstr ""
+
+#: models.py:24
+msgid "Laji"
+msgstr ""
+
+#: models.py:28
+msgid "AlalajiMuoto"
+msgstr ""
+
+#: models.py:32
+msgid "lajike"
+msgstr ""
+
+#: models.py:36
+msgid "SuomalainenNimi"
+msgstr ""
+
+#: models.py:39
+msgid "RuotsinkielinenNimi"
+msgstr ""
+
+#: models.py:43
+msgid "PaikallinenNimi"
+msgstr ""
+
+#: models.py:47
+msgid "Lyhenne_suomalainen"
+msgstr ""
+
+#: models.py:50
+msgid "Lyhenne_tieteellinen"
+msgstr ""
+
+#: models.py:53
+msgid "korkeuscm"
+msgstr ""
+
+#: models.py:57
+msgid "leveyscm"
+msgstr ""
+
+#: models.py:61
+msgid "kukinnanväri"
+msgstr ""
+
+#: models.py:65
+msgid "kukintaAika"
+msgstr ""
+
+#: models.py:68
+msgid "Kasvualusta"
+msgstr ""
+
+#: models.py:71
+msgid "Taimiväli"
+msgstr ""
+
+#: models.py:78 models.py:79
+msgid "species"
+msgstr "laji"
+
+#: models.py:85
+msgid "SukuNimi"
+msgstr ""
+
+#: models.py:88
+msgid "EtuNimi"
+msgstr ""
+
+#: models.py:91
+msgid "LankaPuh"
+msgstr ""
+
+#: models.py:95
+msgid "MatkaPuh"
+msgstr ""
+
+#: models.py:98
+msgid "SähköPosti"
+msgstr ""
+
+#: models.py:102 models.py:151
+msgid "KatuOsoite"
+msgstr ""
+
+#: models.py:106 models.py:155
+msgid "N:o"
+msgstr ""
+
+#: models.py:110 models.py:159
+msgid "as"
+msgstr ""
+
+#: models.py:114 models.py:163
+msgid "PostiNro"
+msgstr ""
+
+#: models.py:118 models.py:167
+msgid "PostiToimiPaikka"
+msgstr ""
+
+#: models.py:121
+msgid "Lisätieto"
+msgstr ""
+
+#: models.py:128
+msgid "contact"
+msgstr "yhteystieto"
+
+#: models.py:129
+msgid "contacts"
+msgstr "yhteystiedot"
+
+#: models.py:134
+msgid "YhteysNro"
+msgstr ""
+
+#: models.py:137
+msgid "Talo"
+msgstr ""
+
+#: models.py:140
+msgid "Toinen nimitys"
+msgstr ""
+
+#: models.py:143
+msgid "Kylä"
+msgstr ""
+
+#: models.py:147
+msgid "Asuinalue"
+msgstr ""
+
+#: models.py:170
+msgid "Historia"
+msgstr ""
+
+#: models.py:171
+msgid "Tietoja talon ja puutarhan historiasta"
+msgstr ""
+
+#: models.py:179
+msgid "location"
+msgstr "sijainti"
+
+#: models.py:180
+msgid "locations"
+msgstr "sijainnit"
+
+#: models.py:186
+msgid "YläneNro"
+msgstr ""
+
+#: models.py:189
+msgid "Kasvin alkuperä"
+msgstr ""
+
+#: models.py:192
+msgid "Kasvilaji"
+msgstr ""
+
+#: models.py:194
+msgid "Havaintopäivä"
+msgstr ""
+
+#: models.py:196
+msgid "Tuntomerkkejä"
+msgstr ""
+
+#: models.py:197
+msgid "Miltä se näyttää?"
+msgstr ""
+
+#: models.py:200
+msgid "Kutsumanimi"
+msgstr ""
+
+#: models.py:203
+msgid "Viljelyhistoria"
+msgstr ""
+
+#: models.py:205
+msgid ""
+"Tietoja alkuperästä ja viljelyhistoriasta: Kuinka kauan se on kasvanut "
+"nykyisellä paikallaan? Mistä se on alun perin saatu? Arviolta millä "
+"vuosikymmenellä sen tiedetään kasvaneen? Kuka sitä on viljellyt?"
+msgstr ""
+
+#: models.py:212
+msgid "Tarinat"
+msgstr ""
+
+#: models.py:213
+msgid "Kasviin liittyvä tarina, tapahtuma"
+msgstr ""
+
+#: models.py:216
+msgid "Kuvat"
+msgstr ""
+
+#: models.py:223
+msgid "observation"
+msgstr "havainto"
+
+#: models.py:224
+msgid "observations"
+msgstr "havainnot"
+
+#: models.py:229 models.py:242
+msgid "name"
+msgstr "nimi"
+
+#: models.py:235
+msgid "garden plot"
+msgstr "kasvimaa"
+
+#: models.py:236
+msgid "garden plots"
+msgstr "kasvimaat"
+
+#: models.py:251
+msgid "bed"
+msgstr "penkki"
+
+#: models.py:252
+msgid "beds"
+msgstr "penkit"
+
+#: models.py:266
+msgid "planting"
+msgstr "istutus"
+
+#: models.py:267
+msgid "plantings"
+msgstr "istutukset"
+
+#: models.py:280 models.py:281
+msgid "care"
+msgstr "hoito"
