@@ -314,4 +314,4 @@ class Care(models.Model):
 
     class Meta:
         verbose_name = _(u'care')
-        verbose_name_plural = _(u'care')
+        verbose_name_plural = _(u'care operations')
