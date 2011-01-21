@@ -1,2 +1,3 @@
 recursive-include */locale *.po
 recursive-include */locale *.mo
+recursive-include ylaneenkasvit/templates *.html
