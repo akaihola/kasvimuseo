@@ -232,7 +232,7 @@ class Observation(models.Model):
         blank=True)
 
     def __unicode__(self):
-        return '%s: %s / %s' % (self.pvm, self.laji, self.sijainti)
+        return '%s (%s %s)' % (self.species, self.origin, self.date)
 
     class Meta:
         verbose_name = _(u'observation')
@@ -252,10 +252,16 @@ class Plot(models.Model):
 
 
 class Bed(models.Model):
-    plot = models.ForeignKey(Plot, null=True)
-    name = models.CharField(max_length=80,
-                            verbose_name=_('name'))
-    description = models.TextField()
+    plot = models.ForeignKey(
+        Plot,
+        null=True, blank=True,
+        verbose_name=_(u'plot'))
+    name = models.CharField(
+        max_length=80,
+        verbose_name=_(u'name'))
+    description = models.TextField(
+        blank=True,
+        verbose_name=_(u'description'))
 
     def __unicode__(self):
         if self.plot:
@@ -268,14 +274,23 @@ class Bed(models.Model):
 
 
 class Planting(models.Model):
-    observation = models.ForeignKey(Observation)
-    Bed = models.ForeignKey(Bed)
-    planting_date = models.DateField()
-    count = models.IntegerField(default=1)
-    removal_date = models.DateField(null=True, blank=True)
+    observation = models.ForeignKey(
+        Observation,
+        verbose_name=_(u'observation'))
+    bed = models.ForeignKey(
+        Bed,
+        verbose_name=_(u'bed'))
+    planting_date = models.DateField(
+        verbose_name=_(u'date of planting'))
+    count = models.IntegerField(
+        default=1,
+        verbose_name=_(u'count'))
+    removal_date = models.DateField(
+        null=True, blank=True,
+        verbose_name=_(u'date of removal'))
 
     def __unicode__(self):
-        return '%s: %s' % (self.pvm, self.havainto)
+        return '%s: %s' % (self.planting_date, self.observation)
 
     class Meta:
         verbose_name = _(u'planting')
@@ -283,13 +298,19 @@ class Planting(models.Model):
 
 
 class Care(models.Model):
-    planting = models.ForeignKey(Planting)
-    date = models.DateField()
-    description = models.TextField()
-    count = models.IntegerField(default=1)
+    planting = models.ForeignKey(
+        Planting,
+        verbose_name=_(u'planting'))
+    date = models.DateField(
+        verbose_name=_(u'date'))
+    description = models.TextField(
+        verbose_name=_(u'description'))
+    count = models.IntegerField(
+        default=1,
+        verbose_name=_(u'number of plants after care'))
 
     def __unicode__(self):
-        return '%s: %s / %s' % (self.pvm, self.planting, self.toimenpide)
+        return '%s: %s / %s' % (self.date, self.planting, self.description)
 
     class Meta:
         verbose_name = _(u'care')
