@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Kasvimuseo 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-21 14:49-0600\n"
-"PO-Revision-Date: 2011-01-21 22:50+0200\n"
+"POT-Creation-Date: 2011-01-21 15:48-0600\n"
+"PO-Revision-Date: 2011-01-21 23:48+0200\n"
 "Last-Translator: Antti Kaihola <akaihol+kasvit@ambitone.com>\n"
 "Language-Team: Finnish <akaihol+kasvit@ambitone.com>\n"
 "Language: \n"
@@ -168,101 +168,137 @@ msgstr ""
 msgid "Tietoja talon ja puutarhan historiasta"
 msgstr ""
 
-#: models.py:179
+#: models.py:181
 msgid "location"
 msgstr "sijainti"
 
-#: models.py:180
+#: models.py:182
 msgid "locations"
 msgstr "sijainnit"
 
-#: models.py:186
+#: models.py:193
+msgid "contact for location"
+msgstr "sijainnin yhteystieto"
+
+#: models.py:194
+msgid "contacts for locations"
+msgstr "sijaintien yhteystiedot"
+
+#: models.py:201
 msgid "YläneNro"
 msgstr ""
 
-#: models.py:189
+#: models.py:204
 msgid "Kasvin alkuperä"
 msgstr ""
 
-#: models.py:192
+#: models.py:207
 msgid "Kasvilaji"
 msgstr ""
 
-#: models.py:194
+#: models.py:209
 msgid "Havaintopäivä"
 msgstr ""
 
-#: models.py:196
+#: models.py:211
 msgid "Tuntomerkkejä"
 msgstr ""
 
-#: models.py:197
+#: models.py:212
 msgid "Miltä se näyttää?"
 msgstr ""
 
-#: models.py:200
+#: models.py:215
 msgid "Kutsumanimi"
 msgstr ""
 
-#: models.py:203
+#: models.py:218
 msgid "Viljelyhistoria"
 msgstr ""
 
-#: models.py:205
+#: models.py:220
 msgid ""
 "Tietoja alkuperästä ja viljelyhistoriasta: Kuinka kauan se on kasvanut "
 "nykyisellä paikallaan? Mistä se on alun perin saatu? Arviolta millä "
 "vuosikymmenellä sen tiedetään kasvaneen? Kuka sitä on viljellyt?"
 msgstr ""
 
-#: models.py:212
+#: models.py:227
 msgid "Tarinat"
 msgstr ""
 
-#: models.py:213
+#: models.py:228
 msgid "Kasviin liittyvä tarina, tapahtuma"
 msgstr ""
 
-#: models.py:216
+#: models.py:231
 msgid "Kuvat"
 msgstr ""
 
-#: models.py:223
+#: models.py:238 models.py:279
 msgid "observation"
 msgstr "havainto"
 
-#: models.py:224
+#: models.py:239
 msgid "observations"
 msgstr "havainnot"
 
-#: models.py:229 models.py:242
+#: models.py:244 models.py:261
 msgid "name"
 msgstr "nimi"
 
-#: models.py:235
+#: models.py:250
 msgid "garden plot"
 msgstr "kasvimaa"
 
-#: models.py:236
+#: models.py:251
 msgid "garden plots"
 msgstr "kasvimaat"
 
-#: models.py:251
+#: models.py:258
+msgid "plot"
+msgstr "kasvimaa"
+
+#: models.py:264 models.py:307
+msgid "description"
+msgstr "kuvaus"
+
+#: models.py:272 models.py:282
 msgid "bed"
 msgstr "penkki"
 
-#: models.py:252
+#: models.py:273
 msgid "beds"
 msgstr "penkit"
 
-#: models.py:266
+#: models.py:284
+msgid "date of planting"
+msgstr "istutuspäivä"
+
+#: models.py:287
+msgid "count"
+msgstr "lukumäärä"
+
+#: models.py:290
+msgid "date of removal"
+msgstr "poistamispäivä"
+
+#: models.py:296 models.py:303
 msgid "planting"
 msgstr "istutus"
 
-#: models.py:267
+#: models.py:297
 msgid "plantings"
 msgstr "istutukset"
 
-#: models.py:280 models.py:281
+#: models.py:305
+msgid "date"
+msgstr "päivä"
+
+#: models.py:310
+msgid "number of plants after care"
+msgstr "lukumäärä toimenpiteen jälkeen"
+
+#: models.py:316 models.py:317
 msgid "care"
 msgstr "hoito"

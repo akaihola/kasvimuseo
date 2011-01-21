@@ -170,7 +170,9 @@ class Location(models.Model):
         verbose_name=_(u'Historia'),
         help_text=_(u'Tietoja talon ja puutarhan historiasta'),
         blank=True)
-    contacts = models.ManyToManyField(Contact)
+    contacts = models.ManyToManyField(
+        Contact,
+        through='LocationContact')
 
     def __unicode__(self):
         return self.name
@@ -178,6 +180,19 @@ class Location(models.Model):
     class Meta:
         verbose_name = _(u'location')
         verbose_name_plural = _(u'locations')
+
+
+class LocationContact(models.Model):
+    location = models.ForeignKey(Location)
+    contact = models.ForeignKey(Contact)
+
+    def __unicode__(self):
+        return '%s/%s' % (self.location, self.contact)
+
+    class Meta:
+        verbose_name = _(u'contact for location')
+        verbose_name_plural = _(u'contacts for locations')
+        db_table = 'kasvimuseo_location_contacts'  # default for ManyToMany
 
 
 class Observation(models.Model):
