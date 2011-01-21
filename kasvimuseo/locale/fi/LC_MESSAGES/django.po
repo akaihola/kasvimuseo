@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Kasvimuseo 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-01-21 15:48-0600\n"
-"PO-Revision-Date: 2011-01-21 23:48+0200\n"
+"POT-Creation-Date: 2011-01-21 16:36-0600\n"
+"PO-Revision-Date: 2011-01-22 00:36+0200\n"
 "Last-Translator: Antti Kaihola <akaihol+kasvit@ambitone.com>\n"
 "Language-Team: Finnish <akaihol+kasvit@ambitone.com>\n"
 "Language: \n"
@@ -299,6 +299,10 @@ msgstr "päivä"
 msgid "number of plants after care"
 msgstr "lukumäärä toimenpiteen jälkeen"
 
-#: models.py:316 models.py:317
+#: models.py:316
 msgid "care"
 msgstr "hoito"
+
+#: models.py:317
+msgid "care operations"
+msgstr "hoidot"
