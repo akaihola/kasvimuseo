@@ -15,13 +15,9 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-
-    'django_extensions',
-    'django_nose')
+)
 
 ROOT_URLCONF = 'urls'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
