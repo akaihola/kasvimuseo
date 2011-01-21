@@ -8,5 +8,6 @@ setup(
     entry_points = {
         'console_scripts': ['manage = ylaneenkasvit.manage:main'],
     },
+    include_package_data = True,
     install_requires = ['django', 'gunicorn'],
 )
