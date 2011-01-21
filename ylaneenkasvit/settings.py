@@ -24,6 +24,8 @@ INSTALLED_APPS = (
     'sentry.client',
 )
 
+TEMPLATE_DIRS = os.path.join(PROJECT_ROOT, 'templates'),
+
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
 ADMIN_MEDIA_PREFIX = '/admin/media/'
