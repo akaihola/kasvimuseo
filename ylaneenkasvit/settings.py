@@ -17,6 +17,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
 
     'gunicorn',
+
+    'indexer',
+    'paging',
+    'sentry',
+    'sentry.client',
 )
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
