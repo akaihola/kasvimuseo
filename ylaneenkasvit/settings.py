@@ -15,9 +15,11 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+
+    'gunicorn',
 )
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'ylaneenkasvit.urls'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
