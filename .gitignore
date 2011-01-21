@@ -1,5 +1,7 @@
 /lib/python2.6
 /bin
+/build
+/dist
 /include
 *.pyc
 /original_data
