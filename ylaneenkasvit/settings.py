@@ -11,6 +11,7 @@ LANGUAGE_CODE = 'fi'
 INSTALLED_APPS = (
     'kasvimuseo',
 
+    'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -29,7 +30,8 @@ TEMPLATE_DIRS = os.path.join(PROJECT_ROOT, 'templates'),
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
-ADMIN_MEDIA_PREFIX = '/admin/media/'
+STATIC_URL = '/media/'
+ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 DEBUG = False
 TEMPLATE_DEBUG = True
