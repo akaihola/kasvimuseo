@@ -9,5 +9,9 @@ setup(
         'console_scripts': ['manage = ylaneenkasvit.manage:main'],
     },
     include_package_data = True,
-    install_requires = ['django', 'django-sentry', 'gunicorn', 'south',],
+    install_requires = ('django',
+                        'django-grappelli',
+                        'django-sentry',
+                        'gunicorn',
+                        'south',),
 )
