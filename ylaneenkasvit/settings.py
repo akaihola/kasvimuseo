@@ -21,5 +21,7 @@ INSTALLED_APPS = (
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
+ADMIN_MEDIA_PREFIX = '/admin/media/'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
