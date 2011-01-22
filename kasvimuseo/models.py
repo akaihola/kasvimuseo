@@ -187,7 +187,7 @@ class LocationContact(models.Model):
     contact = models.ForeignKey(Contact)
 
     def __unicode__(self):
-        return '%s/%s' % (self.location, self.contact)
+        return u'%s/%s' % (self.location, self.contact)
 
     class Meta:
         verbose_name = _(u'contact for location')
@@ -232,7 +232,7 @@ class Observation(models.Model):
         blank=True)
 
     def __unicode__(self):
-        return '%s (%s %s)' % (self.species, self.origin, self.date)
+        return u'%s (%s %s)' % (self.species, self.origin, self.date)
 
     class Meta:
         verbose_name = _(u'observation')
@@ -265,7 +265,7 @@ class Bed(models.Model):
 
     def __unicode__(self):
         if self.plot:
-            return '%s/%s' % (self.plot, self.name)
+            return u'%s/%s' % (self.plot, self.name)
         return self.name
 
     class Meta:
@@ -290,7 +290,7 @@ class Planting(models.Model):
         verbose_name=_(u'date of removal'))
 
     def __unicode__(self):
-        return '%s: %s' % (self.planting_date, self.observation)
+        return u'%s: %s' % (self.planting_date, self.observation)
 
     class Meta:
         verbose_name = _(u'planting')
@@ -310,7 +310,7 @@ class Care(models.Model):
         verbose_name=_(u'number of plants after care'))
 
     def __unicode__(self):
-        return '%s: %s / %s' % (self.date, self.planting, self.description)
+        return u'%s: %s / %s' % (self.date, self.planting, self.description)
 
     class Meta:
         verbose_name = _(u'care')
