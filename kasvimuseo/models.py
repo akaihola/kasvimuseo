@@ -88,6 +88,7 @@ class Species(models.Model):
     class Meta:
         verbose_name = _(u'(one) species')
         verbose_name_plural = _(u'(all) species')
+        ordering = 'name_fi',
 
 
 class Contact(models.Model):
@@ -138,6 +139,7 @@ class Contact(models.Model):
     class Meta:
         verbose_name = _(u'contact')
         verbose_name_plural = _(u'contacts')
+        ordering = 'last_name',
 
 
 class Location(models.Model):
@@ -193,6 +195,7 @@ class Location(models.Model):
     class Meta:
         verbose_name = _(u'location')
         verbose_name_plural = _(u'locations')
+        ordering = 'name',
 
 
 class LocationContact(models.Model):
@@ -255,6 +258,7 @@ class Observation(models.Model):
     class Meta:
         verbose_name = _(u'observation')
         verbose_name_plural = _(u'observations')
+        ordering = 'species__name_fi',
 
 
 class Plot(models.Model):
@@ -312,6 +316,7 @@ class Planting(models.Model):
     class Meta:
         verbose_name = _(u'planting')
         verbose_name_plural = _(u'plantings')
+        ordering = 'observation__species__name_fi',
 
 
 class PlantingPhoto(models.Model):
@@ -353,3 +358,4 @@ class Care(models.Model):
     class Meta:
         verbose_name = _(u'care')
         verbose_name_plural = _(u'care operations')
+        ordering = 'date',
