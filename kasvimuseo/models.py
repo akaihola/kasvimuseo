@@ -9,7 +9,8 @@ PLANT_TYPE_CHOICES = ((1, u'Perenna'),)
 
 class Species(models.Model):
     external_id = models.IntegerField(
-        verbose_name=_(u'LajiNro'))
+        verbose_name=_(u'LajiNro'),
+        null=True, blank=True)
     type = models.IntegerField(
         choices=PLANT_TYPE_CHOICES)
     genus = models.CharField(
@@ -131,7 +132,8 @@ class Contact(models.Model):
 
 class Location(models.Model):
     external_id = models.IntegerField(
-        verbose_name=_(u'YhteysNro'))
+        verbose_name=_(u'YhteysNro'),
+        null=True, blank=True)
     name = models.CharField(
         max_length=40,
         verbose_name=_(u'Talo'))
@@ -211,7 +213,8 @@ class Observation(models.Model):
         verbose_name=_(u'Tuntomerkkejä'),
         help_text=_(u'Miltä se näyttää?'),
         blank=True)
-    nickname = models.TextField(
+    nickname = models.CharField(
+        max_length=200,
         verbose_name=_(u'Kutsumanimi'),
         blank=True)
     history = models.TextField(
@@ -229,6 +232,10 @@ class Observation(models.Model):
         blank=True)
     pictures = models.TextField(
         verbose_name=_(u'Kuvat'),
+        blank=True)
+    environment = models.TextField(
+        verbose_name=_(u'Kasvuympäristö'),
+        help_text=_(u'Maaperä ja kasvupaikka'),
         blank=True)
 
     def __unicode__(self):
@@ -283,7 +290,6 @@ class Planting(models.Model):
     planting_date = models.DateField(
         verbose_name=_(u'date of planting'))
     count = models.IntegerField(
-        default=1,
         verbose_name=_(u'count'))
     removal_date = models.DateField(
         null=True, blank=True,
@@ -297,16 +303,37 @@ class Planting(models.Model):
         verbose_name_plural = _(u'plantings')
 
 
-class Care(models.Model):
+class PlantingPhoto(models.Model):
     planting = models.ForeignKey(
         Planting,
         verbose_name=_(u'planting'))
+    photo = models.ImageField(
+        verbose_name=_(u'photo'),
+        upload_to='photos/planting')
+    date = models.DateField(
+        verbose_name=_(u'date of photo'))
+    photographer = models.CharField(
+        max_length=80,
+        verbose_name=_(u'name of photographer'))
+
+    def __unicode__(self):
+        return u'%s: %s' % (self.planting, self.observation)
+
+    class Meta:
+        verbose_name = _(u'planting')
+        verbose_name_plural = _(u'plantings')
+
+
+class Care(models.Model):
+    planting = models.ForeignKey(
+        Planting,
+        verbose_name=_(u'planting'),
+        help_text=_(u'Specify the planting'))
     date = models.DateField(
         verbose_name=_(u'date'))
     description = models.TextField(
         verbose_name=_(u'description'))
     count = models.IntegerField(
-        default=1,
         verbose_name=_(u'number of plants after care'))
 
     def __unicode__(self):
