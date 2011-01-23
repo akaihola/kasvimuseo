@@ -4,7 +4,16 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
-PLANT_TYPE_CHOICES = ((1, u'Perenna'),)
+PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
+                      (2, u'Perenna'),
+                      (3, u'Yrtti'),
+                      (4, u'Muu hyötykasvi'),
+                      (5, u'Koristepensas'),
+                      (6, u'Koristeköynnös'),
+                      (7, u'Marja'),
+                      (8, u'Marjapensas'),
+                      (9, u'Koristepuu'),
+                      (10, u'Hedelmäpuu'))
 
 
 class Species(models.Model):
