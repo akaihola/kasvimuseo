@@ -35,23 +35,25 @@ admin.site.register(
     save_on_top=True,
     list_display=(
         'external_id',
-        'type',
+        'name_fi',
         'genus',
         'group',
         'species',
         'subspecies',
         'variety',
-        'name_fi',
         'name_sv',
         'name_local',
         'abbr_fi',
         'abbr_scientific',
+        'type',
         'height',
         'width',
         'flower_color',
         'flowering_time',
         'substrate',
-        'spacing',))
+        'spacing',),
+    list_display_links=('external_id', 'name_fi'),
+)
 
 admin.site.register(
     Location,
@@ -59,7 +61,6 @@ admin.site.register(
     save_on_top=True,
     exclude=('contacts',),
     list_display=(
-        'external_id',
         'name',
         'alias',
         'village',
@@ -72,7 +73,7 @@ admin.site.register(
         'history',
         #'contacts',
     ),
-    list_display_links=('external_id', 'name',)
+    list_display_links=('name',)
 )
 
 admin.site.register(
@@ -92,16 +93,20 @@ admin.site.register(
     save_on_top=True,
     list_display=(
         'external_id',
+        'name_fi',
+        'genus',
+        'species_species',
+        'subspecies',
         'origin',
-        'species',
         'date',
         'characteristics',
         'nickname',
         'history',
         'stories',
         'pictures',
+        'environment',
     ),
-    list_display_links=('external_id', 'date',),
+    list_display_links=('external_id', 'name_fi',),
 )
 
 admin.site.register(
@@ -109,11 +114,11 @@ admin.site.register(
     save_on_top=True,
     list_display=(
         'date',
+        'planting',
         'description',
         'count',
-        'planting',
     ),
-    list_display_links=('date', 'description', 'count'),
+    list_display_links=('date', 'planting',),
 )
 
 admin.site.register(
