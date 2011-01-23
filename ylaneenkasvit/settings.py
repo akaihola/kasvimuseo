@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import os
 
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
@@ -11,6 +13,7 @@ LANGUAGE_CODE = 'fi'
 INSTALLED_APPS = (
     'kasvimuseo',
 
+    'grappelli.dashboard',
     'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -26,12 +29,26 @@ INSTALLED_APPS = (
     'sentry.client',
 )
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.core.context_processors.request',
+    'django.contrib.messages.context_processors.messages',
+)
+
 TEMPLATE_DIRS = os.path.join(PROJECT_ROOT, 'templates'),
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
 STATIC_URL = '/media/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
+
+GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
+GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
+
 
 DEBUG = False
 TEMPLATE_DEBUG = True
