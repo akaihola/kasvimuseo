@@ -59,7 +59,7 @@ admin.site.register(
     Location,
     inlines=[LocationContactInline, ObservationInline],
     save_on_top=True,
-    exclude=('contacts',),
+    exclude=('external_id', 'contacts',),
     list_display=(
         'name',
         'alias',
