@@ -1,0 +1,13 @@
+.fieldset_column {
+  float: left;
+  margin-right: 1em;
+}
+
+#contact_form input.vTextField,
+#contact_form textarea.vLargeTextField {
+  width: 20em;
+}
+
+#contact_form fieldset.module {
+  width: 36em;
+}
