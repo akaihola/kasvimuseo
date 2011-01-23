@@ -31,8 +31,7 @@ class Species(models.Model):
         blank=True)
     species = models.CharField(
         max_length=40,
-        verbose_name=_(u'Laji'),
-        blank=True)
+        verbose_name=_(u'Laji'))
     subspecies = models.CharField(
         max_length=40,
         verbose_name=_(u'AlalajiMuoto'),
@@ -54,10 +53,12 @@ class Species(models.Model):
         blank=True)
     abbr_fi = models.CharField(
         max_length=20,
-        verbose_name=_(u'Lyhenne_suomalainen'))
+        verbose_name=_(u'Lyhenne_suomalainen'),
+        blank=True)
     abbr_scientific = models.CharField(
         max_length=20,
-        verbose_name=_(u'Lyhenne_tieteellinen'))
+        verbose_name=_(u'Lyhenne_tieteellinen'),
+        blank=True)
     height = models.CharField(
         max_length=40,
         verbose_name=_(u'korkeuscm'),
@@ -148,7 +149,8 @@ class Location(models.Model):
         verbose_name=_(u'Talo'))
     alias = models.CharField(
         max_length=40,
-        verbose_name=_(u'Toinen nimitys'))
+        verbose_name=_(u'Toinen nimitys'),
+        blank=True)
     village = models.CharField(
         max_length=40,
         verbose_name=_(u'Kylä'),
