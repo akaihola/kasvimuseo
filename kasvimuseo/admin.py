@@ -107,6 +107,20 @@ admin.site.register(
         'environment',
     ),
     list_display_links=('external_id', 'name_fi',),
+    fieldsets=((_(u'Basic information'),
+                {'fields': ('external_id',
+                            'origin',
+                            'species',
+                            'date',),
+                 'classes': ('column',)}),
+               (_(u'Extra information'),
+                {'fields': ('characteristics',
+                            'nickname',
+                            'history',
+                            'stories',
+                            'pictures',
+                            'environment',),
+           'classes': ()})),
 )
 
 admin.site.register(
@@ -119,25 +133,57 @@ admin.site.register(
         'count',
     ),
     list_display_links=('date', 'planting',),
+    fieldsets=((None,
+                {'fields': ('planting', 'date', 'description', 'count',),
+                 'description': _(u'Erityiset hoitotapahtumat, '
+                                  u'suojaus, '
+                                  u'harvennus, '
+                                  u'sato, '
+                                  u'siementen keruu, '
+                                  u'taimien kasvatus, '
+                                  u'myynti jne.')}),
+    ),
 )
 
-admin.site.register(
-    Contact,
-    save_on_top=True,
-    list_display=(
-        'last_name',
-        'first_name',
-        'phone',
-        'mobile',
-        'email',
-        'street',
-        'number',
-        'apartment',
-        'zipcode',
-        'city',
-        'description',),
-    list_display_links=('last_name', 'first_name'),
-)
+
+class ContactAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = ('last_name',
+                    'first_name',
+                    'phone',
+                    'mobile',
+                    'email',
+                    'street',
+                    'number',
+                    'apartment',
+                    'zipcode',
+                    'city',
+                    'description',)
+    list_display_links = ('last_name', 'first_name')
+    fieldsets = (
+        (_(u'Basic information'), {
+            'fields': ('last_name',
+                       'first_name',
+                       'phone',
+                       'mobile',
+                       'email',
+                       'description',),
+            'classes': ('fieldset_column',)
+        }),
+        (_(u'Address'), {
+            'fields': ('street',
+                       'number',
+                       'apartment',
+                       'zipcode',
+                       'city',)
+        }),
+    )
+
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Contact, ContactAdmin)
+
 
 admin.site.register(
     Plot,
