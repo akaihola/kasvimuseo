@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 
 from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
@@ -6,7 +7,14 @@ from kasvimuseo.models import (
 
 class CareInline(admin.TabularInline):
     model = Care
-
+    verbose_name_plural = _(u'Erityiset hoitotapahtumat, '
+                            u'suojaus, '
+                            u'harvennus, '
+                            u'sato, '
+                            u'siementen keruu, '
+                            u'taimien kasvatus, '
+                            u'myynti jne.')
+ 
 
 class ObservationInline(admin.StackedInline):
     model = Observation
