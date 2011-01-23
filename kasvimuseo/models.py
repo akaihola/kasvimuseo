@@ -21,7 +21,8 @@ class Species(models.Model):
         verbose_name=_(u'LajiNro'),
         null=True, blank=True)
     type = models.IntegerField(
-        choices=PLANT_TYPE_CHOICES)
+        choices=PLANT_TYPE_CHOICES,
+        verbose_name=_(u'type'))
     genus = models.CharField(
         max_length=40,
         verbose_name=_(u'Sukunimi'))
@@ -83,6 +84,11 @@ class Species(models.Model):
         blank=True)
 
     def __unicode__(self):
+        return self.name_fi
+
+    def name_with_subspecies(self):
+        if self.subspecies:
+            return u'%s/%s' % (self.name_fi, self.subspecies)
         return self.name_fi
 
     class Meta:
@@ -253,7 +259,23 @@ class Observation(models.Model):
         blank=True)
 
     def __unicode__(self):
-        return u'%s (%s %s)' % (self.species, self.origin, self.date)
+        return u'%s (%s)' % (self.species.name_with_subspecies(), self.origin)
+
+    def name_fi(self):
+        return self.species.name_fi
+    name_fi.short_description = Species._meta.get_field('name_fi').verbose_name
+
+    def genus(self):
+        return self.species.genus
+    genus.short_description = Species._meta.get_field('genus').verbose_name
+
+    def species_species(self):
+        return self.species.species
+    species_species.short_description = Species._meta.get_field('species').verbose_name
+
+    def subspecies(self):
+        return self.species.subspecies
+    subspecies.short_description = Species._meta.get_field('subspecies').verbose_name
 
     class Meta:
         verbose_name = _(u'observation')
@@ -311,7 +333,7 @@ class Planting(models.Model):
         verbose_name=_(u'date of removal'))
 
     def __unicode__(self):
-        return u'%s: %s' % (self.planting_date, self.observation)
+        return unicode(self.observation)
 
     class Meta:
         verbose_name = _(u'planting')
