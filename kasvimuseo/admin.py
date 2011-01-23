@@ -132,7 +132,7 @@ admin.site.register(
                             'origin',
                             'species',
                             'date',),
-                 'classes': ('column',)}),
+                 'classes': ('fieldset_column',)}),
                (_(u'Extra information'),
                 {'fields': ('characteristics',
                             'nickname',
