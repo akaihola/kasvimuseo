@@ -14,7 +14,7 @@ class CareInline(admin.TabularInline):
                             u'siementen keruu, '
                             u'taimien kasvatus, '
                             u'myynti jne.')
- 
+
 
 class ObservationInline(admin.StackedInline):
     model = Observation
@@ -69,7 +69,8 @@ admin.site.register(
                             'height',
                             'width',
                             'flower_color',
-                            'flowering_time',
+                            'flowering_start',
+                            'flowering_end',
                             'substrate',
                             'spacing',)}),
     ),
