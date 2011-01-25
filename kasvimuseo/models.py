@@ -237,6 +237,7 @@ class LocationContact(models.Model):
     class Meta:
         verbose_name = _(u'contact for location')
         verbose_name_plural = _(u'contacts for locations')
+        unique_together = ('location', 'contact'),
         db_table = 'kasvimuseo_location_contacts'  # default for ManyToMany
 
 
