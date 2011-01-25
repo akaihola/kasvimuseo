@@ -11,3 +11,7 @@
 #contact_form fieldset.module {
   width: 36em;
 }
+
+#planting_form #care_set-group textarea.vLargeTextField {
+  height: 4em;
+}
