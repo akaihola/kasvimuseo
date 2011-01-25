@@ -96,17 +96,21 @@ admin.site.register(
     list_display_links=('name',)
 )
 
-admin.site.register(
-    Planting,
-    inlines=[CareInline],
-    save_on_top=True,
-    list_display=(
-        'observation',
-        'bed',
-        'planting_date',
-        'count',
-        'removal_date',),
-)
+
+class PlantingAdmin(admin.ModelAdmin):
+    inlines = [CareInline]
+    save_on_top = True
+    list_display = ('observation',
+                    'bed',
+                    'planting_date',
+                    'count',
+                    'removal_date',)
+
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Planting, PlantingAdmin)
+
 
 admin.site.register(
     Observation,
