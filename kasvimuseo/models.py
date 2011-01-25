@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from django.utils.dates import MONTHS
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -14,6 +15,15 @@ PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
                       (8, u'Marjapensas'),
                       (9, u'Koristepuu'),
                       (10, u'Hedelmäpuu'))
+
+
+ROMAN_NUMERALS = ('',
+                  'I', 'II', 'III', 'IV', 'V', 'VI',
+                  'VII', 'VIII', 'IX', 'X', 'XI', 'XII')
+ROMAN_TO_INT = dict((unicode(roman), index or None)
+                    for index, roman in enumerate(ROMAN_NUMERALS))
+INT_TO_ROMAN = dict((index + 1, unicode(roman))
+                     for index, roman in enumerate(ROMAN_NUMERALS[1:]))
 
 
 class Species(models.Model):
@@ -72,10 +82,14 @@ class Species(models.Model):
         max_length=40,
         verbose_name=_(u'kukinnanväri'),
         blank=True)
-    flowering_time = models.CharField(
-        max_length=20,
-        verbose_name=_(u'kukintaAika'),
-        blank=True)
+    flowering_start = models.IntegerField(
+        verbose_name=_(u'first flowering month'),
+        choices=MONTHS.items(),
+        null=True, blank=True)
+    flowering_end = models.IntegerField(
+        verbose_name=_(u'last flowering month'),
+        choices=MONTHS.items(),
+        null=True, blank=True)
     substrate = models.TextField(
         verbose_name=_(u'Kasvualusta'),
         blank=True)
@@ -90,6 +104,15 @@ class Species(models.Model):
         if self.subspecies:
             return u'%s/%s' % (self.name_fi, self.subspecies)
         return self.name_fi
+
+    def flowering_time(self):
+        if self.flowering_start is None:
+            return u''
+        start = INT_TO_ROMAN[self.flowering_start]
+        if self.flowering_end is None:
+            return start
+        return u'%s–%s' % (start, INT_TO_ROMAN[self.flowering_end])
+    flowering_time.short_description = _(u'flowering time')
 
     class Meta:
         verbose_name = _(u'(one) species')
