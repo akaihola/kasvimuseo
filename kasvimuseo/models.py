@@ -35,7 +35,7 @@ class Species(models.Model):
         verbose_name=_(u'Laji'))
     subspecies = models.CharField(
         max_length=40,
-        verbose_name=_(u'AlalajiMuoto'),
+        verbose_name=_(u'subspecies'),
         blank=True)
     variety = models.CharField(
         max_length=40,
@@ -227,6 +227,10 @@ class Observation(models.Model):
     species = models.ForeignKey(
         Species,
         verbose_name=_(u'Kasvilaji'))
+    variation = models.CharField(
+        max_length=200,
+        verbose_name=_(u'color/form'),
+        blank=True)
     date = models.DateField(
         verbose_name=_(u'Havaintopäivä'))
     characteristics = models.TextField(
@@ -259,7 +263,11 @@ class Observation(models.Model):
         blank=True)
 
     def __unicode__(self):
-        return u'%s (%s)' % (self.species.name_with_subspecies(), self.origin)
+        if self.variation:
+            return u'%s/%s (%s)' % (self.name_fi(),
+                                    self.variation,
+                                    self.origin)
+        return u'%s (%s)' % (self.name_fi(), self.origin)
 
     def name_fi(self):
         return self.species.name_fi
