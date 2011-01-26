@@ -79,7 +79,7 @@ class Species(models.Model):
         verbose_name=_(u'leveyscm'),
         blank=True)
     flower_color = models.CharField(
-        max_length=40,
+        max_length=80,
         verbose_name=_(u'kukinnanväri'),
         blank=True)
     flowering_start = models.IntegerField(
