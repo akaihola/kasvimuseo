@@ -5,8 +5,11 @@ import os
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 
 DATABASES = {'default': {
-    'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': 'ylaneenkasvit.sqlite'}}
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'NAME': 'ylaneenkasvit',
+    'HOST': 'localhost',
+    'USER': 'ylaneenkasvit',
+    'PASSWORD': '5tsovi25'}}
 
 LANGUAGE_CODE = 'fi'
 
