@@ -15,3 +15,15 @@
 #planting_form #care_set-group textarea.vLargeTextField {
   height: 4em;
 }
+
+#changelist-form td {
+  max-width: 13em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#changelist-form td:hover {
+  white-space: normal;
+  overflow: visible;
+}

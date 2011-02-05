@@ -34,11 +34,10 @@ class BedInline(admin.TabularInline):
     model = Bed
 
 
-admin.site.register(
-    Species,
-    inlines=[ObservationInline],
-    save_on_top=True,
-    list_display=(
+class SpeciesAdmin(admin.ModelAdmin):
+    inlines = [ObservationInline]
+    save_on_top = True
+    list_display = (
         edit,
         'external_id',
         'name_fi',
@@ -57,30 +56,34 @@ admin.site.register(
         'flower_color',
         'flowering_time',
         'substrate',
-        'spacing',),
-    list_filter=('type',),
-    fieldsets=((None,
-                {'fields': ('external_id',
-                            'name_fi',
-                            'genus',
-                            'group',
-                            'species',
-                            'subspecies',
-                            'variety',
-                            'name_sv',
-                            'name_local',
-                            'abbr_fi',
-                            'abbr_scientific',
-                            'type',
-                            'height',
-                            'width',
-                            'flower_color',
-                            'flowering_start',
-                            'flowering_end',
-                            'substrate',
-                            'spacing',)}),
-    ),
-)
+        'spacing',)
+    list_filter = 'type',
+    fieldsets = (None,
+                 {'fields': ('external_id',
+                             'name_fi',
+                             'genus',
+                             'group',
+                             'species',
+                             'subspecies',
+                             'variety',
+                             'name_sv',
+                             'name_local',
+                             'abbr_fi',
+                             'abbr_scientific',
+                             'type',
+                             'height',
+                             'width',
+                             'flower_color',
+                             'flowering_start',
+                             'flowering_end',
+                             'substrate',
+                             'spacing',)}),
+
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Species, SpeciesAdmin)
+
 
 admin.site.register(
     Location,
