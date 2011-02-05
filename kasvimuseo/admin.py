@@ -5,6 +5,11 @@ from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
 
 
+def edit(instance):
+    return _('Edit')
+edit.short_description = _(u'Edit')
+
+
 class CareInline(admin.TabularInline):
     model = Care
     verbose_name_plural = _(u'Erityiset hoitotapahtumat, '
@@ -34,6 +39,7 @@ admin.site.register(
     inlines=[ObservationInline],
     save_on_top=True,
     list_display=(
+        edit,
         'external_id',
         'name_fi',
         'genus',
@@ -52,7 +58,6 @@ admin.site.register(
         'flowering_time',
         'substrate',
         'spacing',),
-    list_display_links=('external_id', 'name_fi'),
     list_filter=('type',),
     fieldsets=((None,
                 {'fields': ('external_id',
@@ -83,6 +88,7 @@ admin.site.register(
     save_on_top=True,
     exclude=('external_id', 'contacts',),
     list_display=(
+        edit,
         'name',
         'alias',
         'village',
@@ -95,14 +101,14 @@ admin.site.register(
         'history',
         #'contacts',
     ),
-    list_display_links=('name',)
 )
 
 
 class PlantingAdmin(admin.ModelAdmin):
     inlines = [CareInline]
     save_on_top = True
-    list_display = ('observation',
+    list_display = (edit,
+                    'observation',
                     'bed',
                     'planting_date',
                     'count',
@@ -119,6 +125,7 @@ admin.site.register(
     Observation,
     save_on_top=True,
     list_display=(
+        edit,
         'external_id',
         'name_fi',
         'genus',
@@ -134,7 +141,6 @@ admin.site.register(
         'pictures',
         'environment',
     ),
-    list_display_links=('external_id', 'name_fi',),
     list_filter=('origin', 'species__type', 'date',),
     fieldsets=((_(u'Basic information'),
                 {'fields': ('external_id',
@@ -157,12 +163,12 @@ admin.site.register(
     Care,
     save_on_top=True,
     list_display=(
+        edit,
         'date',
         'planting',
         'description',
         'count',
     ),
-    list_display_links=('date', 'planting',),
     list_filter=('planting__bed', 'date',),
     fieldsets=((None,
                 {'fields': ('planting', 'date', 'description', 'count',),
@@ -179,7 +185,8 @@ admin.site.register(
 
 class ContactAdmin(admin.ModelAdmin):
     save_on_top = True
-    list_display = ('last_name',
+    list_display = (edit,
+                    'last_name',
                     'first_name',
                     'phone',
                     'mobile',
@@ -190,7 +197,6 @@ class ContactAdmin(admin.ModelAdmin):
                     'zipcode',
                     'city',
                     'description',)
-    list_display_links = ('last_name', 'first_name')
     fieldsets = (
         (_(u'Basic information'), {
             'fields': ('last_name',
@@ -218,11 +224,13 @@ admin.site.register(Contact, ContactAdmin)
 
 admin.site.register(
     Plot,
+    list_display=(edit, 'name',),
     inlines=[BedInline],
     save_on_top=True,
 )
 
 admin.site.register(
     Bed,
+    list_display=(edit, 'plot', 'name', 'description',),
     save_on_top=True,
 )
