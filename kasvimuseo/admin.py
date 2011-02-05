@@ -53,6 +53,7 @@ admin.site.register(
         'substrate',
         'spacing',),
     list_display_links=('external_id', 'name_fi'),
+    list_filter=('type',),
     fieldsets=((None,
                 {'fields': ('external_id',
                             'name_fi',
@@ -106,6 +107,7 @@ class PlantingAdmin(admin.ModelAdmin):
                     'planting_date',
                     'count',
                     'removal_date',)
+    list_filter = 'observation__origin', 'bed', 'planting_date',
 
     class Media:
         css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
@@ -133,6 +135,7 @@ admin.site.register(
         'environment',
     ),
     list_display_links=('external_id', 'name_fi',),
+    list_filter=('origin', 'species__type', 'date',),
     fieldsets=((_(u'Basic information'),
                 {'fields': ('external_id',
                             'origin',
@@ -160,6 +163,7 @@ admin.site.register(
         'count',
     ),
     list_display_links=('date', 'planting',),
+    list_filter=('planting__bed', 'date',),
     fieldsets=((None,
                 {'fields': ('planting', 'date', 'description', 'count',),
                  'description': _(u'Erityiset hoitotapahtumat, '
