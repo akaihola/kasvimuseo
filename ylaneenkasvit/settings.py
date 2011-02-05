@@ -51,7 +51,7 @@ ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
 GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
-
+DATE_FORMAT = 'Y-m-d'
 
 DEBUG = False
 TEMPLATE_DEBUG = True
