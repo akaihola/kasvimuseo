@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Kasvimuseo 0.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-02-05 14:40-0600\n"
-"PO-Revision-Date: 2011-02-05 22:41+0200\n"
+"PO-Revision-Date: 2011-02-05 22:44+0200\n"
 "Last-Translator: Antti Kaihola <akaihol+kasvit@ambitone.com>\n"
 "Language-Team: Finnish <akaihol+kasvit@ambitone.com>\n"
 "Language: \n"
@@ -284,11 +284,11 @@ msgstr ""
 
 #: models.py:333 models.py:375
 msgid "observation"
-msgstr "kasvihavainto"
+msgstr "havaittu kasvi"
 
 #: models.py:334
 msgid "observations"
-msgstr "kasvihavainnot"
+msgstr "havaitut kasvit"
 
 #: models.py:340 models.py:357
 msgid "name"
