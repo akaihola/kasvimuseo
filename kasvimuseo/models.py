@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.utils.dates import MONTHS
+from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -241,10 +242,19 @@ class LocationContact(models.Model):
         db_table = 'kasvimuseo_location_contacts'  # default for ManyToMany
 
 
+def get_next_observation_extid():
+    last_id = (Observation.objects
+               .order_by('-external_id')
+               .values_list('external_id', flat=True)[0])
+    return _(u'Next available ID: %s') % (last_id + 1)
+get_next_observation_extid = lazy(get_next_observation_extid, unicode)
+
+
 class Observation(models.Model):
     external_id = models.IntegerField(
         null=True, blank=True,
-        verbose_name=_(u'YläneNro'))
+        verbose_name=_(u'YläneNro'),
+        help_text=get_next_observation_extid())
     origin = models.ForeignKey(
         Location,
         verbose_name=_(u'Kasvin alkuperä'))
