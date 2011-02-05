@@ -20,12 +20,26 @@ class CustomIndexDashboard(Dashboard):
         site_name = get_admin_site_name(context)
 
         # append an app list module for "Applications"
-        self.children.append(modules.AppList(
-            _('Tables'),
+        self.children.append(modules.ModelList(
+            u'',
             collapsible=True,
             column=1,
             css_classes=('collapse',),
-            exclude=('django.contrib.*', 'kasvimuseo.models.Bed',),
+            models=('kasvimuseo.models.Species',
+                    'kasvimuseo.models.Location',
+                    'kasvimuseo.models.Contact',
+                    'kasvimuseo.models.Plot',),
+        ))
+
+        # append an app list module for "Applications"
+        self.children.append(modules.ModelList(
+            u'',
+            collapsible=True,
+            column=1,
+            css_classes=('collapse',),
+            models=('kasvimuseo.models.Observation',
+                    'kasvimuseo.models.Planting',
+                    'kasvimuseo.models.Care',),
         ))
 
         # append an app list module for "Administration"
