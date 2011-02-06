@@ -1,0 +1,5 @@
+http://www.djangoproject.com/download/1.3-beta-1/tarball/
+git+https://github.com/bryanveloso/django-grappelli.git#egg=grappelli
+django-sentry
+gunicorn
+south
