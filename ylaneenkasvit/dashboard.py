@@ -28,7 +28,8 @@ class CustomIndexDashboard(Dashboard):
             models=('kasvimuseo.models.Species',
                     'kasvimuseo.models.Location',
                     'kasvimuseo.models.Contact',
-                    'kasvimuseo.models.Plot',),
+                    'kasvimuseo.models.Plot',
+                    'kasvimuseo.models.Bed',),
         ))
 
         # append an app list module for "Applications"
