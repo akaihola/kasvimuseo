@@ -27,3 +27,79 @@
   white-space: normal;
   overflow: visible;
 }
+
+@media print {
+    #header,
+    #breadcrumbs,
+    .module.footer,
+    #footer,
+    h1 + .tools,
+    .fieldname_action_checkbox,
+    .fieldname_edit,
+    .pagination,
+    a.button.toggle-filters,
+    #ui-datepicker-div { display: none; }
+
+    .module,
+    .module.changelist-filters {
+        border: none; 
+        background: transparent; }
+    .module.changelist-results {
+        background: transparent !important; }
+
+    .module.filter { float: none; }
+    .module.filter.span-6 { width: auto; }
+    .module.filter .pulldown-container { 
+        position: relative; 
+        border: none; }
+    .filter-pulldown { 
+        display: block; 
+        background: transparent; }
+    .filter-pulldown select { width: auto !important; }
+    .filter-pulldown label { color: black; }
+    .module label { 
+        float: left; 
+        width: auto !important; 
+        line-height: normal; 
+        padding: 2px 0 0 0; 
+        margin: 0; }
+
+    thead th, 
+    tfoot td,
+    thead th.sorted,
+    .row1 th,
+    .row1 td { 
+        background: transparent; 
+        color: black; }
+
+    thead th.sorted a,
+    thead th a:link {
+        color: black; }
+
+    .module label:after { content: ":"; }
+
+    select {
+        border: none;
+        background: white;
+        color: black;
+        padding: 0; 
+        height: auto; 
+        vertical-align: baseline; }
+
+    /* copied from a www resource: */
+    tr, td, th {page-break-inside: avoid}
+    thead {display:table-header-group}
+    .NoPrint {visibility:hidden; display:none}
+    a {color:#000000}
+    body { 
+        background: white; 
+        color: black; }
+    #container {
+        width: auto;
+        margin: 0 5%;
+        padding: 0;
+        border: 0;
+        float: none !important;
+        color: black;
+        background: transparent; }
+}
