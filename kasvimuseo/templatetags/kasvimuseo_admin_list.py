@@ -1,7 +1,9 @@
 from django.contrib.admin.templatetags.admin_list import (
     result_hidden_fields, result_headers)
-from django.contrib.admin.util import lookup_field, display_for_field, label_for_field
-from django.contrib.admin.views.main import ORDER_VAR, ORDER_TYPE_VAR
+from django.contrib.admin.util import (
+    lookup_field, display_for_field, label_for_field)
+from django.contrib.admin.views.main import (
+    EMPTY_CHANGELIST_VALUE, ORDER_VAR, ORDER_TYPE_VAR)
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template import Library
