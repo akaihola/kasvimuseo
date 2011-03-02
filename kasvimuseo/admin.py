@@ -117,6 +117,9 @@ class PlantingAdmin(admin.ModelAdmin):
                     'bed',
                     'planting_date',
                     'count',
+                    'last_care_date',
+                    'last_care_description',
+                    'last_care_count',
                     'removal_date',)
     list_filter = 'observation__origin', 'bed', 'planting_date',
 

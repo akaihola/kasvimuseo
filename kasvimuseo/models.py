@@ -377,6 +377,34 @@ class Planting(models.Model):
     def __unicode__(self):
         return unicode(self.observation)
 
+    @property
+    def last_care(self):
+        try:
+            return self.care_set.order_by('-date')[0]
+        except IndexError:
+            return None
+
+    def last_care_date(self):
+        try:
+            return self.last_care.date
+        except AttributeError:
+            return u''
+    last_care_date.short_description = _('date of last care operation')
+
+    def last_care_description(self):
+        try:
+            return self.last_care.description
+        except AttributeError:
+            return u''
+    last_care_description.short_description = _('last care operation')
+
+    def last_care_count(self):
+        try:
+            return self.last_care.count
+        except AttributeError:
+            return u''
+    last_care_count.short_description = _('count after care')
+
     class Meta:
         verbose_name = _(u'planting')
         verbose_name_plural = _(u'plantings')
