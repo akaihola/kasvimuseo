@@ -85,26 +85,28 @@ class SpeciesAdmin(admin.ModelAdmin):
 admin.site.register(Species, SpeciesAdmin)
 
 
-admin.site.register(
-    Location,
-    inlines=[LocationContactInline, ObservationInline],
-    save_on_top=True,
-    exclude=('external_id', 'contacts',),
-    list_display=(
-        edit,
-        'name',
-        'alias',
-        'village',
-        'area',
-        'street',
-        'number',
-        'apartment',
-        'zipcode',
-        'city',
-        'history',
-        #'contacts',
-    ),
-)
+class LocationAdmin(admin.ModelAdmin):
+    inlines = LocationContactInline, ObservationInline,
+    save_on_top = True
+    exclude = 'external_id', 'contacts',
+    list_display = (edit,
+                    'name',
+                    'alias',
+                    'village',
+                    'area',
+                    'street',
+                    'number',
+                    'apartment',
+                    'zipcode',
+                    'city',
+                    'history',
+                    #'contacts',
+                    )
+
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Location, LocationAdmin)
 
 
 class PlantingAdmin(admin.ModelAdmin):
@@ -124,66 +126,68 @@ class PlantingAdmin(admin.ModelAdmin):
 admin.site.register(Planting, PlantingAdmin)
 
 
-admin.site.register(
-    Observation,
-    save_on_top=True,
-    list_display=(
-        edit,
-        'external_id',
-        'name_fi',
-        'genus',
-        'species_species',
-        'subspecies',
-        'variation',
-        'origin',
-        'date',
-        'characteristics',
-        'nickname',
-        'history',
-        'stories',
-        'pictures',
-        'environment',
-    ),
-    list_filter=('origin', 'species__type', 'date',),
-    fieldsets=((_(u'Basic information'),
-                {'fields': ('external_id',
-                            'origin',
-                            'species',
-                            'variation',
-                            'date',),
-                 'classes': ('fieldset_column',)}),
-               (_(u'Extra information'),
-                {'fields': ('characteristics',
-                            'nickname',
-                            'history',
-                            'stories',
-                            'pictures',
-                            'environment',),
-           'classes': ()})),
-)
+class ObservationAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = (edit,
+                    'external_id',
+                    'name_fi',
+                    'genus',
+                    'species_species',
+                    'subspecies',
+                    'variation',
+                    'origin',
+                    'date',
+                    'characteristics',
+                    'nickname',
+                    'history',
+                    'stories',
+                    'pictures',
+                    'environment',)
+    list_filter = 'origin', 'species__type', 'date',
+    fieldsets = ((_(u'Basic information'),
+                  {'fields': ('external_id',
+                              'origin',
+                              'species',
+                              'variation',
+                              'date',),
+                   'classes': ('fieldset_column',)}),
+                 (_(u'Extra information'),
+                  {'fields': ('characteristics',
+                              'nickname',
+                              'history',
+                              'stories',
+                              'pictures',
+                              'environment',),
+                   'classes': ()}))
 
-admin.site.register(
-    Care,
-    save_on_top=True,
-    list_display=(
-        edit,
-        'date',
-        'planting',
-        'description',
-        'count',
-    ),
-    list_filter=('planting__bed', 'date',),
-    fieldsets=((None,
-                {'fields': ('planting', 'date', 'description', 'count',),
-                 'description': _(u'Erityiset hoitotapahtumat, '
-                                  u'suojaus, '
-                                  u'harvennus, '
-                                  u'sato, '
-                                  u'siementen keruu, '
-                                  u'taimien kasvatus, '
-                                  u'myynti jne.')}),
-    ),
-)
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Observation, ObservationAdmin)
+
+
+class CareAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = (edit,
+                    'date',
+                    'planting',
+                    'description',
+                    'count',)
+    list_filter = 'planting__bed', 'date',
+    fieldsets = ((None,
+                  {'fields': ('planting', 'date', 'description', 'count',),
+                   'description': _(u'Erityiset hoitotapahtumat, '
+                                    u'suojaus, '
+                                    u'harvennus, '
+                                    u'sato, '
+                                    u'siementen keruu, '
+                                    u'taimien kasvatus, '
+                                    u'myynti jne.')}),)
+
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Care, CareAdmin)
 
 
 class ContactAdmin(admin.ModelAdmin):
@@ -225,15 +229,22 @@ class ContactAdmin(admin.ModelAdmin):
 admin.site.register(Contact, ContactAdmin)
 
 
-admin.site.register(
-    Plot,
-    list_display=(edit, 'name',),
-    inlines=[BedInline],
-    save_on_top=True,
-)
+class PlotAdmin(admin.ModelAdmin):
+    list_display = edit, 'name',
+    inlines = BedInline,
+    save_on_top = True
 
-admin.site.register(
-    Bed,
-    list_display=(edit, 'plot', 'name', 'description',),
-    save_on_top=True,
-)
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Plot, PlotAdmin)
+
+
+class BedAdmin(admin.ModelAdmin):
+    list_display = edit, 'plot', 'name', 'description',
+    save_on_top = True
+
+    class Media:
+        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
+
+admin.site.register(Bed, BedAdmin)
