@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Kasvimuseo 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-02-05 15:05-0600\n"
-"PO-Revision-Date: 2011-02-05 23:06+0200\n"
+"POT-Creation-Date: 2011-03-02 07:05-0600\n"
+"PO-Revision-Date: 2011-03-02 15:08+0200\n"
 "Last-Translator: Antti Kaihola <akaihol+kasvit@ambitone.com>\n"
 "Language-Team: Finnish <akaihol+kasvit@ambitone.com>\n"
 "Language: \n"
@@ -16,21 +16,21 @@ msgstr ""
 msgid "Edit"
 msgstr "Muokkaa"
 
-#: admin.py:15 admin.py:175
+#: admin.py:15 admin.py:182
 msgid ""
 "Erityiset hoitotapahtumat, suojaus, harvennus, sato, siementen keruu, "
 "taimien kasvatus, myynti jne."
 msgstr ""
 
-#: admin.py:145 admin.py:201
+#: admin.py:150 admin.py:211
 msgid "Basic information"
 msgstr "Perustiedot"
 
-#: admin.py:152
+#: admin.py:157
 msgid "Extra information"
 msgstr "Lisätiedot"
 
-#: admin.py:210
+#: admin.py:220
 msgid "Address"
 msgstr "Osoite"
 
@@ -286,90 +286,121 @@ msgstr ""
 msgid "Maaperä ja kasvupaikka"
 msgstr ""
 
-#: models.py:348 models.py:390
+#: models.py:332 models.py:374
 msgid "observation"
 msgstr "havaittu kasvi"
 
-#: models.py:349
+#: models.py:333
 msgid "observations"
 msgstr "havaitut kasvit"
 
-#: models.py:355 models.py:372
+#: models.py:339 models.py:356
 msgid "name"
 msgstr "nimi"
 
-#: models.py:361
+#: models.py:345
 msgid "garden plot"
 msgstr "kasvimaa"
 
-#: models.py:362
+#: models.py:346
 msgid "garden plots"
 msgstr "kasvimaat"
 
-#: models.py:369
+#: models.py:353
 msgid "plot"
 msgstr "kasvimaa"
 
-#: models.py:375 models.py:440
+#: models.py:359 models.py:452
 msgid "description"
 msgstr "kuvaus"
 
-#: models.py:383 models.py:393
+#: models.py:367 models.py:377
 msgid "bed"
 msgstr "penkki"
 
-#: models.py:384
+#: models.py:368
 msgid "beds"
 msgstr "penkit"
 
-#: models.py:395
+#: models.py:379
 msgid "date of planting"
 msgstr "istutuspäivä"
 
-#: models.py:397
+#: models.py:381
 msgid "count"
 msgstr "lukumäärä"
 
-#: models.py:400
+#: models.py:384
 msgid "date of removal"
 msgstr "poistamispäivä"
 
-#: models.py:406 models.py:414 models.py:428 models.py:435
+#: models.py:401
+msgid "date of last care operation"
+msgstr "viim. hoitopvm"
+
+#: models.py:408
+msgid "last care operation"
+msgstr "hoito"
+
+#: models.py:415
+msgid "count after care"
+msgstr "lukum."
+
+#: models.py:418 models.py:426 models.py:440 models.py:447
 msgid "planting"
 msgstr "istutus"
 
-#: models.py:407 models.py:429
+#: models.py:419 models.py:441
 msgid "plantings"
 msgstr "istutukset"
 
-#: models.py:416
+#: models.py:428
 msgid "photo"
 msgstr "valokuva"
 
-#: models.py:419
+#: models.py:431
 msgid "date of photo"
 msgstr "kuvauspäivä"
 
-#: models.py:422
+#: models.py:434
 msgid "name of photographer"
 msgstr "kuvaajan nimi"
 
-#: models.py:436
+#: models.py:448
 msgid "Specify the planting"
 msgstr "Anna istutettu kasvi"
 
-#: models.py:438
+#: models.py:450
 msgid "date"
 msgstr "päivä"
 
-#: models.py:442
+#: models.py:454
 msgid "number of plants after care"
 msgstr "lukumäärä toimenpiteen jälkeen"
 
-#: models.py:448
+#: models.py:460
 msgid "care"
 msgstr "hoito"
 
-#: models.py:449
+#: models.py:461
 msgid "care operations"
 msgstr "hoidot"
+
+#: templates/admin/change_list.html:50
+msgid "Home"
+msgstr "Alkuun"
+
+#: templates/admin/change_list.html:68
+#, python-format
+msgid "Add %(name)s"
+msgstr "Lisää %(name)s"
+
+#: templates/admin/change_list.html:86
+msgid "Filter"
+msgstr "Suodatus"
+
+#: templates/admin/change_list.html:114
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Korjaa seuraava virhe."
+msgstr[1] "Korjaa seuraavat virheet."
