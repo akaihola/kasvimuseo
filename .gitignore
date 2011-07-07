@@ -1,6 +1,7 @@
-/lib/python2.6
+/lib/python2.*
 /bin
 /build
+/db
 /dist
 /include
 *.pyc
