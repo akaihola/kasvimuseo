@@ -1,8 +1,11 @@
 from django.contrib import admin
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 
 from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
+from kasvimuseo.views import PlantedSpecies
 
 
 def edit(instance):
@@ -32,6 +35,16 @@ class LocationContactInline(admin.TabularInline):
 
 class BedInline(admin.TabularInline):
     model = Bed
+
+
+def planted_species_report(modeladmin, request, queryset):
+    external_ids = queryset.values_list('external_id', flat=True)
+    external_ids_param = u','.join(unicode(external_id)
+                                   for external_id in external_ids)
+    url = reverse('planted-species',
+                  kwargs={'species_external_ids': external_ids_param})
+    return HttpResponseRedirect(url)
+planted_species_report.short_description = _(u'Create Species Sheets')
 
 
 class SpeciesAdmin(admin.ModelAdmin):
@@ -70,6 +83,7 @@ class SpeciesAdmin(admin.ModelAdmin):
                              'flowering_start',
                              'flowering_end',
                              'substrate',)}),
+    actions = [planted_species_report]
 
     class Media:
         css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
