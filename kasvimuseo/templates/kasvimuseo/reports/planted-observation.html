@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+    <head>
+        <style type="text/css">
+            #scientific-name { font-style: italic; }
+            h2 { clear: both; }
+            dl { clear: both; padding-top: 3em; }
+            dt { clear: both; float: left; width: 15em; }
+            dd { float: left; margin-left: 1em; }
+        </style>
+    </head>
+    <body>
+        <img src="dummy.jpg" />
+        <div id="information-for-guide">
+            <ul id="beds">
+                {% for bed in beds %}
+                    <li>
+                        {{ bed }}
+                    </li>
+                {% endfor %}
+            </ul>
+            Havainto {{ observation.external_id }}
+        </div>
+        <div id="public-information">
+            <div id="general-information">
+                <div id="species-name">
+                    <div id="finnish-name">
+                        {{ species.name_fi }}{% if observation.variation %}, {{ observation.variation }}{% endif %}
+                    </div>
+                    <div id="scientific-name">
+                        {{ species.genus }}
+                        {{ species.group }}
+                        {{ species.species }}
+                        {{ species.subspecies }}
+                        {{ species.variety }}
+                    </div>
+                    {% if species.name_local %}
+                        <div id="local-name">
+                            {{ species.name_local }}
+                        </div>
+                    {% endif %}
+                </div>
+                <dl id="species-properties">
+                    <dt>Kukinnan väri</dt>
+                    <dd>{{ species.flower_color }}</dd>
+                    <dt>Kukinta-aika</dt>
+                    <dd>
+                        {{ species.flowering_start }}–{{ species.flowering_end }}
+                    </dd>
+                    <dt>Korkeus</dt>
+                    <dd>
+                        {{ species.height }} cm
+                    </dd>
+                    <dt>Taimiväli</dt>
+                    <dd>
+                        {{ species.spacing }} cm
+                    </dd>
+                    <dt>Kasvualusta</dt>
+                    <dd>
+                        {{ species.substrate }}
+                    </dd>
+                </dl>
+            </div>
+            <div id="planting-information">
+                <h2>
+                    Istutuspai{{ beds|length|pluralize:"kka,kat" }} museomäellä
+                </h2>
+                <ul>
+                    {% for bed in beds %}
+                        <li>{{ bed }}</li>
+                    {% endfor %}
+                </ul>
+                <h2>Alkuperäinen kasvupaikka</h2>
+                <ul>
+                    <li>{{ origin.name }}, {{ origin.village }}</li>
+                </ul>
+            </div>
+            <h2>
+                Viljelytietoja ja tarinoita kasvin alkuperäiseltä kasvupaikalta
+            </h2>
+            <dl id="origin-information">
+                {% if texts %}
+                    <dt>{{ origin.name }}, {{ origin.village }}</dt>
+                    {% for text in texts %}
+                        <dd>{{ text }}</dd>
+                    {% endfor %}
+                {% endif %}
+            </dl>
+        </div>
+    </body>
+</html>

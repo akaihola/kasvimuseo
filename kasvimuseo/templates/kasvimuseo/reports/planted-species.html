@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+    <head>
+        <style type="text/css">
+            @media screen {
+                body {
+                    background: #d6d6d6;
+                    background: -moz-linear-gradient(top, #333, #d6d6d6);
+                    background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#d6d6d6));
+                    background: -o-linear-gradient(top, #333, #d6d6d6);
+                }
+                nav, .species {
+                    box-shadow: 2px 2px 7px #444;
+                    -moz-box-shadow: 2px 2px 7px #444;
+                    -webkit-box-shadow: 2px 2px 7px #444;
+                    margin: 2em;
+                    padding: 2em;
+                }
+                nav {
+                    background: #666;
+                    text-align: right;
+                }
+                nav a {
+                    text-decoration: none;
+                    color: #000;
+                }
+                nav a:hover {
+                    text-decoration: underline;
+                    color: #333;
+                }
+                .species {
+                    background: #fff;
+                }
+            }
+            @media print {
+                nav { display: none; }
+            }
+            .scientific-name { font-style: italic; }
+            dl.table dt { clear: both; float: left; width: 15em; }
+            .species { page-break-before: always; }
+            img {
+                width: 50%;
+                float: right;
+            }
+            .public-information { clear: right; }
+        </style>
+    </head>
+    <body>
+        {% if next %}
+        <nav>
+            <a href="{{ next }}">Jatka »</a>
+        </nav>
+        {% endif %}{# next #}
+        {% for page in pages %}
+            <div class="species">
+                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Convallaria_majalis_zoom.jpg/800px-Convallaria_majalis_zoom.jpg" />
+                <div class="information-for-guide">
+                    <ul class="beds">
+                        {% for bed in page.beds %}
+                            <li>
+                                {{ bed }}:
+                                {% for observation in bed.planted_observations %}
+                                    {{ observation.external_id }}{% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            </li>
+                        {% endfor %}{# bed in page.beds #}
+                    </ul>
+                </div>
+                <div class="public-information">
+                    <div class="general-information">
+                        <div class="species-name">
+                            <div class="finnish-name">
+                                {{ page.species.name_fi }}
+                            </div>
+                            <div class="scientific-name">
+                                {{ page.species.genus }}
+                                {{ page.species.group }}
+                                {{ page.species.species }}
+                                {{ page.species.subspecies }}
+                                {{ page.species.variety }}
+                            </div>
+                            {% if page.species.name_local %}
+                                <div class="local-name">
+                                    {{ page.species.name_local }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h2>Yleistietoja kasvilajista</h2>
+                        <dl class="species-properties table">
+                            <dt>Kukinnan väri</dt>
+                            <dd>{{ page.species.flower_color }}</dd>
+                            <dt>Kukinta-aika</dt>
+                            <dd>
+                                {{ page.species.flowering_start }}–{{ page.species.flowering_end }}
+                            </dd>
+                            <dt>Korkeus</dt>
+                            <dd>
+                                {{ page.species.height }} cm
+                            </dd>
+                            <dt>Taimiväli</dt>
+                            <dd>
+                                {{ page.species.spacing }} cm
+                            </dd>
+                            <dt>Kasvualusta</dt>
+                            <dd>
+                                {{ page.species.substrate }}
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="planting-information">
+        
+                        <h2>Kasvi museomäellä</h2>
+                        <dl>
+                            {% for bed in page.beds %}
+                                <dt>{{ bed }}</dt>
+                                <dd>
+                                    {% for obs in bed.planted_observations %}
+                                        {{ obs.origin }}, {{ obs.origin.village }}{% if obs.variation %}: {{ obs.variation }}{% endif %}
+                                        {% if not forloop.last %}<br />{% endif %}
+                                    {% endfor %}
+                                </dd>
+                            {% endfor %}{# bed in page.beds #}
+                        </dl>
+        
+                    </div>
+                    <h2>
+                        Viljelytietoja ja tarinoita kasvin
+                        alkuperäis{{ page.origins|length|pluralize:"e,i" }}ltä
+                        kasvupaik{{ page.origins|length|pluralize:"a,oi" }}lta
+                    </h2>
+                    <dl class="origin-information">
+                        {% for observation in page.planted_observations %}
+                            {% if observation.history or observation.stories %}
+                                <dt>
+                                    {{ page.species.name_fi|title }}{% if observation.variation %},
+                                                           {{ observation.variation }}
+                                                         {% endif %},
+                                    {{ observation.origin.name }},
+                                    {{ observation.origin.village }}
+                                </dt>
+                                {% if observation.history %}
+                                    <dd>{{ observation.history }}</dd>
+                                {% endif %}
+                                {% if observation.stories %}
+                                    <dd>{{ observation.stories }}</dd>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </dl>
+                </div>
+            </div>{# .species #}
+        {% endfor %}{# page in pages #}
+    </body>
+</html>
