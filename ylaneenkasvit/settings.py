@@ -55,3 +55,9 @@ DATE_FORMAT = 'Y-m-d'
 
 DEBUG = False
 TEMPLATE_DEBUG = True
+
+try:
+    from ylaneenkasvit.local_settings import *
+    modify(globals())
+except ImportError:
+    pass
