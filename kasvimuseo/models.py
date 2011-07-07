@@ -55,22 +55,6 @@ class Species(models.Model):
     name_fi = models.CharField(
         max_length=40,
         verbose_name=_(u'SuomalainenNimi'))
-    name_sv = models.CharField(
-        max_length=40,
-        verbose_name=_(u'RuotsinkielinenNimi'),
-        blank=True)
-    name_local = models.CharField(
-        max_length=40,
-        verbose_name=_(u'PaikallinenNimi'),
-        blank=True)
-    abbr_fi = models.CharField(
-        max_length=20,
-        verbose_name=_(u'Lyhenne_suomalainen'),
-        blank=True)
-    abbr_scientific = models.CharField(
-        max_length=20,
-        verbose_name=_(u'Lyhenne_tieteellinen'),
-        blank=True)
     height = models.CharField(
         max_length=40,
         verbose_name=_(u'korkeuscm'),
@@ -78,6 +62,9 @@ class Species(models.Model):
     width = models.CharField(
         max_length=40,
         verbose_name=_(u'leveyscm'),
+        blank=True)
+    spacing = models.TextField(
+        verbose_name=_(u'Taimiväli'),
         blank=True)
     flower_color = models.CharField(
         max_length=80,
@@ -93,9 +80,6 @@ class Species(models.Model):
         null=True, blank=True)
     substrate = models.TextField(
         verbose_name=_(u'Kasvualusta'),
-        blank=True)
-    spacing = models.TextField(
-        verbose_name=_(u'Taimiväli'),
         blank=True)
 
     def __unicode__(self):
