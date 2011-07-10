@@ -155,6 +155,7 @@ class ObservationAdmin(admin.ModelAdmin):
                     'history',
                     'stories',
                     'pictures',
+                    'notes',
                     'environment',)
     list_filter = 'origin', 'species__type', 'date',
     fieldsets = ((_(u'Basic information'),
@@ -170,6 +171,7 @@ class ObservationAdmin(admin.ModelAdmin):
                               'history',
                               'stories',
                               'pictures',
+                              'notes',
                               'environment',),
                    'classes': ()}))
 

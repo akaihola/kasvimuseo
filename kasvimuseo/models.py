@@ -295,6 +295,9 @@ class Observation(models.Model):
     pictures = models.TextField(
         verbose_name=_(u'Kuvat'),
         blank=True)
+    notes = models.TextField(
+        verbose_name=_(u'notes'),
+        blank=True)
     environment = models.TextField(
         verbose_name=_(u'Kasvuympäristö'),
         help_text=_(u'Maaperä ja kasvupaikka'),
