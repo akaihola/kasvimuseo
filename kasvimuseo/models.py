@@ -17,6 +17,19 @@ PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
                       (9, u'Koristepuu'),
                       (10, u'Hedelmäpuu'))
 
+LIGHTINGS = ((1, u'A'),
+             (2, u'A-Pv'),
+             (3, u'Pv'),
+             (4, u'Pv-V'),
+             (5, u'V'),
+             (6, u'A-V'),)
+
+LIGHTINGS_VERBOSE = ((1, u'aurinko'),
+                     (2, u'aurinko–puolivarjo'),
+                     (3, u'puolivarjo'),
+                     (4, u'puolivarjo–varjo'),
+                     (5, u'varjo'),
+                     (6, u'aurinko–varjo'),)
 
 ROMAN_NUMERALS = ('',
                   'I', 'II', 'III', 'IV', 'V', 'VI',
@@ -77,6 +90,10 @@ class Species(models.Model):
     flowering_end = models.IntegerField(
         verbose_name=_(u'last flowering month'),
         choices=MONTHS.items(),
+        null=True, blank=True)
+    lighting = models.IntegerField(
+        verbose_name=_(u'light requirement'),
+        choices=LIGHTINGS,
         null=True, blank=True)
     substrate = models.TextField(
         verbose_name=_(u'Kasvualusta'),
