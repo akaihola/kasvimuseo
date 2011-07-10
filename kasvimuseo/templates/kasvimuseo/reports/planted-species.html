@@ -135,6 +135,12 @@
                             <dd>
                                 {{ page.species.substrate }}
                             </dd>
+                            {% if page.species.additional_info %}
+                                <dt>Lisätietoja</dt>
+                                <dd>
+                                    {{ page.species.additional_info }}
+                                </dd>
+                            {% endif %}
                         </dl>
                     </div>
                     <div class="planting-information">

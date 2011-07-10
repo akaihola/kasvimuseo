@@ -98,6 +98,9 @@ class Species(models.Model):
     substrate = models.TextField(
         verbose_name=_(u'Kasvualusta'),
         blank=True)
+    additional_info = models.TextField(
+        verbose_name=_(u'additional information'),
+        blank=True)
 
     def __unicode__(self):
         return self.name_fi
