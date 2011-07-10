@@ -112,7 +112,7 @@
                         <h2>Yleistietoja kasvilajista</h2>
                         <dl class="species-properties table">
                             <dt>Kukinnan väri</dt>
-                            <dd>{{ page.species.flower_color }}</dd>
+                            <dd>{{ page.species.flower_color }}&nbsp;</dd>
                             <dt>Kukinta-aika</dt>
                             <dd>
                                 {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
@@ -127,11 +127,11 @@
                             </dd>
                             <dt>Valovaatimus</dt>
                             <dd>
-                                {{ page.species.lighting|lighting_name }}
+                                {{ page.species.lighting|lighting_name }}&nbsp;
                             </dd>
                             <dt>Kasvualusta</dt>
                             <dd>
-                                {{ page.species.substrate }}
+                                {{ page.species.substrate }}&nbsp;
                             </dd>
                             {% if page.species.additional_info %}
                                 <dt>Lisätietoja</dt>
