@@ -65,6 +65,7 @@ class SpeciesAdmin(admin.ModelAdmin):
         'spacing',
         'flower_color',
         'flowering_time',
+        'lighting',
         'substrate',)
     list_filter = 'type',
     fieldsets = (None,
@@ -82,6 +83,7 @@ class SpeciesAdmin(admin.ModelAdmin):
                              'flower_color',
                              'flowering_start',
                              'flowering_end',
+                             'lighting',
                              'substrate',)}),
     actions = [planted_species_report]
 
