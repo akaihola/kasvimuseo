@@ -9,6 +9,7 @@
                     background: -moz-linear-gradient(top, #333, #d6d6d6);
                     background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#d6d6d6));
                     background: -o-linear-gradient(top, #333, #d6d6d6);
+                    font-size: 10px;
                 }
                 nav, .species {
                     box-shadow: 2px 2px 7px #444;
@@ -35,15 +36,32 @@
             }
             @media print {
                 nav { display: none; }
+                .species { padding-top: 2.5cm; }
+                body { font-size: 12pt; }
+            }
+            body {
+                width: 17cm;
             }
             .scientific-name { font-style: italic; }
-            dl.table dt { clear: both; float: left; width: 15em; }
+            table.header { width: 100%; }
+            table.header td.photo { width: 8cm; }
+            table.header td.species-name {
+                vertical-align: bottom;
+                font-size: 1.5em;
+            }
+            .finnish-name {
+                text-transform: uppercase;
+                font-weight: bold;
+            }
+            dl.table dt { clear: both; float: left; width: 10em; }
             .species { page-break-before: always; }
             img {
-                width: 50%;
-                float: right;
+                max-width: 8cm;
+                height: auto;
             }
-            .public-information { clear: right; }
+            .public-information {
+                padding-top: 1.5cm;
+            }
         </style>
     </head>
     <body>
