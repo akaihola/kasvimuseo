@@ -1,4 +1,5 @@
 <!doctype html>
+{% load lightings months %}
 <html>
     <head>
         <style type="text/css">
@@ -53,45 +54,52 @@
         {% endif %}{# next #}
         {% for page in pages %}
             <div class="species">
-                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Convallaria_majalis_zoom.jpg/800px-Convallaria_majalis_zoom.jpg" />
-                <div class="information-for-guide">
-                    <ul class="beds">
-                        {% for bed in page.beds %}
-                            <li>
-                                {{ bed }}:
-                                {% for observation in bed.planted_observations %}
-                                    {{ observation.external_id }}{% if not forloop.last %},{% endif %}
-                                {% endfor %}
-                            </li>
-                        {% endfor %}{# bed in page.beds #}
-                    </ul>
-                </div>
+                <table class="header">
+                    <tbody>
+                        <tr>
+                            <td class="beds">
+                                {% for bed in page.beds %}
+                                    {{ bed }}:
+                                    {% for observation in bed.planted_observations %}
+                                        {{ observation.external_id }}{% if not forloop.last %},{% endif %}
+                                    {% endfor %}
+                                    {% if not forloop.last %}<br />{% endif %}
+                                {% endfor %}{# bed in page.beds #}
+                            </td>
+                            <td class="photo" rowspan="2">
+                                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/{% cycle 'e/e5/Convallaria_majalis_zoom.jpg/800px-Convallaria_majalis_zoom' 'b/bd/Helianthus_annuus_exposed_2004-05-22.jpg/450px-Helianthus_annuus_exposed_2004-05-22' %}.jpg" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="species-name">
+                                <div class="finnish-name">
+                                    {{ page.species.name_fi }}
+                                </div>
+                                {% if page.local_names %}
+                                    <div class="local-names">
+                                        "{% for name in page.local_names %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                                    </div>
+                                {% endif %}
+                                <div class="scientific-name">
+                                    {{ page.species.genus }}
+                                    {{ page.species.group }}
+                                    {{ page.species.species }}
+                                    {{ page.species.subspecies }}
+                                    {{ page.species.variety }}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <div class="public-information">
                     <div class="general-information">
-                        <div class="species-name">
-                            <div class="finnish-name">
-                                {{ page.species.name_fi }}
-                            </div>
-                            <div class="scientific-name">
-                                {{ page.species.genus }}
-                                {{ page.species.group }}
-                                {{ page.species.species }}
-                                {{ page.species.subspecies }}
-                                {{ page.species.variety }}
-                            </div>
-                            {% if page.species.name_local %}
-                                <div class="local-name">
-                                    {{ page.species.name_local }}
-                                </div>
-                            {% endif %}
-                        </div>
                         <h2>Yleistietoja kasvilajista</h2>
                         <dl class="species-properties table">
                             <dt>Kukinnan väri</dt>
                             <dd>{{ page.species.flower_color }}</dd>
                             <dt>Kukinta-aika</dt>
                             <dd>
-                                {{ page.species.flowering_start }}–{{ page.species.flowering_end }}
+                                {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
                             </dd>
                             <dt>Korkeus</dt>
                             <dd>
@@ -100,6 +108,10 @@
                             <dt>Taimiväli</dt>
                             <dd>
                                 {{ page.species.spacing }} cm
+                            </dd>
+                            <dt>Valovaatimus</dt>
+                            <dd>
+                                {{ page.species.lighting|lighting_name }}
                             </dd>
                             <dt>Kasvualusta</dt>
                             <dd>
