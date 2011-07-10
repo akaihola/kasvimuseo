@@ -18,9 +18,10 @@ class PlantedSpecies(TemplateResponseMixin, View):
         beds = list(Bed.objects
                     .filter(planting__observation__species=species)
                     .distinct())
-        bed_dict = dict((bed.pk, bed) for bed in beds)
         for bed in beds:
-            bed.planted_observations = []
+            bed.plantings = (bed.planting_set
+                             .filter(observation__species=species)
+                             .exclude(removal_date__isnull=False))
         planted_observations = list(
             Observation.objects
             .filter(species=species, planting__isnull=False)
@@ -29,10 +30,6 @@ class PlantedSpecies(TemplateResponseMixin, View):
                       for observation in planted_observations)
         local_names = []
         for observation in planted_observations:
-            for planting in observation.planting_set.all():
-                bed = bed_dict.get(planting.bed_id)
-                if bed:
-                    bed.planted_observations.append(observation)
             if observation.nickname:
                 local_names.append(observation.nickname)
 

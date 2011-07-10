@@ -36,12 +36,13 @@
             }
             @media print {
                 nav { display: none; }
-                .species { padding-top: 2.5cm; }
+                .species { padding-top: 2cm; }
                 body { font-size: 12pt; }
             }
             body {
                 width: 17cm;
             }
+            h2 { margin-top: 1.5em; }
             .scientific-name { font-style: italic; }
             table.header { width: 100%; }
             table.header td.photo { width: 8cm; }
@@ -54,6 +55,14 @@
                 font-weight: bold;
             }
             dl.table dt { clear: both; float: left; width: 10em; }
+            table.plantings {
+                border-collapse: collapse;
+            }
+            table.plantings td, table.plantings th {
+                text-align: left;
+                border: none;
+                padding-right: 1em;
+            }
             .species { page-break-before: always; }
             img {
                 max-width: 8cm;
@@ -75,20 +84,6 @@
                 <table class="header">
                     <tbody>
                         <tr>
-                            <td class="beds">
-                                {% for bed in page.beds %}
-                                    {{ bed }}:
-                                    {% for observation in bed.planted_observations %}
-                                        {{ observation.external_id }}{% if not forloop.last %},{% endif %}
-                                    {% endfor %}
-                                    {% if not forloop.last %}<br />{% endif %}
-                                {% endfor %}{# bed in page.beds #}
-                            </td>
-                            <td class="photo" rowspan="2">
-                                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/{% cycle 'e/e5/Convallaria_majalis_zoom.jpg/800px-Convallaria_majalis_zoom' 'b/bd/Helianthus_annuus_exposed_2004-05-22.jpg/450px-Helianthus_annuus_exposed_2004-05-22' %}.jpg" />
-                            </td>
-                        </tr>
-                        <tr>
                             <td class="species-name">
                                 <div class="finnish-name">
                                     {{ page.species.name_fi }}
@@ -105,6 +100,9 @@
                                     {{ page.species.subspecies }}
                                     {{ page.species.variety }}
                                 </div>
+                            </td>
+                            <td class="photo">
+                                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/{% cycle 'e/e5/Convallaria_majalis_zoom.jpg/800px-Convallaria_majalis_zoom' 'b/bd/Helianthus_annuus_exposed_2004-05-22.jpg/450px-Helianthus_annuus_exposed_2004-05-22' %}.jpg" />
                             </td>
                         </tr>
                     </tbody>
@@ -144,18 +142,38 @@
                         </dl>
                     </div>
                     <div class="planting-information">
-        
                         <h2>Kasvi museomäellä</h2>
+                        <table class="plantings">
+                            <thead>
+                                <tr>
+                                    <th>Sijainti museomäellä</th>
+                                    <th>Istutuspäivä</th>
+                                    <th>Alkuperäinen kasvupaikka</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bed in page.beds %}
+                                    {% for planting in bed.plantings %}
+                                        <tr>
+                                            <td>
+                                                {% ifchanged %}
+                                                {{ bed }}
+                                                {% endifchanged %}
+                                            </td>
+                                            <td>
+                                                {{ planting.planting_date|date:"j.n.Y" }}
+                                            </td>
+                                            <td>
+                                                {{ planting.observation.origin }},
+                                                {{ planting.observation.origin.village }}{% if planting.observation.variation %}:
+                                                {{ planting.observation.variation }}{% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}{# planting in bed.plantings #}
+                                {% endfor %}{# bed in page.beds #}
+                            </tbody>
+                        </table>
                         <dl>
-                            {% for bed in page.beds %}
-                                <dt>{{ bed }}</dt>
-                                <dd>
-                                    {% for obs in bed.planted_observations %}
-                                        {{ obs.origin }}, {{ obs.origin.village }}{% if obs.variation %}: {{ obs.variation }}{% endif %}
-                                        {% if not forloop.last %}<br />{% endif %}
-                                    {% endfor %}
-                                </dd>
-                            {% endfor %}{# bed in page.beds #}
                         </dl>
         
                     </div>
