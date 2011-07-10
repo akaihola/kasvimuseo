@@ -8,4 +8,6 @@ register = Library()
 
 @register.filter
 def lighting_name(number):
-    return dict(LIGHTINGS_VERBOSE)[number]
+    if number:
+        return dict(LIGHTINGS_VERBOSE)[number]
+    return u''
