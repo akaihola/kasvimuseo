@@ -27,16 +27,20 @@ class PlantedSpecies(TemplateResponseMixin, View):
             .distinct())
         origins = set(observation.origin.name
                       for observation in planted_observations)
+        local_names = []
         for observation in planted_observations:
             for planting in observation.planting_set.all():
                 bed = bed_dict.get(planting.bed_id)
                 if bed:
                     bed.planted_observations.append(observation)
+            if observation.nickname:
+                local_names.append(observation.nickname)
 
         return {'species': species,
                 'beds': beds,
                 'origins': origins,
-                'planted_observations': planted_observations}
+                'planted_observations': planted_observations,
+                'local_names': local_names}
 
     def get(self, request, species_external_ids):
         extid_list = species_external_ids.split(',')
