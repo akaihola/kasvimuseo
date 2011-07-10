@@ -1,7 +1,13 @@
-from fabric.api import env
-from ambideploy import bootstrap, clone_db, install_django, install_project
+from fabric.api import env, task
+from ambideploy import (bootstrap,
+                        clone_db,
+                        install_django,
+                        install_project,
+                        migrate,
+                        update)
 
 
+@task
 def kala():
     env.hosts = ['kala.ambitone.com']
     env.project_root = '/www/ylaneenkasvit'
