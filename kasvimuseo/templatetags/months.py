@@ -8,4 +8,6 @@ register = Library()
 
 @register.filter
 def month_name(number):
-    return MONTHS[number]
+    if number:
+        return MONTHS[number]
+    return u''
