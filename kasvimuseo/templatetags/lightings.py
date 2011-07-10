@@ -8,4 +8,4 @@ register = Library()
 
 @register.filter
 def lighting_name(number):
-    return LIGHTINGS_VERBOSE[number]
+    return dict(LIGHTINGS_VERBOSE)[number]
