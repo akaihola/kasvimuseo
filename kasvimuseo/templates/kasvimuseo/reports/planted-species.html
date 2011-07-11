@@ -149,19 +149,25 @@
                                 <tr>
                                     <th>Kukinta-aika</th>
                                     <td>
-                                        {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
+                                        {% if page.species.flowering_start or page.species.flowering_end %}
+                                            {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Korkeus</th>
                                     <td>
-                                        {{ page.species.height }} cm
+                                        {% if page.species.height %}
+                                            {{ page.species.height }} cm
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Taimiväli</th>
                                     <td>
-                                        {{ page.species.spacing }} cm
+                                        {% if page.species.spacing %}
+                                            {{ page.species.spacing }} cm
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 <tr>
