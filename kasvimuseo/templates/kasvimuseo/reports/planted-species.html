@@ -150,7 +150,7 @@
                                     <th>Kukinta-aika</th>
                                     <td>
                                         {% if page.species.flowering_start or page.species.flowering_end %}
-                                            {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
+                                            {{ page.species.flowering_start|month_name }}{% if page.species.flowering_start != page.species.flowering_end %}–{{ page.species.flowering_end|month_name }}{% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>
