@@ -4,6 +4,7 @@ from ambideploy import (bootstrap,
                         install_django,
                         install_project,
                         migrate,
+                        restart_django,
                         update)
 
 
