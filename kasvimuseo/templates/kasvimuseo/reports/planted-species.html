@@ -69,8 +69,13 @@
                 white-space: nowrap;
                 padding-right: 2em;
             }
-            table.plantings td, table.plantings th { padding: 0 .5em 0 0; }
-            table.plantings td:last-child, table.plantings th:last-child { padding: 0 0 0 0; }
+            table.plantings td, table.plantings th {
+                padding: .5em 1em 0 0;
+                line-height: 1em;
+            }
+            table.plantings td:last-child, table.plantings th:last-child {
+                padding: .5em 0 0 0;
+            }
             div.external-id {
                 border: solid black 1px;
                 height: 1em;
@@ -199,7 +204,8 @@
                                         <tr>
                                             <td>
                                                 {% ifchanged %}
-                                                {{ bed.plot }}/&#8203;{{ bed.name }}
+                                                {{ bed.plot }}/<br />
+                                                {{ bed.name }}
                                                 {% endifchanged %}
                                             </td>
                                             <td>
@@ -207,7 +213,7 @@
                                             </td>
                                             <td>
                                                 {{ planting.observation.origin }},
-                                                {{ planting.observation.origin.village }}{% if planting.observation.variation %}:
+                                                {{ planting.observation.origin.village }}{% if planting.observation.variation %}:<br />
                                                 {{ planting.observation.variation }}{% endif %}
                                             </td>
                                             <td>
