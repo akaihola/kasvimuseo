@@ -4,18 +4,20 @@
     <head>
         <style type="text/css">
             @media screen {
+                html {
+                    font-size: 22px;
+                }
                 body {
                     background: #d6d6d6;
                     background: -moz-linear-gradient(top, #333, #d6d6d6);
                     background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#d6d6d6));
                     background: -o-linear-gradient(top, #333, #d6d6d6);
-                    font-size: 10px;
                 }
                 nav, .species {
                     box-shadow: 2px 2px 7px #444;
                     -moz-box-shadow: 2px 2px 7px #444;
                     -webkit-box-shadow: 2px 2px 7px #444;
-                    margin: 2em;
+                    margin: 2em -2em;
                     padding: 2em;
                 }
                 nav {
@@ -34,19 +36,28 @@
                     background: #fff;
                 }
             }
+
             @media print {
                 nav { display: none; }
-                .species { padding-top: 2cm; }
-                body { font-size: 12pt; }
+                .species { padding-top: 4em; }
+                html { font-size: 12pt; }
             }
+
             body {
-                width: 17cm;
+                width: 37em;
+                margin: auto;
             }
+
             h2 { margin-top: 1.5em; }
+            table { border-collapse: collapse; }
+            th, td {
+                vertical-align: top;
+                text-align: left;
+                padding: 0;
+            }
             .scientific-name { font-style: italic; }
-            table.header { width: 100%; }
-            table.header td.photo { width: 8cm; }
             table.header td.species-name {
+                width: 21em;
                 vertical-align: bottom;
                 font-size: 1.5em;
             }
@@ -54,23 +65,37 @@
                 text-transform: uppercase;
                 font-weight: bold;
             }
-            dl.table dt { clear: both; float: left; width: 10em; }
-            table.plantings {
-                border-collapse: collapse;
+            .species-properties th {
+                white-space: nowrap;
+                padding-right: 2em;
             }
-            table.plantings td, table.plantings th {
-                text-align: left;
-                border: none;
-                padding-right: 1em;
+            table.plantings td, table.plantings th { padding: 0 .5em 0 0; }
+            table.plantings td:last-child, table.plantings th:last-child { padding: 0 0 0 0; }
+            div.external-id {
+                border: solid black 1px;
+                height: 1em;
+                -webkit-border-radius: 1em;
+                -moz-border-radius: 1em;
+                -khtml-border-radius: 1em;
+                border-radius: 1em;
+                text-align: center;
+                padding: 0 .2em .2em .2em;
+                font-family: sans-serif;
+                font-size: .75em;
             }
-            .species { page-break-before: always; }
-            img {
-                max-width: 8cm;
-                height: auto;
+            .species {
+                page-break-before: always;
+                height: 54em;
+                /* border: solid black 1px; */
             }
-            .public-information {
-                padding-top: 1.5cm;
+            img { height: auto; }
+            td.photo {
+                width: 16em;
+                text-align: right;
             }
+            td.photo.horizontal img { width: 16em; }
+            td.photo.vertical img { width: 12em; }
+            .public-information { padding-top: 2em; }
         </style>
     </head>
     <body>
@@ -101,8 +126,8 @@
                                     {{ page.species.variety }}
                                 </div>
                             </td>
-                            <td class="photo">
-                                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/{% cycle 'e/e5/Convallaria_majalis_zoom.jpg/800px-Convallaria_majalis_zoom' 'b/bd/Helianthus_annuus_exposed_2004-05-22.jpg/450px-Helianthus_annuus_exposed_2004-05-22' %}.jpg" />
+                            <td class="photo {% cycle 'horizontal' 'vertical' %}">
+                                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/{% cycle '8/8f/Nymphaea_tetragona.jpg/800px-Nymphaea_tetragona' 'b/bd/Helianthus_annuus_exposed_2004-05-22.jpg/450px-Helianthus_annuus_exposed_2004-05-22' %}.jpg" />
                             </td>
                         </tr>
                     </tbody>
@@ -110,36 +135,52 @@
                 <div class="public-information">
                     <div class="general-information">
                         <h2>Yleistietoja kasvilajista</h2>
-                        <dl class="species-properties table">
-                            <dt>Kukinnan väri</dt>
-                            <dd>{{ page.species.flower_color }}&nbsp;</dd>
-                            <dt>Kukinta-aika</dt>
-                            <dd>
-                                {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
-                            </dd>
-                            <dt>Korkeus</dt>
-                            <dd>
-                                {{ page.species.height }} cm
-                            </dd>
-                            <dt>Taimiväli</dt>
-                            <dd>
-                                {{ page.species.spacing }} cm
-                            </dd>
-                            <dt>Valovaatimus</dt>
-                            <dd>
-                                {{ page.species.lighting|lighting_name }}&nbsp;
-                            </dd>
-                            <dt>Kasvualusta</dt>
-                            <dd>
-                                {{ page.species.substrate }}&nbsp;
-                            </dd>
-                            {% if page.species.additional_info %}
-                                <dt>Lisätietoja</dt>
-                                <dd>
-                                    {{ page.species.additional_info }}
-                                </dd>
-                            {% endif %}
-                        </dl>
+                        <table class="species-properties">
+                            <tbody>
+                                <tr>
+                                    <th>Kukinnan väri</th>
+                                    <td>{{ page.species.flower_color }}&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <th>Kukinta-aika</th>
+                                    <td>
+                                        {{ page.species.flowering_start|month_name }}–{{ page.species.flowering_end|month_name }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Korkeus</th>
+                                    <td>
+                                        {{ page.species.height }} cm
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Taimiväli</th>
+                                    <td>
+                                        {{ page.species.spacing }} cm
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Valovaatimus</th>
+                                    <td>
+                                        {{ page.species.lighting|lighting_name }}&nbsp;
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Kasvualusta</th>
+                                    <td>
+                                        {{ page.species.substrate }}&nbsp;
+                                    </td>
+                                </tr>
+                                {% if page.species.additional_info %}
+                                    <tr>
+                                        <th>Lisätietoja</th>
+                                        <td>
+                                            {{ page.species.additional_info }}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
                     </div>
                     <div class="planting-information">
                         <h2>Kasvi museomäellä</h2>
@@ -149,6 +190,7 @@
                                     <th>Sijainti museomäellä</th>
                                     <th>Istutuspäivä</th>
                                     <th>Alkuperäinen kasvupaikka</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -157,7 +199,7 @@
                                         <tr>
                                             <td>
                                                 {% ifchanged %}
-                                                {{ bed }}
+                                                {{ bed.plot }}/&#8203;{{ bed.name }}
                                                 {% endifchanged %}
                                             </td>
                                             <td>
@@ -167,6 +209,11 @@
                                                 {{ planting.observation.origin }},
                                                 {{ planting.observation.origin.village }}{% if planting.observation.variation %}:
                                                 {{ planting.observation.variation }}{% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="external-id">
+                                                    {{ planting.observation.external_id }}
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}{# planting in bed.plantings #}
@@ -178,7 +225,7 @@
         
                     </div>
                     <h2>
-                        Viljelytietoja ja tarinoita kasvin
+                        Viljelyhistoria ja tarinoita
                         alkuperäis{{ page.origins|length|pluralize:"e,i" }}ltä
                         kasvupaik{{ page.origins|length|pluralize:"a,oi" }}lta
                     </h2>
