@@ -23,6 +23,7 @@ def kala():
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
     env.nginx_root_location_extra = 'client_max_body_size 10m;'
+    env.gunicorn_timeout = 240
     env.media_sites = [
         {'name': 'ylaneenkasvit-static',
          'www_hostnames': ['static.kasvit.ambitone.com'],
