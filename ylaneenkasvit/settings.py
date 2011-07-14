@@ -62,6 +62,10 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
 DATE_FORMAT = 'Y-m-d'
 
+SOUTH_MIGRATION_MODULES = {
+    'photologue': 'ylaneenkasvit.migrations.photologue',
+}
+
 DEBUG = False
 TEMPLATE_DEBUG = True
 
