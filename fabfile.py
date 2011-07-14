@@ -23,9 +23,9 @@ def kala():
     env.db_user = 'ylaneenkasvit'
     env.nginx_root_location_extra = 'client_max_body_size 10m;'
     env.media_sites = [
-        {'name': 'static',
+        {'name': 'ylaneenkasvit-static',
          'www_hostnames': ['static.kasvit.ambitone.com'],
-         'root': '{project_root}/src/{project_name}/static/'},
-        {'name': 'media',
+         'root': '{project_root}/static/'.format(**env)},
+        {'name': 'ylaneenkasvit-media',
          'www_hostnames': ['media.kasvit.ambitone.com'],
-         'root': '{project_root}/media/'}]
+         'root': '{project_root}/media/'.format(**env)}]
