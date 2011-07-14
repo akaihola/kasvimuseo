@@ -131,8 +131,8 @@
                                     {{ page.species.variety }}
                                 </div>
                             </td>
-                            <td class="photo {% cycle 'horizontal' 'vertical' %}">
-                                <img src="http://upload.wikimedia.org/wikipedia/commons/thumb/{% cycle '8/8f/Nymphaea_tetragona.jpg/800px-Nymphaea_tetragona' 'b/bd/Helianthus_annuus_exposed_2004-05-22.jpg/450px-Helianthus_annuus_exposed_2004-05-22' %}.jpg" />
+                            <td class="photo horizontal"">
+                                <img src="{{ page.species.photo.image.url }}" />
                             </td>
                         </tr>
                     </tbody>
