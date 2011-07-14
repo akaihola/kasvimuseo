@@ -6,6 +6,7 @@
 /include
 *.pyc
 /original_data
+/static
 /src
 *.org
 *.sqlite
