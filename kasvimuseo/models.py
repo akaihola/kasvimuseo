@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.dates import MONTHS
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
+from photologue.models import Photo
 from south.modelsinspector import add_introspection_rules
 
 
@@ -471,3 +472,25 @@ class Care(models.Model):
 # http://south.aeracode.org/docs/customfields.html
 # http://groups.google.com/group/south-users/browse_thread/thread/4088fd57a0e45eeb?pli=1
 add_introspection_rules([], ["^photologue\.models\.TagField"])
+
+
+def autoconnect_photo_to_species(sender, instance, **kwargs):
+    if sender != Photo:
+        return
+    import ipdb;ipdb.set_trace()  ## DEBUG
+    title_parts = instance.title.split()
+    if not title_parts:
+        return instance
+    species_name = title_parts[0].lower()
+    try:
+        species = Species.objects.get(name_fi=species_name,
+                                      photo__isnull=True)
+    except Species.DoesNotExist:
+        pass
+    else:
+        species.photo = instance
+        species.save()
+    return instance
+
+
+models.signals.post_save.connect(autoconnect_photo_to_species)
