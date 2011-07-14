@@ -16,6 +16,8 @@ def kala():
     env.hosts = ['kala.ambitone.com']
     env.project_root = '/www/ylaneenkasvit'
     env.project_name = 'ylaneenkasvit'
+    env.www_hostnames = ['kasvit.ambitone.com']
+    env.django_port = 25121
     env.repository = 'nopo.ambitone.com:/var/lib/git/repositories/ylaneenkasvit.git'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
