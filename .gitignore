@@ -5,6 +5,7 @@
 /dist
 /include
 *.pyc
+/media
 /original_data
 /static
 /src
