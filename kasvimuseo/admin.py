@@ -4,9 +4,12 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 
+from .forms import PhotoForm
 from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
 from kasvimuseo.views import PlantedSpecies
+from photologue.admin import PhotoAdmin as PhotologuePhotoAdmin
+from photologue.models import Photo
 
 
 ADMIN_CSS_PATH = '%scss/kasvimuseo.admin.css' % settings.STATIC_URL
@@ -262,3 +265,10 @@ class BedAdmin(admin.ModelAdmin):
     class Media:
         css = CSS
 admin.site.register(Bed, BedAdmin)
+
+
+class PhotoAdmin(PhotologuePhotoAdmin):
+    form = PhotoForm
+
+admin.site.unregister(Photo)
+admin.site.register(Photo, PhotoAdmin)
