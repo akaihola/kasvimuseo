@@ -14,6 +14,7 @@ urlpatterns = patterns(
      {'document_root': os.path.join(os.path.dirname(grappelli.__file__), 'media')}),
     (r'^admin/', include(admin.site.urls)),
     (r'^sentry/', include('sentry.urls')),
+    (r'^photologue/', include('photologue.urls')),
     (r'^kasvimuseo/', include('kasvimuseo.urls')),
     (r'^$', lambda request: HttpResponseRedirect('/admin/')),
 )

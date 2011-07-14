@@ -43,6 +43,16 @@ class CustomIndexDashboard(Dashboard):
                     'kasvimuseo.models.Care',),
         ))
 
+        # append an app list module for "Photos"
+        self.children.append(modules.ModelList(
+            u'',
+            collapsible=True,
+            column=1,
+            css_classes=('collapse',),
+            models=('photologue.models.Gallery',
+                    'photologue.models.Photo',),
+        ))
+
         # append an app list module for "Administration"
         self.children.append(modules.ModelList(
             _('Administration'),
