@@ -132,7 +132,8 @@
                                 </div>
                             </td>
                             <td class="photo horizontal"">
-                                <img src="{{ page.species.photo.image.url }}" />
+                                <img src="{{ page.species.photo.get_display_url }}" />{# low rez #}
+                                <!-- img src="{{ page.species.photo.image.url }}" / -->{# original rez #}
                             </td>
                         </tr>
                     </tbody>
