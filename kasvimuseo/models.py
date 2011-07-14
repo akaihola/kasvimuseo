@@ -15,7 +15,8 @@ PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
                       (7, u'Marja'),
                       (8, u'Marjapensas'),
                       (9, u'Koristepuu'),
-                      (10, u'Hedelmäpuu'))
+                      (10, u'Hedelmäpuu'),
+                      (11, u'Luonnonkasvi'))
 
 LIGHTINGS = ((1, u'A'),
              (2, u'A-Pv'),
