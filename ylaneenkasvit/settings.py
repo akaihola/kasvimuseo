@@ -5,6 +5,9 @@ import os
 PROJECT_ROOT = '/www/ylaneenkasvit'
 here = lambda *args: os.path.join(os.path.dirname(__file__), *args)
 
+ADMINS = (('Antti Kaihola', 'akaihol+ylaneenkasvit@ambitone.com'),)
+MANAGERS = ADMINS
+
 DATABASES = {'default': {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
     'NAME': 'ylaneenkasvit',
