@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.dates import MONTHS
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
+from south.modelsinspector import add_introspection_rules
 
 
 PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
@@ -459,3 +460,11 @@ class Care(models.Model):
         verbose_name = _(u'care')
         verbose_name_plural = _(u'care operations')
         ordering = 'date',
+
+
+# make South work with Photologue
+# see:
+# http://blog.fergusrossferrier.co.uk/2010/09/django-getting-south-and-photologue-to.html
+# http://south.aeracode.org/docs/customfields.html
+# http://groups.google.com/group/south-users/browse_thread/thread/4088fd57a0e45eeb?pli=1
+add_introspection_rules([], ["^photologue\.models\.TagField"])
