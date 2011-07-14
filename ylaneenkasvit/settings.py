@@ -63,7 +63,7 @@ GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
 DATE_FORMAT = 'Y-m-d'
 
 SOUTH_MIGRATION_MODULES = {
-    'photologue': 'ylaneenkasvit.migrations.photologue',
+    'photologue': 'ylaneenkasvit.external_migrations.photologue',
 }
 
 DEBUG = False
