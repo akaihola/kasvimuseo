@@ -16,6 +16,7 @@ DATABASES = {'default': {
     'PASSWORD': '***REMOVED***'}}
 
 LANGUAGE_CODE = 'fi'
+TIME_ZONE = 'Europe/Helsinki'
 
 INSTALLED_APPS = (
     'ylaneenkasvit',  # for fixtures
