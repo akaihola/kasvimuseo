@@ -72,7 +72,8 @@ class SpeciesAdmin(admin.ModelAdmin):
         'flowering_time',
         'lighting',
         'substrate',
-        'additional_info',)
+        'additional_info',
+        'photo',)
     list_filter = 'type',
     fieldsets = (None,
                  {'fields': ('external_id',
@@ -91,7 +92,8 @@ class SpeciesAdmin(admin.ModelAdmin):
                              'flowering_end',
                              'lighting',
                              'substrate',
-                             'additional_info',)}),
+                             'additional_info',
+                             'photo',)}),
     actions = [planted_species_report]
 
     class Media:

@@ -103,6 +103,9 @@ class Species(models.Model):
     additional_info = models.TextField(
         verbose_name=_(u'additional information'),
         blank=True)
+    photo = models.ForeignKey(
+        'photologue.Photo',
+        null=True, blank=True)
 
     def __unicode__(self):
         return self.name_fi
