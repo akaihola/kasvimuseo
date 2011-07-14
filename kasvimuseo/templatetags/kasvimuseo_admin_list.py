@@ -7,7 +7,7 @@ from django.contrib.admin.views.main import (
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template import Library
-from django.utils.encoding import smart_unicode, force_unicode
+from django.utils.encoding import smart_str, smart_unicode, force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 
@@ -22,9 +22,9 @@ def identifier_for_field(name, model, model_admin=None):
         return name
     except models.FieldDoesNotExist:
         if name == "__unicode__":
-            return force_unicode(model._meta.verbose_name)
+            return force_unicode(model._meta.module_name)
         elif name == "__str__":
-            return smart_str(model._meta.verbose_name)
+            return smart_str(model._meta.module_name)
         else:
             if callable(name):
                 attr = name
