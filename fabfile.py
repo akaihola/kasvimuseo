@@ -1,10 +1,13 @@
 from fabric.api import env, task
 from ambideploy import (bootstrap,
                         clone_db,
+                        configure_nginx,
+                        collectstatic,
                         install_django,
                         install_project,
                         migrate,
                         restart_django,
+                        syncdb,
                         update)
 
 
