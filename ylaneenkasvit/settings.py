@@ -15,6 +15,7 @@ DATABASES = {'default': {
 LANGUAGE_CODE = 'fi'
 
 INSTALLED_APPS = (
+    'ylaneenkasvit',  # for fixtures
     'kasvimuseo',
 
     'grappelli.dashboard',
