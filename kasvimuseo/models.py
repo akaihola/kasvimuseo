@@ -477,7 +477,6 @@ add_introspection_rules([], ["^photologue\.models\.TagField"])
 def autoconnect_photo_to_species(sender, instance, **kwargs):
     if sender != Photo:
         return
-    import ipdb;ipdb.set_trace()  ## DEBUG
     title_parts = instance.title.split()
     if not title_parts:
         return instance
