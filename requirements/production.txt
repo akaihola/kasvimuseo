@@ -3,3 +3,4 @@ django-grappelli==2.3.3
 django-sentry
 gunicorn
 south
+django-photologue==2.3

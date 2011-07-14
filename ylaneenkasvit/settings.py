@@ -30,6 +30,8 @@ INSTALLED_APPS = (
 
     'indexer',
     'paging',
+    'photologue',
+
     'sentry',
     'sentry.client',
 )
