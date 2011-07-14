@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
@@ -6,6 +7,10 @@ from django.utils.translation import ugettext_lazy as _
 from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
 from kasvimuseo.views import PlantedSpecies
+
+
+ADMIN_CSS_PATH = '%scss/kasvimuseo.admin.css' % settings.STATIC_URL
+CSS = {'all': (ADMIN_CSS_PATH,)}
 
 
 def edit(instance):
@@ -90,8 +95,7 @@ class SpeciesAdmin(admin.ModelAdmin):
     actions = [planted_species_report]
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Species, SpeciesAdmin)
 
 
@@ -114,8 +118,7 @@ class LocationAdmin(admin.ModelAdmin):
                     )
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Location, LocationAdmin)
 
 
@@ -134,8 +137,7 @@ class PlantingAdmin(admin.ModelAdmin):
     list_filter = 'observation__origin', 'bed', 'planting_date',
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Planting, PlantingAdmin)
 
 
@@ -176,8 +178,7 @@ class ObservationAdmin(admin.ModelAdmin):
                    'classes': ()}))
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Observation, ObservationAdmin)
 
 
@@ -200,8 +201,7 @@ class CareAdmin(admin.ModelAdmin):
                                     u'myynti jne.')}),)
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Care, CareAdmin)
 
 
@@ -239,8 +239,7 @@ class ContactAdmin(admin.ModelAdmin):
     )
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Contact, ContactAdmin)
 
 
@@ -250,8 +249,7 @@ class PlotAdmin(admin.ModelAdmin):
     save_on_top = True
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Plot, PlotAdmin)
 
 
@@ -260,6 +258,5 @@ class BedAdmin(admin.ModelAdmin):
     save_on_top = True
 
     class Media:
-        css = {'all': ('/media/kasvimuseo/css/kasvimuseo.admin.css',)}
-
+        css = CSS
 admin.site.register(Bed, BedAdmin)

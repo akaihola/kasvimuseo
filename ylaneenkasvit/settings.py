@@ -2,7 +2,8 @@
 
 import os
 
-PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
+PROJECT_ROOT = '/www/ylaneenkasvit'
+here = lambda *args: os.path.join(os.path.dirname(__file__), *args)
 
 DATABASES = {'default': {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -22,6 +23,7 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.staticfiles',
 
     'gunicorn',
     'south',
@@ -37,19 +39,24 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
-    #'django.core.context_processors.static',
+    'django.core.context_processors.static',
     'django.core.context_processors.request',
     'django.contrib.messages.context_processors.messages',
 )
 
-TEMPLATE_DIRS = os.path.join(PROJECT_ROOT, 'templates'),
+TEMPLATE_DIRS = (here('templates'),
+                 here('..', 'lib', 'python2.7', 'site-packages',
+                      'photologue', 'templates'))
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
-STATIC_URL = '/media/'
+STATIC_URL = 'http://static.kasvit.ambitone.com/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
+MEDIA_URL = 'http://media.kasvit.ambitone.com'
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
 DATE_FORMAT = 'Y-m-d'
 

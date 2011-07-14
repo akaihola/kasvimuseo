@@ -16,3 +16,11 @@ def kala():
     env.repository = 'nopo.ambitone.com:/var/lib/git/repositories/ylaneenkasvit.git'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
+    env.nginx_root_location_extra = 'client_max_body_size 10m;'
+    env.media_sites = [
+        {'name': 'static',
+         'www_hostnames': ['static.kasvit.ambitone.com'],
+         'root': '{project_root}/src/{project_name}/static/'},
+        {'name': 'media',
+         'www_hostnames': ['media.kasvit.ambitone.com'],
+         'root': '{project_root}/media/'}]
