@@ -22,8 +22,7 @@ class PhotoForm(forms.ModelForm):
         if not self.cleaned_data.get('title', u'').strip():
             all_parts = self.cleaned_data['image'].name.split('.')
             parts = [part for part in all_parts
-                     if part.lower() not in (u'jpg', u'jpeg', u'jpe')
-                     and not any(c.isdigit() for c in part)]
+                     if part.lower() not in (u'jpg', u'jpeg', u'jpe')]
             self.cleaned_data['title'] = u' '.join(parts)
         if not self.cleaned_data.get('title_slug', u'').strip():
             self.cleaned_data['title_slug'] = slugify(remove_diacritics(
