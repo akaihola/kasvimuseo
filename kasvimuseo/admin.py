@@ -270,5 +270,8 @@ admin.site.register(Bed, BedAdmin)
 class PhotoAdmin(PhotologuePhotoAdmin):
     form = PhotoForm
 
+    class Media:
+        css = CSS
+
 admin.site.unregister(Photo)
 admin.site.register(Photo, PhotoAdmin)
