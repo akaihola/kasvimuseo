@@ -131,7 +131,7 @@
                                     {# page.species.variety #}
                                 </div>
                             </td>
-                            <td class="photo horizontal"">
+                            <td class="photo {% if page.species.photo.image.width > page.species.photo.image.height %}horizontal{% else %}vertical{% endif %}">
                                 <img src="{{ page.species.photo.get_display_url }}" />{# low rez #}
                                 <!-- img src="{{ page.species.photo.image.url }}" / -->{# original rez #}
                             </td>
