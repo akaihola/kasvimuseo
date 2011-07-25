@@ -88,11 +88,8 @@
                 font-family: sans-serif;
                 font-size: .75em;
             }
-            .species {
-                page-break-before: always;
-                height: 54em;
-                /* border: solid black 1px; */
-            }
+            .species { page-break-before: always; }
+            .species:first-child { page-break-before: avoid; }
             img { height: auto; }
             td.photo {
                 width: 16em;
@@ -109,6 +106,7 @@
             <a href="{{ next }}">Jatka »</a>
         </nav>
         {% endif %}{# next #}
+        <article>
         {% for page in pages %}
             <div class="species">
                 <table class="header">
@@ -264,5 +262,6 @@
                 </div>
             </div>{# .species #}
         {% endfor %}{# page in pages #}
+        </article>
     </body>
 </html>
