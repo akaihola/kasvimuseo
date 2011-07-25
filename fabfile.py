@@ -9,7 +9,8 @@ from ambideploy import (bootstrap,
                         migrate,
                         restart_django,
                         syncdb,
-                        update)
+                        update,
+                        update_code)
 
 
 @task
