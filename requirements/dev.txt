@@ -1,2 +1,3 @@
 django-extensions
 -e git+git://fabfile.org/fabric.git#egg=fabric
+django-pserver
