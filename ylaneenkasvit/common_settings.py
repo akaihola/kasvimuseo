@@ -14,7 +14,7 @@ MANAGERS = ADMINS
 # specify database NAME, USER and PASSWORD in site specific settings
 DATABASES = {'default': {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    'HOST': 'localhost'}}
+    'HOST': '/var/run/postgresql'}}
 
 LANGUAGE_CODE = 'fi'
 TIME_ZONE = 'Europe/Helsinki'
