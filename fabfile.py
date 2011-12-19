@@ -20,14 +20,16 @@ from djangodeploy import (bootstrap,
 def kala():
     env.hosts = ['kala.ambitone.com']
     env.project_root = '/www/ylaneenkasvit'
+    env.site_root = '/www/ylaneenkasvit'
     env.project_name = 'ylaneenkasvit'
     env.www_hostnames = ['kasvit.ambitone.com']
-    env.django_port = 25121
+    env.wsgi_port = 25121
     env.repository = 'nopo.ambitone.com:/var/lib/git/repositories/ylaneenkasvit.git'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
     env.nginx_root_location_extra = 'client_max_body_size 10m;'
     env.gunicorn_timeout = 240
+    env.django_settings_module = 'ylaneenkasvit.ylaneenkasvit_settings'
     env.media_sites = [
         {'name': 'ylaneenkasvit-static',
          'www_hostnames': ['static.kasvit.ambitone.com'],
