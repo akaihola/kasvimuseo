@@ -1,0 +1,29 @@
+{% extends "jqm/simple.html" %}
+{% block title %}Istutetut kasvit{% endblock %}
+{% block content %}
+    <ul data-role="listview" 
+        data-theme="c"
+        data-dividertheme="b"
+        Xdata-filter="true"
+        Xdata-filter-placeholder="Etsi kasvin nimellä..." 
+        Xdata-filter-theme="b"
+        
+>
+        {% for species in object_listX %}
+            <li>
+                    <a href="{% url planted-species-compact species_external_ids=species.external_id %}">
+                <img src="{{ species.photo.get_mobilethumbnail_url }}" />
+                <h1>
+                        {{ species.name_fi }}
+                </h1>
+                <p>
+                    {{ species.genus }}
+                    {{ species.group }}
+                    {{ species.species }}
+                    {{ species.subspecies }}
+                </p>
+                    </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

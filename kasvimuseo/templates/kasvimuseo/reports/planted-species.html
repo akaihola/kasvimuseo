@@ -1,267 +1,155 @@
-<!doctype html>
+{% extends base_template %}
 {% load lightings months %}
-<html>
-    <head>
-        <style type="text/css">
-            @media screen {
-                html {
-                    font-size: 21px;
-                }
-                body {
-                    background: #d6d6d6;
-                    background: -moz-linear-gradient(top, #333, #d6d6d6);
-                    background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#d6d6d6));
-                    background: -o-linear-gradient(top, #333, #d6d6d6);
-                }
-                nav, .species {
-                    box-shadow: 2px 2px 7px #444;
-                    -moz-box-shadow: 2px 2px 7px #444;
-                    -webkit-box-shadow: 2px 2px 7px #444;
-                    margin: 2em -2em;
-                    padding: 2em;
-                }
-                nav {
-                    background: #666;
-                    text-align: right;
-                }
-                nav a {
-                    text-decoration: none;
-                    color: #000;
-                }
-                nav a:hover {
-                    text-decoration: underline;
-                    color: #333;
-                }
-                .species {
-                    background: #fff;
-                }
-            }
-
-            @media print {
-                nav { display: none; }
-                .species { padding-top: 4em; }
-                html { font-size: 12pt; }
-            }
-
-            body {
-                width: 42.51968503937008em; /* 18cm@12pt */
-                margin: auto;
-            }
-
-            h2 { margin-top: 1.5em; }
-            table { border-collapse: collapse; }
-            th, td {
-                vertical-align: top;
-                text-align: left;
-                padding: 0;
-            }
-            .scientific-name { font-style: italic; }
-            table.header td.species-name {
-                width: 21em;
-                vertical-align: bottom;
-                font-size: 1.5em;
-            }
-            .finnish-name {
-                text-transform: uppercase;
-                font-weight: bold;
-            }
-            .species-properties th {
-                white-space: nowrap;
-                padding-right: 2em;
-            }
-            table.plantings td, table.plantings th {
-                padding: .5em 1em 0 0;
-                line-height: 1em;
-            }
-            table.plantings td:last-child, table.plantings th:last-child {
-                padding: .5em 0 0 0;
-            }
-            div.external-id {
-                border: solid black 1px;
-                height: 1em;
-                -webkit-border-radius: 1em;
-                -moz-border-radius: 1em;
-                -khtml-border-radius: 1em;
-                border-radius: 1em;
-                text-align: center;
-                padding: 0 .2em .2em .2em;
-                font-family: sans-serif;
-                font-size: .75em;
-            }
-            .species { page-break-before: always; }
-            .species:first-child { page-break-before: avoid; }
-            img { height: auto; }
-            td.photo {
-                width: 16em;
-                text-align: right;
-            }
-            td.photo.horizontal img { width: 21.25984251968504em; /* 9cm@12pt */ }
-            td.photo.vertical img { width: 15.944881889763781em; /* 6.75cm@12pt */ }
-            .public-information { padding-top: 2em; }
-        </style>
-    </head>
-    <body>
-        {% if next %}
-        <nav>
-            <a href="{{ next }}">Jatka »</a>
-        </nav>
-        {% endif %}{# next #}
-        <article>
-        {% for page in pages %}
-            <div class="species">
-                <table class="header">
-                    <tbody>
-                        <tr>
-                            <td class="species-name">
-                                <div class="finnish-name">
-                                    {{ page.species.name_fi }}
-                                </div>
-                                {% if page.local_names %}
-                                    <div class="local-names">
-                                        "{% for name in page.local_names %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
-                                    </div>
-                                {% endif %}
-                                <div class="scientific-name">
-                                    {{ page.species.genus }}
-                                    {{ page.species.group }}
-                                    {{ page.species.species }}
-                                    {{ page.species.subspecies }}
-                                    {# page.species.variety #}
-                                </div>
-                            </td>
-                            <td class="photo {% if page.species.photo.image.width > page.species.photo.image.height %}horizontal{% else %}vertical{% endif %}">
-                                <img src="{{ page.species.photo.get_display_url }}" />{# low rez #}
-                                <!-- img src="{{ page.species.photo.image.url }}" / -->{# original rez #}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="public-information">
-                    <div class="general-information">
-                        <h2>Yleistietoja kasvilajista</h2>
-                        <table class="species-properties">
-                            <tbody>
+{% block species-items %}
+    {% for page in pages %}
+        <div class="species">
+            <div class="header">
+                <div class="species-name">
+                    <div class="finnish-name">
+                        {{ page.species.name_fi }}
+                    </div>
+                    {% if page.local_names %}
+                        <div class="local-names">
+                            "{% for name in page.local_names %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                        </div>
+                    {% endif %}
+                    <div class="scientific-name">
+                        {{ page.species.genus }}
+                        {{ page.species.group }}
+                        {{ page.species.species }}
+                        {{ page.species.subspecies }}
+                        {# page.species.variety #}
+                    </div>
+                </div>
+                <div class="photo {% if page.species.photo.image.width > page.species.photo.image.height %}horizontal{% else %}vertical{% endif %}">
+                    <img src="{{ page.species.photo.get_display_url }}" />{# low rez #}
+                    <!-- img src="{{ page.species.photo.image.url }}" / -->{# original rez #}
+                </div>
+            </div>
+            <div class="public-information">
+                <div class="general-information">
+                    <h2>Yleistietoja kasvilajista</h2>
+                    <table class="species-properties">
+                        <tbody>
+                            <tr>
+                                <th>Kukinnan väri</th>
+                                <td>{{ page.species.flower_color }}&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <th>Kukinta-aika</th>
+                                <td>
+                                    {% if page.species.flowering_start or page.species.flowering_end %}
+                                        {{ page.species.flowering_start|month_name }}{% if page.species.flowering_start != page.species.flowering_end %}–{{ page.species.flowering_end|month_name }}{% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Korkeus</th>
+                                <td>
+                                    {% if page.species.height %}
+                                        {{ page.species.height }} cm
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Taimiväli</th>
+                                <td>
+                                    {% if page.species.spacing %}
+                                        {{ page.species.spacing }} cm
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Valovaatimus</th>
+                                <td>
+                                    {{ page.species.lighting|lighting_name }}&nbsp;
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Kasvualusta</th>
+                                <td>
+                                    {{ page.species.substrate }}&nbsp;
+                                </td>
+                            </tr>
+                            {% if page.species.additional_info %}
                                 <tr>
-                                    <th>Kukinnan väri</th>
-                                    <td>{{ page.species.flower_color }}&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <th>Kukinta-aika</th>
+                                    <th>Lisätietoja</th>
                                     <td>
-                                        {% if page.species.flowering_start or page.species.flowering_end %}
-                                            {{ page.species.flowering_start|month_name }}{% if page.species.flowering_start != page.species.flowering_end %}–{{ page.species.flowering_end|month_name }}{% endif %}
-                                        {% endif %}
+                                        {{ page.species.additional_info }}
                                     </td>
                                 </tr>
-                                <tr>
-                                    <th>Korkeus</th>
-                                    <td>
-                                        {% if page.species.height %}
-                                            {{ page.species.height }} cm
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Taimiväli</th>
-                                    <td>
-                                        {% if page.species.spacing %}
-                                            {{ page.species.spacing }} cm
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Valovaatimus</th>
-                                    <td>
-                                        {{ page.species.lighting|lighting_name }}&nbsp;
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Kasvualusta</th>
-                                    <td>
-                                        {{ page.species.substrate }}&nbsp;
-                                    </td>
-                                </tr>
-                                {% if page.species.additional_info %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="planting-information">
+                    <h2>Kasvi museomäellä</h2>
+                    <table class="plantings">
+                        <thead>
+                            <tr>
+                                <th>Sijainti museomäellä</th>
+                                <th>Istutuspäivä</th>
+                                <th>Alkuperäinen kasvupaikka</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bed in page.beds %}
+                                {% for planting in bed.plantings %}
                                     <tr>
-                                        <th>Lisätietoja</th>
                                         <td>
-                                            {{ page.species.additional_info }}
+                                            {% ifchanged %}
+                                            {{ bed.plot }}/<br />
+                                            {{ bed.name }}
+                                            {% endifchanged %}
+                                        </td>
+                                        <td>
+                                            {{ planting.planting_date|date:"j.n.Y" }}
+                                        </td>
+                                        <td>
+                                            {{ planting.observation.origin }},
+                                            {{ planting.observation.origin.village }}{% if planting.observation.variation %}:<br />
+                                            {{ planting.observation.variation }}{% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="external-id">
+                                                {{ planting.observation.external_id }}
+                                            </div>
                                         </td>
                                     </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="planting-information">
-                        <h2>Kasvi museomäellä</h2>
-                        <table class="plantings">
-                            <thead>
-                                <tr>
-                                    <th>Sijainti museomäellä</th>
-                                    <th>Istutuspäivä</th>
-                                    <th>Alkuperäinen kasvupaikka</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for bed in page.beds %}
-                                    {% for planting in bed.plantings %}
-                                        <tr>
-                                            <td>
-                                                {% ifchanged %}
-                                                {{ bed.plot }}/<br />
-                                                {{ bed.name }}
-                                                {% endifchanged %}
-                                            </td>
-                                            <td>
-                                                {{ planting.planting_date|date:"j.n.Y" }}
-                                            </td>
-                                            <td>
-                                                {{ planting.observation.origin }},
-                                                {{ planting.observation.origin.village }}{% if planting.observation.variation %}:<br />
-                                                {{ planting.observation.variation }}{% endif %}
-                                            </td>
-                                            <td>
-                                                <div class="external-id">
-                                                    {{ planting.observation.external_id }}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}{# planting in bed.plantings #}
-                                {% endfor %}{# bed in page.beds #}
-                            </tbody>
-                        </table>
-                        <dl>
-                        </dl>
-        
-                    </div>
-                    <h2>
-                        Viljelyhistoria ja tarinoita
-                        alkuperäis{{ page.origins|length|pluralize:"e,i" }}ltä
-                        kasvupaik{{ page.origins|length|pluralize:"a,oi" }}lta
-                    </h2>
-                    <dl class="origin-information">
-                        {% for observation in page.planted_observations %}
-                            {% if observation.history or observation.stories %}
-                                <dt>
-                                    {{ page.species.name_fi|title }}{% if observation.variation %},
-                                                           {{ observation.variation }}
-                                                         {% endif %},
-                                    {{ observation.origin.name }},
-                                    {{ observation.origin.village }}
-                                </dt>
-                                {% if observation.history %}
-                                    <dd>{{ observation.history }}</dd>
-                                {% endif %}
-                                {% if observation.stories %}
-                                    <dd>{{ observation.stories }}</dd>
-                                {% endif %}
-                            {% endif %}
-                        {% endfor %}
+                                {% endfor %}{# planting in bed.plantings #}
+                            {% endfor %}{# bed in page.beds #}
+                        </tbody>
+                    </table>
+                    <dl>
                     </dl>
+    
                 </div>
-            </div>{# .species #}
-        {% endfor %}{# page in pages #}
-        </article>
-    </body>
-</html>
+                <h2>
+                    Viljelyhistoria ja tarinoita
+                    alkuperäis{{ page.origins|length|pluralize:"e,i" }}ltä
+                    kasvupaik{{ page.origins|length|pluralize:"a,oi" }}lta
+                </h2>
+                <dl class="origin-information">
+                    {% for observation in page.planted_observations %}
+                        {% if observation.history or observation.stories %}
+                            <dt>
+                                {{ page.species.name_fi|title }}{% if observation.variation %},
+                                                       {{ observation.variation }}
+                                                     {% endif %},
+                                {{ observation.origin.name }},
+                                {{ observation.origin.village }}
+                            </dt>
+                            {% if observation.history %}
+                                <dd>{{ observation.history }}</dd>
+                            {% endif %}
+                            {% if observation.stories %}
+                                <dd>{{ observation.stories }}</dd>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </dl>
+            </div>
+        </div>{# .species #}
+    {% endfor %}{# page in pages #}
+{% endblock %}
