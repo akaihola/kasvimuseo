@@ -37,3 +37,26 @@ def kala():
         {'name': 'ylaneenkasvit-media',
          'www_hostnames': ['media.kasvit.ambitone.com'],
          'root': '{project_root}/media/'.format(**env)}]
+
+
+@task
+def kajala():
+    env.hosts = ['kala.ambitone.com']
+    env.project_root = '/www/ylaneenkasvit'
+    env.site_root = '/www/kajalankasvit'
+    env.project_name = 'kajalankasvit'
+    env.www_hostnames = ['kajalankasvit.ambitone.com']
+    env.django_port = 11110
+    env.db_name = 'kajalankasvit'
+    env.db_user = 'kajalankasvit'
+    env.db_password = '6dofoso11'
+    env.nginx_root_location_extra = 'client_max_body_size 10m;'
+    env.gunicorn_timeout = 240
+    env.django_settings_module = 'ylaneenkasvit.kajala_settings'
+    env.media_sites = [
+        {'name': 'kajalankasvit-static',
+         'www_hostnames': ['static.kajalankasvit.ambitone.com'],
+         'root': '{project_root}/static/'.format(**env)},
+        {'name': 'kajalankasvit-media',
+         'www_hostnames': ['media.kajalankasvit.ambitone.com'],
+         'root': '{site_root}/media/'.format(**env)}]
