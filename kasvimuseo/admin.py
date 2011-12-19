@@ -267,8 +267,15 @@ class BedAdmin(admin.ModelAdmin):
 admin.site.register(Bed, BedAdmin)
 
 
+class SpeciesInline(admin.TabularInline):
+    model = Species
+    verbose_name_plural = _(u'Species to which the photo is attached')
+    fields = 'name_fi',
+
+
 class PhotoAdmin(PhotologuePhotoAdmin):
     form = PhotoForm
+    inlines = SpeciesInline,
 
     class Media:
         css = CSS
