@@ -17,6 +17,7 @@ from ambideploy import (bootstrap,
 def kala():
     env.hosts = ['kala.ambitone.com']
     env.project_root = '/www/ylaneenkasvit'
+    env.site_root = '/www/ylaneenkasvit'
     env.project_name = 'ylaneenkasvit'
     env.www_hostnames = ['kasvit.ambitone.com']
     env.django_port = 25121
