@@ -1,14 +1,23 @@
 from django.conf.urls.defaults import patterns, url
 
-from .views import PlantedSpecies
+from .views import PlantedSpeciesCompact, PlantedSpeciesPrintable, PlantedSpeciesList
 
 
 urlpatterns = patterns(
     'kasvimuseo.views',
 
-    url(regex=(r'^planted-species/'
+    url(regex=(r'^planted-species/$'),
+        view=PlantedSpeciesList.as_view(),
+        name='planted-species-list'),
+
+    url(regex=(r'^planted-species-compact/'
                r'(?P<species_external_ids>[\d,]+)/$'),
-        view=PlantedSpecies.as_view(),
+        view=PlantedSpeciesCompact.as_view(),
+        name='planted-species-compact'),
+
+    url(regex=(r'^planted-species-printable/'
+               r'(?P<species_external_ids>[\d,]+)/$'),
+        view=PlantedSpeciesPrintable.as_view(),
         name='planted-species'),
 
     url(regex=r'^planted-observation/(\d+)/$',

@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{STATIC_URL}}css/planted-species-printable.css">
+    </head>
+    <body class="printable">
+        {% if next %}
+        <nav>
+            <a href="{{ next }}">Jatka »</a>
+        </nav>
+        {% endif %}{# next #}
+        <article>
+            {% block species-items %}{% endblock %}
+        </article>
+    </body>
+</html>

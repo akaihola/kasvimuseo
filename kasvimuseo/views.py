@@ -2,9 +2,19 @@ from collections import defaultdict
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.views.generic.base import TemplateResponseMixin, View
+from django.views.generic import ListView, View
+from django.views.generic.base import TemplateResponseMixin
 
 from kasvimuseo.models import Bed, Observation, Species
+
+
+class PlantedSpeciesList(ListView):
+    template_name = 'kasvimuseo/reports/planted-species-list.html'
+    model = Species
+    queryset = (model.objects
+                .filter(observation__planting__isnull=False)
+                .distinct()
+                .order_by('name_fi'))
 
 
 class PlantedSpecies(TemplateResponseMixin, View):
@@ -12,7 +22,9 @@ class PlantedSpecies(TemplateResponseMixin, View):
 
     def get_context_data(self, queryset):
         return {'pages': [self._get_single_context_data(species)
-                          for species in queryset]}
+                          for species in queryset],
+                'base_template': ('kasvimuseo/reports/%s'
+                                  % self.base_template_name)}
 
     def _get_single_context_data(self, species):
         beds = list(Bed.objects
@@ -46,6 +58,14 @@ class PlantedSpecies(TemplateResponseMixin, View):
         if 'HTTP_REFERER' in request.META:
             context['next'] = request.META['HTTP_REFERER']
         return self.render_to_response(context)
+
+
+class PlantedSpeciesPrintable(PlantedSpecies):
+    base_template_name = 'planted-species-base-printable.html'
+
+
+class PlantedSpeciesCompact(PlantedSpecies):
+    base_template_name = 'planted-species-base-compact.html'
 
 
 def planted_observation(request, observation_external_id):
