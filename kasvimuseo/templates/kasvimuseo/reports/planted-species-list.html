@@ -32,7 +32,7 @@
     <script type="text/javascript">
         $(window).load(function() {
             var pageHeight = $('.ui-page').height() + 'px';
-            //parent.postMessage({plantedSpeciesIframeHeight: pagHeight}, '*');
+            parent.postMessage({plantedSpeciesIframeHeight: pagHeight}, '*');
         });
     </script>
 {% endblock sitescripts %}
