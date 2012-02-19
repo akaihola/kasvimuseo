@@ -1,5 +1,32 @@
 {% extends "jqm/simple.html" %}
 
+{% block sitestyle %}
+<style>
+    .ui-li-heading {
+        margin-top: 0.3em;
+        margin-bottom: 0.4em;
+    }
+    .ui-li .ui-btn-inner a.ui-link-inherit, .ui-li-static.ui-li {
+        padding-top: 0px;
+        padding-bottom: 0px;
+        min-height: 43px;
+    }
+</style>
+{% endblock sitestyle %}
+
+{% block jqm-custom-scripting %}
+    {{ block.super }}
+    <script type="text/javascript">
+        $(document).bind("mobileinit", function () {
+            $.mobile.listview.prototype.options.theme = "c";
+            $.mobile.listview.prototype.options.dividerTheme = "b";
+            $.mobile.listview.prototype.options.headerTheme = "e";
+            $.mobile.page.prototype.options.addBackBtn = true;
+            $.mobile.page.prototype.options.backBtnText = "takaisin";
+        });
+    </script>
+{% endblock %}
+
 {% block sitescripts %}
     {{ block.super }}
     <script type="text/javascript">
@@ -12,20 +39,16 @@
 
 {% block title %}Istutetut kasvit{% endblock %}
 {% block content %}
-    <ul data-role="listview" 
-        data-theme="c"
-        data-dividertheme="b"
+    <ul data-role="listview"
         Xdata-filter="true"
-        Xdata-filter-placeholder="Etsi kasvin nimellä..." 
-        Xdata-filter-theme="b"
-        
->
+        Xdata-filter-placeholder="Etsi kasvin nimellä..."
+        Xdata-filter-theme="b">
         {% for species in object_list %}
             <li>
-                    <a href="{% url planted-species-compact species_external_ids=species.external_id %}">
+                <a href="{% url planted-species-compact species_external_ids=species.external_id %}">
                 <img src="{{ species.photo.get_mobilethumbnail_url }}" />
                 <h1>
-                        {{ species.name_fi }}
+                    {{ species.name_fi }}
                 </h1>
                 <p>
                     {{ species.genus }}
