@@ -1,19 +1,19 @@
 from fabric.api import env, task
-from djangodeploy import (bootstrap,
-                          clone_db,
-                          configure_nginx,
-                          configure_postgresql,
-                          configure_supervisor,
-                          collectstatic,
-                          create_db,
-                          create_db_user,
-                          install_django,
-                          install_project,
-                          migrate,
-                          restart_django,
-                          syncdb,
-                          update,
-                          update_code)
+from flax import (bootstrap,
+                  clone_db,
+                  configure_nginx,
+                  configure_postgresql,
+                  configure_supervisor,
+                  collectstatic,
+                  create_db,
+                  create_db_user,
+                  install_django,
+                  install_project,
+                  migrate,
+                  restart_django,
+                  syncdb,
+                  update,
+                  update_code)
 
 
 @task
