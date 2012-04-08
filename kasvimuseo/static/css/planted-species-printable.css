@@ -43,6 +43,10 @@ body.printable {
     margin: auto;
 }
 
+.navbar-species-name {
+    color: #888;
+}
+
 .header {
     -webkit-box-shadow: 1px 1px 10px #000;
     border: solid black 1px;

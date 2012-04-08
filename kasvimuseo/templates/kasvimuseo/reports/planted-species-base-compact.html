@@ -6,17 +6,42 @@
 {% endblock %}
 
 {% block jqmheader %}
-    <div data-role="navbar">
+    <div data-role="navbar" data-iconpos="left">
         <ul>
-            <li><a href="#" 
-                   data-icon="arrow-l"
-                   data-theme="a">{% trans 'Previous' %}</a></li>
-            <li><a href="#" 
+            <li>
+                {% if pages.0.previous %}
+                    <a href="{% url planted-species-compact species_external_ids=pages.0.previous.external_id %}" 
+                       data-icon="arrow-l"
+                       data-theme="a">
+                        {% trans 'Previous' %}
+                        <br />
+                        <span class="navbar-species-name">
+                            ({{ pages.0.previous.name_fi }})
+                        </span>
+                    </a>
+                {% endif %}
+            </li>
+
+            <li><a href="{% url planted-species-list %}" 
                    data-icon="arrow-u"
-                   data-theme="a">{% trans 'All Species' %}</a></li>
-            <li><a href="#" 
-                   data-icon="arrow-r"
-                   data-theme="a">{% trans 'Next' %}</a></li>
+                   data-theme="a">
+                    {% trans 'All Species' %}
+                    <br />
+                    &nbsp;
+            </a></li>
+            <li>
+                {% if pages.0.next %}
+                    <a href="{% url planted-species-compact species_external_ids=pages.0.next.external_id %}" 
+                       data-icon="arrow-r"
+                       data-theme="a">
+                        {% trans 'Next' %}
+                        <br />
+                        <span class="navbar-species-name">
+                            ({{ pages.0.next.name_fi }})
+                        </span>
+                    </a>
+                {% endif %}
+            </li>
         </ul>
     </div>
 {% endblock jqmheader %}
