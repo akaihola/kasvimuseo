@@ -49,7 +49,11 @@ body.printable {
 
 .header {
     -webkit-box-shadow: 1px 1px 10px #000;
+    -moz-box-shadow: 1px 1px 10px #000;
+    -o-box-shadow: 1px 1px 10px #000;
+    -ms-box-shadow: 1px 1px 10px #000;
     border: solid black 1px;
+    background: #f8f8f8;
 }
 
 .header.horizontal { width: 352px; }
