@@ -12,8 +12,7 @@ class PlantedSpeciesList(ListView):
     template_name = 'kasvimuseo/reports/planted-species-list.html'
     model = Species
     queryset = (model.objects
-                .filter(observation__planting__isnull=False,
-                        observation__planting__bed__public=True)
+                .public_planted()
                 .distinct()
                 .order_by('name_fi'))
 
@@ -48,11 +47,23 @@ class PlantedSpecies(TemplateResponseMixin, View):
             if observation.nickname:
                 local_names.append(observation.nickname)
 
-        return {'species': species,
-                'beds': beds,
-                'origins': origins,
-                'planted_observations': planted_observations,
-                'local_names': local_names}
+        def get_adjacent_species(order, comparison):
+            adjacent_species = list(
+                Species.objects
+                .public_planted()
+                .order_by(order + 'name_fi')
+                .filter(**{'name_fi__' + comparison: species.name_fi}))[:1]
+            if adjacent_species:
+                return adjacent_species[0]
+
+        ctx = {'species': species,
+               'previous': get_adjacent_species('-', 'lt'),
+               'next': get_adjacent_species('', 'gt'),
+               'beds': beds,
+               'origins': origins,
+               'planted_observations': planted_observations,
+               'local_names': local_names}
+        return ctx
 
     def get(self, request, species_external_ids):
         extid_list = species_external_ids.split(',')

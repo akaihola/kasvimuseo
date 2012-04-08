@@ -43,6 +43,14 @@ INT_TO_ROMAN = dict((index + 1, unicode(roman))
                      for index, roman in enumerate(ROMAN_NUMERALS[1:]))
 
 
+class SpeciesManager(models.Manager):
+    def public_planted(self):
+        return (super(SpeciesManager, self)
+                .get_query_set()
+                .filter(observation__planting__isnull=False,
+                        observation__planting__bed__public=True))
+
+
 class Species(models.Model):
     external_id = models.IntegerField(
         verbose_name=_(u'LajiNro'),
@@ -107,6 +115,8 @@ class Species(models.Model):
     photo = models.ForeignKey(
         'photologue.Photo',
         null=True, blank=True)
+
+    objects = SpeciesManager()
 
     def __unicode__(self):
         return self.name_fi
