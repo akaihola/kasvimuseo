@@ -8,7 +8,7 @@
         background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#d6d6d6));
         background: -o-linear-gradient(top, #333, #d6d6d6);
     }
-    .printable nav, .species {
+    .printable nav, .printable .species {
         box-shadow: 2px 2px 7px #444;
         -moz-box-shadow: 2px 2px 7px #444;
         -webkit-box-shadow: 2px 2px 7px #444;
