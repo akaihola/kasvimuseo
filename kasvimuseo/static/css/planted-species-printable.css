@@ -50,8 +50,10 @@ body.printable {
 .header {
     -webkit-box-shadow: 1px 1px 10px #000;
     border: solid black 1px;
-    width: 352px;
 }
+
+.header.horizontal { width: 352px; }
+.header.vertical { width: 264px; }
 
 .header .species-name {
     padding: .5em;
@@ -119,6 +121,6 @@ div.external-id {
     width: 16em;
     text-align: right;
 }
-.printable .photo.horizontal img { width: 21.25984251968504em; /* 9cm@12pt */ }
-.printable .photo.vertical img { width: 15.944881889763781em; /* 6.75cm@12pt */ }
+.printable .header.horizontal .photo img { width: 21.25984251968504em; /* 9cm@12pt */ }
+.printable .header.vertical .photo img { width: 15.944881889763781em; /* 6.75cm@12pt */ }
 .printable .public-information { padding-top: 2em; }

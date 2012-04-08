@@ -9,7 +9,7 @@
         data-filter-theme="b">
 
         <div class="species">
-            <table class="header">
+            <table class="header {% if species.photo.image.width > species.photo.image.height %}horizontal{% else %}vertical{% endif %}">
                 <tbody>
                     <tr>
                         <td class="species-name">
@@ -29,7 +29,7 @@
                                 {# species.variety #}
                             </div>
                         </td>
-                        <td class="photo {% if species.photo.image.width > species.photo.image.height %}horizontal{% else %}vertical{% endif %}">
+                        <td class="photo">
                             <img src="{{ species.photo.get_display_url }}" />{# low rez #}
                             <!-- img src="{{ species.photo.image.url }}" / -->{# original rez #}
                         </td>
