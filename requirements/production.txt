@@ -3,5 +3,5 @@ django-grappelli==2.3.3
 -e git+git://github.com/akaihola/django-jqm.git@1.1.0-rc.2#egg=django_jqm
 django-sentry==1.8.6.2
 gunicorn==0.14.2
-south
+south==0.7.4
 django-photologue==2.3
