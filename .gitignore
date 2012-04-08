@@ -7,6 +7,7 @@
 *.pyc
 /media
 /original_data
+/share
 /static
 /src
 *.org
