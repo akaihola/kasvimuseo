@@ -29,7 +29,8 @@ class PlantedSpecies(TemplateResponseMixin, View):
 
     def _get_single_context_data(self, species):
         beds = list(Bed.objects
-                    .filter(planting__observation__species=species)
+                    .filter(planting__observation__species=species,
+                            public=True)
                     .distinct())
         for bed in beds:
             bed.plantings = (bed.planting_set
