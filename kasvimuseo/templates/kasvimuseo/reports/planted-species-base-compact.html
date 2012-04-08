@@ -11,6 +11,7 @@
             <li>
                 {% if pages.0.previous %}
                     <a href="{% url planted-species-compact species_external_ids=pages.0.previous.external_id %}" 
+                       data-direction="reverse"
                        data-icon="arrow-l"
                        data-theme="a">
                         {% trans 'Previous' %}
