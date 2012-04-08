@@ -361,6 +361,9 @@ class Bed(models.Model):
     description = models.TextField(
         blank=True,
         verbose_name=_(u'description'))
+    public = models.BooleanField(
+        default=False,
+        verbose_name=_(u'public'))
 
     def __unicode__(self):
         if self.plot:
