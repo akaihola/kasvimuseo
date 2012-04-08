@@ -1,7 +1,26 @@
 {% extends "jqm/simple.html" %}
+{% load i18n %}
+
 {% block sitestyle %}
     <link rel="stylesheet" href="{{STATIC_URL}}css/planted-species-printable.css">
 {% endblock %}
+
+{% block jqmheader %}
+    <div data-role="navbar">
+        <ul>
+            <li><a href="#" 
+                   data-icon="arrow-l"
+                   data-theme="a">{% trans 'Previous' %}</a></li>
+            <li><a href="#" 
+                   data-icon="arrow-u"
+                   data-theme="a">{% trans 'All Species' %}</a></li>
+            <li><a href="#" 
+                   data-icon="arrow-r"
+                   data-theme="a">{% trans 'Next' %}</a></li>
+        </ul>
+    </div>
+{% endblock jqmheader %}
+
 {% block title %}Tietoa kasvista{% endblock %}
 {% block content %}
     {% block species-items %}{% endblock %}
