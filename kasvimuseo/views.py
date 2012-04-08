@@ -12,7 +12,8 @@ class PlantedSpeciesList(ListView):
     template_name = 'kasvimuseo/reports/planted-species-list.html'
     model = Species
     queryset = (model.objects
-                .filter(observation__planting__isnull=False)
+                .filter(observation__planting__isnull=False,
+                        observation__planting__bed__public=True)
                 .distinct()
                 .order_by('name_fi'))
 
