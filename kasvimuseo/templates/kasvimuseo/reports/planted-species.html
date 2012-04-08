@@ -135,8 +135,7 @@
                         {% if observation.history or observation.stories %}
                             <dt>
                                 {{ page.species.name_fi|title }}{% if observation.variation %},
-                                                       {{ observation.variation }}
-                                                     {% endif %},
+                                                       {{ observation.variation }}{% endif %},
                                 {{ observation.origin.name }},
                                 {{ observation.origin.village }}
                             </dt>
