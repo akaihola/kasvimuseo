@@ -95,6 +95,20 @@ th {
     white-space: nowrap;
     padding-right: 2em;
 }
+table.plantings th.external-id {
+    text-align: center;
+}
+table.plantings {
+    border-collapse: collapse;
+}
+table.plantings td {
+    padding: 4px 6px;
+}
+table.plantings th {
+    background: #ccc;
+    padding: 6px !important;
+}
+
 .printable table.plantings td, table.plantings th {
     padding: .5em 1em 0 0;
     line-height: 1em;
