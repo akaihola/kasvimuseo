@@ -259,7 +259,7 @@ admin.site.register(Plot, PlotAdmin)
 
 
 class BedAdmin(admin.ModelAdmin):
-    list_display = edit, 'plot', 'name', 'description',
+    list_display = edit, 'plot', 'name', 'description', 'public'
     save_on_top = True
 
     class Media:
