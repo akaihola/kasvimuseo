@@ -43,23 +43,45 @@ body.printable {
     margin: auto;
 }
 
+.header {
+    -webkit-box-shadow: 1px 1px 10px #000;
+    border: solid black 1px;
+    width: 352px;
+}
+
+.header .species-name {
+    padding: .5em;
+}
+.header .species-name .local-names {
+    font-style: italic;
+}
+
 .printable .header { display: table; }
 .printable .header .species-name,
 .printable .header .photo { display: table-cell; }
-.printable h2 { margin-top: 1.5em; }
+h2 {
+    margin-top: 1.5em; 
+    font-size: 16px;
+}
 .printable table { border-collapse: collapse; }
 th, td {
     vertical-align: top;
     text-align: left;
     padding: 0;
+    font-size: 16px;
 }
+th {
+    font-weight: normal;
+    color: #733;
+}
+
 .printable .scientific-name { font-style: italic; }
 .printable .header .species-name {
     width: 21em;
     vertical-align: bottom;
     font-size: 1.5em;
 }
-.printable .finnish-name {
+.finnish-name {
     text-transform: uppercase;
     font-weight: bold;
 }
