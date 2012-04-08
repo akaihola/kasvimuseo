@@ -39,6 +39,7 @@ class PlantedSpecies(TemplateResponseMixin, View):
         planted_observations = list(
             Observation.objects
             .filter(species=species, planting__isnull=False)
+            .order_by('origin__name')
             .distinct())
         origins = set(observation.origin.name
                       for observation in planted_observations)
