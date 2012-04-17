@@ -90,9 +90,12 @@ def result_headers(cl):
                                              cl.model,
                                              model_admin=cl.model_admin)]
         new_order_type = 'asc'
-        if field_name == cl.order_field or admin_order_field == cl.order_field:
-            th_classes.append('sorted %sending' % cl.order_type.lower())
-            new_order_type = {'asc': 'desc', 'desc': 'asc'}[cl.order_type.lower()]
+
+        ## This was broken after updating Django from 1.3.1 to 1.4.
+        ## Find another solution.
+        # if field_name == cl.order_field or admin_order_field == cl.order_field:
+        #     th_classes.append('sorted %sending' % cl.order_type.lower())
+        #     new_order_type = {'asc': 'desc', 'desc': 'asc'}[cl.order_type.lower()]
 
         yield {
             "text": header,
