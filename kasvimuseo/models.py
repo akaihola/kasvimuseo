@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.dates import MONTHS
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
+import operator
 from photologue.models import Photo
 from south.modelsinspector import add_introspection_rules
 
@@ -45,10 +46,36 @@ INT_TO_ROMAN = dict((index + 1, unicode(roman))
 
 class SpeciesManager(models.Manager):
     def public_planted(self):
-        return (super(SpeciesManager, self)
-                .get_query_set()
-                .filter(observation__planting__isnull=False,
-                        observation__planting__bed__public=True))
+        """Returns public currently planted species
+
+        Excludes species with:
+        * no observations
+        * no planted observations
+        * no planted observations which haven't been removed
+
+        """
+        base_qs = super(SpeciesManager, self).get_query_set()
+        all_species = (base_qs
+                       .filter(observation__planting__isnull=False,
+                               observation__planting__bed__public=True)
+                       .prefetch_related(
+                           'observation_set__planting_set__care_set')
+                       .order_by())
+        species_pks = set()
+        for species in all_species:
+            if any(planting.care_set.count() == 0
+                   or planting.last_care_count() > 0
+                   # or sorted(planting.care_set.all(),
+                   #           key=operator.attrgetter('date'),
+                   #           reverse=True)[0].count > 0
+                   for observation in species.observation_set.all()
+                   for planting in observation.planting_set.all()):
+                # At least one planting for an observations of the species
+                # hasn't been removed, i.e. the number (count) of plantings
+                # after the last care operation is non-zero.  Include the
+                # species.
+                species_pks.add(species.pk)
+        return base_qs.filter(pk__in=species_pks)
 
 
 class Species(models.Model):
@@ -405,8 +432,20 @@ class Planting(models.Model):
 
     @property
     def last_care(self):
+        """Returns the last care operation for the planting
+
+        Optimizes by returning from the prefetched objects cache if
+        :meth:`prefetch_related` had been used.
+
+        """
+        if hasattr(self, '_prefetched_objects_cache'):
+            cares = sorted(self.care_set.all(),
+                           key=operator.attrgetter('date'),
+                           reverse=True)
+        else:
+            cares = self.care_set.order_by('-date')
         try:
-            return self.care_set.order_by('-date')[0]
+            return cares[0]
         except IndexError:
             return None
 
