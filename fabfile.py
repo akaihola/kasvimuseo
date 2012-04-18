@@ -25,9 +25,12 @@ def kala():
     env.www_hostnames = ['kasvit.ambitone.com']
     env.wsgi_port = 25121
     env.repository = 'nopo.ambitone.com:/var/lib/git/repositories/ylaneenkasvit.git'
+    env.branch = 'master'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
     env.nginx_root_location_extra = 'client_max_body_size 10m;'
+    env.webserver = 'gunicorn'
+    env.process_control = 'supervisor'
     env.gunicorn_timeout = 240
     env.django_settings_module = 'ylaneenkasvit.ylaneenkasvit_settings'
     env.media_sites = [
