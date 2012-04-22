@@ -6,6 +6,12 @@
           href="{{STATIC_URL}}css/planted-species-printable.css" />
 {% endblock %}
 
+{% block sitescripts %}
+    {{ block.super }}
+    <script type="text/javascript"
+            src="{{ STATIC_URL }}js/kasvimuseo/iframe-height-fix.js"></script>
+{% endblock sitescripts %}
+
 {% block jqmheader %}
     <div data-role="navbar" data-iconpos="left">
         <ul>
