@@ -24,7 +24,7 @@ def kala():
     env.project_name = 'ylaneenkasvit'
     env.www_hostnames = ['kasvit.ambitone.com']
     env.wsgi_port = 25121
-    env.repository = 'nopo.ambitone.com:/var/lib/git/repositories/ylaneenkasvit.git'
+    env.repository = 'nopo.ambitone.com/var/lib/git/repositories/ylaneenkasvit.git'
     env.branch = 'master'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
