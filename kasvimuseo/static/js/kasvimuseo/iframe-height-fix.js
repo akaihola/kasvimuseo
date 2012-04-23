@@ -1,6 +1,6 @@
-$(window).load(function() {
+$(window).on('pagechange', function(event, data) {
     parent.postMessage(
-        {plantedSpeciesIframeHeight: $('.ui-footer').position().top + 'px'},
+        {plantedSpeciesIframeHeight: $('.ui-footer', data.toPage).position().top + 'px'},
         '*'
     );
 });
