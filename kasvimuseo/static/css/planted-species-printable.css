@@ -142,3 +142,13 @@ div.external-id {
 .printable .header.horizontal .photo img { width: 21.25984251968504em; /* 9cm@12pt */ }
 .printable .header.vertical .photo img { width: 15.944881889763781em; /* 6.75cm@12pt */ }
 .printable .public-information { padding-top: 2em; }
+
+.ui-li-heading {
+    margin-top: 0.3em;
+    margin-bottom: 0.4em;
+}
+.ui-li .ui-btn-inner a.ui-link-inherit, .ui-li-static.ui-li {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    min-height: 43px;
+}
