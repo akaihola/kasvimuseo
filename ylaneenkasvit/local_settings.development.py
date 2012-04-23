@@ -12,12 +12,12 @@ def modify(settings):
     db['HOST'] = os.path.join(os.path.dirname(__file__), '..', 'db')
     db['NAME'] = 'ylaneenkasvit'
 
-    settings['INSTALLED_APPS'] += 'pserver', 'django_extensions',
+    #settings['INSTALLED_APPS'] += 'pserver', 'django_extensions',
 
 
-#PROJECT_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-#STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
-#STATIC_URL = 'http://static.kasvit.local/'
+PROJECT_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATIC_URL = '/static/'
 #ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 #MEDIA_URL = 'http://media.kasvit.local'
 #MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
