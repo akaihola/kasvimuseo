@@ -1,4 +1,4 @@
-document.write('<iframe src="http://kasvit.ambitone.com/kasvimuseo/planted-species/" width="547px" height="10000px" scrolling="no" id="kasvit-iframe" style="border: none;"></iframe>');
+document.write('<iframe src="http://kasvit.ambitone.com/kasvimuseo/planted-species/" width="547px" height="10000px" frameborder="0" scrolling="no" id="kasvit-iframe" style="border: none;"></iframe>');
 
 (function() { 
     var getTop = function(elem) {
