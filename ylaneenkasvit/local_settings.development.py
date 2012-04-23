@@ -18,6 +18,5 @@ def modify(settings):
 PROJECT_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
-#ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
-#MEDIA_URL = 'http://media.kasvit.local'
-#MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
+MEDIA_URL = '/media/'
