@@ -1,3 +1,5 @@
+# FIXME: action selection doesn't work in admin!
+
 from django.conf import settings
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -77,6 +79,7 @@ class SpeciesAdmin(admin.ModelAdmin):
         'substrate',
         'additional_info',
         'photo',)
+    # FIXME: filtering doesn't work
     list_filter = 'type',
     fieldsets = (None,
                  {'fields': ('external_id',
@@ -97,6 +100,7 @@ class SpeciesAdmin(admin.ModelAdmin):
                              'substrate',
                              'additional_info',
                              'photo',)}),
+    # FIXME: action selection doesn't work
     actions = [planted_species_report]
 
     class Media:
@@ -139,6 +143,7 @@ class PlantingAdmin(admin.ModelAdmin):
                     'last_care_description',
                     'last_care_count',
                     'removal_date',)
+    # FIXME: filtering doesn't work
     list_filter = 'observation__origin', 'bed', 'planting_date',
 
     class Media:
@@ -164,6 +169,7 @@ class ObservationAdmin(admin.ModelAdmin):
                     'pictures',
                     'notes',
                     'environment',)
+    # FIXME: filtering doesn't work
     list_filter = 'origin', 'species__type', 'date',
     fieldsets = ((_(u'Basic information'),
                   {'fields': ('external_id',
@@ -194,6 +200,7 @@ class CareAdmin(admin.ModelAdmin):
                     'planting',
                     'description',
                     'count',)
+    # FIXME: filtering doesn't work
     list_filter = 'planting__bed', 'date',
     fieldsets = ((None,
                   {'fields': ('planting', 'date', 'description', 'count',),
