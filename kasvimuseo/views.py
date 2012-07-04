@@ -11,6 +11,8 @@ from kasvimuseo.models import Bed, Observation, Species
 class PlantedSpeciesList(ListView):
     template_name = 'kasvimuseo/reports/planted-species-list.html'
     model = Species
+
+    # FIXME: .public-planted() is evaluated at import time!
     queryset = (model.objects
                 .public_planted()
                 .distinct()
