@@ -10,6 +10,7 @@
 /share
 /static
 /src
+/venv32
 *.org
 *.sqlite
 /ipy_conf.py
