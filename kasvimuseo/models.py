@@ -470,6 +470,10 @@ class Planting(models.Model):
             return u''
     last_care_count.short_description = _('count after care')
 
+    def observation_external_id(self):
+        return self.observation.external_id
+    observation_external_id.short_description = _(u'YläneNro')
+
     class Meta:
         verbose_name = _(u'planting')
         verbose_name_plural = _(u'plantings')

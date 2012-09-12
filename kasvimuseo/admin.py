@@ -135,6 +135,7 @@ class PlantingAdmin(admin.ModelAdmin):
     inlines = [CareInline]
     save_on_top = True
     list_display = (edit,
+                    'observation_external_id',
                     'observation',
                     'bed',
                     'planting_date',
