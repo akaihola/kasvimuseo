@@ -15,8 +15,16 @@ class PlantedSpeciesList(ListView):
     template_name = 'kasvimuseo/reports/planted-species-list.html'
     model = Species
 
-    # FIXME: .public-planted() is evaluated at import time!
-    queryset = (model.objects
+    def get_queryset(self):
+        """Returns public planted species ordered by Finnish name
+
+        The :meth:`get_queryset` method is used instead of the ``queryset``
+        attribute, because
+        :meth:`kasvimuseo.models.SpeciesManager.public_planted` is not lazy and
+        needs to be evaluated every time.
+
+        """
+        return (self.model.objects
                 .public_planted()
                 .distinct()
                 .order_by('name_fi'))
