@@ -53,6 +53,8 @@ class SpeciesManager(models.Manager):
         * no planted observations
         * no planted observations which haven't been removed
 
+        NB! This evaluates the queryset!
+
         """
         base_qs = super(SpeciesManager, self).get_query_set()
         all_species = (base_qs
