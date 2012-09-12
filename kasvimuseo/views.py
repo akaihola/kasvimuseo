@@ -1,5 +1,8 @@
-from collections import defaultdict
-from django.core.urlresolvers import reverse
+# pylint: disable=E1101
+#         Instance has no 'X' method/attribute
+# pylint: disable=W0142
+#         Used * or ** magic
+
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.views.generic import ListView, View
