@@ -1,10 +1,14 @@
 from django.conf.urls.defaults import patterns, url
 
-from .views import PlantedSpeciesCompact, PlantedSpeciesPrintable, PlantedSpeciesList
+from .views import (
+    BedMap, PlantedSpeciesCompact, PlantedSpeciesPrintable, PlantedSpeciesList)
 
 
 urlpatterns = patterns(
     'kasvimuseo.views',
+
+    # pylint: disable=E1101
+    #         Instance of <class> has no <member>
 
     url(regex=(r'^planted-species/$'),
         view=PlantedSpeciesList.as_view(),
@@ -23,4 +27,8 @@ urlpatterns = patterns(
     url(regex=r'^planted-observation/(\d+)/$',
         view='planted_observation',
         name='planted-observation'),
+
+    url(regex=r'^map/(?P<pk>\d+)/$',
+        view=BedMap.as_view(),
+        name='bed-map'),
 )

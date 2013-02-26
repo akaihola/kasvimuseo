@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
 from django.views.generic import ListView, View
 from django.views.generic.base import TemplateResponseMixin
+from django.views.generic.detail import DetailView
 
 from kasvimuseo.models import Bed, Observation, Species
 
@@ -115,3 +116,12 @@ def planted_observation(request, observation_external_id):
          'origin': observation.origin,
          'texts': texts},
         RequestContext(request))
+
+
+class BedMap(DetailView):
+    model = Bed
+    template_name = 'kasvimuseo/bed-map.html'
+
+    def get_context_data(self, **kwargs):
+        return super(BedMap, self).get_context_data(
+            bed_depth=40, **kwargs)

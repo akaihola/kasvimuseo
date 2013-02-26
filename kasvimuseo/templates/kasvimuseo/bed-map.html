@@ -1,0 +1,68 @@
+<!doctype html>
+{% load bush %}
+<html>
+    <head>
+        <style type="text/css" media="screen">
+            article {
+                font-size: 4px;
+            }
+
+            ul {
+                position: relative;
+            }
+
+            li {
+                position: absolute;
+                list-style: none;
+            }
+
+            li span.name, li span.point-symbol {
+                font-size: 16px;
+            }
+
+            li span.name {
+                position: absolute;
+                top: 0;
+            }
+
+            li span.point {
+                display: table-cell;
+                vertical-align: middle;
+                text-align: center;
+            }
+
+            li span.point-symbol {
+                position: relative;
+            }
+
+            li span.bush {
+                background: #0f0;
+                position: absolute;
+                left: 25%;
+                top: 25%;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>{{ object.name }}</h1>
+
+        <article>
+            <ul style="height: {{ bed_depth }}em;">
+                {% for planting in object.planting_set.all %}
+                    <li style="left: {{ planting.distance_left }}em;
+                               bottom: {{ planting.distance_front }}em;">
+                        <span class="bush"
+                              style="{{ planting|bush_shadow }}">&nbsp;
+                        </span>
+                        <span class="point"
+                              style="width: {{ planting.width }}em;
+                                     height: {{ planting.depth }}em;">
+                            <span class="point-symbol">×</span>
+                        </span>
+                        <span class="name">{{ planting.observation.species.name_fi }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
+    </body>
+</html>
