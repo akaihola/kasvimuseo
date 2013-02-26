@@ -277,8 +277,15 @@ admin.site.register(Plot, PlotAdmin)
 
 
 class BedAdmin(admin.ModelAdmin):
-    list_display = edit, 'plot', 'name', 'description', 'public'
+    list_display = edit, 'plot', 'name', 'description', 'public', 'map'
     save_on_top = True
+
+    def map(self, obj):
+        url = reverse('bed-map', kwargs={'pk': obj.pk})
+        label = _(u'map')
+        return u'<a href="{0}">{1}</a>'.format(url, label)
+    map.short_description = _(u'show map')
+    map.allow_tags = True
 
     class Media:
         css = CSS
