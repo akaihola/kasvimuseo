@@ -1,5 +1,6 @@
 -r production.txt
 
 django-extensions
--e git+git://fabfile.org/fabric.git#egg=fabric
+-e git+git@git.ambitone.com:django/django-flax@8cb6c58d293f95e0c030af195d63196837acfa24#egg=flax-dev
 django-pserver
+-e git+git://fabfile.org/fabric.git#egg=fabric

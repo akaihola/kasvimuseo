@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 # FIXME: action selection doesn't work in admin!
 
 from django.conf import settings
@@ -143,9 +145,17 @@ class PlantingAdmin(admin.ModelAdmin):
                     'last_care_date',
                     'last_care_description',
                     'last_care_count',
-                    'removal_date',)
+                    'removal_date',
+                    'coordinates',)
     # FIXME: filtering doesn't work
     list_filter = 'observation__origin', 'bed', 'planting_date',
+
+    def coordinates(self, obj):
+        return u'({0}cm,{1}cm)<br>{0}×{1}cm'.format(
+            obj.distance_left, obj.distance_front,
+            obj.width, obj.depth)
+    coordinates.short_description = _(u'(left,front) width×depth')
+    coordinates.allow_tags = True
 
     class Media:
         css = CSS
