@@ -18,6 +18,7 @@ DATABASES = {'default': {
 
 LANGUAGE_CODE = 'fi'
 TIME_ZONE = 'Europe/Helsinki'
+USE_TZ = True
 
 INSTALLED_APPS = (
     'ylaneenkasvit',  # for fixtures

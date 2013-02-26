@@ -425,6 +425,22 @@ class Planting(models.Model):
         verbose_name=_(u'date of planting'))
     count = models.IntegerField(
         verbose_name=_(u'count'))
+    distance_left = models.IntegerField(
+        default=15,
+        verbose_name=_(u'distance left'),
+        help_text=_(u'distance in cm from the left edge of the bed'))
+    distance_front = models.IntegerField(
+        default=15,
+        verbose_name=_(u'distance front'),
+        help_text=_(u'distance in cm from the front edge of the bed'))
+    width = models.IntegerField(
+        default=15,
+        verbose_name=_(u'width'),
+        help_text=_(u'width of the planting in cm'))
+    depth = models.IntegerField(
+        default=15,
+        verbose_name=_(u'depth'),
+        help_text=_(u'depth of the planting in cm'))
     removal_date = models.DateField(
         null=True, blank=True,
         verbose_name=_(u'date of removal'))
