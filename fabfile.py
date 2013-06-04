@@ -19,6 +19,7 @@ from flax import (bootstrap,
 @task
 def kala():
     env.hosts = ['kala.ambitone.com']
+    env.user = 'akaihola'
     env.project_root = '/www/ylaneenkasvit'
     env.site_root = '/www/ylaneenkasvit'
     env.project_name = 'ylaneenkasvit'
