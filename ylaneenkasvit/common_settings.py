@@ -66,7 +66,7 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 #STATIC_URL = 'http://STATIC_URL/'
 #ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 #GRAPPELLI_ADMIN_TITLE = u'GRAPPELLI_ADMIN_TITLE'
-#MEDIA_URL = 'http://MEDIA_URL'
+#MEDIA_URL = 'http://MEDIA_URL/'
 #MEDIA_ROOT = os.path.join(SITE_ROOT, 'MEDIA_ROOT')
 
 GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
