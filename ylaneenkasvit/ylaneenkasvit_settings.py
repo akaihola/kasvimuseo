@@ -18,7 +18,7 @@ STATIC_URL = 'http://static.kasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
-MEDIA_URL = 'http://media.kasvit.ambitone.com'
+MEDIA_URL = 'http://media.kasvit.ambitone.com/'
 MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')
 
 try:
