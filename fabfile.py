@@ -22,10 +22,12 @@ def kala():
     env.user = 'akaihola'
     env.project_root = '/www/ylaneenkasvit'
     env.site_root = '/www/ylaneenkasvit'
+    env.virtualenv_root = '/www/ylaneenkasvit'
     env.project_name = 'ylaneenkasvit'
     env.www_hostnames = ['kasvit.ambitone.com']
     env.wsgi_port = 25121
     env.repository = 'nopo.ambitone.com/var/lib/git/repositories/ylaneenkasvit.git'
+    env.pip_args = '--no-deps'  # fixes photologue/Pillow problem
     env.branch = 'master'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'
