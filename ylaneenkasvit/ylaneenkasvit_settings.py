@@ -12,6 +12,8 @@ DATABASES['default'].update({
     'USER': 'ylaneenkasvit',
     'PASSWORD': '***REMOVED***'})
 
+SECRET_KEY = '***REMOVED***'
+
 STATIC_URL = 'http://static.kasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
