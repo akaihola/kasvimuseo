@@ -10,6 +10,7 @@
 /share
 /static
 /src
+/venv
 /venv32
 *.org
 *.sqlite
