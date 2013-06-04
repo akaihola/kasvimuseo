@@ -4,3 +4,4 @@ django-extensions
 -e git+git@git.ambitone.com:django/django-flax@8cb6c58d293f95e0c030af195d63196837acfa24#egg=flax-dev
 django-pserver
 Fabric==1.6.0
+Werkzeug==0.8.3
