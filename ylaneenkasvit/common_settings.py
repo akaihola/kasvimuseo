@@ -40,8 +40,7 @@ INSTALLED_APPS = (
     'paging',
     'photologue',
 
-    'sentry',
-    'sentry.client',
+    # TODO: configure raven
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
