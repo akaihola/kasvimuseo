@@ -17,7 +17,7 @@
         <ul>
             <li>
                 {% if pages.0.previous %}
-                    <a href="{% url planted-species-compact species_external_ids=pages.0.previous.external_id %}" 
+                    <a href="{% url "planted-species-compact" species_external_ids=pages.0.previous.external_id %}"
                        data-direction="reverse"
                        data-icon="arrow-l"
                        data-theme="a">
@@ -30,7 +30,7 @@
                 {% endif %}
             </li>
 
-            <li><a href="{% url planted-species-list %}" 
+            <li><a href="{% url "planted-species-list" %}"
                    data-icon="arrow-u"
                    data-theme="a">
                     {% trans 'All Species' %}
@@ -39,7 +39,7 @@
             </a></li>
             <li>
                 {% if pages.0.next %}
-                    <a href="{% url planted-species-compact species_external_ids=pages.0.next.external_id %}" 
+                    <a href="{% url "planted-species-compact" species_external_ids=pages.0.next.external_id %}"
                        data-icon="arrow-r"
                        data-theme="a">
                         {% trans 'Next' %}
