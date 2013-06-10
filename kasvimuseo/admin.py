@@ -147,8 +147,8 @@ class PlantingAdmin(admin.ModelAdmin):
                     'last_care_count',
                     'removal_date',
                     'coordinates',)
-    # FIXME: filtering doesn't work
     list_filter = 'observation__origin', 'bed', 'planting_date',
+    ordering = 'observation__external_id',
 
     def coordinates(self, obj):
         return u'({0}cm,{1}cm)<br>{0}×{1}cm'.format(
