@@ -1,7 +1,7 @@
 if (document.location.search == '?debug=1') {
     document.write('<div id="planted-species-iframe-debug" style="position:absolute;width:233px;height:10em;overflow:scroll;margin-left:-233px;background:#cff;"></div>');
 };
-document.write('<iframe src="http://kasvit.ambitone.com/kasvimuseo/planted-species/" width="547px" height="10000px" frameborder="0" scrolling="no" id="kasvit-iframe" style="border: none;"></iframe>');
+document.write('<iframe src="//kasvit.ambitone.com/kasvimuseo/planted-species/" width="547px" height="10000px" frameborder="0" scrolling="no" id="kasvit-iframe" style="border: none;"></iframe>');
 
 (function() {
     var debug = document.getElementById("planted-species-iframe-debug"),
