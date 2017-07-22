@@ -12,11 +12,11 @@ DATABASES['default'].update({
     'USER': 'kajalankasvit',
     'PASSWORD': '6dofoso11'})
 
-STATIC_URL = 'http://static.kajalankasvit.ambitone.com/'
+STATIC_URL = '//static.kajalankasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Kajalan kasvimaat'
-MEDIA_URL = 'http://media.kajalankasvit.ambitone.com/'
+MEDIA_URL = '//media.kajalankasvit.ambitone.com/'
 MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')
 
 try:

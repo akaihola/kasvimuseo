@@ -14,11 +14,11 @@ DATABASES['default'].update({
 
 SECRET_KEY = ';)bi?F@=#NZO!"kXr`ls7Z,s-,$oPQ"b1ohGZ6O$(!l(uQCn-U\'/HP^d4onE~d+'
 
-STATIC_URL = 'http://static.kasvit.ambitone.com/'
+STATIC_URL = '//static.kasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
-MEDIA_URL = 'http://media.kasvit.ambitone.com/'
+MEDIA_URL = '//media.kasvit.ambitone.com/'
 MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')
 
 try:
