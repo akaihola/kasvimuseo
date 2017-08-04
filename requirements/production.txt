@@ -2,7 +2,7 @@ django==1.5.1
 django-extensions==1.1.1
 django-grappelli==2.4.5
 django-indexer==0.3.0
--e git+git://github.com/akaihola/django-jqm.git@c61563e0d2fe7a26fa662363a59fc521627141cf#egg=django_jqm
+-e git+git://github.com/akaihola/django-jqm.git@6565aff79068caf992e5040a6aed2ecd59e67a9f#egg=django_jqm
 django-paging==0.2.4
 gunicorn==0.17.4
 six==1.3.0
