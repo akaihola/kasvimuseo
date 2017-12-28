@@ -9,7 +9,7 @@ from django.views.generic import ListView, View
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import DetailView
 
-from kasvimuseo.models import Bed, Observation, Species
+from kasvimuseo.models import Bed, Observation, Species, Planting
 
 
 class PlantedSpeciesList(ListView):
@@ -29,6 +29,10 @@ class PlantedSpeciesList(ListView):
                 .public_planted()
                 .distinct()
                 .order_by('name_fi'))
+
+
+class PlantedSpeciesLabels(PlantedSpeciesList):
+    template_name = 'kasvimuseo/reports/planting-labels.html'
 
 
 class PlantedSpecies(TemplateResponseMixin, View):

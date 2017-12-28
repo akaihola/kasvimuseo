@@ -1,8 +1,10 @@
 from django.conf.urls.defaults import patterns, url
 
-from .views import (
-    BedMap, PlantedSpeciesCompact, PlantedSpeciesPrintable, PlantedSpeciesList)
-
+from .views import (BedMap,
+                    PlantedSpeciesCompact,
+                    PlantedSpeciesLabels,
+                    PlantedSpeciesList,
+                    PlantedSpeciesPrintable)
 
 urlpatterns = patterns(
     'kasvimuseo.views',
@@ -13,6 +15,10 @@ urlpatterns = patterns(
     url(regex=(r'^planted-species/$'),
         view=PlantedSpeciesList.as_view(),
         name='planted-species-list'),
+
+    url(regex=r'^planting-labels/$',
+        view=PlantedSpeciesLabels.as_view(),
+        name='planting-label'),
 
     url(regex=(r'^planted-species-compact/'
                r'(?P<species_external_ids>[\d,]+)/$'),
