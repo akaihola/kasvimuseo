@@ -164,6 +164,10 @@ class Species(models.Model):
         return u'%s–%s' % (start, INT_TO_ROMAN[self.flowering_end])
     flowering_time.short_description = _(u'flowering time')
 
+    def nicknames(self):
+        return [observation.nickname
+                for observation in self.observation_set.planted_public()]
+
     class Meta:
         verbose_name = _(u'(one) species')
         verbose_name_plural = _(u'(all) species')
@@ -299,6 +303,41 @@ def get_next_observation_extid():
 get_next_observation_extid = lazy(get_next_observation_extid, unicode)
 
 
+class ObservationManager(models.Manager):
+    use_for_related_fields = True
+
+    def public_planted(self):
+        """Returns public currently planted observations
+
+        Excludes observations with:
+        * no plantings
+        * no plantings which haven't been removed
+
+        NB! This evaluates the queryset!
+
+        """
+        base_qs = super(ObservationManager, self).all()
+        all_observations = (base_qs
+                            .filter(planting__isnull=False,
+                                    planting__bed__public=True)
+                            .prefetch_related('planting_set__care_set')
+                            .order_by())
+        observation_pks = set()
+        for observation in all_observations:
+            if any(not planting.removal_date
+                   and (planting.care_set.count() == 0
+                        or planting.last_care_count() > 0)
+                   # or sorted(planting.care_set.all(),
+                   #           key=operator.attrgetter('date'),
+                   #           reverse=True)[0].count > 0
+                   for planting in observation.planting_set.all()):
+                # At least one planting for the observations hasn't been
+                # removed, i.e. the number (count) of plantings after the last
+                # care operation is non-zero.  Include the observation.
+                observation_pks.add(observation.pk)
+        return base_qs.filter(pk__in=observation_pks)
+
+
 class Observation(models.Model):
     external_id = models.IntegerField(
         null=True, blank=True,
@@ -347,6 +386,8 @@ class Observation(models.Model):
         verbose_name=_(u'Kasvuympäristö'),
         help_text=_(u'Maaperä ja kasvupaikka'),
         blank=True)
+
+    objects = ObservationManager()
 
     def __unicode__(self):
         if self.variation:
