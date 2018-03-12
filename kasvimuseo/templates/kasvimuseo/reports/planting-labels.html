@@ -1,4 +1,4 @@
-{% load kasvimuseo_model_tags %}
+{% load kasvimuseo_model_tags kasvimuseo_photo_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,12 +12,20 @@
             size: A4;
             margin: 0cm;
         }
+        body {
+            margin: 0px;
+            font-family: sans-serif;
+        }
+
+        /* settings form */
         input[type=text] {
             width: 3em;
             margin-right: 1em;
         }
+
+        /* one label */
         li {
-            position: relative;  /* so observation-id can be positioned */
+            position: relative; /* so observation-id can be positioned */
             width: {{ request.GET.width|default:"14cm" }};
             height: {{ request.GET.height|default:"8cm" }};
             list-style: none;
@@ -27,28 +35,42 @@
             page-break-inside: avoid;
             overflow: hidden;
         }
-        li .photo {
+
+        /* photo in label */
+        li.horizontal .photo {
             width: 100%;
             height: 60%;
             margin-bottom: 0.2cm;
+        }
+        li.vertical .photo {
+            height: 100%;
+            margin-bottom: 0;
+            text-align: left;
+            float: left;
         }
         li .photo img {
             max-width: 100%;
             max-height: 100%;
         }
-        body {
-            margin: 0px;
-            font-family: sans-serif;
+        li.horizontal {
+            text-align: center;
         }
         h1, p {
-            text-align: center;
-            margin: 0cm 0;
-            line-height: 110%
+            margin: 0;
+        }
+        li.horizontal h1, li.horizontal p {
+            line-height: 110%;
+        }
+        li.vertical h1, li.vertical p {
+            line-height: 150%;
         }
         .fit-wrapper {
+            /* wrapper around text which will be fit */
             margin: 0 0.3cm;
         }
         h1 {
+            /* Finnish name of the species */
+            display: block;
             text-transform: uppercase;
             font-size: 30pt;
             width: 100%;
@@ -69,13 +91,19 @@
             margin: 0;
         }
         .observation-ids {
+            font-size: 30pt;
+            font-weight: bold;
+        }
+        li.horizontal .observation-ids {
             position: absolute;
             right: 0.5cm;
             text-align: right;
             width: 2cm;
             bottom: 40%;
-            font-size: 30pt;
-            font-weight: bold;
+        }
+        li.vertical .observation-ids {
+            float: right;
+            margin-right: 0.5cm;
         }
     </style>
     <script src="{{ STATIC_URL }}js/kasvimuseo/fitty.min.js"></script>
@@ -90,9 +118,14 @@
 </form>
 <ul>
     {% for species in object_list %}
-        <li>
+        <li class="{{ species.photo|get_photo_orientation }}">
             <p class="observation-ids">
-                {% for external_id in species.observation_set.public_planted|external_ids %}{% if not forloop.first %} {% endif %}{{ external_id }}{% endfor %}
+                {% for external_id in species.observation_set.public_planted|external_ids %}
+                    {% if not forloop.first %}
+                        <br />
+                    {% endif %}
+                    {{ external_id }}
+                {% endfor %}
             </p>
             <div class="photo">
                 <img src="{{ species.photo.get_display_url }}" />
@@ -124,14 +157,37 @@
 </ul>
 </body>
 <script type="text/javascript">
+    var $ = document.querySelectorAll.bind(document);
+    var verticals = $('.vertical');
+    var fixLabel = (label) => {
+        var fitTexts = label.querySelectorAll('.fit-wrapper');
+        var image = label.querySelector('img');
+        var timer = setInterval(() => {
+            if (image.complete && image.naturalWidth > 0) {
+                clearInterval(timer);
+                var photoWrapper = label.querySelector('.photo');
+                var newWidth = `calc(${photoWrapper.offsetWidth}px + 0.3cm)`;
+                console.log(newWidth);
+                for (var fitText of fitTexts) {
+                    fitText.style.marginLeft = newWidth;
+                    fitty(fitText.querySelector('*'));
+                }
+            } else {
+                console.log(`Waiting for ${image}`);
+            }
+        }, 1000);
+    }
+    for (var label of verticals) {
+        fixLabel(label);
+    }
     var fit = function(klass) {
-        var el = document.getElementsByClassName(klass)[0];
+        var el = $(klass)[0];
         var style = window.getComputedStyle(el, null);
         var fontSize = parseFloat(style.getPropertyValue('font-size'));
-        fitty(`.${klass}`, {maxSize: fontSize});
+        fitty(klass, {maxSize: fontSize});
     };
-    fit('name');
-    fit('classification');
-    fit('nicknames');
+    fit('.horizontal .name');
+    fit('.horizontal .classification');
+    //fit('.nicknames');
 </script>
 </html>
