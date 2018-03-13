@@ -181,8 +181,9 @@
                             fitText.style.marginLeft = '0.3cm';
                         }
                         Vue.nextTick(function() {
-                            const el = this,
-                                style = window.getComputedStyle(el, null),
+                            const el = this;
+                            el.style.fontSize = '';
+                            const style = window.getComputedStyle(el, null),
                                 fontSize = parseFloat(style.getPropertyValue('font-size'));
                             fitty(el, {maxSize: fontSize});
                         }, fitText.firstChild);
