@@ -26,12 +26,12 @@
         /* one label */
         li {
             position: relative; /* so observation-id can be positioned */
+            display: inline-block;
             width: {{ request.GET.width|default:"14cm" }};
             height: {{ request.GET.height|default:"8cm" }};
             list-style: none;
             border: solid gray 1px;
-            margin: 0.9cm;
-            float: left;
+            margin: 0.5cm;
             page-break-inside: avoid;
             overflow: hidden;
         }
