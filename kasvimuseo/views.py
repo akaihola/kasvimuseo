@@ -2,13 +2,15 @@
 #         Instance has no 'X' method/attribute
 # pylint: disable=W0142
 #         Used * or ** magic
+import json
 
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.views.generic import ListView, View
+from django.views.generic import ListView, View, FormView
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import DetailView
 
+from kasvimuseo.forms import LabelFormSet
 from kasvimuseo.models import Bed, Observation, Species, Planting
 
 
@@ -29,6 +31,22 @@ class PlantedSpeciesList(ListView):
                 .public_planted()
                 .distinct()
                 .order_by('name_fi'))
+
+    def get_context_data(self, object_list, **kwargs):
+        vue_data = {
+            'object_list': [
+                {'id': species.pk,
+                 'name_fi': species.name_fi,
+                 'photo': species.photo.get_display_url(),
+                 'external_ids': list(species.observation_set.public_planted().values_list('external_id', flat=True)),
+                 'genus': species.genus,
+                 'group': species.group,
+                 'species': species.species,
+                 'subspecies': species.subspecies,
+                 'nicknames': list(species.observation_set.public_planted().values_list('nickname', flat=True))}
+                for species in object_list]}
+        return super(PlantedSpeciesList, self).get_context_data(
+            vue_data=json.dumps(vue_data), object_list=object_list, **kwargs)
 
 
 class PlantedSpeciesLabels(PlantedSpeciesList):
@@ -129,3 +147,16 @@ class BedMap(DetailView):
     def get_context_data(self, **kwargs):
         return super(BedMap, self).get_context_data(
             bed_depth=40, **kwargs)
+
+
+class LabelsEditor(FormView):
+    template_name = 'kasvimuseo/forms/planting-labels-edit.html'
+    form_class = LabelFormSet
+
+    def get_initial(self):
+        plantings = Planting.objects.all()
+        return [{'species': planting.observation.species.name_fi,
+                 'planting': planting.observation.external_id,
+                 'label': planting.label.name,
+                 'photo': planting.label.photo}
+                for planting in plantings]
