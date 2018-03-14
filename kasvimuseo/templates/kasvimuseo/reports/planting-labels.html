@@ -118,10 +118,7 @@
     <script src="{{ STATIC_URL }}js/kasvimuseo/fitty.min.js"></script>
 </head>
 <body>
-    <div id="app"
-         ondragenter="return false"
-         ondragover="return false"
-         v-on:drop="dropNewLabel">
+    <div id="app">
         <form method="GET" action=".">
             <label for="width">Box width:</label>
             <input type="text" placeholder="14cm" name="width">
@@ -129,23 +126,28 @@
             <input type="text" placeholder="8cm" name="height">
             <input type="submit" value="Set box size">
         </form>
-        <ul>
+        <ul id="labels"
+            @dragenter="dragEnterBackground"
+            @dragexit="dragExitBackground"
+            ondragover="return false"
+            @drop="dropNewLabel">
             <li v-for="species in object_list"
                 :data-species-id="species.id"
-                XXv-on:dragenter="dragEnterExternalId"
-                v-on:dragover="dragOverLabel"
-                v-on:drop="dropLabel">
-                <p class="observation-ids">
-                    <template v-for="(external_id, index) in species.external_ids">
-                        <br v-if="index" />
-                        <span draggable="true"
-                              v-on:dragstart="dragStartExternalId">
-                            [[ external_id ]]
-                        </span>
-                    </template>
-                </p>
+                @dragenter="dragEnterLabel"
+                @dragexit="dragExitLabel"
+                @dragover="dragOverLabel"
+                @drop="dropLabel">
+                <div class="observation-ids">
+                    <p v-for="(external_id, index) in species.external_ids"
+                       class="observation-id"
+                       draggable="true"
+                       @dragstart="dragStart"
+                       @dragend="dragEnd">
+                        [[ external_id ]]
+                    </p>
+                </div>
                 <div class="photo">
-                    <img :src="species.photo" v-on:load="photoLoaded" />
+                    <img :src="species.photo" @load="photoLoaded" />
                 </div>
                 <div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}
                     <h1 class="name">
@@ -178,8 +180,6 @@
                     label.className = orientation;
                     if (orientation === 'vertical') {
                         const imgWidth = img.offsetWidth;
-                        //const imgWidth = img.closest('.photo').offsetWidth;
-                        console.log(img.closest('.photo'), imgWidth);
                         newWidth = `calc(${imgWidth}px + 0.3cm)`;
                     }
                     for (let fitText of label.querySelectorAll('.fit-wrapper')) {
@@ -198,39 +198,109 @@
                     }
                 },
                 labelSpeciesId: function(target) {
-                    var label = target.closest('li');
-                    return label.dataset.speciesId;
+                    const label = target.closest('li');
+                    return parseInt(label.dataset.speciesId);
                 },
-                dragMatch: function(event) {
-                    var index = parseInt(event.dataTransfer.getData('text')),
-                        label = document.querySelector(`ul li:nth-child(${index + 1})`),
-                        dragSpeciesId = this.labelSpeciesId(label);
-                    return this.labelSpeciesId(event.target) === dragSpeciesId;
+                setDragData: function(event, index, externalId, speciesId) {
+                    event.dataTransfer.setData('text/plain:index', index);
+                    event.dataTransfer.setData('text/plain:externalId', externalId);
+                    event.dataTransfer.setData('text/plain:speciesId', speciesId);
                 },
-                dragStartExternalId: function(event) {
-                    console.log('dragstart', event);
-                    var label = event.target.closest('li'),
-                        index = this.getElIndex(label);
-                    event.dataTransfer.setData('text/plain', index);
-                    event.dataTransfer.effectAllowed = "copy";
+                getDragData: function(event) {
+                    return {
+                        index: parseInt(event.dataTransfer.getData('text/plain:index')),
+                        externalId: parseInt(event.dataTransfer.getData('text/plain:externalId')),
+                        speciesId: parseInt(event.dataTransfer.getData('text/plain:speciesId'))
+                    };
                 },
-                dragEnterExternalId: function(event) {
-                    if (this.dragMatch(event)) {
+                getLabelData: function(event) {
+                    const node = event.target,
+                        el = (node.nodeType === 1 ? node : node.parentElement),
+                        label = el.closest('li')
+                    return {
+                        index: this.getElIndex(label),
+                        speciesId: parseInt(label.dataset.speciesId)
+                    }
+                },
+                getEventData: function(event) {
+                    return {
+                        drag: this.getDragData(event),
+                        target: this.getLabelData(event)
+                    }
+                },
+                dragMatch: function(target, drag) {
+                    return target.speciesId === drag.speciesId &&
+                        target.index !== drag.index;
+                },
+                dragStart: function(event) {
+                    const index = this.getElIndex(event.target.closest('li')),
+                        externalId = parseInt(event.target.innerHTML),
+                        speciesId = this.labelSpeciesId(event.target);
+                    this.setDragData(event, index, externalId, speciesId);
+                    event.dataTransfer.effectAllowed = "move";
+                    event.target.style.border = 'solid black 1px';
+                    Vue.nextTick(() => {
+                        const externalIds = this.object_list[index].external_ids,
+                            externalIdIndex = externalIds.indexOf(externalId);
+                        externalIds.splice(externalIdIndex, 1);
+                        event.target.style.border = 'none';
+                    });
+                },
+                dragEnd: function(event) {
+                    const drag = this.getDragData(event),
+                        labels = this.object_list;
+                    if (event.dataTransfer.dropEffect === 'none') {
+                        // drag&drop was cancelled, restore the external ID
+                        labels[drag.index].external_ids.push(drag.externalId);
+                    } else if (labels[drag.index].external_ids.length === 0) {
+                        // no external IDs left, remove the label
+                        labels.splice(drag.index, 1);
+                    }
+                },
+                dragEnterBackground: function(event) {
+                    // when an external ID being dragged enters the background
+                    // area, show a "new label" indicator
+                    if (event.target.id === 'labels') {
                         event.preventDefault();
-                        console.log('dragenter', event);
+                        // TODO: show "new label" indicator
+                        event.dropEffect = 'move';
+                    }
+                },
+                dragExitBackground: function(event) {
+                    // when an external ID being dragged exits the background
+                    // area, hide the "new label" indicator
+                    if (event.target.nodeType === 1) {
+                        // TODO: hide "new label" indicator
+                    }
+                },
+                dragEnterLabel: function(event) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        event.preventDefault();
+                        this.object_list[e.target.index].external_ids.push(e.drag.externalId);
+                    }
+                },
+                dragExitLabel: function(event) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        const externalIds = this.object_list[e.target.index].external_ids;
+                        externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
                     }
                 },
                 dragOverLabel: function(event) {
-                    if (this.dragMatch(event)) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
                         event.preventDefault();
-                        // console.log('dragover', event);
                     }
                 },
                 dropLabel: function(event) {
                     event.stopPropagation();
-                    event.preventDefault();
-                    if (this.dragMatch(event)) {
-                        console.log('DROP', event.dataTransfer.getData('text'), 'onto', this.labelSpeciesId(event.target), event);
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        event.preventDefault();
                     }
                 },
                 getElIndex: function(el) {
@@ -239,15 +309,16 @@
                 },
                 dropNewLabel: function(event) {
                     event.preventDefault();
-                    const index = parseInt(event.dataTransfer.getData('text')),
-                        label = document.querySelector(`ul li:nth-child(${index + 1})`),
-                        that = this;
-                    this.object_list.splice(index + 1, 0, this.object_list[index]);
+                    const drag = this.getDragData(event),
+                        that = this,
+                        newLabel = JSON.parse(JSON.stringify(this.object_list[drag.index]));
+                    this.object_list.splice(drag.index + 1, 0, newLabel);
+                    newLabel.external_ids.splice(0);
+                    newLabel.external_ids.push(drag.externalId);
                     Vue.nextTick(function() {
                         that.photoLoaded(
-                            {target: document.querySelector(`ul li:nth-child(${index + 2}) img`)});
+                            {target: document.querySelector(`ul li:nth-child(${drag.index + 2}) img`)});
                     });
-                    console.log('DROP NEW', event, label);
                 }
             },
             data: {{ vue_data|safe }}
