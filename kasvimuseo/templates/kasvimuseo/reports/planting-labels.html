@@ -131,21 +131,9 @@
             @dragexit="dragExitBackground"
             ondragover="return false"
             @drop="dropNewLabel">
-            <li v-for="species in object_list"
-                :data-species-id="species.id"
-                @dragenter="dragEnterLabel"
-                @dragexit="dragExitLabel"
-                @dragover="dragOverLabel"
-                @drop="dropLabel">
-                <observation-ids :ids="species.external_ids"
-                                 v-on:remove-label-at-index="removeLabel"></observation-ids>
-                <photo :url="species.photo"></photo>
-                <name :name="species.name_fi"></name>
-                <classification :genus="species.genus"
-                                :group="species.group"
-                                :species="species.species"
-                                :subspecies="species.subspecies"></classification>
-            </li>
+            <template v-for="species in object_list">
+                <species-label :species="species"></species-label>
+            </template>
         </ul>
     </div>
 
@@ -208,11 +196,8 @@
                         this.ids.push(drag.externalId);
                     } else if (this.ids.length === 0) {
                         // no external IDs left, remove the label
-                        this.$emit('remove-label-at-index', drag.index);
+                        bus.$emit('remove-label-at-index', drag.index);
                     }
-                },
-                removeLabel: function(index) {
-                    this.object_list.splice(index, 1);
                 },
                 dragEnterBackground: function(event) {
                     // when an external ID being dragged enters the background
@@ -235,14 +220,14 @@
                     const e = this.getEventData(event);
                     if (this.dragMatch(e.target, e.drag)) {
                         event.preventDefault();
-                        this.object_list[e.target.index].external_ids.push(e.drag.externalId);
+                        this.species.external_ids.push(e.drag.externalId);
                     }
                 },
                 dragExitLabel: function(event) {
                     event.stopPropagation();
                     const e = this.getEventData(event);
                     if (this.dragMatch(e.target, e.drag)) {
-                        const externalIds = this.object_list[e.target.index].external_ids;
+                        const externalIds = this.species.external_ids;
                         externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
                     }
                 },
@@ -278,86 +263,118 @@
             }
         };
 
-        const vm = new Vue({
-            delimiters: ['[[', ']]'],
-            el: '#app',
-            mixins: [dragMixin],
-            components: {
-                'observation-ids': {
-                    props: ['ids'],
-                    delimiters: ['[[', ']]'],
-                    mixins: [dragMixin],
-                    template:
-                    '<div class="observation-ids">' +
-                    '    <p v-for="(id, index) in ids"' +
-                    '       class="observation-id"' +
-                    '       draggable="true"' +
-                    '       @dragstart="dragStart"' +
-                    '       @dragend="dragEnd">' +
-                    '        [[ id ]]' +
-                    '    </p>' +
-                    '</div>'
-                },
-                'name': {
-                    props: ['name'],
-                    delimiters: ['[[', ']]'],
-                    template:
-                    '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
-                    '    <h1 class="name">' +
-                    '        [[ name ]]' +
-                    '    </h1>' +
-                    '</div>'
-                },
-                'classification': {
-                    props: ['genus', 'group', 'species', 'subspecies'],
-                    delimiters: ['[[', ']]'],
-                    template:
-                    '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
-                    '    <p class="classification">' +
-                    '        [[ genus ]]' +
-                    '        [[ group ]]' +
-                    '        [[ species ]]' +
-                    '        [[ subspecies ]]' +
-                    '    </p>' +
-                    '</div>'
-                },
-                'photo': {
-                    'props': ['url'],
-                    template:
-                    '<div class="photo">' +
-                    '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
-                    '</div>',
-                    methods: {
-                        photoLoaded: function(event) {
-                            const img = event.target,
-                                aspectRatio = img.width / img.height,
-                                label = img.closest('li'),
-                                orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
-                            let newWidth;
-                            label.className = orientation;
+        const bus = new Vue();
+
+        const labelComponents = {
+            'observation-ids': {
+                name: 'observation-ids',
+                props: ['ids'],
+                delimiters: ['[[', ']]'],
+                mixins: [dragMixin],
+                template:
+                '<div class="observation-ids">' +
+                '    <p v-for="(id, index) in ids"' +
+                '       class="observation-id"' +
+                '       draggable="true"' +
+                '       @dragstart="dragStart"' +
+                '       @dragend="dragEnd">' +
+                '        [[ id ]]' +
+                '    </p>' +
+                '</div>'
+            },
+            'name': {
+                props: ['name'],
+                delimiters: ['[[', ']]'],
+                template:
+                '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
+                '    <h1 class="name">' +
+                '        [[ name ]]' +
+                '    </h1>' +
+                '</div>'
+            },
+            'classification': {
+                props: ['genus', 'group', 'species', 'subspecies'],
+                delimiters: ['[[', ']]'],
+                template:
+                '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
+                '    <p class="classification">' +
+                '        [[ genus ]]' +
+                '        [[ group ]]' +
+                '        [[ species ]]' +
+                '        [[ subspecies ]]' +
+                '    </p>' +
+                '</div>'
+            },
+            'photo': {
+                'props': ['url'],
+                template:
+                '<div class="photo">' +
+                '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
+                '</div>',
+                methods: {
+                    photoLoaded: function (event) {
+                        const img = event.target,
+                            aspectRatio = img.width / img.height,
+                            label = img.closest('li'),
+                            orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
+                        let newWidth;
+                        label.className = orientation;
+                        if (orientation === 'vertical') {
+                            const imgWidth = img.offsetWidth;
+                            newWidth = `calc(${imgWidth}px + 0.3cm)`;
+                        }
+                        for (let fitText of label.querySelectorAll('.fit-wrapper')) {
                             if (orientation === 'vertical') {
-                                const imgWidth = img.offsetWidth;
-                                newWidth = `calc(${imgWidth}px + 0.3cm)`;
+                                fitText.style.marginLeft = newWidth;
+                            } else {
+                                fitText.style.marginLeft = '0.3cm';
                             }
-                            for (let fitText of label.querySelectorAll('.fit-wrapper')) {
-                                if (orientation === 'vertical') {
-                                    fitText.style.marginLeft = newWidth;
-                                } else {
-                                    fitText.style.marginLeft = '0.3cm';
-                                }
-                                Vue.nextTick(function() {
-                                    const el = this;
-                                    el.style.fontSize = '';
-                                    const style = window.getComputedStyle(el, null),
-                                        fontSize = parseFloat(style.getPropertyValue('font-size'));
-                                    fitty(el, {maxSize: fontSize});
-                                }, fitText.firstChild);
-                            }
+                            Vue.nextTick(function () {
+                                const el = this;
+                                el.style.fontSize = '';
+                                const style = window.getComputedStyle(el, null),
+                                    fontSize = parseFloat(style.getPropertyValue('font-size'));
+                                fitty(el, {maxSize: fontSize});
+                            }, fitText.firstChild);
                         }
                     }
                 }
+            }
+        };
+
+        const vm = new Vue({
+            delimiters: ['[[', ']]'],
+            mixins: [dragMixin],
+            el: '#app',
+            components: {
+                'species-label': {
+                    'props': ['species'],
+                    delimiters: ['[[', ']]'],
+                    mixins: [dragMixin],
+                    components: labelComponents,
+                    template:
+                    '<li :data-species-id="species.id"' +
+                    '    @dragenter="dragEnterLabel"' +
+                    '    @dragexit="dragExitLabel"' +
+                    '    @dragover="dragOverLabel"' +
+                    '    @drop="dropLabel">' +
+                    '    <observation-ids :ids="species.external_ids"></observation-ids>' +
+                    '    <photo :url="species.photo"></photo>' +
+                    '    <name :name="species.name_fi"></name>' +
+                    '    <classification :genus="species.genus"' +
+                    '                    :group="species.group"' +
+                    '                    :species="species.species"' +
+                    '                    :subspecies="species.subspecies"></classification>' +
+                    '</li>'
+                },
             },
-            data: {{ vue_data|safe }}
+            data: {{ vue_data|safe }},
+            created: function() {
+                const that = this;
+                bus.$on('remove-label-at-index', function(index) {
+                    that.object_list.splice(index, 1);
+                });
+            }
         });
     </script>
 </body>
