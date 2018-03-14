@@ -137,74 +137,20 @@
                 @dragexit="dragExitLabel"
                 @dragover="dragOverLabel"
                 @drop="dropLabel">
-                <div class="observation-ids">
-                    <p v-for="(external_id, index) in species.external_ids"
-                       class="observation-id"
-                       draggable="true"
-                       @dragstart="dragStart"
-                       @dragend="dragEnd">
-                        [[ external_id ]]
-                    </p>
-                </div>
+                <observation-ids :ids="species.external_ids"
+                                 v-on:remove-label-at-index="removeLabel"></observation-ids>
                 <photo :url="species.photo"></photo>
-                <div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}
-                    <h1 class="name">
-                        [[ species.name_fi ]]
-                    </h1>
-                </div>
-                <div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}
-                    <p class="classification">
-                        [[ species.genus ]]
-                        [[ species.group ]]
-                        [[ species.species ]]
-                        [[ species.subspecies ]]
-                    </p>
-                </div>
+                <name :name="species.name_fi"></name>
+                <classification :genus="species.genus"
+                                :group="species.group"
+                                :species="species.species"
+                                :subspecies="species.subspecies"></classification>
             </li>
         </ul>
     </div>
 
     <script type="text/javascript">
-        vm = new Vue({
-            delimiters: ['[[', ']]'],
-            el: '#app',
-            components: {
-                'photo': {
-                    'props': ['url'],
-                    template:
-                    '<div class="photo">' +
-                    '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
-                    '</div>',
-                    methods: {
-                        photoLoaded: function(event) {
-                            const img = event.target,
-                                aspectRatio = img.width / img.height,
-                                label = img.closest('li'),
-                                orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
-                            let newWidth;
-                            label.className = orientation;
-                            if (orientation === 'vertical') {
-                                const imgWidth = img.offsetWidth;
-                                newWidth = `calc(${imgWidth}px + 0.3cm)`;
-                            }
-                            for (let fitText of label.querySelectorAll('.fit-wrapper')) {
-                                if (orientation === 'vertical') {
-                                    fitText.style.marginLeft = newWidth;
-                                } else {
-                                    fitText.style.marginLeft = '0.3cm';
-                                }
-                                Vue.nextTick(function() {
-                                    const el = this;
-                                    el.style.fontSize = '';
-                                    const style = window.getComputedStyle(el, null),
-                                        fontSize = parseFloat(style.getPropertyValue('font-size'));
-                                    fitty(el, {maxSize: fontSize});
-                                }, fitText.firstChild);
-                            }
-                        }
-                    }
-                }
-            },
+        const dragMixin = {
             methods: {
                 labelSpeciesId: function(target) {
                     const label = target.closest('li');
@@ -249,22 +195,24 @@
                     event.dataTransfer.effectAllowed = "move";
                     event.target.style.border = 'solid black 1px';
                     Vue.nextTick(() => {
-                        const externalIds = this.object_list[index].external_ids,
+                        const externalIds = this.ids,
                             externalIdIndex = externalIds.indexOf(externalId);
                         externalIds.splice(externalIdIndex, 1);
                         event.target.style.border = 'none';
                     });
                 },
                 dragEnd: function(event) {
-                    const drag = this.getDragData(event),
-                        labels = this.object_list;
+                    const drag = this.getDragData(event);
                     if (event.dataTransfer.dropEffect === 'none') {
                         // drag&drop was cancelled, restore the external ID
-                        labels[drag.index].external_ids.push(drag.externalId);
-                    } else if (labels[drag.index].external_ids.length === 0) {
+                        this.ids.push(drag.externalId);
+                    } else if (this.ids.length === 0) {
                         // no external IDs left, remove the label
-                        labels.splice(drag.index, 1);
+                        this.$emit('remove-label-at-index', drag.index);
                     }
+                },
+                removeLabel: function(index) {
+                    this.object_list.splice(index, 1);
                 },
                 dragEnterBackground: function(event) {
                     // when an external ID being dragged enters the background
@@ -326,6 +274,87 @@
                     newLabel.external_ids.push(drag.externalId);
                     // force refresh layout of the new label:
                     this.$set(newLabel, 'photo', newLabel.photo);
+                }
+            }
+        };
+
+        const vm = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            mixins: [dragMixin],
+            components: {
+                'observation-ids': {
+                    props: ['ids'],
+                    delimiters: ['[[', ']]'],
+                    mixins: [dragMixin],
+                    template:
+                    '<div class="observation-ids">' +
+                    '    <p v-for="(id, index) in ids"' +
+                    '       class="observation-id"' +
+                    '       draggable="true"' +
+                    '       @dragstart="dragStart"' +
+                    '       @dragend="dragEnd">' +
+                    '        [[ id ]]' +
+                    '    </p>' +
+                    '</div>'
+                },
+                'name': {
+                    props: ['name'],
+                    delimiters: ['[[', ']]'],
+                    template:
+                    '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
+                    '    <h1 class="name">' +
+                    '        [[ name ]]' +
+                    '    </h1>' +
+                    '</div>'
+                },
+                'classification': {
+                    props: ['genus', 'group', 'species', 'subspecies'],
+                    delimiters: ['[[', ']]'],
+                    template:
+                    '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
+                    '    <p class="classification">' +
+                    '        [[ genus ]]' +
+                    '        [[ group ]]' +
+                    '        [[ species ]]' +
+                    '        [[ subspecies ]]' +
+                    '    </p>' +
+                    '</div>'
+                },
+                'photo': {
+                    'props': ['url'],
+                    template:
+                    '<div class="photo">' +
+                    '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
+                    '</div>',
+                    methods: {
+                        photoLoaded: function(event) {
+                            const img = event.target,
+                                aspectRatio = img.width / img.height,
+                                label = img.closest('li'),
+                                orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
+                            let newWidth;
+                            label.className = orientation;
+                            if (orientation === 'vertical') {
+                                const imgWidth = img.offsetWidth;
+                                newWidth = `calc(${imgWidth}px + 0.3cm)`;
+                            }
+                            for (let fitText of label.querySelectorAll('.fit-wrapper')) {
+                                if (orientation === 'vertical') {
+                                    fitText.style.marginLeft = newWidth;
+                                } else {
+                                    fitText.style.marginLeft = '0.3cm';
+                                }
+                                Vue.nextTick(function() {
+                                    const el = this;
+                                    el.style.fontSize = '';
+                                    const style = window.getComputedStyle(el, null),
+                                        fontSize = parseFloat(style.getPropertyValue('font-size'));
+                                    fitty(el, {maxSize: fontSize});
+                                }, fitText.firstChild);
+                            }
+                        }
+                    }
                 }
             },
             data: {{ vue_data|safe }}
