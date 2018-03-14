@@ -146,9 +146,7 @@
                         [[ external_id ]]
                     </p>
                 </div>
-                <div class="photo">
-                    <img :src="species.photo" @load="photoLoaded" />
-                </div>
+                <photo :url="species.photo"></photo>
                 <div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}
                     <h1 class="name">
                         [[ species.name_fi ]]
@@ -170,33 +168,44 @@
         vm = new Vue({
             delimiters: ['[[', ']]'],
             el: '#app',
-            methods: {
-                photoLoaded: function(event) {
-                    const img = event.target,
-                        aspectRatio = img.width / img.height,
-                        label = img.closest('li'),
-                        orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
-                    let newWidth;
-                    label.className = orientation;
-                    if (orientation === 'vertical') {
-                        const imgWidth = img.offsetWidth;
-                        newWidth = `calc(${imgWidth}px + 0.3cm)`;
-                    }
-                    for (let fitText of label.querySelectorAll('.fit-wrapper')) {
-                        if (orientation === 'vertical') {
-                            fitText.style.marginLeft = newWidth;
-                        } else {
-                            fitText.style.marginLeft = '0.3cm';
+            components: {
+                'photo': {
+                    'props': ['url'],
+                    template:
+                    '<div class="photo">' +
+                    '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
+                    '</div>',
+                    methods: {
+                        photoLoaded: function(event) {
+                            const img = event.target,
+                                aspectRatio = img.width / img.height,
+                                label = img.closest('li'),
+                                orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
+                            let newWidth;
+                            label.className = orientation;
+                            if (orientation === 'vertical') {
+                                const imgWidth = img.offsetWidth;
+                                newWidth = `calc(${imgWidth}px + 0.3cm)`;
+                            }
+                            for (let fitText of label.querySelectorAll('.fit-wrapper')) {
+                                if (orientation === 'vertical') {
+                                    fitText.style.marginLeft = newWidth;
+                                } else {
+                                    fitText.style.marginLeft = '0.3cm';
+                                }
+                                Vue.nextTick(function() {
+                                    const el = this;
+                                    el.style.fontSize = '';
+                                    const style = window.getComputedStyle(el, null),
+                                        fontSize = parseFloat(style.getPropertyValue('font-size'));
+                                    fitty(el, {maxSize: fontSize});
+                                }, fitText.firstChild);
+                            }
                         }
-                        Vue.nextTick(function() {
-                            const el = this;
-                            el.style.fontSize = '';
-                            const style = window.getComputedStyle(el, null),
-                                fontSize = parseFloat(style.getPropertyValue('font-size'));
-                            fitty(el, {maxSize: fontSize});
-                        }, fitText.firstChild);
                     }
-                },
+                }
+            },
+            methods: {
                 labelSpeciesId: function(target) {
                     const label = target.closest('li');
                     return parseInt(label.dataset.speciesId);
@@ -315,10 +324,8 @@
                     this.object_list.splice(drag.index + 1, 0, newLabel);
                     newLabel.external_ids.splice(0);
                     newLabel.external_ids.push(drag.externalId);
-                    Vue.nextTick(function() {
-                        that.photoLoaded(
-                            {target: document.querySelector(`ul li:nth-child(${drag.index + 2}) img`)});
-                    });
+                    // force refresh layout of the new label:
+                    this.$set(newLabel, 'photo', newLabel.photo);
                 }
             },
             data: {{ vue_data|safe }}
