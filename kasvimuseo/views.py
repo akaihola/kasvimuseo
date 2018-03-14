@@ -10,7 +10,6 @@ from django.views.generic import ListView, View, FormView
 from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import DetailView
 
-from kasvimuseo.forms import LabelFormSet
 from kasvimuseo.models import Bed, Observation, Species, Planting
 
 
@@ -147,16 +146,3 @@ class BedMap(DetailView):
     def get_context_data(self, **kwargs):
         return super(BedMap, self).get_context_data(
             bed_depth=40, **kwargs)
-
-
-class LabelsEditor(FormView):
-    template_name = 'kasvimuseo/forms/planting-labels-edit.html'
-    form_class = LabelFormSet
-
-    def get_initial(self):
-        plantings = Planting.objects.all()
-        return [{'species': planting.observation.species.name_fi,
-                 'planting': planting.observation.external_id,
-                 'label': planting.label.name,
-                 'photo': planting.label.photo}
-                for planting in plantings]
