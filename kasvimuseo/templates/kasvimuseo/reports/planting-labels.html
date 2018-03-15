@@ -175,22 +175,6 @@
                     return target.speciesId === drag.speciesId &&
                         target.index !== drag.index;
                 },
-                dragEnterBackground: function(event) {
-                    // when an external ID being dragged enters the background
-                    // area, show a "new label" indicator
-                    if (event.target.id === 'labels') {
-                        event.preventDefault();
-                        // TODO: show "new label" indicator
-                        event.dropEffect = 'move';
-                    }
-                },
-                dragExitBackground: function(event) {
-                    // when an external ID being dragged exits the background
-                    // area, hide the "new label" indicator
-                    if (event.target.nodeType === 1) {
-                        // TODO: hide "new label" indicator
-                    }
-                },
                 dragEnterLabel: function(event) {
                     event.stopPropagation();
                     const e = this.getEventData(event);
@@ -371,6 +355,24 @@
                 },
             },
             data: {{ vue_data|safe }},
+            methods: {
+                dragEnterBackground: function(event) {
+                    // when an external ID being dragged enters the background
+                    // area, show a "new label" indicator
+                    if (event.target.id === 'labels') {
+                        event.preventDefault();
+                        // TODO: show "new label" indicator
+                        event.dropEffect = 'move';
+                    }
+                },
+                dragExitBackground: function(event) {
+                    // when an external ID being dragged exits the background
+                    // area, hide the "new label" indicator
+                    if (event.target.nodeType === 1) {
+                        // TODO: hide "new label" indicator
+                    }
+                }
+            },
             created: function() {
                 const that = this;
                 bus.$on('remove-label-at-index', function(index) {
