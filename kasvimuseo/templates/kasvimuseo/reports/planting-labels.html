@@ -175,30 +175,6 @@
                     return target.speciesId === drag.speciesId &&
                         target.index !== drag.index;
                 },
-                dragStart: function(event) {
-                    const index = this.getElIndex(event.target.closest('li')),
-                        externalId = parseInt(event.target.innerHTML),
-                        speciesId = this.labelSpeciesId(event.target);
-                    this.setDragData(event, index, externalId, speciesId);
-                    event.dataTransfer.effectAllowed = "move";
-                    event.target.style.border = 'solid black 1px';
-                    Vue.nextTick(() => {
-                        const externalIds = this.ids,
-                            externalIdIndex = externalIds.indexOf(externalId);
-                        externalIds.splice(externalIdIndex, 1);
-                        event.target.style.border = 'none';
-                    });
-                },
-                dragEnd: function(event) {
-                    const drag = this.getDragData(event);
-                    if (event.dataTransfer.dropEffect === 'none') {
-                        // drag&drop was cancelled, restore the external ID
-                        this.ids.push(drag.externalId);
-                    } else if (this.ids.length === 0) {
-                        // no external IDs left, remove the label
-                        bus.$emit('remove-label-at-index', drag.index);
-                    }
-                },
                 dragEnterBackground: function(event) {
                     // when an external ID being dragged enters the background
                     // area, show a "new label" indicator
@@ -280,7 +256,33 @@
                 '       @dragend="dragEnd">' +
                 '        [[ id ]]' +
                 '    </p>' +
-                '</div>'
+                '</div>',
+                methods: {
+                    dragStart: function(event) {
+                        const index = this.getElIndex(event.target.closest('li')),
+                            externalId = parseInt(event.target.innerHTML),
+                            speciesId = this.labelSpeciesId(event.target);
+                        this.setDragData(event, index, externalId, speciesId);
+                        event.dataTransfer.effectAllowed = "move";
+                        event.target.style.border = 'solid black 1px';
+                        Vue.nextTick(() => {
+                            const externalIds = this.ids,
+                                externalIdIndex = externalIds.indexOf(externalId);
+                            externalIds.splice(externalIdIndex, 1);
+                            event.target.style.border = 'none';
+                        });
+                    },
+                    dragEnd: function(event) {
+                        const drag = this.getDragData(event);
+                        if (event.dataTransfer.dropEffect === 'none') {
+                            // drag&drop was cancelled, restore the external ID
+                            this.ids.push(drag.externalId);
+                        } else if (this.ids.length === 0) {
+                            // no external IDs left, remove the label
+                            bus.$emit('remove-label-at-index', drag.index);
+                        }
+                    },
+                }
             },
             'name': {
                 props: ['name'],
