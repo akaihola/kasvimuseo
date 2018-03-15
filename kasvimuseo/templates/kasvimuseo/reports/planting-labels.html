@@ -119,7 +119,7 @@
             border: solid black 4px;
             padding: 0;
             position: absolute;
-            z-index: 1;
+            z-index: -1; /* prevent drag enter and flickering */
             background: white;
         }
     </style>
@@ -146,7 +146,11 @@
             @dragover="dragOverBackground"
             @drop="dropNewLabel">
             <template v-for="species in object_list">
-                <species-label :species="species"></species-label>
+                <species-label :species="species"
+                               @dragenter.native="dragEnterLabel"
+                               @dragexit.native="dragExitLabel"
+                               @dragover.native="dragOverLabel"
+                               @drop.native="dropLabel"></species-label>
             </template>
         </ul>
     </div>
@@ -313,11 +317,7 @@
                     mixins: [dragMixin],
                     components: labelComponents,
                     template:
-                    '<li :data-species-id="species.id"' +
-                    '    @dragenter="dragEnterLabel"' +
-                    '    @dragexit="dragExitLabel"' +
-                    '    @dragover="dragOverLabel"' +
-                    '    @drop="dropLabel">' +
+                    '<li :data-species-id="species.id">' +
                     '    <observation-ids :ids="species.external_ids"></observation-ids>' +
                     '    <photo :url="species.photo"></photo>' +
                     '    <name :name="species.name_fi"></name>' +
@@ -325,40 +325,8 @@
                     '                    :group="species.group"' +
                     '                    :species="species.species"' +
                     '                    :subspecies="species.subspecies"></classification>' +
-                    '</li>',
-                    methods: {
-                        dragEnterLabel: function(event) {
-                            event.stopPropagation();
-                            const e = this.getEventData(event);
-                            if (this.dragMatch(e.target, e.drag)) {
-                                event.preventDefault();
-                                this.species.external_ids.push(e.drag.externalId);
-                            }
-                        },
-                        dragExitLabel: function(event) {
-                            event.stopPropagation();
-                            const e = this.getEventData(event);
-                            if (this.dragMatch(e.target, e.drag)) {
-                                const externalIds = this.species.external_ids;
-                                externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
-                            }
-                        },
-                        dragOverLabel: function(event) {
-                            event.stopPropagation();
-                            const e = this.getEventData(event);
-                            if (this.dragMatch(e.target, e.drag)) {
-                                event.preventDefault();
-                            }
-                        },
-                        dropLabel: function(event) {
-                            event.stopPropagation();
-                            const e = this.getEventData(event);
-                            if (this.dragMatch(e.target, e.drag)) {
-                                event.preventDefault();
-                            }
-                        }
-                    }
-                },
+                    '</li>'
+                }
             },
             methods: {
                 dragEnterBackground: function(event) {
@@ -367,9 +335,7 @@
                     if (event.target.id === 'labels') {
                         event.preventDefault();
                         event.dropEffect = 'move';
-                        console.log('dragSpecies visible');
                         this.dragSpecies.visible = true;
-                        this.mouse = `top: ${event.pageY}px; left: ${event.pageX}px;`;
                     }
                 },
                 dragExitBackground: function(event) {
@@ -380,8 +346,12 @@
                     }
                 },
                 dragOverBackground: function(event) {
-                    event.preventDefault();
-                    this.mouse = `top: ${event.pageY}px; left: ${event.pageX}px;`;
+                    if (event.target.id === 'labels') {
+                        const x = event.pageX - 95,
+                            y = event.pageY - 30;
+                        event.preventDefault();
+                        this.mouse = `transform: translate(${x}px, ${y}px) scale(0.25);`;
+                    }
                 },
                 dropNewLabel: function(event) {
                     event.preventDefault();
@@ -394,6 +364,38 @@
                     // force refresh layout of the new label:
                     this.$set(newLabel, 'photo', newLabel.photo);
                     this.dragSpecies.visible = false;
+                },
+                dragEnterLabel: function(event) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        event.preventDefault();
+                        const label = this.object_list[e.target.index];
+                        label.external_ids.push(e.drag.externalId);
+                    }
+                },
+                dragExitLabel: function(event) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        const label = this.object_list[e.target.index],
+                            externalIds = label.external_ids;
+                        externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
+                    }
+                },
+                dragOverLabel: function(event) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        event.preventDefault();
+                    }
+                },
+                dropLabel: function(event) {
+                    event.stopPropagation();
+                    const e = this.getEventData(event);
+                    if (this.dragMatch(e.target, e.drag)) {
+                        event.preventDefault();
+                    }
                 }
             },
             data: Object.assign({{ vue_data|safe }}, {dragSpecies: {visible: false}, mouse: ''}),
