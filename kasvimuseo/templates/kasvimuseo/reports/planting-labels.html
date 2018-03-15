@@ -175,36 +175,6 @@
                     return target.speciesId === drag.speciesId &&
                         target.index !== drag.index;
                 },
-                dragEnterLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
-                        event.preventDefault();
-                        this.species.external_ids.push(e.drag.externalId);
-                    }
-                },
-                dragExitLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
-                        const externalIds = this.species.external_ids;
-                        externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
-                    }
-                },
-                dragOverLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
-                        event.preventDefault();
-                    }
-                },
-                dropLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
-                        event.preventDefault();
-                    }
-                },
                 getElIndex: function(el) {
                     for (var i = 0; el = el.previousElementSibling; i++);
                     return i;
@@ -351,7 +321,39 @@
                     '                    :group="species.group"' +
                     '                    :species="species.species"' +
                     '                    :subspecies="species.subspecies"></classification>' +
-                    '</li>'
+                    '</li>',
+                    methods: {
+                        dragEnterLabel: function(event) {
+                            event.stopPropagation();
+                            const e = this.getEventData(event);
+                            if (this.dragMatch(e.target, e.drag)) {
+                                event.preventDefault();
+                                this.species.external_ids.push(e.drag.externalId);
+                            }
+                        },
+                        dragExitLabel: function(event) {
+                            event.stopPropagation();
+                            const e = this.getEventData(event);
+                            if (this.dragMatch(e.target, e.drag)) {
+                                const externalIds = this.species.external_ids;
+                                externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
+                            }
+                        },
+                        dragOverLabel: function(event) {
+                            event.stopPropagation();
+                            const e = this.getEventData(event);
+                            if (this.dragMatch(e.target, e.drag)) {
+                                event.preventDefault();
+                            }
+                        },
+                        dropLabel: function(event) {
+                            event.stopPropagation();
+                            const e = this.getEventData(event);
+                            if (this.dragMatch(e.target, e.drag)) {
+                                event.preventDefault();
+                            }
+                        }
+                    }
                 },
             },
             data: {{ vue_data|safe }},
