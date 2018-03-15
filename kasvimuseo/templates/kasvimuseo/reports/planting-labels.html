@@ -113,12 +113,26 @@
             float: right;
             margin-right: 0.5cm;
         }
+        #drag-wrapper {
+            transform: scale(0.25);
+            transform-origin:top left;
+            border: solid black 4px;
+            padding: 0;
+            position: absolute;
+            z-index: 1;
+            background: white;
+        }
     </style>
     <script src="https://unpkg.com/vue"></script>
     <script src="{{ STATIC_URL }}js/kasvimuseo/fitty.min.js"></script>
 </head>
 <body>
     <div id="app">
+        <div id="drag-wrapper"
+             v-show="dragSpecies.visible"
+             :style="mouse">
+            <species-label :species="dragSpecies"></species-label>
+        </div>
         <form method="GET" action=".">
             <label for="width">Box width:</label>
             <input type="text" placeholder="14cm" name="width">
@@ -129,7 +143,7 @@
         <ul id="labels"
             @dragenter="dragEnterBackground"
             @dragexit="dragExitBackground"
-            ondragover="return false"
+            @dragover="dragOverBackground"
             @drop="dropNewLabel">
             <template v-for="species in object_list">
                 <species-label :species="species"></species-label>
@@ -178,17 +192,6 @@
                 getElIndex: function(el) {
                     for (var i = 0; el = el.previousElementSibling; i++);
                     return i;
-                },
-                dropNewLabel: function(event) {
-                    event.preventDefault();
-                    const drag = this.getDragData(event),
-                        that = this,
-                        newLabel = JSON.parse(JSON.stringify(this.object_list[drag.index]));
-                    this.object_list.splice(drag.index + 1, 0, newLabel);
-                    newLabel.external_ids.splice(0);
-                    newLabel.external_ids.push(drag.externalId);
-                    // force refresh layout of the new label:
-                    this.$set(newLabel, 'photo', newLabel.photo);
                 }
             }
         };
@@ -219,6 +222,7 @@
                         this.setDragData(event, index, externalId, speciesId);
                         event.dataTransfer.effectAllowed = "move";
                         event.target.style.border = 'solid black 1px';
+                        bus.$emit('set-drag-label', index, externalId);
                         Vue.nextTick(() => {
                             const externalIds = this.ids,
                                 externalIdIndex = externalIds.indexOf(externalId);
@@ -356,29 +360,56 @@
                     }
                 },
             },
-            data: {{ vue_data|safe }},
             methods: {
                 dragEnterBackground: function(event) {
                     // when an external ID being dragged enters the background
                     // area, show a "new label" indicator
                     if (event.target.id === 'labels') {
                         event.preventDefault();
-                        // TODO: show "new label" indicator
                         event.dropEffect = 'move';
+                        console.log('dragSpecies visible');
+                        this.dragSpecies.visible = true;
+                        this.mouse = `top: ${event.pageY}px; left: ${event.pageX}px;`;
                     }
                 },
                 dragExitBackground: function(event) {
                     // when an external ID being dragged exits the background
                     // area, hide the "new label" indicator
                     if (event.target.nodeType === 1) {
-                        // TODO: hide "new label" indicator
+                        this.dragSpecies.visible = false;
                     }
+                },
+                dragOverBackground: function(event) {
+                    event.preventDefault();
+                    this.mouse = `top: ${event.pageY}px; left: ${event.pageX}px;`;
+                },
+                dropNewLabel: function(event) {
+                    event.preventDefault();
+                    const drag = this.getDragData(event),
+                        that = this,
+                        newLabel = JSON.parse(JSON.stringify(this.object_list[drag.index]));
+                    this.object_list.splice(drag.index + 1, 0, newLabel);
+                    newLabel.external_ids.splice(0);
+                    newLabel.external_ids.push(drag.externalId);
+                    // force refresh layout of the new label:
+                    this.$set(newLabel, 'photo', newLabel.photo);
+                    this.dragSpecies.visible = false;
                 }
             },
+            data: Object.assign({{ vue_data|safe }}, {dragSpecies: {visible: false}, mouse: ''}),
             created: function() {
                 const that = this;
                 bus.$on('remove-label-at-index', function(index) {
                     that.object_list.splice(index, 1);
+                });
+                bus.$on('set-drag-label', function(index, externalId) {
+                    if (index === undefined) {
+                        that.dragSpecies.visible = false;
+                    } else {
+                        that.dragSpecies = JSON.parse(JSON.stringify(that.object_list[index]));
+                        that.dragSpecies.external_ids = [externalId];
+                        that.$set(that.dragSpecies, 'visible', false);
+                    }
                 });
             }
         });
