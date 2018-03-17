@@ -44,7 +44,8 @@ class PlantedSpeciesList(ListView):
                  'group': species.group,
                  'species': species.species,
                  'subspecies': species.subspecies,
-                 'nicknames': list(species.observation_set.public_planted().values_list('nickname', flat=True))}
+                 'nicknames': list(species.observation_set.public_planted().values_list('nickname', flat=True)),
+                 'visible': True}
                 for species in object_list]}
         return super(PlantedSpeciesList, self).get_context_data(
             vue_data=json.dumps(vue_data), object_list=object_list, **kwargs)
