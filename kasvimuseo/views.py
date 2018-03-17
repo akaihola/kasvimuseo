@@ -6,14 +6,14 @@ import json
 
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.views.generic import ListView, View, FormView
-from django.views.generic.base import TemplateResponseMixin
+from django.views.generic import View
+from django.views.generic.base import TemplateResponseMixin, TemplateView
 from django.views.generic.detail import DetailView
 
-from kasvimuseo.models import Bed, Observation, Species, Planting
+from kasvimuseo.models import Bed, Observation, Species
 
 
-class PlantedSpeciesList(ListView):
+class PlantedSpeciesList(TemplateView):
     template_name = 'kasvimuseo/reports/planted-species-list.html'
     model = Species
 
@@ -26,12 +26,12 @@ class PlantedSpeciesList(ListView):
         needs to be evaluated every time.
 
         """
-        return (self.model.objects
-                .public_planted()
-                .distinct()
-                .order_by('name_fi'))
 
-    def get_context_data(self, object_list, **kwargs):
+    def get_context_data(self, **kwargs):
+        object_list = (self.model.objects
+                       .public_planted()
+                       .distinct()
+                       .order_by('name_fi'))
         vue_data = {
             'object_list': [
                 {'id': species.pk,
