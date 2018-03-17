@@ -37,7 +37,10 @@
             overflow: hidden;
         }
         li.hidden {
-            opacity: 0.2;
+            opacity: 0.3;
+        }
+        li.hidden:hover .remove {
+            opacity: 1;
         }
 
         /* photo in label */
@@ -120,10 +123,13 @@
         .remove {
             font-size: 30pt;
             position: absolute;
-            right: 0;
+            right: 5px;
             bottom: 0;
             opacity: 0;
             transition: all 0.5s ease-in-out;
+        }
+        .remove * {
+            cursor: pointer;
         }
         li:hover .remove {
             opacity: 0.5;
@@ -267,64 +273,65 @@
                 }
             },
             'name': {
-                props: ['name'],
+                props: ['name', 'textMargin'],
                 delimiters: ['[[', ']]'],
                 template:
-                '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
+                '<div class="fit-wrapper"' +
+                '     v-bind:style="{ marginLeft: textMargin }">{# dummy wrapper needed for fitty due to centering #}' +
                 '    <h1 class="name">' +
                 '        [[ name ]]' +
                 '    </h1>' +
-                '</div>'
+                '</div>',
+                watch: {
+                    textMargin: function(val) {
+                        const h1 = this.$el.getElementsByTagName('h1')[0];
+                        Vue.nextTick(function () {
+                            h1.style.fontSize = '';
+                            const style = window.getComputedStyle(h1, null),
+                                fontSize = parseFloat(style.getPropertyValue('font-size'));
+                            fitty(h1, {maxSize: fontSize});
+                        }, h1);
+                    }
+                }
             },
             'classification': {
-                props: ['genus', 'group', 'species', 'subspecies'],
+                props: ['genus', 'group', 'species', 'subspecies', 'textMargin'],
                 delimiters: ['[[', ']]'],
                 template:
-                '<div class="fit-wrapper">{# dummy wrapper needed for fitty due to centering #}' +
+                '<div class="fit-wrapper"' +
+                '     v-bind:style="{ marginLeft: textMargin }">{# dummy wrapper needed for fitty due to centering #}' +
                 '    <p class="classification">' +
                 '        [[ genus ]]' +
                 '        [[ group ]]' +
                 '        [[ species ]]' +
                 '        [[ subspecies ]]' +
                 '    </p>' +
-                '</div>'
+                '</div>',
+                watch: {
+                    textMargin: function(val) {
+                        const p = this.$el.getElementsByTagName('p')[0];
+                        Vue.nextTick(function () {
+                            p.style.fontSize = '';
+                            const style = window.getComputedStyle(p, null),
+                                fontSize = parseFloat(style.getPropertyValue('font-size'));
+                            fitty(p, {maxSize: fontSize});
+                        }, p);
+                    }
+                }
             },
             'photo': {
                 'props': ['url'],
                 template:
                 '<div class="photo">' +
-                '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
+                '    <img :src="url"' +
+                '         @load="photoLoaded"' +
+                '         v-on:layout="photoLoaded" />' +
                 '</div>',
-                mixins: [dragMixin],
                 methods: {
                     photoLoaded: function (event) {
-                        const e = this.getLabelData(event),
-                            img = event.target,
-                            aspectRatio = img.width / img.height,
-                            label = img.closest('li'),
-                            orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
-                        let newWidth;
-                        label.classList.remove('horizontal');
-                        label.classList.remove('vertical');
-                        label.classList.add(orientation);
-                        if (orientation === 'vertical') {
-                            const imgWidth = img.offsetWidth;
-                            newWidth = `calc(${imgWidth}px + 0.3cm)`;
-                        }
-                        for (let fitText of label.querySelectorAll('.fit-wrapper')) {
-                            if (orientation === 'vertical') {
-                                fitText.style.marginLeft = newWidth;
-                            } else {
-                                fitText.style.marginLeft = '0.3cm';
-                            }
-                            Vue.nextTick(function () {
-                                const el = this;
-                                el.style.fontSize = '';
-                                const style = window.getComputedStyle(el, null),
-                                    fontSize = parseFloat(style.getPropertyValue('font-size'));
-                                fitty(el, {maxSize: fontSize});
-                            }, fitText.firstChild);
-                        }
+                        const img = event.target,
+                            aspectRatio = img.width / img.height;
+                        this.$emit('aspect', {aspectRatio: aspectRatio});
                     }
                 }
             }
@@ -340,16 +347,21 @@
                     delimiters: ['[[', ']]'],
                     mixins: [dragMixin],
                     components: labelComponents,
+                    data: () => ({
+                        isVertical: false,
+                        textMargin: '0.3cm'}),
                     template:
                     '<li :data-species-id="species.id"' +
-                    '    v-bind:class="{ hidden: !species.visible, vertical: species.vertical, horizontal: !species.vertical }">' +
+                    '    v-bind:class="{ hidden: !species.visible, vertical: isVertical, horizontal: !isVertical }">' +
                     '    <observation-ids :ids="species.external_ids"></observation-ids>' +
-                    '    <photo :url="species.photo"></photo>' +
-                    '    <name :name="species.name_fi"></name>' +
+                    '    <photo :url="species.photo_url" v-on:aspect="setAspect"></photo>' +
+                    '    <name :name="species.name_fi"' +
+                    '          :textMargin="textMargin"></name>' +
                     '    <classification :genus="species.genus"' +
                     '                    :group="species.group"' +
                     '                    :species="species.species"' +
-                    '                    :subspecies="species.subspecies"></classification>' +
+                    '                    :subspecies="species.subspecies"' +
+                    '                    :textMargin="textMargin"></classification>' +
                     '    <div class="remove">' +
                     '         <label for="remove">&#x1f5b6;</label><input type="checkbox" v-model="species.visible">' +
                     '    </div>' +
@@ -359,6 +371,15 @@
                             const e = this.getLabelData(event);
                             this.species.visible = !this.species.visible;
                             this.$emit('moveLabelToEnd', e.index);
+                        },
+                        setAspect: function(payload) {
+                            this.isVertical = payload.aspectRatio < 3.1 / 4;
+                            const width = payload.aspectRatio * this.$el.offsetHeight;
+                            if (this.isVertical) {
+                                this.textMargin = `calc(${width}px + 0.3cm)`;
+                            } else {
+                                this.textMargin = '0.3cm';
+                            }
                         }
                     }
                 }
