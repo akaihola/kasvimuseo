@@ -6,7 +6,7 @@
     <title>{{ object.observation.species.name_fi }}</title>
     <style>
         @media print {
-            form { display: none; }
+            form, .hidden { display: none; }
         }
         @page {
             size: A4;
@@ -34,6 +34,9 @@
             margin: 0.5cm;
             page-break-inside: avoid;
             overflow: hidden;
+        }
+        li.hidden {
+            opacity: 0.2;
         }
 
         /* photo in label */
@@ -98,7 +101,7 @@
             cursor: move;
             transition: all 0.5s ease-in-out;
         }
-        .observation-id:hover {
+        li:hover .observation-id {
             transform: rotate(5deg);
             box-shadow: 2px 2px 3px 3px rgba(0, 0, 0, 0.5);
         }
@@ -112,6 +115,22 @@
         li.vertical .observation-ids {
             float: right;
             margin-right: 0.5cm;
+        }
+        .remove {
+            font-size: 30pt;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: all 0.5s ease-in-out;
+        }
+        li:hover .remove {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+        li .remove:hover {
+            opacity: 1;
+            transition: all 0s;
         }
         #drag-wrapper {
             transform: scale(0.25);
@@ -177,7 +196,7 @@
                 getLabelData: function(event) {
                     const node = event.target,
                         el = (node.nodeType === 1 ? node : node.parentElement),
-                        label = el.closest('li')
+                        label = el.closest('li');
                     return {
                         index: this.getElIndex(label),
                         speciesId: parseInt(label.dataset.speciesId)
@@ -275,14 +294,18 @@
                 '<div class="photo">' +
                 '    <img :src="url" @load="photoLoaded" v-on:layout="photoLoaded" />' +
                 '</div>',
+                mixins: [dragMixin],
                 methods: {
                     photoLoaded: function (event) {
-                        const img = event.target,
+                        const e = this.getLabelData(event),
+                            img = event.target,
                             aspectRatio = img.width / img.height,
                             label = img.closest('li'),
                             orientation = aspectRatio < 3.1 / 4 ? 'vertical' : 'horizontal';
                         let newWidth;
-                        label.className = orientation;
+                        label.classList.remove('horizontal');
+                        label.classList.remove('vertical');
+                        label.classList.add(orientation);
                         if (orientation === 'vertical') {
                             const imgWidth = img.offsetWidth;
                             newWidth = `calc(${imgWidth}px + 0.3cm)`;
@@ -317,7 +340,8 @@
                     mixins: [dragMixin],
                     components: labelComponents,
                     template:
-                    '<li :data-species-id="species.id">' +
+                    '<li :data-species-id="species.id"' +
+                    '    v-bind:class="{ hidden: !species.visible, vertical: species.vertical, horizontal: !species.vertical }">' +
                     '    <observation-ids :ids="species.external_ids"></observation-ids>' +
                     '    <photo :url="species.photo"></photo>' +
                     '    <name :name="species.name_fi"></name>' +
@@ -325,7 +349,17 @@
                     '                    :group="species.group"' +
                     '                    :species="species.species"' +
                     '                    :subspecies="species.subspecies"></classification>' +
-                    '</li>'
+                    '    <div class="remove">' +
+                    '         <label for="remove">&#x1f5b6;</label><input type="checkbox" v-model="species.visible">' +
+                    '    </div>' +
+                    '</li>',
+                    methods: {
+                        toggleVisible: function(event) {
+                            const e = this.getLabelData(event);
+                            this.species.visible = !this.species.visible;
+                            this.$emit('moveLabelToEnd', e.index);
+                        }
+                    }
                 }
             },
             methods: {
@@ -396,6 +430,10 @@
                     if (this.dragMatch(e.target, e.drag)) {
                         event.preventDefault();
                     }
+                },
+                moveLabelToEnd: function(event, index) {
+                    const label = this.object_list.splice(index, 1)[0];
+                    this.object_list.push(label);
                 }
             },
             data: Object.assign({{ vue_data|safe }}, {dragSpecies: {visible: false}, mouse: ''}),
@@ -410,7 +448,7 @@
                     } else {
                         that.dragSpecies = JSON.parse(JSON.stringify(that.object_list[index]));
                         that.dragSpecies.external_ids = [externalId];
-                        that.$set(that.dragSpecies, 'visible', false);
+                        that.dragSpecies.visible = false;
                     }
                 });
             }
