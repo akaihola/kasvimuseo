@@ -226,6 +226,18 @@
             }
         };
 
+        const fitMixin = {
+            methods: {
+                fitContent: function() {
+                    const el = this.$el.firstChild;
+                    el.style.fontSize = '';
+                    const style = window.getComputedStyle(el, null),
+                        fontSize = parseFloat(style.getPropertyValue('font-size'));
+                    fitty(el, {maxSize: fontSize});
+                }
+            }
+        }
+
         const bus = new Vue();
 
         const labelComponents = {
@@ -282,15 +294,10 @@
                 '        [[ name ]]' +
                 '    </h1>' +
                 '</div>',
+                mixins: [fitMixin],
                 watch: {
-                    textMargin: function(val) {
-                        const h1 = this.$el.getElementsByTagName('h1')[0];
-                        Vue.nextTick(function () {
-                            h1.style.fontSize = '';
-                            const style = window.getComputedStyle(h1, null),
-                                fontSize = parseFloat(style.getPropertyValue('font-size'));
-                            fitty(h1, {maxSize: fontSize});
-                        }, h1);
+                    textMargin: function() {
+                        this.fitContent();
                     }
                 }
             },
@@ -307,15 +314,10 @@
                 '        [[ subspecies ]]' +
                 '    </p>' +
                 '</div>',
+                mixins: [fitMixin],
                 watch: {
-                    textMargin: function(val) {
-                        const p = this.$el.getElementsByTagName('p')[0];
-                        Vue.nextTick(function () {
-                            p.style.fontSize = '';
-                            const style = window.getComputedStyle(p, null),
-                                fontSize = parseFloat(style.getPropertyValue('font-size'));
-                            fitty(p, {maxSize: fontSize});
-                        }, p);
+                    textMargin: function() {
+                        this.fitContent();
                     }
                 }
             },
