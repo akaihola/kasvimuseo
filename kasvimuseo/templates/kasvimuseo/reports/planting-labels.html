@@ -228,7 +228,7 @@
 
         const fitMixin = {
             methods: {
-                fitContent: function() {
+                fitTextToSpace: function() {
                     const el = this.$el.firstChild;
                     el.style.fontSize = '';
                     const style = window.getComputedStyle(el, null),
@@ -285,28 +285,28 @@
                 }
             },
             'name': {
-                props: ['name', 'textMargin'],
+                props: ['name', 'verticalPhotoWidth'],
                 delimiters: ['[[', ']]'],
                 template:
                 '<div class="fit-wrapper"' +
-                '     v-bind:style="{ marginLeft: textMargin }">{# dummy wrapper needed for fitty due to centering #}' +
+                '     v-bind:style="{ marginLeft: verticalPhotoWidth }">{# dummy wrapper needed for fitty due to centering #}' +
                 '    <h1 class="name">' +
                 '        [[ name ]]' +
                 '    </h1>' +
                 '</div>',
                 mixins: [fitMixin],
                 watch: {
-                    textMargin: function() {
-                        this.fitContent();
+                    verticalPhotoWidth: function() {
+                        this.fitTextToSpace();
                     }
                 }
             },
             'classification': {
-                props: ['genus', 'group', 'species', 'subspecies', 'textMargin'],
+                props: ['genus', 'group', 'species', 'subspecies', 'verticalPhotoWidth'],
                 delimiters: ['[[', ']]'],
                 template:
                 '<div class="fit-wrapper"' +
-                '     v-bind:style="{ marginLeft: textMargin }">{# dummy wrapper needed for fitty due to centering #}' +
+                '     v-bind:style="{ marginLeft: verticalPhotoWidth }">{# dummy wrapper needed for fitty due to centering #}' +
                 '    <p class="classification">' +
                 '        [[ genus ]]' +
                 '        [[ group ]]' +
@@ -316,8 +316,8 @@
                 '</div>',
                 mixins: [fitMixin],
                 watch: {
-                    textMargin: function() {
-                        this.fitContent();
+                    verticalPhotoWidth: function() {
+                        this.fitTextToSpace();
                     }
                 }
             },
@@ -351,19 +351,19 @@
                     components: labelComponents,
                     data: () => ({
                         isVertical: false,
-                        textMargin: '0.3cm'}),
+                        verticalPhotoWidth: '0.3cm'}),
                     template:
                     '<li :data-species-id="species.id"' +
                     '    v-bind:class="{ hidden: !species.visible, vertical: isVertical, horizontal: !isVertical }">' +
                     '    <observation-ids :ids="species.external_ids"></observation-ids>' +
                     '    <photo :url="species.photo_url" v-on:aspect="setAspect"></photo>' +
                     '    <name :name="species.name_fi"' +
-                    '          :textMargin="textMargin"></name>' +
+                    '          :verticalPhotoWidth="verticalPhotoWidth"></name>' +
                     '    <classification :genus="species.genus"' +
                     '                    :group="species.group"' +
                     '                    :species="species.species"' +
                     '                    :subspecies="species.subspecies"' +
-                    '                    :textMargin="textMargin"></classification>' +
+                    '                    :verticalPhotoWidth="verticalPhotoWidth"></classification>' +
                     '    <div class="remove">' +
                     '         <label for="remove">&#x1f5b6;</label><input type="checkbox" v-model="species.visible">' +
                     '    </div>' +
@@ -378,9 +378,9 @@
                             this.isVertical = payload.aspectRatio < 3.1 / 4;
                             const width = payload.aspectRatio * this.$el.offsetHeight;
                             if (this.isVertical) {
-                                this.textMargin = `calc(${width}px + 0.3cm)`;
+                                this.verticalPhotoWidth = `calc(${width}px + 0.3cm)`;
                             } else {
-                                this.textMargin = '0.3cm';
+                                this.verticalPhotoWidth = '0.3cm';
                             }
                         }
                     }
