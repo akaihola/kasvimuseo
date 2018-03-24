@@ -39,7 +39,9 @@ class PlantedSpeciesList(TemplateView):
                  'photo_url': (species.photo.get_display_url()
                                if species.photo
                                else ''),
-                 'external_ids': list(species.observation_set.public_planted().values_list('external_id', flat=True)),
+                 'external_ids': list(species.observation_set.public_planted()
+                                      .order_by('external_id')
+                                      .values_list('external_id', flat=True)),
                  'genus': species.genus,
                  'group': species.group,
                  'species': species.species,

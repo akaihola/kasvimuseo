@@ -168,15 +168,13 @@
         </form>
         <ul id="labels"
             @dragenter="dragEnterBackground"
-            @dragexit="dragExitBackground"
             @dragover="dragOverBackground"
-            @drop="dropNewLabel">
+            @drop.prevent="dropNewLabel">
             <template v-for="species in object_list">
                 <species-label :species="species"
-                               @dragenter.native="dragEnterLabel"
-                               @dragexit.native="dragExitLabel"
-                               @dragover.native="dragOverLabel"
-                               @drop.native="dropLabel"></species-label>
+                               @dragenter.stop.native="dragEnterLabel"
+                               @dragover.stop.native="allowDropOnLabel"
+                               @drop.stop.native="dragDropOnLabel"></species-label>
             </template>
         </ul>
     </div>
@@ -184,44 +182,34 @@
     <script type="text/javascript">
         const dragMixin = {
             methods: {
-                labelSpeciesId: function(target) {
-                    const label = target.closest('li');
-                    return parseInt(label.dataset.speciesId);
+                setDragInfo: function(event, data) {
+                    window.dragData = data;
+                    return window.dragData;
                 },
-                setDragData: function(event, index, externalId, speciesId) {
-                    event.dataTransfer.setData('text/plain:index', index);
-                    event.dataTransfer.setData('text/plain:externalId', externalId);
-                    event.dataTransfer.setData('text/plain:speciesId', speciesId);
+                getDragInfo: function() {
+                    return window.dragData;
                 },
-                getDragData: function(event) {
-                    return {
-                        index: parseInt(event.dataTransfer.getData('text/plain:index')),
-                        externalId: parseInt(event.dataTransfer.getData('text/plain:externalId')),
-                        speciesId: parseInt(event.dataTransfer.getData('text/plain:speciesId'))
-                    };
-                },
-                getLabelData: function(event) {
-                    const node = event.target,
-                        el = (node.nodeType === 1 ? node : node.parentElement),
+                getLabelData: function(node) {
+                    const el = (node.nodeType === 1 ? node : node.parentElement),
                         label = el.closest('li');
                     return {
                         index: this.getElIndex(label),
-                        speciesId: parseInt(label.dataset.speciesId)
-                    }
+                        speciesId: parseInt(label.dataset.speciesId)};
                 },
-                getEventData: function(event) {
-                    return {
-                        drag: this.getDragData(event),
-                        target: this.getLabelData(event)
-                    }
-                },
-                dragMatch: function(target, drag) {
+                canDropToLabel: function(event) {
+                    const drag = this.getDragInfo(),
+                        target = this.getLabelData(event.target);
                     return target.speciesId === drag.speciesId &&
                         target.index !== drag.index;
                 },
                 getElIndex: function(el) {
                     for (var i = 0; el = el.previousElementSibling; i++);
                     return i;
+                },
+                insort: function(items, newItem) {
+                    for (var i = 0; i < items.length && items[i] < newItem; ++i);
+                    items.splice(i, 0, newItem);
+                    return items;
                 }
             }
         };
@@ -236,7 +224,7 @@
                     fitty(el, {maxSize: fontSize});
                 }
             }
-        }
+        };
 
         const bus = new Vue();
 
@@ -244,6 +232,9 @@
             'observation-ids': {
                 name: 'observation-ids',
                 props: ['ids'],
+                data: function() {
+                    return {draggedExternalId: null};
+                },
                 delimiters: ['[[', ']]'],
                 mixins: [dragMixin],
                 template:
@@ -258,30 +249,35 @@
                 '</div>',
                 methods: {
                     dragStart: function(event) {
-                        const index = this.getElIndex(event.target.closest('li')),
-                            externalId = parseInt(event.target.innerHTML),
-                            speciesId = this.labelSpeciesId(event.target);
-                        this.setDragData(event, index, externalId, speciesId);
+                        const label = this.getLabelData(event.target),
+                            externalId = parseInt(event.target.innerHTML);
+                        this.setDragInfo(
+                            event,
+                            {
+                                index: label.index,
+                                externalId: externalId,
+                                speciesId: label.speciesId,
+                                state: 'dragging',
+                                lastLabelIndex: label.index
+                            });
+                        event.dataTransfer.setData('text/plain', 'drag');
                         event.dataTransfer.effectAllowed = "move";
-                        event.target.style.border = 'solid black 1px';
-                        bus.$emit('set-drag-label', index, externalId);
-                        Vue.nextTick(() => {
-                            const externalIds = this.ids,
-                                externalIdIndex = externalIds.indexOf(externalId);
-                            externalIds.splice(externalIdIndex, 1);
-                            event.target.style.border = 'none';
-                        });
+                        bus.$emit('set-drag-label', label.index, externalId);
                     },
                     dragEnd: function(event) {
-                        const drag = this.getDragData(event);
-                        if (event.dataTransfer.dropEffect === 'none') {
-                            // drag&drop was cancelled, restore the external ID
-                            this.ids.push(drag.externalId);
-                        } else if (this.ids.length === 0) {
-                            // no external IDs left, remove the label
+                        // event.target is null when dragging to another label!
+                        const drag = this.getDragInfo();
+                        if (drag.state === 'dragging' && drag.index !== drag.lastLabelIndex) {
+                            // Drop to another label was not authorized,
+                            // restore external ID on the original label.
+                            this.insort(this.ids, drag.externalId);
+                        } else if (drag.state === 'dropped' && this.ids.length === 0) {
+                            // The last remaining external ID was moved out of
+                            // a label to another label of the same species.
+                            // Remove the label.
                             bus.$emit('remove-label-at-index', drag.index);
                         }
-                    },
+                    }
                 }
             },
             'name': {
@@ -370,9 +366,8 @@
                     '</li>',
                     methods: {
                         toggleVisible: function(event) {
-                            const e = this.getLabelData(event);
+                            const e = this.getLabelData(event.target);
                             this.species.visible = !this.species.visible;
-                            this.$emit('moveLabelToEnd', e.index);
                         },
                         setAspect: function(payload) {
                             this.isVertical = payload.aspectRatio < 3.1 / 4;
@@ -391,14 +386,24 @@
                     // when an external ID being dragged enters the background
                     // area, show a "new label" indicator
                     if (event.target.id === 'labels') {
+                        const drag = this.getDragInfo();
+                        if (drag.lastLabelIndex >= 0) {
+                            // Dragging from a label. For good browser
+                            // compatibility, don't rely on drag exit events.
+                            // Instead, trigger exit when entering elsewhere.
+                            this.dragExitLabel();
+                        }
                         event.preventDefault();
                         event.dropEffect = 'move';
                         this.dragSpecies.visible = true;
+                        drag.lastLabelIndex = -1;  // background = -1
                     }
                 },
                 dragExitBackground: function(event) {
-                    // when an external ID being dragged exits the background
-                    // area, hide the "new label" indicator
+                    // When an external ID being dragged exits the background
+                    // area, hide the "new label" indicator. This is also
+                    // called whenever another element inside the <ul> is
+                    // entered (but not on Chrome).
                     if (event.target.nodeType === 1) {
                         this.dragSpecies.visible = false;
                     }
@@ -412,55 +417,65 @@
                     }
                 },
                 dropNewLabel: function(event) {
-                    event.preventDefault();
-                    const drag = this.getDragData(event),
-                        that = this,
+                    const drag = this.getDragInfo(),
                         newLabel = JSON.parse(JSON.stringify(this.object_list[drag.index]));
                     this.object_list.splice(drag.index + 1, 0, newLabel);
                     newLabel.external_ids.splice(0);
-                    newLabel.external_ids.push(drag.externalId);
+                    this.insort(newLabel.external_ids, drag.externalId);
                     // force refresh layout of the new label:
                     this.$set(newLabel, 'photo', newLabel.photo);
                     this.dragSpecies.visible = false;
+                    drag.state = 'dropped';
                 },
                 dragEnterLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
+                    const drag = this.getDragInfo(),
+                        enteredLabel = this.getLabelData(event.target);
+                    if (drag.lastLabelIndex === -1) { // background
+                        // For good browser compatibility, don't rely on drag
+                        // exit events. Trigger them manually when entering
+                        // another element.
+                        this.dragExitBackground(event);
+                    } else if (drag.lastLabelIndex !== enteredLabel.index) {
+                        this.dragExitLabel();
+                    }
+                    if (drag.lastLabelIndex !== enteredLabel.index
+                        && enteredLabel.speciesId === drag.speciesId) {
+                        // Coming from background or another label, and
+                        // dragging the same species as the entered label. Add
+                        // the dragged external ID to this label.
                         event.preventDefault();
-                        const label = this.object_list[e.target.index];
-                        label.external_ids.push(e.drag.externalId);
+                        const labelData = this.object_list[enteredLabel.index];
+                        this.insort(labelData.external_ids, drag.externalId);
                     }
+                    drag.lastLabelIndex = enteredLabel.index;
                 },
-                dragExitLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
-                        const label = this.object_list[e.target.index],
-                            externalIds = label.external_ids;
-                        externalIds.splice(externalIds.indexOf(e.drag.externalId), 1);
-                    }
+                dragExitLabel: function() {
+                    // Remove the dragged external ID from the label upon exit
+                    const drag = this.getDragInfo(),
+                        labelData = this.object_list[drag.lastLabelIndex],
+                        externalIds = labelData.external_ids;
+                    externalIds.splice(externalIds.indexOf(drag.externalId), 1);
                 },
-                dragOverLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
+                allowDropOnLabel: function(event) {
+                    // handler for both ondragover and ondrop for labels
+                    if (this.canDropToLabel(event)) {
                         event.preventDefault();
                     }
                 },
-                dropLabel: function(event) {
-                    event.stopPropagation();
-                    const e = this.getEventData(event);
-                    if (this.dragMatch(e.target, e.drag)) {
+                dragDropOnLabel: function(event) {
+                    // handler for both ondragover and ondrop for labels
+                    if (this.canDropToLabel(event)) {
                         event.preventDefault();
+                        this.getDragInfo().state = 'dropped';
                     }
-                },
-                moveLabelToEnd: function(event, index) {
-                    const label = this.object_list.splice(index, 1)[0];
-                    this.object_list.push(label);
                 }
             },
-            data: Object.assign({{ vue_data|safe }}, {dragSpecies: {visible: false}, mouse: ''}),
+            data: Object.assign(
+                {{ vue_data|safe }},
+                {
+                    dragSpecies: {visible: false},
+                    mouse: ''
+                }),
             created: function() {
                 const that = this;
                 bus.$on('remove-label-at-index', function(index) {
