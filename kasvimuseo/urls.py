@@ -3,6 +3,7 @@ from django.conf.urls.defaults import patterns, url
 from .views import (BedMap,
                     PlantedSpeciesCompact,
                     PlantedSpeciesLabels,
+                    PlantedSpeciesLabelsApi,
                     PlantedSpeciesList,
                     PlantedSpeciesPrintable)
 
@@ -19,6 +20,10 @@ urlpatterns = patterns(
     url(regex=r'^planting-labels/$',
         view=PlantedSpeciesLabels.as_view(),
         name='planting-label'),
+
+    url(regex=r'^planting-labels/data/$',
+        view=PlantedSpeciesLabelsApi.as_view(),
+        name='planting-label-data'),
 
     url(regex=(r'^planted-species-compact/'
                r'(?P<species_external_ids>[\d,]+)/$'),

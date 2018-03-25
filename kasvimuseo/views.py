@@ -4,16 +4,17 @@
 #         Used * or ** magic
 import json
 
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext
-from django.views.generic import View
+from django.views.generic import View, ListView
 from django.views.generic.base import TemplateResponseMixin, TemplateView
 from django.views.generic.detail import DetailView
 
 from kasvimuseo.models import Bed, Observation, Species
 
 
-class PlantedSpeciesList(TemplateView):
+class PlantedSpeciesList(ListView):
     template_name = 'kasvimuseo/reports/planted-species-list.html'
     model = Species
 
@@ -26,12 +27,34 @@ class PlantedSpeciesList(TemplateView):
         needs to be evaluated every time.
 
         """
+        return (self.model.objects
+                .public_planted()
+                .distinct()
+                .order_by('name_fi'))
 
-    def get_context_data(self, **kwargs):
-        object_list = (self.model.objects
-                       .public_planted()
-                       .distinct()
-                       .order_by('name_fi'))
+
+class PlantedSpeciesLabels(TemplateView):
+    template_name = 'kasvimuseo/reports/planting-labels.html'
+
+
+class PlantedSpeciesLabelsApi(View):
+    model = Species
+
+    def get_queryset(self):
+        """Returns public planted species ordered by Finnish name
+
+        The :meth:`get_queryset` method is used instead of the ``queryset``
+        attribute, because
+        :meth:`kasvimuseo.models.SpeciesManager.public_planted` is not lazy and
+        needs to be evaluated every time.
+
+        """
+        return (self.model.objects
+                .public_planted()
+                .distinct()
+                .order_by('name_fi'))
+
+    def get(self, request, *args, **kwargs):
         vue_data = {
             'object_list': [
                 {'id': species.pk,
@@ -46,15 +69,14 @@ class PlantedSpeciesList(TemplateView):
                  'group': species.group,
                  'species': species.species,
                  'subspecies': species.subspecies,
-                 'nicknames': list(species.observation_set.public_planted().values_list('nickname', flat=True)),
+                 'nicknames': list(species.observation_set
+                                   .public_planted()
+                                   .values_list('nickname', flat=True)),
                  'visible': True}
-                for species in object_list]}
-        return super(PlantedSpeciesList, self).get_context_data(
-            vue_data=json.dumps(vue_data), object_list=object_list, **kwargs)
-
-
-class PlantedSpeciesLabels(PlantedSpeciesList):
-    template_name = 'kasvimuseo/reports/planting-labels.html'
+                for species in self.get_queryset()]}
+        return HttpResponse(json.dumps(vue_data),
+                            content_type='application/json',
+                            **kwargs)
 
 
 class PlantedSpecies(TemplateResponseMixin, View):
