@@ -299,15 +299,15 @@
                 }
             },
             'classification': {
-                props: ['genus', 'group', 'species', 'subspecies', 'verticalPhotoWidth'],
+                props: ['genus', 'species', 'group', 'subspecies', 'verticalPhotoWidth'],
                 delimiters: ['[[', ']]'],
                 template:
                 '<div class="fit-wrapper"' +
                 '     v-bind:style="{ marginLeft: verticalPhotoWidth }">{# dummy wrapper needed for fitty due to centering #}' +
                 '    <p class="classification">' +
                 '        [[ genus ]]' +
-                '        [[ group ]]' +
                 '        [[ species ]]' +
+                '        [[ group ]]' +
                 '        [[ subspecies ]]' +
                 '    </p>' +
                 '</div>',
@@ -357,8 +357,8 @@
                     '    <name :name="species.name_fi"' +
                     '          :verticalPhotoWidth="verticalPhotoWidth"></name>' +
                     '    <classification :genus="species.genus"' +
-                    '                    :group="species.group"' +
                     '                    :species="species.species"' +
+                    '                    :group="species.group"' +
                     '                    :subspecies="species.subspecies"' +
                     '                    :verticalPhotoWidth="verticalPhotoWidth"></classification>' +
                     '    <div class="remove">' +

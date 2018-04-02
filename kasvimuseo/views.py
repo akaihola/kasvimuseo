@@ -66,8 +66,8 @@ class PlantedSpeciesLabelsApi(View):
                                       .order_by('external_id')
                                       .values_list('external_id', flat=True)),
                  'genus': species.genus,
-                 'group': species.group,
                  'species': species.species,
+                 'group': species.group,
                  'subspecies': species.subspecies,
                  'nicknames': list(species.observation_set
                                    .public_planted()
