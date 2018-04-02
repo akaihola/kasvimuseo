@@ -348,7 +348,10 @@
                     components: labelComponents,
                     data: () => ({
                         isVertical: false,
-                        verticalPhotoWidth: '0.3cm'}),
+                        // Initially set photo space width to zero. This will
+                        // change to min. 0.3 cm once the photo is loaded,
+                        // which triggers text fitting.
+                        verticalPhotoWidth: '0.0cm'}),
                     template:
                     '<li :data-species-id="species.id"' +
                     '    v-bind:class="{ hidden: !species.visible, vertical: isVertical, horizontal: !isVertical }">' +
