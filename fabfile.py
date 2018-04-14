@@ -1,4 +1,5 @@
 from fabric.api import env, task
+# noinspection PyUnresolvedReferences
 from flax import (bootstrap,
                   clone_db,
                   configure_nginx,
