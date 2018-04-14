@@ -3,13 +3,11 @@ import os
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-DATABASES = {'default': {
-    'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    'HOST': '/var/run/postgresql'}}
+
 
 def modify(settings):
     db = settings['DATABASES']['default']
-    db['HOST'] = os.path.join(os.path.dirname(__file__), '..', 'db')
+    db['HOST'] = '/tmp'
     db['NAME'] = 'ylaneenkasvit'
 
     #settings['INSTALLED_APPS'] += 'pserver', 'django_extensions',
