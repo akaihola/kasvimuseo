@@ -105,6 +105,9 @@ class Species(models.Model):
         max_length=40,
         verbose_name=_(u'lajike'),
         blank=True)
+    cultivation_history = models.TextField(
+        verbose_name=_(u'cultivation history'),
+        blank=True)
     name_fi = models.CharField(
         max_length=40,
         verbose_name=_(u'SuomalainenNimi'))
