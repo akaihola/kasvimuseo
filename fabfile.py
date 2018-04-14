@@ -18,9 +18,9 @@ from flax import (bootstrap,
 
 
 @task
-def kala():
-    env.hosts = ['kala.ambitone.com']
-    env.user = 'akaihola'
+def ylane():
+    env.hosts = ['kasvit.ambitone.com']
+    env.user = 'ylaneenkasvit'
     env.project_root = '/www/ylaneenkasvit'
     env.site_root = '/www/ylaneenkasvit'
     env.virtualenv_root = '/www/ylaneenkasvit'
