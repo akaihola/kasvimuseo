@@ -178,6 +178,7 @@
     <script src="{{ STATIC_URL }}js/kasvimuseo/fitty.min.js"></script>
 </head>
 <body>
+    <input name="{% csrf_token %}" value="dmbdgNDkX7dRF9o6kh6ROeqwoJnIc8KW" type="hidden">
     <div id="app">
         <div id="drag-wrapper"
              v-show="dragSpecies.visible"
@@ -191,6 +192,7 @@
             <input type="text" placeholder="8cm" name="height">
             <input type="submit" value="Set box size">
         </form>
+        <button v-on:click="save">Save changes</button>
         <ul id="labels"
             @dragenter="dragEnterBackground"
             @dragover="dragOverBackground"
@@ -529,6 +531,14 @@
                         event.preventDefault();
                         this.getDragInfo().state = 'dropped';
                     }
+                },
+                save: function(event) {
+                    axios.post(
+                        '{% url "planting-label-data" %}',
+                        this.object_list
+                    ).catch(e => {
+                        console.log(e)
+                    });
                 }
             },
             data: {

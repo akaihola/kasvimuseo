@@ -11,7 +11,7 @@ from django.views.generic import View, ListView
 from django.views.generic.base import TemplateResponseMixin, TemplateView
 from django.views.generic.detail import DetailView
 
-from kasvimuseo.models import Bed, Observation, Species
+from kasvimuseo.models import Bed, Observation, Species, Label
 from kasvimuseo.photos import (get_photo_pks_and_urls_by_species,
                                get_species_photo_info)
 
@@ -91,6 +91,13 @@ class PlantedSpeciesLabelsApi(View):
         return HttpResponse(json.dumps(vue_data),
                             content_type='application/json',
                             **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        #old_labels = list(Label.objects.all())
+        #Label.objects.all().delete()
+        for item in json.loads(request.body):
+            print(item)
+
 
 
 class PlantedSpecies(TemplateResponseMixin, View):

@@ -458,6 +458,18 @@ class Bed(models.Model):
         verbose_name_plural = _(u'beds')
 
 
+class Label(models.Model):
+    name = models.CharField(
+        max_length=80,
+        verbose_name=_(u'name of label'))
+    species = models.ForeignKey(
+        Species,
+        verbose_name=_(u'species'))
+    photo = models.ForeignKey(
+        'photologue.Photo',
+        null=True, blank=True)
+
+
 class Planting(models.Model):
     observation = models.ForeignKey(
         Observation,
@@ -488,6 +500,9 @@ class Planting(models.Model):
     removal_date = models.DateField(
         null=True, blank=True,
         verbose_name=_(u'date of removal'))
+    label = models.ForeignKey(
+        Label, null=True,
+        verbose_name=_(u'label'))
 
     def __unicode__(self):
         return unicode(self.observation)
