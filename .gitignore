@@ -16,3 +16,5 @@
 *.sqlite
 /ipy_conf.py
 *.egg-info
+/.idea
+/.venv
