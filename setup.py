@@ -8,5 +8,9 @@ setup(
     entry_points = {
         'console_scripts': ['manage = ylaneenkasvit.manage:main'],
     },
-    include_package_data = True,
+    include_package_data=True,
+    tests_require=['mock==2.0.0',
+                   'pbr==4.0.2',
+                   'pytest==3.5.0',
+                   'pytest-django==2.9.1']
 )

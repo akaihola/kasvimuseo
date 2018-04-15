@@ -12,6 +12,8 @@ from django.views.generic.base import TemplateResponseMixin, TemplateView
 from django.views.generic.detail import DetailView
 
 from kasvimuseo.models import Bed, Observation, Species
+from kasvimuseo.photos import (get_photo_pks_and_urls_by_species,
+                               get_species_photo_info)
 
 
 class PlantedSpeciesList(ListView):
@@ -54,26 +56,38 @@ class PlantedSpeciesLabelsApi(View):
                 .distinct()
                 .order_by('name_fi'))
 
+    @staticmethod
+    def get_species_data(species, photo_pks_and_urls_by_title):
+        photo_pk, photo_alternatives = get_species_photo_info(
+            species, photo_pks_and_urls_by_title)
+        return {
+            'id': species.pk,
+            'name_fi': species.name_fi,
+            'photo_pk': photo_pk,
+            'all_photos': photo_alternatives,
+            'external_ids': list(species.observation_set.public_planted()
+                                 .order_by('external_id')
+                                 .values_list('external_id', flat=True)),
+            'genus': species.genus,
+            'species': species.species,
+            'group': species.group,
+            'subspecies': species.subspecies,
+            'nicknames': list(species.observation_set
+                              .public_planted()
+                              .values_list('nickname', flat=True)),
+            'visible': True}
+
+    # noinspection PyUnusedLocal
     def get(self, request, *args, **kwargs):
-        vue_data = {
-            'object_list': [
-                {'id': species.pk,
-                 'name_fi': species.name_fi,
-                 'photo_url': (species.photo.get_display_url()
-                               if species.photo
-                               else ''),
-                 'external_ids': list(species.observation_set.public_planted()
-                                      .order_by('external_id')
-                                      .values_list('external_id', flat=True)),
-                 'genus': species.genus,
-                 'species': species.species,
-                 'group': species.group,
-                 'subspecies': species.subspecies,
-                 'nicknames': list(species.observation_set
-                                   .public_planted()
-                                   .values_list('nickname', flat=True)),
-                 'visible': True}
-                for species in self.get_queryset()]}
+        # optimize the query
+        queryset = (self.get_queryset()
+                    .only('pk', 'name_fi', 'photo__image',
+                          'genus', 'species', 'group', 'subspecies')
+                    .select_related('photo', 'observation_set'))
+        all_photos = get_photo_pks_and_urls_by_species()
+        # noinspection PyUnresolvedReferences
+        vue_data = {'object_list': [self.get_species_data(species, all_photos)
+                                    for species in queryset]}
         return HttpResponse(json.dumps(vue_data),
                             content_type='application/json',
                             **kwargs)
