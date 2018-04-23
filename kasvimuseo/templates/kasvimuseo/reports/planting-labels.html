@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <link rel="icon" href="{{ STATIC_URL }}img/favicon.ico">
     <title>{{ object.observation.species.name_fi }}</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/sanitize.css/2.0.0/sanitize.min.css" />
     <!--suppress CssUnusedSymbol -->
     <style>
         @media print {
@@ -18,6 +20,20 @@
         body {
             margin: 0px;
             font-family: sans-serif;
+        }
+
+        button,
+        html input[type="button"],
+        input[type="reset"],
+        input[type="submit"] {
+            padding: 5px;
+            border-radius: 3px;
+        }
+        button:disabled,
+        html input[type="button"]:disabled,
+        input[type="reset"]:disabled,
+        input[type="submit"]:disabled {
+            color: #aaa;
         }
 
         /* settings form */
