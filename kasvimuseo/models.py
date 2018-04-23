@@ -457,15 +457,26 @@ class Bed(models.Model):
 
 
 class Label(models.Model):
-    name = models.CharField(
-        max_length=80,
-        verbose_name=_(u'name of label'))
     species = models.ForeignKey(
         Species,
         verbose_name=_(u'species'))
     photo = models.ForeignKey(
         'photologue.Photo',
         null=True, blank=True)
+    visible = models.BooleanField(default=True)
+
+
+class PlantingManager(models.Manager):
+    def public_planted(self):
+        base_qs = super(PlantingManager, self).all()
+        all_plantings = (base_qs
+                         .filter(bed__public=True)
+                         .select_related('bed__public')
+                         .prefetch_related('care_set')
+                         .order_by())
+        planting_pks = {planting.pk for planting in all_plantings
+                        if planting.is_public_planted()}
+        return base_qs.filter(pk__in=planting_pks)
 
 
 class Planting(models.Model):
@@ -499,8 +510,10 @@ class Planting(models.Model):
         null=True, blank=True,
         verbose_name=_(u'date of removal'))
     label = models.ForeignKey(
-        Label, null=True,
+        Label, null=True, on_delete=models.SET_NULL,
         verbose_name=_(u'label'))
+
+    objects = PlantingManager()
 
     def __unicode__(self):
         return unicode(self.observation)
