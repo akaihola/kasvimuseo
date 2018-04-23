@@ -41,6 +41,19 @@
             width: 3em;
             margin-right: 1em;
         }
+        #save.progress {
+            background: #3798d9 linear-gradient(-45deg, rgba(255, 255, 255, 0.125) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.125) 50%, rgba(255, 255, 255, 0.125) 75%, transparent 75%, transparent);
+            background-size: 35px 35px;
+            animation: cssProgressActive 2s linear infinite;
+        }
+        @keyframes cssProgressActive {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 35px 35px;
+            }
+        }
 
         /* one label */
         li {
@@ -194,7 +207,6 @@
     <script src="{{ STATIC_URL }}js/kasvimuseo/fitty.min.js"></script>
 </head>
 <body>
-    <input name="{% csrf_token %}" value="dmbdgNDkX7dRF9o6kh6ROeqwoJnIc8KW" type="hidden">
     <div id="app">
         <div id="drag-wrapper"
              v-show="dragSpecies.visible"
@@ -208,7 +220,10 @@
             <input type="text" placeholder="8cm" name="height">
             <input type="submit" value="Set box size">
         </form>
-        <button v-on:click="save">Save changes</button>
+        <button id="save"
+                v-on:click="save"
+                v-bind:class="{ progress: isSaving }"
+                v-bind:disabled="disableSave">Save changes</button>
         <ul id="labels"
             @dragenter="dragEnterBackground"
             @dragover="dragOverBackground"
@@ -444,10 +459,6 @@
                     '    </div>' +
                     '</li>',
                     methods: {
-                        toggleVisible: function(event) {
-                            const e = this.getLabelData(event.target);
-                            this.species.visible = !this.species.visible;
-                        },
                         setAspect: function(payload) {
                             this.isVertical = payload.aspectRatio < 3.1 / 4;
                             const width = payload.aspectRatio * this.$el.offsetHeight;
@@ -456,6 +467,11 @@
                             } else {
                                 this.verticalPhotoWidth = '0.3cm';
                             }
+                        }
+                    },
+                    watch: {
+                        'species.visible': function(newVal, oldVal) {
+                            bus.$emit('enable-save');
                         }
                     }
                 }
@@ -549,18 +565,29 @@
                     }
                 },
                 save: function(event) {
+                    const token = document.cookie.match(/\bcsrftoken=(\w+)/)[1];
+                    this.isSaving = true;
+                    this.disableSave = true;
                     axios.post(
                         '{% url "planting-label-data" %}',
-                        this.object_list
-                    ).catch(e => {
-                        console.log(e)
+                        this.object_list,
+                        {headers: {'X-CSRFToken': token}}
+                    ).then(r => {
+                        this.isSaving = false;
+                        bus.$emit('enable-save');
+                    }).catch(e => {
+                        this.isSaving = false;
+                        bus.$emit('enable-save');
+                        console.log(e);
                     });
                 }
             },
             data: {
                 object_list: [],
                 dragSpecies: {visible: false, all_photos: {}},
-                mouse: ''
+                mouse: '',
+                isSaving: false,
+                disableSave: true
             },
             created: function() {
                 const that = this;
@@ -582,6 +609,9 @@
                         that.dragSpecies.external_ids = [externalId];
                         that.dragSpecies.visible = false;
                     }
+                });
+                bus.$on('enable-save', function() {
+                    that.disableSave = false;
                 });
             }
         });
