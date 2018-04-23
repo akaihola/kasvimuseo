@@ -327,9 +327,7 @@ class ObservationManager(models.Manager):
                             .order_by())
         observation_pks = set()
         for observation in all_observations:
-            if any(not planting.removal_date
-                   and (planting.care_set.count() == 0
-                        or planting.last_care_count() > 0)
+            if any(planting.is_public_planted()
                    # or sorted(planting.care_set.all(),
                    #           key=operator.attrgetter('date'),
                    #           reverse=True)[0].count > 0
@@ -550,6 +548,15 @@ class Planting(models.Model):
     def observation_external_id(self):
         return self.observation.external_id
     observation_external_id.short_description = _(u'YläneNro')
+
+    def is_public_planted(self):
+        """Returns True if the planting is public and not removed"""
+        if not self.bed.public:
+            return False
+        if self.removal_date or (self.care_set.count()
+                                 and self.last_care_count() == 0):
+            return False
+        return True
 
     class Meta:
         verbose_name = _(u'planting')
