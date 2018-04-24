@@ -327,9 +327,7 @@ class ObservationManager(models.Manager):
                             .order_by())
         observation_pks = set()
         for observation in all_observations:
-            if any(not planting.removal_date
-                   and (planting.care_set.count() == 0
-                        or planting.last_care_count() > 0)
+            if any(planting.is_public_planted()
                    # or sorted(planting.care_set.all(),
                    #           key=operator.attrgetter('date'),
                    #           reverse=True)[0].count > 0
@@ -458,6 +456,29 @@ class Bed(models.Model):
         verbose_name_plural = _(u'beds')
 
 
+class Label(models.Model):
+    species = models.ForeignKey(
+        Species,
+        verbose_name=_(u'species'))
+    photo = models.ForeignKey(
+        'photologue.Photo',
+        null=True, blank=True)
+    visible = models.BooleanField(default=True)
+
+
+class PlantingManager(models.Manager):
+    def public_planted(self):
+        base_qs = super(PlantingManager, self).all()
+        all_plantings = (base_qs
+                         .filter(bed__public=True)
+                         .select_related('bed__public')
+                         .prefetch_related('care_set')
+                         .order_by())
+        planting_pks = {planting.pk for planting in all_plantings
+                        if planting.is_public_planted()}
+        return base_qs.filter(pk__in=planting_pks)
+
+
 class Planting(models.Model):
     observation = models.ForeignKey(
         Observation,
@@ -488,6 +509,11 @@ class Planting(models.Model):
     removal_date = models.DateField(
         null=True, blank=True,
         verbose_name=_(u'date of removal'))
+    label = models.ForeignKey(
+        Label, null=True, on_delete=models.SET_NULL,
+        verbose_name=_(u'label'))
+
+    objects = PlantingManager()
 
     def __unicode__(self):
         return unicode(self.observation)
@@ -535,6 +561,15 @@ class Planting(models.Model):
     def observation_external_id(self):
         return self.observation.external_id
     observation_external_id.short_description = _(u'YläneNro')
+
+    def is_public_planted(self):
+        """Returns True if the planting is public and not removed"""
+        if not self.bed.public:
+            return False
+        if self.removal_date or (self.care_set.count()
+                                 and self.last_care_count() == 0):
+            return False
+        return True
 
     class Meta:
         verbose_name = _(u'planting')

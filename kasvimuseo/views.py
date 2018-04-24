@@ -3,6 +3,9 @@
 # pylint: disable=W0142
 #         Used * or ** magic
 import json
+from collections import OrderedDict
+from itertools import groupby
+from operator import attrgetter
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response
@@ -11,7 +14,7 @@ from django.views.generic import View, ListView
 from django.views.generic.base import TemplateResponseMixin, TemplateView
 from django.views.generic.detail import DetailView
 
-from kasvimuseo.models import Bed, Observation, Species
+from kasvimuseo.models import Bed, Observation, Species, Label, Planting
 from kasvimuseo.photos import (get_photo_pks_and_urls_by_species,
                                get_species_photo_info)
 
@@ -40,8 +43,6 @@ class PlantedSpeciesLabels(TemplateView):
 
 
 class PlantedSpeciesLabelsApi(View):
-    model = Species
-
     def get_queryset(self):
         """Returns public planted species ordered by Finnish name
 
@@ -51,13 +52,14 @@ class PlantedSpeciesLabelsApi(View):
         needs to be evaluated every time.
 
         """
-        return (self.model.objects
+        return (Observation.objects
                 .public_planted()
                 .distinct()
-                .order_by('name_fi'))
+                .order_by('species__name_fi'))
 
     @staticmethod
-    def get_species_data(species, photo_pks_and_urls_by_title):
+    def get_species_data(species, observation_set, visible,
+                         photo_pks_and_urls_by_title):
         photo_pk, photo_alternatives = get_species_photo_info(
             species, photo_pks_and_urls_by_title)
         return {
@@ -65,32 +67,84 @@ class PlantedSpeciesLabelsApi(View):
             'name_fi': species.name_fi,
             'photo_pk': photo_pk,
             'all_photos': photo_alternatives,
-            'external_ids': list(species.observation_set.public_planted()
-                                 .order_by('external_id')
-                                 .values_list('external_id', flat=True)),
+            'external_ids': [observation.external_id
+                             for observation in observation_set],
             'genus': species.genus,
             'species': species.species,
             'group': species.group,
             'subspecies': species.subspecies,
-            'nicknames': list(species.observation_set
-                              .public_planted()
-                              .values_list('nickname', flat=True)),
-            'visible': True}
+            'nicknames': [observation.nickname
+                          for observation in observation_set],
+            'visible': visible}
+
+    def get_labels_data(self):
+        # optimize the observations query
+        queryset = (self.get_queryset()
+                    .only('external_id',
+                          'species__id', 'species__name_fi',
+                          'species__photo__image',
+                          'species__genus', 'species__species',
+                          'species__group', 'species__subspecies')
+                    .select_related('species__photo'))
+        all_photos = get_photo_pks_and_urls_by_species()
+        # noinspection PyUnresolvedReferences
+        observations_by_species = OrderedDict([
+            (species, sorted(observation_set))
+            for species, observation_set
+            in groupby(queryset, attrgetter('species'))])
+        labels = (Label.objects
+                  .select_related('species')
+                  .order_by('species__name_fi'))
+        labels_by_species = groupby(labels, attrgetter('species'))
+        label_infos = [
+            self.get_species_data(species,
+                                  [planting.observation
+                                   for planting in label.planting_set.all()],
+                                  label.visible,
+                                  all_photos)
+            for species, labels in labels_by_species
+            for label in labels]
+        label_species_pks = {label['id'] for label in label_infos}
+        print('{} labels'.format(len(label_infos)))
+        for species, observation_set in observations_by_species.items():
+            if species.pk not in label_species_pks:
+                print('adding {} with {}'.format(
+                    species.name_fi.encode('ascii', 'replace'),
+                    [o.external_id for o in observation_set]))
+                label_infos.append(
+                    self.get_species_data(species,
+                                          observation_set,
+                                          True,
+                                          all_photos))
+        vue_data = {'object_list': label_infos}
+        return vue_data
 
     # noinspection PyUnusedLocal
     def get(self, request, *args, **kwargs):
-        # optimize the query
-        queryset = (self.get_queryset()
-                    .only('pk', 'name_fi', 'photo__image',
-                          'genus', 'species', 'group', 'subspecies')
-                    .select_related('photo', 'observation_set'))
-        all_photos = get_photo_pks_and_urls_by_species()
-        # noinspection PyUnresolvedReferences
-        vue_data = {'object_list': [self.get_species_data(species, all_photos)
-                                    for species in queryset]}
+        vue_data = self.get_labels_data()
         return HttpResponse(json.dumps(vue_data),
                             content_type='application/json',
                             **kwargs)
+
+    # noinspection PyUnusedLocal
+    def post(self, request, *args, **kwargs):
+        items = json.loads(request.body)
+        Label.objects.all().delete()
+        Label.objects.bulk_create([Label(species_id=item['id'],
+                                         photo_id=item['photo_pk'],
+                                         visible=item['visible'])
+                                   for item in items])
+        labels = Label.objects.order_by('pk')
+        external_ids = {external_id: label
+                        for item, label in zip(items, labels)
+                        for external_id in item['external_ids']}
+        plantings = (Planting.objects
+                     .public_planted()
+                     .filter(observation__external_id__in=external_ids))
+        for planting in plantings:
+            planting.label = external_ids[planting.observation.external_id]
+            planting.save()
+        return HttpResponse('OK', content_type='text/plain')
 
 
 class PlantedSpecies(TemplateResponseMixin, View):

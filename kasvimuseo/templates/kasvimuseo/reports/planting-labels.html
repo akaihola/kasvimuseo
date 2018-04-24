@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <link rel="icon" href="{{ STATIC_URL }}img/favicon.ico">
     <title>{{ object.observation.species.name_fi }}</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/sanitize.css/2.0.0/sanitize.min.css" />
     <!--suppress CssUnusedSymbol -->
     <style>
         @media print {
@@ -20,10 +22,37 @@
             font-family: sans-serif;
         }
 
+        button,
+        html input[type="button"],
+        input[type="reset"],
+        input[type="submit"] {
+            padding: 5px;
+            border-radius: 3px;
+        }
+        button:disabled,
+        html input[type="button"]:disabled,
+        input[type="reset"]:disabled,
+        input[type="submit"]:disabled {
+            color: #aaa;
+        }
+
         /* settings form */
         input[type=text] {
             width: 3em;
             margin-right: 1em;
+        }
+        #save.progress {
+            background: #3798d9 linear-gradient(-45deg, rgba(255, 255, 255, 0.125) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.125) 50%, rgba(255, 255, 255, 0.125) 75%, transparent 75%, transparent);
+            background-size: 35px 35px;
+            animation: cssProgressActive 2s linear infinite;
+        }
+        @keyframes cssProgressActive {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 35px 35px;
+            }
         }
 
         /* one label */
@@ -191,6 +220,10 @@
             <input type="text" placeholder="8cm" name="height">
             <input type="submit" value="Set box size">
         </form>
+        <button id="save"
+                v-on:click="save"
+                v-bind:class="{ progress: isSaving }"
+                v-bind:disabled="disableSave">Save changes</button>
         <ul id="labels"
             @dragenter="dragEnterBackground"
             @dragover="dragOverBackground"
@@ -426,10 +459,6 @@
                     '    </div>' +
                     '</li>',
                     methods: {
-                        toggleVisible: function(event) {
-                            const e = this.getLabelData(event.target);
-                            this.species.visible = !this.species.visible;
-                        },
                         setAspect: function(payload) {
                             this.isVertical = payload.aspectRatio < 3.1 / 4;
                             const width = payload.aspectRatio * this.$el.offsetHeight;
@@ -438,6 +467,11 @@
                             } else {
                                 this.verticalPhotoWidth = '0.3cm';
                             }
+                        }
+                    },
+                    watch: {
+                        'species.visible': function(newVal, oldVal) {
+                            bus.$emit('enable-save');
                         }
                     }
                 }
@@ -529,12 +563,31 @@
                         event.preventDefault();
                         this.getDragInfo().state = 'dropped';
                     }
+                },
+                save: function(event) {
+                    const token = document.cookie.match(/\bcsrftoken=(\w+)/)[1];
+                    this.isSaving = true;
+                    this.disableSave = true;
+                    axios.post(
+                        '{% url "planting-label-data" %}',
+                        this.object_list,
+                        {headers: {'X-CSRFToken': token}}
+                    ).then(r => {
+                        this.isSaving = false;
+                        bus.$emit('enable-save');
+                    }).catch(e => {
+                        this.isSaving = false;
+                        bus.$emit('enable-save');
+                        console.log(e);
+                    });
                 }
             },
             data: {
                 object_list: [],
                 dragSpecies: {visible: false, all_photos: {}},
-                mouse: ''
+                mouse: '',
+                isSaving: false,
+                disableSave: true
             },
             created: function() {
                 const that = this;
@@ -556,6 +609,9 @@
                         that.dragSpecies.external_ids = [externalId];
                         that.dragSpecies.visible = false;
                     }
+                });
+                bus.$on('enable-save', function() {
+                    that.disableSave = false;
                 });
             }
         });
