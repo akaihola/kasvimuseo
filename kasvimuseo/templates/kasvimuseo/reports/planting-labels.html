@@ -124,6 +124,9 @@
         li.vertical h1, li.vertical p {
             line-height: 150%;
         }
+        li.vertical .observation-id {
+            line-height: 100%;
+        }
         .fit-wrapper {
             /* wrapper around text which will be fit */
             margin: 0 0.3cm;
@@ -156,12 +159,15 @@
             padding-top: 30px;
         }
         .observation-id {
+            margin-bottom: 7px;
+            box-shadow: 0.8px 0.8px 1.5px 0.5px rgba(0, 0, 0, 1);
+            transform: rotate(-3deg);
             cursor: move;
             transition: all 0.5s ease-in-out;
         }
         li:hover .observation-id {
             transform: rotate(5deg);
-            box-shadow: 2px 2px 3px 3px rgba(0, 0, 0, 0.5);
+            box-shadow: 4px 4px 3px 3px rgba(0, 0, 0, .7);
         }
         li.horizontal .observation-ids {
             position: absolute;
