@@ -594,10 +594,10 @@
                 const that = this;
                 axios.get('{% url "planting-label-data" %}')
                     .then(response => {
-                        this.object_list = response.data.object_list;
+                        that.object_list = response.data.object_list;
                     })
                     .catch(e => {
-                        alert('error')
+                        alert('error');
                     });
                 bus.$on('remove-label-at-index', function(index) {
                     that.object_list.splice(index, 1);
