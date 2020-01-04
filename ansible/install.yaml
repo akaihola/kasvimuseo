@@ -1,0 +1,23 @@
+---
+- name: Install Kasvimuseo and dependencies
+  hosts: all
+  remote_user: kasvimuseo
+
+  tasks:
+    - name: Install Python 2.7
+      apt:
+        name: python-minimal
+        state: present
+      become: yes
+
+    - name: Install pip for Python 2.7
+      apt:
+        name: python-pip
+        state: present
+      become: yes
+
+    - name: Install the Kasvimuseo application
+      pip:
+        executable: "pip2"
+        name: "git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git"
+        extra_args: "--user"

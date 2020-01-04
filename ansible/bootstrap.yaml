@@ -1,0 +1,52 @@
+---
+
+# Instructions:
+# $ pip install ansible paramiko
+# $ ansible-playbook -k -c paramiko ansible/bootstrap.yaml
+# (enter root password on the host)
+
+- name: Bootstrap server for future ansible runs
+  hosts: all
+  remote_user: root
+
+  vars:
+    user_name: kasvimuseo
+    user_pass: $6$kUCuxyloATWJ6yK/$Ql3oNNsqRQJeiKv3WX8y2imgwEH7kKTBr6kXEoztpoyHY0tuSopyCeJ1LBMm/Xfu3Mmhi67hwk9v8nvx7F9I2.
+
+  tasks:
+  - name: Update apt cache
+    apt: update_cache=yes
+
+  - name: Safe aptitude upgrade
+    apt: upgrade=safe
+    async: 600
+    poll: 5
+
+  - name: Add my user
+    user: >
+      name={{ user_name }}
+      password={{ user_pass }}
+      shell=/bin/bash
+      groups=sudo
+      append=yes
+      generate_ssh_key=yes
+      ssh_key_bits=2048
+      state=present
+
+  - name: Add my workstation user's public key to the new user
+    authorized_key:
+      user: "{{ user_name }}"
+      key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      state: present
+    notify: restart ssh
+
+  - name: Add host key for Bitbucket
+    known_hosts: >
+      path=/home/{{ user_name }}/.ssh/known_hosts
+      name=bitbucket.org
+      key="bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw=="
+    become_user: "{{ user_name }}"
+
+  handlers:
+  - name: restart ssh
+    service: name=ssh state=restarted
