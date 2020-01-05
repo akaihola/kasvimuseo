@@ -1,8 +1,23 @@
+postgresql_packages:
+  - postgresql
+  - postgresql-contrib
+  - libpq-dev
+  - postgis
 postgresql_databases:
   - name: ylaneenkasvit
+    owner: ylaneenkasvit
 postgresql_users:
   - name: ylaneenkasvit
     password: 5tsovi25
+postgresql_hba_entries:
+  - type: local
+    database: ylaneenkasvit
+    user: ylaneenkasvit
+    auth_method: md5
+  - {type: local, database: all, user: postgres, auth_method: peer}
+  - {type: local, database: all, user: all, auth_method: peer}
+  - {type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5}
+  - {type: host, database: all, user: all, address: '::1/128', auth_method: md5}
 
 nginx_main_template_enable: true
 nginx_main_template:

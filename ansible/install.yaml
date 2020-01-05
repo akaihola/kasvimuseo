@@ -37,6 +37,16 @@
       import_role:
         name: geerlingguy.postgresql
 
+    - name: Add Postgis extension
+      tags:
+        - database
+        - postgis
+      become: true
+      become_user: "{{ postgresql_user }}"
+      postgresql_ext:
+        name: postgis
+        db: ylaneenkasvit
+
     - name: Install NGINX
       tags:
         - web
