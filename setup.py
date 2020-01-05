@@ -9,6 +9,7 @@ setup(
         'console_scripts': ['manage = ylaneenkasvit.manage:main'],
     },
     include_package_data=True,
+    install_requires=[line for line in open('requirements/production.txt')],
     tests_require=['mock==2.0.0',
                    'pbr==4.0.2',
                    'pytest==3.5.0',
