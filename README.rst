@@ -9,6 +9,6 @@ Mount photos from production::
 Deployment
 ==========
 
-In a checkout of the Ambitone deployment repository::
-
-    $ ansible-playbook -v ylaneenkasvit.yml
+    export ANSIBLE_VAULT_PASS=***********
+    ansible-playbook ansible/bootstrap.yml
+    ansible-playbook ansible/install.yml
