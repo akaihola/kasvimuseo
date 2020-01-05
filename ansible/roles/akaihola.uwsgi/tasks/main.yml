@@ -1,0 +1,38 @@
+---
+- name: Install uWSGI
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - uwsgi
+    - uwsgi-plugin-python
+
+- name: Create uWSGI config
+  become_user: kasvimuseo
+  template: src=uwsgi.ini dest=/home/kasvimuseo/uwsgi.ini
+  register: wsgi_config
+  notify:
+    - "(Handler: All OSs) Reload NGINX"
+
+- name: Setup systemd service
+  template:
+    src: uwsgi_systemd
+    dest: "/etc/systemd/system/ylaneenkasvit-wsgi.service"
+    owner: root
+    group: root
+    mode: 0644
+  register: wsgi_service
+  notify:
+    - "(Handler: All OSs) Reload NGINX"
+
+- name: Reload systemd because we've just updated a service
+  shell: systemctl daemon-reload
+  when: wsgi_service.changed
+
+- name: Ensure that the wsgi service is enabled
+  service: "name=ylaneenkasvit-wsgi enabled=yes"
+
+# We can't use a handler for this, because handlers don't work well with dynamic parameters.
+- name: Restart uWSGI service
+  service: "name=ylaneenkasvit-wsgi state=restarted"
+  when: wsgi_service.changed or wsgi_config.changed

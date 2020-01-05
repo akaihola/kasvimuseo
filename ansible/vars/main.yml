@@ -1,0 +1,48 @@
+postgresql_databases:
+  - name: ylaneenkasvit
+postgresql_users:
+  - name: ylaneenkasvit
+    password: 5tsovi25
+
+nginx_main_template_enable: true
+nginx_main_template:
+  user: nginx www-data
+  worker_processes: 1
+  error_log:
+    location: /var/log/nginx/error.log
+    level: warn
+  worker_connections: 1024
+  http_enable: true
+  http_settings:
+    access_log_format:
+      - name: main
+        format: '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"'
+    access_log_location:
+      - location: /var/log/nginx/access.log
+        name: main
+    keepalive_timeout: 65
+    cache: false
+    rate_limit: false
+    keyval: false
+  stream_enable: false
+#  template_file: nginx.conf.j2
+#  conf_file_name: nginx.conf
+#  conf_file_location: /etc/nginx/
+
+nginx_http_template_enable: true
+nginx_http_template:
+  default:
+    template_file: nginx-site.conf.j2
+    conf_file_name: default.conf
+    conf_file_location: /etc/nginx/conf.d/
+    site_domain: kasvit.ambitone.com
+    ssl:
+      cert: /etc/letsencrypt/live/kasvit.ambitone.com/fullchain.pem
+      key: /etc/letsencrypt/live/kasvit.ambitone.com/privkey.pem
+
+certbot_admin_email: antti19@ambitone.com
+certbot_create_if_missing: true
+certbot_create_standalone_stop_services: [nginx]
+certbot_certs:
+  - domains:
+      - kasvit.ambitone.com

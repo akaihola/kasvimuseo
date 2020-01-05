@@ -1,0 +1,12 @@
+[Unit]
+Description=uWSGI Instance to serve ylaneenkasvit
+After=syslog.target
+
+[Service]
+ExecStart=/usr/bin/uwsgi --ini /home/kasvimuseo/uwsgi.ini
+Restart=always
+RestartSec=5s
+KillSignal=SIGQUIT
+
+[Install]
+WantedBy=multi-user.target

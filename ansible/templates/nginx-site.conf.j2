@@ -1,0 +1,20 @@
+upstream django {
+    server unix://home/kasvimuseo/wsgi.sock;
+}
+
+server {
+    listen 443 ssl;
+    server_name {{ item.value.site_domain }};
+    ssl_certificate {{ item.value.ssl.cert }};
+    ssl_certificate_key {{ item.value.ssl.key }};
+    location / {
+        uwsgi_pass django;
+        include    /etc/nginx/uwsgi_params;
+    }
+}
+
+server {
+    listen 80;
+    server_name {{ item.value.site_domain }};
+    return 301 https://{{ item.value.site_domain }}$request_uri;
+}
