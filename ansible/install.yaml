@@ -30,6 +30,32 @@
         name: "git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git"
         extra_args: "--user"
 
+    - name: Create static assets directory
+      tags:
+        - code
+      become: true
+      file:
+        path: /www/ylaneenkasvit
+        state: directory
+        owner: kasvimuseo
+        group: www-data
+
+    - name: Make manage.py executable
+      tags:
+        - code
+      file:
+        path: "{{ django_dir }}/manage.py"
+        mode: 0775
+
+    - name: Collect static assets
+      tags:
+        - code
+        - static
+      django_manage:
+        command: collectstatic
+        app_path: "{{ django_dir }}"
+        settings: ylaneenkasvit.ylaneenkasvit_settings
+
     - name: Install PostgreSQL
       tags:
         - database

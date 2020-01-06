@@ -1,20 +1,31 @@
 upstream django {
-    server unix://home/kasvimuseo/wsgi.sock;
+    server unix:/{{ uwsgi_socket }};
 }
 
+{% for server in item.value.servers %}
 server {
     listen 443 ssl;
-    server_name {{ item.value.site_domain }};
-    ssl_certificate {{ item.value.ssl.cert }};
-    ssl_certificate_key {{ item.value.ssl.key }};
-    location / {
+    server_name {{ server.domain }};
+    ssl_certificate /etc/letsencrypt/live/{{ server.domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ server.domain }}/privkey.pem;
+
+{% for path, alias in (server.static_paths|default({})).items() %}
+    location {{ path }} {
+        alias {{ alias }};
+    }
+{% endfor %}
+
+{% if server.app_path is defined %}
+    location {{ server.app_path }} {
         uwsgi_pass django;
         include    /etc/nginx/uwsgi_params;
     }
+{% endif %}
 }
 
 server {
     listen 80;
-    server_name {{ item.value.site_domain }};
-    return 301 https://{{ item.value.site_domain }}$request_uri;
+    server_name {{ server.domain }};
+    return 301 https://{{ server.domain }}$request_uri;
 }
+{% endfor %}

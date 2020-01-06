@@ -50,10 +50,14 @@ nginx_http_template:
     template_file: nginx-site.conf.j2
     conf_file_name: default.conf
     conf_file_location: /etc/nginx/conf.d/
-    site_domain: kasvit.ambitone.com
-    ssl:
-      cert: /etc/letsencrypt/live/kasvit.ambitone.com/fullchain.pem
-      key: /etc/letsencrypt/live/kasvit.ambitone.com/privkey.pem
+    servers:
+      - domain: kasvit.ambitone.com
+        app_path: "/"
+      - domain: static.kasvit.ambitone.com
+        static_paths:
+          /grappelli/: /www/ylaneenkasvit/static/grappelli/
+          /admin/: /www/ylaneenkasvit/static/admin/
+          /: /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit/
 
 certbot_admin_email: antti19@ambitone.com
 certbot_create_if_missing: true
@@ -61,3 +65,7 @@ certbot_create_standalone_stop_services: [nginx]
 certbot_certs:
   - domains:
       - kasvit.ambitone.com
+      - static.kasvit.ambitone.com
+
+django_dir: /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit
+uwsgi_socket: /home/kasvimuseo/wsgi.sock
