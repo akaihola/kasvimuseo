@@ -53,11 +53,11 @@ nginx_http_template:
     servers:
       - domain: kasvit.ambitone.com
         app_path: "/"
+        static_paths:
+          /favicon.ico: /www/ylaneenkasvit/static/img/favicon.ico
       - domain: static.kasvit.ambitone.com
         static_paths:
-          /grappelli/: /www/ylaneenkasvit/static/grappelli/
-          /admin/: /www/ylaneenkasvit/static/admin/
-          /: /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit/
+          /: /www/ylaneenkasvit/static/
 
 certbot_admin_email: antti19@ambitone.com
 certbot_create_if_missing: true

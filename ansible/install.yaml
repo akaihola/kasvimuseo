@@ -33,16 +33,19 @@
     - name: Create static assets directory
       tags:
         - code
+        - static
       become: true
       file:
         path: /www/ylaneenkasvit
         state: directory
         owner: kasvimuseo
         group: www-data
+        mode: 06770
 
     - name: Make manage.py executable
       tags:
         - code
+        - static
       file:
         path: "{{ django_dir }}/manage.py"
         mode: 0775
