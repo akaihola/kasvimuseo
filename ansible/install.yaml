@@ -76,6 +76,19 @@
         name: postgis
         db: ylaneenkasvit
 
+    - name: Upload media
+      tags:
+        - media
+      become: true
+      become_user: kasvimuseo
+      synchronize:
+        src: ../media
+        dest: /www/ylaneenkasvit/
+        archive: false
+        recursive: true
+        rsync_path: /usr/bin/rsync
+      when: upload_media is defined
+
     - name: Install NGINX
       tags:
         - web
