@@ -14,19 +14,38 @@
         state: present
       become: yes
 
-    - name: Install pip for Python 2.7
+    - name: Install pip 19.3.1 with a patch for issue 5780
+      tags:
+        - python
+      pip:
+        name: https://github.com/rouge8/pip/archive/gh-5780.zip
+        extra_args: "--user"
+
+    - name: Remove OS package of old pip for Python 2.7
       tags:
         - python
       apt:
         name: python-pip
-        state: present
+        state: absent
       become: yes
+
+#    - name: Download new pip for Python 2.7
+#      tags:
+#        - python
+#      get_url:
+#        url: https://bootstrap.pypa.io/get-pip.py
+#        dest: /tmp/
+#
+#    - name: Install new pip for Python 2.7
+#      tags:
+#        - python
+#      command: python2.7 /tmp/get-pip.py --user
 
     - name: Install the Kasvimuseo application
       tags:
         - code
       pip:
-        executable: "pip2"
+        executable: "/home/kasvimuseo/.local/bin/pip2"
         name: "git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git"
         extra_args: "--user"
 
