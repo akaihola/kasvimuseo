@@ -76,6 +76,52 @@
         name: postgis
         db: ylaneenkasvit
 
+    - name: Copy database backup to host
+      tags:
+        - database
+        - restore
+      copy:
+        src: "{{ database_backup_to_restore }}"
+        dest: /tmp/backup.sql
+      when: database_backup_to_restore is defined
+
+    - name: Restore database from backup
+      tags:
+        - database
+        - restore
+      become: true
+      become_user: "{{ postgresql_user }}"
+      postgresql_db:
+        name: "{{ item.name }}"
+        owner: "{{ item.owner | default(postgresql_user) }}"
+        state: restore
+        target: /tmp/backup.sql
+      when: database_backup_to_restore is defined
+      with_items: "{{ postgresql_databases }}"
+
+    - name: Back up the database
+      tags:
+        - database
+        - backup
+      become: true
+      become_user: "{{ postgresql_user }}"
+      postgresql_db:
+        name: "{{ item.name }}"
+        owner: "{{ item.owner | default(postgresql_user) }}"
+        state: dump
+        target: /tmp/backup.sql
+      when: backup_database is defined
+      with_items: "{{ postgresql_databases }}"
+
+    - name: Fetch database backup from host
+      tags:
+        - database
+        - backup
+      fetch:
+        src: /tmp/backup.sql
+        dest: "{{ backup_database }}"
+      when: backup_database is defined
+
     - name: Upload media
       tags:
         - media

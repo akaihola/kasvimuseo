@@ -12,3 +12,11 @@ Deployment
     export ANSIBLE_VAULT_PASS=***********
     ansible-playbook ansible/bootstrap.yml
     ansible-playbook ansible/install.yml
+
+Restoring the database
+----------------------
+
+    ansible-playbook \
+      -t restore \
+      -e database_backup_to_restore=local/path/to/backup.sql \
+      ansible/install.yml
