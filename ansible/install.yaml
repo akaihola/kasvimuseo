@@ -1,7 +1,7 @@
 ---
 - name: Install Kasvimuseo and dependencies
   hosts: all
-  remote_user: kasvimuseo
+  remote_user: {{ app_user }}
   vars_files:
     - vars/main.yml
 
@@ -45,7 +45,7 @@
       tags:
         - code
       pip:
-        executable: "/home/kasvimuseo/.local/bin/pip2"
+        executable: "/home/{{ app_user }}/.local/bin/pip2"
         name: "git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git"
         extra_args: "--user"
 
@@ -57,7 +57,7 @@
       file:
         path: /www/ylaneenkasvit
         state: directory
-        owner: kasvimuseo
+        owner: "{{ app_user }}"
         group: www-data
         mode: 06770
 
@@ -145,7 +145,7 @@
       tags:
         - media
       become: true
-      become_user: kasvimuseo
+      become_user: "{{ app_user }}"
       synchronize:
         src: ../media
         dest: /www/ylaneenkasvit/

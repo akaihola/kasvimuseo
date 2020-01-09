@@ -67,5 +67,6 @@ certbot_certs:
       - kasvit.ambitone.com
       - static.kasvit.ambitone.com
 
+app_user: kasvimuseo
 django_dir: /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit
 uwsgi_socket: /home/kasvimuseo/wsgi.sock
