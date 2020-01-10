@@ -12,6 +12,7 @@ remove_diacritics = lambda u: filter(lambda x: not combining(x),
 class PhotoForm(forms.ModelForm):
     class Meta:
         model = Photo
+        exclude = []
 
     def __init__(self, *args, **kwargs):
         super(PhotoForm, self).__init__(*args, **kwargs)
