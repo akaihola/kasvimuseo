@@ -58,12 +58,16 @@ nginx_http_template:
       - domain: static.kasvit.ambitone.com
         static_paths:
           /: /www/ylaneenkasvit/static/
+      - domain: media.kasvit.ambitone.com
+        static_paths:
+          /: /www/ylaneenkasvit/media/
 
 certbot_admin_email: antti19@ambitone.com
 certbot_create_if_missing: true
 certbot_create_standalone_stop_services: [nginx]
 certbot_certs:
   - domains:
+      - media.kasvit.ambitone.com
       - kasvit.ambitone.com
       - static.kasvit.ambitone.com
 
