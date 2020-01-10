@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
 from django.db import models
 from django.utils.dates import MONTHS
 from django.utils.functional import lazy
@@ -7,6 +8,11 @@ from django.utils.translation import ugettext_lazy as _
 import operator
 from photologue.models import Photo
 from south.modelsinspector import add_introspection_rules
+
+try:
+    unicode
+except NameError:
+    unicode = str
 
 
 PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
@@ -35,12 +41,12 @@ LIGHTINGS_VERBOSE = ((1, u'aurinko'),
                      (5, u'varjo'),
                      (6, u'aurinko–varjo'),)
 
-ROMAN_NUMERALS = ('',
-                  'I', 'II', 'III', 'IV', 'V', 'VI',
-                  'VII', 'VIII', 'IX', 'X', 'XI', 'XII')
-ROMAN_TO_INT = dict((unicode(roman), index or None)
+ROMAN_NUMERALS = [u'',
+                  u'I', u'II', u'III', u'IV', u'V', u'VI',
+                  u'VII', u'VIII', u'IX', u'X', u'XI', u'XII']
+ROMAN_TO_INT = dict((roman, index or None)
                     for index, roman in enumerate(ROMAN_NUMERALS))
-INT_TO_ROMAN = dict((index + 1, unicode(roman))
+INT_TO_ROMAN = dict((index + 1, roman)
                      for index, roman in enumerate(ROMAN_NUMERALS[1:]))
 
 
