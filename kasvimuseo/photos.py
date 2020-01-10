@@ -15,7 +15,8 @@ def get_photo_pks_and_urls_by_species():
     """Get URLs of all photos, grouped by the first word of the photo title"""
     # noinspection PyUnresolvedReferences
     all_photos = get_photo_titles_pks_and_urls()
-    titles_pks_and_urls = groupby(all_photos, lambda (title, _): title)
+    titles_pks_and_urls = groupby(all_photos,
+                                  lambda title_and_url: title_and_url[0])
     return {title: [pk_and_url for _, pk_and_url in pks_and_urls]
             for title, pks_and_urls in titles_pks_and_urls}
 
