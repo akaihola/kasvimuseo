@@ -20,7 +20,7 @@ MEDIA_URL = '//media.kajalankasvit.ambitone.com/'
 MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')
 
 try:
-    from ylaneenkasvit.local_settings import *
+    from local_settings import *
     modify(globals())
 except ImportError:
     pass
