@@ -102,5 +102,5 @@ LOGGING = {
 }
 
 
-DEBUG = False
-TEMPLATE_DEBUG = True
+DEBUG = bool(os.environ.get('KASVIMUSEO_DEBUG'))
+TEMPLATE_DEBUG = DEBUG
