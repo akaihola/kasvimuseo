@@ -64,12 +64,18 @@ nginx_http_template:
 
 certbot_admin_email: antti19@ambitone.com
 certbot_create_if_missing: true
-certbot_create_standalone_stop_services: [nginx]
+certbot_create_standalone_stop_services:
+  - nginx
 certbot_certs:
   - domains:
       - media.kasvit.ambitone.com
       - kasvit.ambitone.com
       - static.kasvit.ambitone.com
+certbot_auto_renew: true
+certbot_auto_renew_user: "root"
+certbot_auto_renew_hour: "3"
+certbot_auto_renew_minute: "30"
+certbot_auto_renew_options: "--pre-hook \"systemctl stop nginx\" --post-hook \"systemctl start nginx\" "
 
 app_user: kasvimuseo
 django_dir: /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit
