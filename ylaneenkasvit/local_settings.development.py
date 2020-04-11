@@ -8,7 +8,7 @@ def modify(settings):
     db = settings['DATABASES']['default']
     db['HOST'] = '/var/run/postgresql'
     db['NAME'] = 'ylaneenkasvit'
-    db['PORT'] = 5433
+    db['PORT'] = 5432
 
     #settings['INSTALLED_APPS'] += 'pserver', 'django_extensions',
 
