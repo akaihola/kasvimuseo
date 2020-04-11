@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 # FIXME: action selection doesn't work in admin!
+import os
 
 from django.conf import settings
 from django.contrib import admin
@@ -81,34 +82,49 @@ class SpeciesAdmin(admin.ModelAdmin):
         'lighting',
         'substrate',
         'additional_info',
-        'photo',)
+        "photo_image",
+    )
     # FIXME: filtering doesn't work
-    list_filter = 'type',
-    fieldsets = (None,
-                 {'fields': ('external_id',
-                             'name_fi',
-                             'genus',
-                             'group',
-                             'species',
-                             'subspecies',
-                             'variety',
-                             'cultivation_history',
-                             'type',
-                             'height',
-                             'spacing',
-                             'width',
-                             'flower_color',
-                             'flowering_start',
-                             'flowering_end',
-                             'lighting',
-                             'substrate',
-                             'additional_info',
-                             'photo',)}),
+    list_filter = ("type",)
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "external_id",
+                    "name_fi",
+                    "genus",
+                    "group",
+                    "species",
+                    "subspecies",
+                    "variety",
+                    "cultivation_history",
+                    "type",
+                    "height",
+                    "spacing",
+                    "width",
+                    "flower_color",
+                    "flowering_start",
+                    "flowering_end",
+                    "lighting",
+                    "substrate",
+                    "additional_info",
+                )
+            },
+        ),
+    )
     # FIXME: action selection doesn't work
     actions = [planted_species_report]
 
     class Media:
         css = CSS
+
+    def photo_image(self, obj):
+        return os.path.basename(obj.photo.image.path) if obj.photo else ""
+
+    photo_image.short_description = "photo_image"
+
+
 admin.site.register(Species, SpeciesAdmin)
 
 
