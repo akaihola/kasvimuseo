@@ -317,8 +317,13 @@ class SpeciesInline(admin.TabularInline):
 
 
 class PhotoAdmin(PhotologuePhotoAdmin):
+    list_display = ['image_filename' if field_name == 'title' else field_name
+                    for field_name in PhotologuePhotoAdmin.list_display]
     form = PhotoForm
     inlines = SpeciesInline,
+
+    def image_filename(self, obj):
+        return obj.image.name.split('/')[-1]
 
     class Media:
         css = CSS
