@@ -34,3 +34,8 @@ Restoring the database in a development environment
 
     sudo -u postgres createdb -O ylaneenkasvit ylaneenkasvit
     sudo -u postgres psql -f /backup-dir/vps763955.ovh.net/tmp/backup.sql ylaneenkasvit
+
+Updating code on the server
+---------------------------
+
+    ansible-playbook -t code ansible/install.yaml
