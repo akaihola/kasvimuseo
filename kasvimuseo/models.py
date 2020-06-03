@@ -471,6 +471,15 @@ class Label(models.Model):
         null=True, blank=True)
     visible = models.BooleanField(default=True)
 
+    def __unicode__(self):
+        photo = u' / {}'.format(self.photo.image_filename()) if self.photo else u''
+        hidden = u'' if self.visible else ' [{}]'.format(_(u'hidden'))
+        return u'{}{}{}'.format(self.species, photo, hidden)
+
+    class Meta:
+        verbose_name = _(u'label')
+        verbose_name_plural = _(u'labels')
+
 
 class PlantingManager(models.Manager):
     def public_planted(self):
