@@ -355,6 +355,18 @@ msgstr "penkit"
 msgid "species"
 msgstr "kasvilaji"
 
+#: models.py:476
+msgid "hidden"
+msgstr "piilotettu"
+
+#: models.py:480 models.py:529
+msgid "label"
+msgstr "kyltti"
+
+#: models.py:481
+msgid "labels"
+msgstr "kyltit"
+
 #: models.py:505
 msgid "date of planting"
 msgstr "istutuspäivä"
