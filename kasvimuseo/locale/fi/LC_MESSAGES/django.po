@@ -351,7 +351,11 @@ msgstr "penkki"
 msgid "beds"
 msgstr "penkit"
 
-#: models.py:469
+#: models.py:468
+msgid "species"
+msgstr "kasvilaji"
+
+#: models.py:505
 msgid "date of planting"
 msgstr "istutuspäivä"
 
