@@ -525,8 +525,12 @@ class Planting(models.Model):
         null=True, blank=True,
         verbose_name=_(u'date of removal'))
     label = models.ForeignKey(
-        Label, null=True, on_delete=models.SET_NULL,
-        verbose_name=_(u'label'))
+        Label,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_(u'label'),
+    )
 
     objects = PlantingManager()
 
