@@ -47,6 +47,7 @@
       pip:
         executable: "/home/{{ app_user }}/.local/bin/pip2"
         name: "git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git"
+        state: latest
         extra_args: "--user"
 
     - name: Create static assets directory
