@@ -19,8 +19,13 @@
         Xdata-filter-theme="b">
         {% for species in object_list %}
             <li>
-                <a href="{% url "planted-species-compact" species_external_ids=species.external_id %}"
-                   data-ajax="false">
+                {% if printable %}
+                    <a href="{% url "planted-species" species_external_ids=species.external_id %}"
+                       data-ajax="false">
+                {% else %}
+                    <a href="{% url "planted-species-compact" species_external_ids=species.external_id %}"
+                       data-ajax="false">
+                {% endif %}
                 <img src="{{ species.photo.get_mobilethumbnail_url }}" />
                 <h1>
                     {{ species.name_fi }}
