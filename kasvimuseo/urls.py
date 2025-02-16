@@ -17,6 +17,10 @@ urlpatterns = patterns(
         view=PlantedSpeciesList.as_view(),
         name='planted-species-list'),
 
+    url(regex=(r'^planted-species-printable/$'),
+        view=PlantedSpeciesList.as_view(extra_context={"printable": True}),
+        name='planted-species-list-printable'),
+
     url(regex=r'^planting-labels/$',
         view=PlantedSpeciesLabels.as_view(),
         name='planting-label'),

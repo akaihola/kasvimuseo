@@ -37,6 +37,15 @@ class PlantedSpeciesList(ListView):
                 .distinct()
                 .order_by('name_fi'))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.extra_context or {})
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return self.render_to_response(context)
+
 
 class PlantedSpeciesLabels(TemplateView):
     template_name = 'kasvimuseo/reports/planting-labels.html'
