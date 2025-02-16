@@ -1,7 +1,7 @@
 -r production.txt
 
 django-extensions==1.5.9
--e git+https://github.com/akaihola/django-flax@868c863c109fd9e367248a3e5ed5609cf622a0e9#egg=flax-dev
+flax @ git+https://github.com/akaihola/django-flax@868c863c109fd9e367248a3e5ed5609cf622a0e9
 django-pserver
 Fabric==1.6.0
 Werkzeug==0.8.3
