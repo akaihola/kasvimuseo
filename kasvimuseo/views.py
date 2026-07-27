@@ -105,12 +105,8 @@ class PlantedSpeciesLabelsApi(View):
             for species, labels in labels_by_species
             for label in labels]
         label_species_pks = {label['id'] for label in label_infos}
-        print('{} labels'.format(len(label_infos)))
         for species, observation_set in observations_by_species.items():
             if species.pk not in label_species_pks:
-                print('adding {} with {}'.format(
-                    species.name_fi.encode('ascii', 'replace'),
-                    [o.external_id for o in observation_set]))
                 label_infos.append(
                     self.get_species_data(species,
                                           observation_set,
