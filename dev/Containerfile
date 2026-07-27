@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir --no-deps -r /tmp/production.txt \
 
 # Test dependencies, as pinned in setup.py's tests_require.
 RUN pip install --no-cache-dir 'pytest==3.5.0' 'pytest-django==2.9.1' \
+                               'coverage==4.5.4' \
                                'mock==2.0.0' 'pbr==4.0.2'
 
 ENV PYTHONPATH=/src \
