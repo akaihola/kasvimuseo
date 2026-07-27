@@ -23,10 +23,21 @@ def jpeg_bytes(width=8, height=8, color=(0, 128, 0)):
 
 
 @pytest.fixture
-def media_root(settings, tmpdir):
-    """Point ``MEDIA_ROOT`` at a per-test temporary directory."""
-    settings.MEDIA_ROOT = str(tmpdir)
-    return str(tmpdir)
+def media_root(tmpdir):
+    """Point ``MEDIA_ROOT`` at a per-test temporary directory.
+
+    ``FileSystemStorage`` resolves ``MEDIA_ROOT`` once, when it is built, so
+    ``default_storage`` keeps writing to the old directory unless it is
+    rebuilt. Django does that from a ``setting_changed`` receiver -- but
+    pytest-django's ``settings`` fixture only monkeypatches the settings object
+    and never sends the signal, so go through ``override_settings``, which
+    does.
+    """
+    from django.test.utils import override_settings
+    override = override_settings(MEDIA_ROOT=str(tmpdir))
+    override.enable()
+    yield str(tmpdir)
+    override.disable()
 
 
 @pytest.fixture
