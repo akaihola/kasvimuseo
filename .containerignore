@@ -1,0 +1,5 @@
+.dev/
+.git/
+media/
+static/
+*.pyc
