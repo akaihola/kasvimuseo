@@ -7,6 +7,7 @@
 #   db fetch [file]                     dump the production database over SSH
 #   db restore <file>                   load a dump into the local database
 #   db bootstrap                        empty database from the migrations
+#   media fetch                         download the photos the database uses
 #   app build                           build the Python 2.7 dev image
 #   app run                             Django dev server ($KASVIMUSEO_PORT:8000)
 #   app manage <args...>                run a manage.py command
@@ -123,6 +124,43 @@ db_restore() {
     [ "$started" = 1 ] && db_stop || true
 }
 
+# The printable and compact species views make Django open the image files to
+# read their dimensions, so a production MEDIA_URL is not enough for those. The
+# media host serves the photos publicly, so fetch exactly the ones the database
+# references. Python 2 code, so it runs in the app container, not on the host.
+media_fetch() {
+    with_db app_run_container "" python -c '
+import os, urllib, urllib2
+from django.conf import settings
+from photologue.models import Photo
+
+base = settings.MEDIA_URL
+if base.startswith("//"):
+    base = "https:" + base
+fetched = failed = present = 0
+for name in Photo.objects.values_list("image", flat=True).order_by("image"):
+    destination = os.path.join(settings.MEDIA_ROOT, name)
+    if os.path.exists(destination):
+        present += 1
+        continue
+    try:
+        data = urllib2.urlopen(base + urllib.quote(name.encode("utf-8")),
+                               timeout=60).read()
+    except Exception as error:
+        print("FAILED {0}: {1}".format(name.encode("utf-8"), error))
+        failed += 1
+        continue
+    directory = os.path.dirname(destination)
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    with open(destination, "wb") as image_file:
+        image_file.write(data)
+    fetched += 1
+print("{0} fetched, {1} failed, {2} already present".format(
+    fetched, failed, present))
+'
+}
+
 CONTAINER=kasvimuseo-dev-$$
 
 app_run_container() {
@@ -170,6 +208,11 @@ case "${1:-}" in
       reset)   db_stop; rm -rf "$PGDATA"; echo "Cluster deleted" ;;
       *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|restore|bootstrap|reset" ;;
     esac ;;
+  media)
+    case "${2:-}" in
+      fetch)   media_fetch ;;
+      *)       die "usage: dev/kasvimuseo media fetch" ;;
+    esac ;;
   app)
     case "${2:-}" in
       build)   podman build -f "$REPO/dev/Containerfile" -t "$IMAGE" "$REPO" ;;
@@ -182,5 +225,5 @@ case "${1:-}" in
       shell)   with_db app_run_container "" sh ;;
       *)       die "usage: dev/kasvimuseo app build|run|manage|test|shell" ;;
     esac ;;
-  *) sed -n '2,17p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+  *) sed -n '2,18p' "${BASH_SOURCE[0]}" | cut -c3- ;;
 esac
