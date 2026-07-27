@@ -173,10 +173,6 @@ class Species(models.Model):
         return u'%s–%s' % (start, INT_TO_ROMAN[self.flowering_end])
     flowering_time.short_description = _(u'flowering time')
 
-    def nicknames(self):
-        return [observation.nickname
-                for observation in self.observation_set.planted_public()]
-
     class Meta:
         verbose_name = _(u'(one) species')
         verbose_name_plural = _(u'(all) species')
@@ -305,10 +301,15 @@ class LocationContact(models.Model):
 
 
 def get_next_observation_extid():
-    last_id = (Observation.objects
-               .order_by('-external_id')
-               .values_list('external_id', flat=True)[0])
-    return _(u'Next available ID: %s') % (last_id + 1)
+    # ``external_id`` is nullable and PostgreSQL sorts NULLs first on a
+    # descending order_by, so NULLs must be filtered out; an empty table then
+    # leaves no row at all.
+    last_ids = (Observation.objects
+                .filter(external_id__isnull=False)
+                .order_by('-external_id')
+                .values_list('external_id', flat=True)[:1])
+    next_id = last_ids[0] + 1 if last_ids else 1
+    return _(u'Next available ID: %s') % next_id
 get_next_observation_extid = lazy(get_next_observation_extid, unicode)
 
 
