@@ -10,6 +10,7 @@
 #   app build                           build the Python 2.7 dev image
 #   app run                             Django dev server ($KASVIMUSEO_PORT:8000)
 #   app manage <args...>                run a manage.py command
+#   app test [args]                     run the unit tests (no database needed)
 #   app shell                           shell inside the app container
 #
 # `app run` and `app manage` start PostgreSQL if it is down and stop it again on
@@ -30,7 +31,8 @@ PROD_SSH=${KASVIMUSEO_PROD_SSH:-kasvimuseo@kasvit.ambitone.com}
 
 die() { echo "$*" >&2; exit 1; }
 
-[ -t 0 ] && TTY_FLAGS=-it || TTY_FLAGS=
+# -i always, so piping into `app manage shell` works; -t only with a terminal.
+[ -t 0 ] && TTY_FLAGS=-it || TTY_FLAGS=-i
 
 pg_running() { pg_ctl -D "$PGDATA" status >/dev/null 2>&1; }
 
@@ -67,7 +69,15 @@ db_fetch() {
     echo "Dumping $DB_NAME from $PROD_SSH ..." >&2
     ssh "$PROD_SSH" \
         "PGPASSWORD='$DB_PASSWORD' pg_dump -h /var/run/postgresql -U $DB_USER \
-         --no-owner --no-privileges $DB_NAME | gzip -9" | gunzip > "$out"
+         --no-owner --no-privileges $DB_NAME | gzip -9" | gunzip > "$out" || {
+        rm -f "$out"
+        die "Dump failed. This needs an SSH account on the production host whose
+key is authorised; set KASVIMUSEO_PROD_SSH=user@host to pick another one. If you
+have no SSH access, take the backup with Ansible instead and restore that file:
+  ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml"
+    }
+    grep -q 'PostgreSQL database dump complete' "$out" || \
+        die "$out looks truncated -- the dump did not finish."
     echo "Wrote $out ($(wc -l < "$out") lines)" >&2
 }
 
@@ -105,9 +115,9 @@ cleanup() {
     podman rm -f -t 3 "$CONTAINER" >/dev/null 2>&1 || true
     [ "$DB_STARTED" = 1 ] && db_stop || true
 }
+trap cleanup EXIT
 with_db() {
     pg_running || { db_start; DB_STARTED=1; }
-    trap cleanup EXIT
     "$@"
 }
 
@@ -137,8 +147,11 @@ case "${1:-}" in
       run)     with_db app_run_container "-p ${KASVIMUSEO_PORT:-8000}:8000" \
                    python ylaneenkasvit/manage.py runserver 0.0.0.0:8000 ;;
       manage)  shift 2; with_db app_run_container "" python ylaneenkasvit/manage.py "$@" ;;
+      # The unit tests are pure mocks, so they need no database.
+      test)    shift 2; app_run_container "-w /src/kasvimuseo" \
+                   python -m pytest "${@:-tests}" ;;
       shell)   with_db app_run_container "" sh ;;
-      *)       die "usage: dev/kasvimuseo app build|run|manage|shell" ;;
+      *)       die "usage: dev/kasvimuseo app build|run|manage|test|shell" ;;
     esac ;;
-  *) sed -n '2,16p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+  *) sed -n '2,17p' "${BASH_SOURCE[0]}" | cut -c3- ;;
 esac

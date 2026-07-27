@@ -10,6 +10,10 @@ COPY requirements/production.txt /tmp/production.txt
 RUN pip install --no-cache-dir --no-deps -r /tmp/production.txt \
  && pip install --no-cache-dir 'Pillow==6.2.2' 'django-sortedm2m==1.5.0'
 
+# Test dependencies, as pinned in setup.py's tests_require.
+RUN pip install --no-cache-dir 'pytest==3.5.0' 'pytest-django==2.9.1' \
+                               'mock==2.0.0' 'pbr==4.0.2'
+
 ENV PYTHONPATH=/src \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=ylaneenkasvit.ylaneenkasvit_settings \

@@ -28,9 +28,10 @@ Ansible instead and restore that file::
     $ dev/kasvimuseo db restore /backup-dir/vps763955.ovh.net/tmp/backup.sql
 
 To work without any production data, build an empty database from the
-migrations instead::
+migrations instead, and give yourself an admin account::
 
     $ dev/kasvimuseo db bootstrap
+    $ dev/kasvimuseo app manage createsuperuser
 
 Run the site at http://localhost:8000/ ::
 
@@ -42,6 +43,7 @@ Other commands::
     $ dev/kasvimuseo db psql                  # psql on the local database
     $ dev/kasvimuseo db reset                 # delete the cluster entirely
     $ dev/kasvimuseo app manage <args>        # any manage.py command
+    $ dev/kasvimuseo app test                 # unit tests; needs no database
     $ dev/kasvimuseo app shell                # shell in the Python 2.7 container
 
 ``app run`` and ``app manage`` start PostgreSQL if it is down and stop it again
