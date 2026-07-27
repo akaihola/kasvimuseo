@@ -41,6 +41,7 @@ Other commands::
 
     $ dev/kasvimuseo db start|stop|status     # PostgreSQL by hand
     $ dev/kasvimuseo db psql                  # psql on the local database
+    $ dev/kasvimuseo media fetch              # photos the database references
     $ dev/kasvimuseo db reset                 # delete the cluster entirely
     $ dev/kasvimuseo app manage <args>        # any manage.py command
     $ dev/kasvimuseo app test                 # unit tests; needs no database
@@ -61,12 +62,14 @@ from ``local_settings.development.py``).
 Photos are loaded straight from ``media.kasvit.ambitone.com``, so the species
 list, the planting labels and the admin need no local media. The printable and
 compact species views do: Django opens the image files to read their
-dimensions, and raises ``IOError`` if they are missing. For those, get the
-media directory::
+dimensions, and raises ``IOError`` if they are missing. Download exactly the
+photos the database references -- no SSH needed, the media host is public::
 
-    $ sshfs -o ro akaihola@kasvit.ambitone.com:/www/ylaneenkasvit/media media
+    $ dev/kasvimuseo media fetch
 
-or, for an offline copy::
+That is 137 files and about 260 MB at the time of writing, and it skips what is
+already there, so it is safe to re-run after restoring a newer dump. The whole
+directory, including material no row points at, still needs SSH::
 
     $ rsync -a akaihola@kasvit.ambitone.com:/www/ylaneenkasvit/media/ media/
 
