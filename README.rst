@@ -56,8 +56,10 @@ current server: it drops the PostGIS extension when PostGIS is not installed
 locally (no table uses a spatial type) and the one index over ``abstime``, a
 type removed in PostgreSQL 12. Both are reported as they are skipped.
 
-Local settings live in ``ylaneenkasvit/local_settings.py`` (untracked, seeded
-from ``local_settings.development.py``).
+Local settings live in ``ylaneenkasvit/local_settings.py``. It is untracked, so
+``dev/kasvimuseo`` copies it from ``local_settings.development.py`` the first
+time it runs the app; edit your copy freely. Without it the app falls back to
+production's static URL and ignores the database environment variables.
 
 Photos are loaded straight from ``media.kasvit.ambitone.com``, so the species
 list, the planting labels and the admin need no local media. The printable and
