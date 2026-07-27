@@ -169,7 +169,7 @@ class PlantingAdmin(admin.ModelAdmin):
     ordering = 'observation__external_id',
 
     def coordinates(self, obj):
-        return u'({0}cm,{1}cm)<br>{0}×{1}cm'.format(
+        return u'({0}cm,{1}cm)<br>{2}×{3}cm'.format(
             obj.distance_left, obj.distance_front,
             obj.width, obj.depth)
     coordinates.short_description = _(u'(left,front) width×depth')
