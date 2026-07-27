@@ -1,0 +1,7 @@
+# The app is Django 1.5 on Python 2.7 and its dependencies only exist inside
+# the dev container (see dev/Containerfile), so a host type checker cannot
+# resolve django, photologue, south or PIL. Type checking is not part of this
+# project's tooling; this file only keeps editor/hook noise down.
+[rules]
+unresolved-import = "ignore"
+unresolved-attribute = "ignore"
