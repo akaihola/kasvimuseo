@@ -18,3 +18,7 @@
 *.egg-info
 /.idea
 /.venv
+/.dev/
+/dev/__pycache__/
+/ylaneenkasvit/local_settings.py
+/kasvimuseo/.pytest_cache/

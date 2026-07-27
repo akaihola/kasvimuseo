@@ -1,0 +1,21 @@
+# Development image: Python 2.7 + the app's dependencies, but NO app code.
+# The working copy is bind-mounted at /src so edits take effect immediately.
+FROM docker.io/library/python:2.7-alpine
+
+RUN apk add --no-cache jpeg-dev zlib-dev libpq postgresql-dev gcc musl-dev python2-dev
+
+COPY requirements/production.txt /tmp/production.txt
+# --no-deps keeps the pinned versions exactly as listed (see fabfile.py: it also
+# avoids photologue dragging in an incompatible Pillow).
+RUN pip install --no-cache-dir --no-deps -r /tmp/production.txt \
+ && pip install --no-cache-dir 'Pillow==6.2.2' 'django-sortedm2m==1.5.0'
+
+# Test dependencies, as pinned in setup.py's tests_require.
+RUN pip install --no-cache-dir 'pytest==3.5.0' 'pytest-django==2.9.1' \
+                               'mock==2.0.0' 'pbr==4.0.2'
+
+ENV PYTHONPATH=/src \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=ylaneenkasvit.ylaneenkasvit_settings \
+    KASVIMUSEO_DEBUG=1
+WORKDIR /src
