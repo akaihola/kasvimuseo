@@ -50,12 +50,25 @@ Other commands::
 when they exit, so the cluster only runs while it is needed. Started by hand
 with ``db start``, it keeps running until ``db stop``.
 
+Production still runs PostgreSQL 10, so ``db restore`` adapts the dump to a
+current server: it drops the PostGIS extension when PostGIS is not installed
+locally (no table uses a spatial type) and the one index over ``abstime``, a
+type removed in PostgreSQL 12. Both are reported as they are skipped.
+
 Local settings live in ``ylaneenkasvit/local_settings.py`` (untracked, seeded
-from ``local_settings.development.py``). Photos are loaded straight from
-``media.kasvit.ambitone.com``. Mount them locally only if Django itself has to
-read the image files::
+from ``local_settings.development.py``).
+
+Photos are loaded straight from ``media.kasvit.ambitone.com``, so the species
+list, the planting labels and the admin need no local media. The printable and
+compact species views do: Django opens the image files to read their
+dimensions, and raises ``IOError`` if they are missing. For those, get the
+media directory::
 
     $ sshfs -o ro akaihola@kasvit.ambitone.com:/www/ylaneenkasvit/media media
+
+or, for an offline copy::
+
+    $ rsync -a akaihola@kasvit.ambitone.com:/www/ylaneenkasvit/media/ media/
 
 
 
