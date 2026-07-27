@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# Development helper for Kasvimuseo: throwaway PostgreSQL cluster + Python 2.7
+# app container. All state lives under .dev/ and is safe to delete.
+#
+# Usage: dev/kasvimuseo <command> [args]
+#   db start|stop|status|psql|reset     local PostgreSQL cluster
+#   db fetch [file]                     dump the production database over SSH
+#   db restore <file>                   load a dump into the local database
+#   db bootstrap                        empty database from the migrations
+#   app build                           build the Python 2.7 dev image
+#   app run                             Django dev server ($KASVIMUSEO_PORT:8000)
+#   app manage <args...>                run a manage.py command
+#   app shell                           shell inside the app container
+#
+# `app run` and `app manage` start PostgreSQL if it is down and stop it again on
+# exit, so the cluster only runs while it is actually needed.
+set -euo pipefail
+
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+DEV=$REPO/.dev
+PGDATA=$DEV/pgdata
+PGSOCK=$DEV/run
+PGPORT=${KASVIMUSEO_PG_PORT:-5432}
+PGLOG=$DEV/pg.log
+DB_NAME=${KASVIMUSEO_DB_NAME:-ylaneenkasvit}
+DB_USER=${KASVIMUSEO_DB_USER:-ylaneenkasvit}
+DB_PASSWORD=${KASVIMUSEO_DB_PASSWORD:-5tsovi25}
+IMAGE=${KASVIMUSEO_IMAGE:-kasvimuseo-dev}
+PROD_SSH=${KASVIMUSEO_PROD_SSH:-kasvimuseo@kasvit.ambitone.com}
+
+die() { echo "$*" >&2; exit 1; }
+
+[ -t 0 ] && TTY_FLAGS=-it || TTY_FLAGS=
+
+pg_running() { pg_ctl -D "$PGDATA" status >/dev/null 2>&1; }
+
+db_init() {
+    [ -f "$PGDATA/PG_VERSION" ] && return
+    mkdir -p "$PGSOCK" "$DEV/backups"
+    # Local-only cluster reachable through a unix socket inside the repo, so it
+    # cannot collide with a system PostgreSQL and needs no passwords.
+    initdb -D "$PGDATA" -U "$USER" --auth-local=trust --auth-host=trust \
+           --encoding=UTF8 --locale=C.UTF-8 >/dev/null
+}
+
+db_start() {
+    db_init
+    pg_running && return
+    mkdir -p "$PGSOCK"
+    pg_ctl -D "$PGDATA" -l "$PGLOG" -w \
+           -o "-k $PGSOCK -p $PGPORT -c listen_addresses=" start >/dev/null
+    psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -tAc \
+         "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1 || \
+        psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q -c \
+             "CREATE ROLE $DB_USER LOGIN SUPERUSER PASSWORD '$DB_PASSWORD'"
+    psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -tAc \
+         "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1 || \
+        psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q -c \
+             "CREATE DATABASE $DB_NAME OWNER $DB_USER"
+}
+
+db_stop() { pg_running && pg_ctl -D "$PGDATA" -w -m fast stop >/dev/null || true; }
+
+db_fetch() {
+    local out=${1:-$DEV/backups/production.sql}
+    mkdir -p "$(dirname "$out")"
+    echo "Dumping $DB_NAME from $PROD_SSH ..." >&2
+    ssh "$PROD_SSH" \
+        "PGPASSWORD='$DB_PASSWORD' pg_dump -h /var/run/postgresql -U $DB_USER \
+         --no-owner --no-privileges $DB_NAME | gzip -9" | gunzip > "$out"
+    echo "Wrote $out ($(wc -l < "$out") lines)" >&2
+}
+
+db_restore() {
+    local file=${1:-} started=0
+    [ -f "$file" ] || die "usage: dev/kasvimuseo db restore <dump.sql>"
+    pg_running || { db_start; started=1; }
+    psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q \
+         -c "DROP DATABASE IF EXISTS $DB_NAME" \
+         -c "CREATE DATABASE $DB_NAME OWNER $DB_USER"
+    psql -h "$PGSOCK" -p "$PGPORT" -U "$DB_USER" -d "$DB_NAME" \
+         -v ON_ERROR_STOP=1 -q -o /dev/null -f "$file"
+    echo "Restored $file into $DB_NAME" >&2
+    [ "$started" = 1 ] && db_stop || true
+}
+
+CONTAINER=kasvimuseo-dev-$$
+
+app_run_container() {
+    local extra=$1; shift
+    # Named so the exit trap can reap it: podman leaves the container running if
+    # its client process is killed rather than interrupted.
+    podman run --rm --name "$CONTAINER" ${TTY_FLAGS:-} \
+        -v "$REPO:/src" \
+        -v "$PGSOCK:/var/run/postgresql" \
+        -e "KASVIMUSEO_DB_PORT=$PGPORT" \
+        -e "KASVIMUSEO_DB_NAME=$DB_NAME" \
+        -e "KASVIMUSEO_DB_USER=$DB_USER" \
+        $extra "$IMAGE" "$@"
+}
+
+# Starts the cluster if needed and stops it again afterwards.
+DB_STARTED=0
+cleanup() {
+    podman rm -f -t 3 "$CONTAINER" >/dev/null 2>&1 || true
+    [ "$DB_STARTED" = 1 ] && db_stop || true
+}
+with_db() {
+    pg_running || { db_start; DB_STARTED=1; }
+    trap cleanup EXIT
+    "$@"
+}
+
+case "${1:-}" in
+  db)
+    case "${2:-}" in
+      start)   db_start; echo "PostgreSQL up on $PGSOCK (port $PGPORT)" ;;
+      stop)    db_stop; echo "PostgreSQL stopped" ;;
+      status)  pg_ctl -D "$PGDATA" status ;;
+      psql)    shift 2; with_db psql -h "$PGSOCK" -p "$PGPORT" -U "$DB_USER" -d "$DB_NAME" "$@" ;;
+      fetch)   db_fetch "${3:-}" ;;
+      bootstrap)
+               # Empty database from the migrations, for working without a
+               # production dump. photologue must go first: kasvimuseo:0014
+               # references photologue_photo.
+               with_db app_run_container "" sh -c \
+                 'python ylaneenkasvit/manage.py syncdb --noinput;
+                  python ylaneenkasvit/manage.py migrate photologue --noinput &&
+                  python ylaneenkasvit/manage.py migrate --noinput' ;;
+      restore) db_restore "${3:-}" ;;
+      reset)   db_stop; rm -rf "$PGDATA"; echo "Cluster deleted" ;;
+      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|restore|bootstrap|reset" ;;
+    esac ;;
+  app)
+    case "${2:-}" in
+      build)   podman build -f "$REPO/dev/Containerfile" -t "$IMAGE" "$REPO" ;;
+      run)     with_db app_run_container "-p ${KASVIMUSEO_PORT:-8000}:8000" \
+                   python ylaneenkasvit/manage.py runserver 0.0.0.0:8000 ;;
+      manage)  shift 2; with_db app_run_container "" python ylaneenkasvit/manage.py "$@" ;;
+      shell)   with_db app_run_container "" sh ;;
+      *)       die "usage: dev/kasvimuseo app build|run|manage|shell" ;;
+    esac ;;
+  *) sed -n '2,16p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+esac
