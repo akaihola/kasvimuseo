@@ -81,6 +81,24 @@ have no SSH access, take the backup with Ansible instead and restore that file:
     echo "Wrote $out ($(wc -l < "$out") lines)" >&2
 }
 
+# Makes a production dump loadable into a plain, current PostgreSQL. With
+# skip_postgis=1 it also drops the PostGIS extension and the spatial_ref_sys
+# table PostGIS owns.
+sanitize_dump() {
+    awk -v skip_postgis="${1:-0}" '
+        skip_postgis && /^(CREATE|COMMENT ON) EXTENSION.*postgis/ { next }
+        skip_postgis && /^COPY public\.spatial_ref_sys/ { skip = 1; next }
+        skip { if ($0 == "\\.") skip = 0; next }
+        # abstime was removed in PostgreSQL 12, so an index over it cannot be
+        # recreated. Production is still on 10.
+        /^CREATE INDEX .*abstime/ {
+            print "Skipping index " $3 ": it uses abstime, removed in PostgreSQL 12." \
+                > "/dev/stderr"
+            next
+        }
+        { print }'
+}
+
 db_restore() {
     local file=${1:-} started=0
     [ -f "$file" ] || die "usage: dev/kasvimuseo db restore <dump.sql>"
@@ -88,8 +106,19 @@ db_restore() {
     psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q \
          -c "DROP DATABASE IF EXISTS $DB_NAME" \
          -c "CREATE DATABASE $DB_NAME OWNER $DB_USER"
-    psql -h "$PGSOCK" -p "$PGPORT" -U "$DB_USER" -d "$DB_NAME" \
-         -v ON_ERROR_STOP=1 -q -o /dev/null -f "$file"
+    # Production enables PostGIS, but no table uses a spatial type, so a plain
+    # PostgreSQL without it can still take the dump -- skip the extension rather
+    # than make every developer install PostGIS.
+    local skip_postgis=0
+    if grep -qi 'EXTENSION.*postgis' "$file" && ! psql -h "$PGSOCK" -p "$PGPORT" \
+            -U "$USER" -d postgres -tAc \
+            "SELECT 1 FROM pg_available_extensions WHERE name='postgis'" | grep -q 1; then
+        echo "PostGIS is not installed locally; skipping the unused extension." >&2
+        skip_postgis=1
+    fi
+    sanitize_dump "$skip_postgis" < "$file" | \
+        psql -h "$PGSOCK" -p "$PGPORT" -U "$DB_USER" -d "$DB_NAME" \
+             -v ON_ERROR_STOP=1 -q -o /dev/null
     echo "Restored $file into $DB_NAME" >&2
     [ "$started" = 1 ] && db_stop || true
 }
