@@ -334,6 +334,64 @@ There is no CI yet, so the gate is the dev script, not a build server. Adding
 CI is a natural follow-up once the suite needs a database.
 
 
+Outcome
+=======
+
+All five packages are implemented. 150 tests, green in 8 seconds, no
+production dump and no media download. Coverage went from 30 % to **97 %**:
+
+===================================== ======= ====== =======
+Module                                  Stmts   Miss   Cover
+===================================== ======= ====== =======
+admin.py                                  122      0    100%
+forms.py                                   21      0    100%
+models.py                                 288      3     99%
+photos.py                                  19      0    100%
+templatetags/bush.py                        5      0    100%
+templatetags/kasvimuseo_admin_list.py     139     19     86%
+templatetags/kasvimuseo_model_tags.py       6      0    100%
+templatetags/kasvimuseo_photo_tags.py       7      0    100%
+templatetags/lightings.py                   7      0    100%
+templatetags/months.py                      7      0    100%
+urls.py                                     3      0    100%
+views.py                                   98      0    100%
+**TOTAL**                                 722     22     97%
+===================================== ======= ====== =======
+
+``kasvimuseo_admin_list.py`` reached 86 % incidentally through the admin
+changelist smoke tests, without being tested directly -- as intended.
+
+Defects 1--4 are fixed. Three further findings came out of writing the tests
+and are **not** fixed, because each changes behaviour that is visible in
+production and so wants a decision first:
+
+1. **``SpeciesManager.public_planted`` ignores ``removal_date``**, unlike
+   ``PlantingManager`` and ``ObservationManager``. Worse, its inner loop walks
+   *every* planting of the species, including ones in non-public beds, so a
+   species whose public plantings have all been removed still appears on the
+   public species list. Pinned as-is by tests in both ``test_models.py`` and
+   ``test_views.py``.
+2. **``planted_species_report`` raises ``NoReverseMatch``** when a selected
+   species has a NULL ``external_id``: ``unicode(None)`` is ``'None'`` and the
+   URL pattern only accepts ``[\d,]+``.
+3. **``autoconnect_photo_to_species`` can break every Photo save.** It catches
+   only ``Species.DoesNotExist``, but ``name_fi`` has no unique constraint, so
+   two photoless species sharing a name make the receiver raise
+   ``MultipleObjectsReturned`` -- from a ``post_save`` receiver connected for
+   every model, which would take down the Photo admin. Its species lookup is
+   also case-sensitive on the ``name_fi`` side, so a capitalised ``name_fi``
+   can never be auto-attached.
+
+Two notes for whoever writes the next tests:
+
+* ``django.utils.translation.override('en')`` raises in this install -- there
+  is no English catalog on disk. Use ``override(None)`` to deactivate
+  translations instead.
+* ``PlantedSpecies.get``'s ``HTTP_REFERER`` branch is **not** dead, contrary to
+  the guess in P2 above: ``planted-species-base-printable.html`` renders the
+  top-level ``{{ next }}`` as its only "Jatka >>" link.
+
+
 Sequencing
 ==========
 
