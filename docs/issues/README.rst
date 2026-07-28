@@ -52,9 +52,20 @@ Metadata fields
 Open issues
 ===========
 
-All eighteen came out of the test coverage work on branch
-``test-coverage_g78``. None are fixed: each one either changes behaviour that
-is visible in production or deletes code, so each wants a decision first.
+None are fixed: each one either changes behaviour that is visible in
+production, deletes code, or commits to a piece of work, so each wants a
+decision first.
+
+They come from two pieces of work. **001-018** came out of the test coverage
+work on branch ``test-coverage_g78``; each has a test pinning the current
+behaviour, so fixing one means deliberately changing a test.
+**019-036** came out of the dependency and platform upgrade analysis on branch
+``requirements-update-plan`` (``docs/upgrade-plan.rst``). Those mostly have no
+``Evidence`` entry, because they concern configuration, packaging and future
+versions rather than code paths a test can reach.
+
+From the test coverage work
+---------------------------
 
 ==== ======== ======================= ==================================================
   ID Severity Area                    Title
@@ -82,6 +93,41 @@ is visible in production or deletes code, so each wants a decision first.
 Suggested reading order for a first review: 001, 002 and 017 are the ones with
 real consequences. 013, 006 and 015 are cheap tidying. 016 and 018 are about
 the future rather than today.
+
+From the dependency upgrade analysis
+------------------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 019 High     settings / upgrade      Settings define no MIDDLEWARE
+ 020 Low      dependencies / cleanup  django-indexer and django-paging are unused
+ 021 Low      settings / dependencies gunicorn is an app for a removed command
+ 022 Low      urls / cleanup          Dead /media/grappelli/ route, ADMIN_MEDIA_PREFIX
+ 023 Medium   settings / upgrade      contrib.messages configured but not installed
+ 024 Medium   settings / py3          TEMPLATE_DIRS hardcodes a python2.7 path
+ 025 High     security / settings     SECRET_KEY and DB password are committed
+ 026 Medium   settings / deployment   ALLOWED_HOSTS is set nowhere in the repository
+ 027 High     dependencies / build    No upper bounds; --no-deps is load-bearing
+ 028 Medium   dependencies            photologue <=3.15.1 breaks on Pillow >=10
+ 029 Low      dependencies / build    gunicorn <=20.1.0 breaks on setuptools >=82
+ 030 Low      dependencies / build    django-sortedm2m <2 cannot be built by modern tools
+ 031 Medium   dependencies / build    Three dependencies install from URLs, not PyPI
+ 032 Low      deployment / cleanup    fabfile.py duplicates the Ansible deployment
+ 033 Low      dependencies / cleanup  django-pserver is required but never used
+ 034 High     templatetags / upgrade  admin_list fork needs re-syncing 19 times
+ 035 Low      dependencies / arch     photologue and grappelli cap the Django version
+ 036 High     platform / security     The runtime stack is end-of-life and unpatched
+==== ======== ======================= ==================================================
+
+**036 is the umbrella** -- the Python 2.7 / Django 1.5 modernisation, planned in
+``docs/upgrade-plan.rst``. Read it first; it lists which of the others block it.
+
+Of the rest, 025 and 026 are security questions independent of the upgrade and
+can be decided immediately. 019, 023 and 024 are one-line defensive changes that
+are no-ops today and prevent silent breakage later -- the cheapest things on this
+list. 027 is the one with a real design decision in it. 034 wants deciding before
+the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions.
 
 
 Already fixed
@@ -117,6 +163,9 @@ Observations, not actionable
 Noted while testing; nothing to do, but worth knowing before someone
 rediscovers them.
 
+From the test coverage work
+---------------------------
+
 * **The admin login gate does not redirect.** Django 1.5 returns 200 rendering
   the login form at the requested URL rather than 302 to ``admin:login``. No
   data leaks. Later Django versions redirect.
@@ -135,3 +184,33 @@ rediscovers them.
   Python 2.7 code -- unresolved imports for ``django``, ``photologue`` and
   ``south``, which only exist inside the dev container. ``ty.toml`` silences
   the import rules for this reason.
+
+From the dependency upgrade analysis
+------------------------------------
+
+Suspected problems that turned out **not** to be problems. Recorded so nobody
+spends time re-investigating them.
+
+* **ExifRead is safe across its whole range.** photologue calls exactly one
+  function, ``exifread.process_file``, and it is present and unchanged from
+  2.1.2 through 3.5.1. The 2.x to 3.x major bump does not affect this project.
+* **``Image.FLIP_LEFT_RIGHT`` and ``Image.ROTATE_180`` still work on Pillow
+  12.** photologue uses both. Only ``Image.ANTIALIAS`` was removed -- see issue
+  028.
+* **pytz is safe.** Django 1.11 through 3.2 depend on it without an upper
+  bound, but it is a data package with a stable API; a 2026 release works with
+  Django 1.11.
+* **sqlparse and asgiref are safe.** Django bounds them itself
+  (``asgiref<4``, ``sqlparse>=0.3.1``), so they need no attention.
+* **``pytest-django==2.9.1`` is good to Django 1.9**, not just 1.5. Its
+  ``tox.ini`` lists Django 1.4 through 1.9. The comment in
+  ``requirements/testing.txt`` -- "the last release supporting Django 1.5" --
+  is true but reads as more limiting than it is: the test stack needs no
+  attention for the first seven upgrade stages.
+* **``grappelli.dashboard`` survives to grappelli 5.0.0.** It was worth
+  checking, since ``ylaneenkasvit/dashboard.py`` depends on it and it is an
+  optional sub-application.
+* **``uv`` cannot target Python 2.7** (its floor is 3.6), so the early upgrade
+  stages cannot be resolved with it and stay hand-maintained. Not a defect in
+  anything, but it is the reason ``upgrade-plan.rst`` Appendix A starts at
+  Stage 10.
