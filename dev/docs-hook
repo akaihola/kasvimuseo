@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# PostToolUse hook: rebuild the documentation after an agent edits its sources.
+#
+# Register it in .claude/settings.json -- agents cannot write that file, the
+# harness masks it. "async": true is what keeps the agent from waiting:
+#
+#   { "hooks": { "PostToolUse": [ { "matcher": "Write|Edit|MultiEdit",
+#       "hooks": [ { "type": "command", "command": "dev/docs-hook",
+#                    "async": true } ] } ] } }
+#
+# Reads the hook payload on stdin and exits at once for an edit that touches no
+# documentation source. For one that does, it runs the build in the foreground
+# and lets the harness own that process: detaching it here with `setsid nohup`
+# is what a sandbox reaps when the spawning session ends. Under a harness with
+# no async hooks, wrap the whole call instead of the build.
+
+set -euo pipefail
+
+file=$(python3 -c '
+import json, sys
+try:
+    payload = json.load(sys.stdin)
+except ValueError:
+    sys.exit(0)
+print(payload.get("tool_input", {}).get("file_path", ""))
+' 2>/dev/null) || exit 0
+
+[ -n "$file" ] || exit 0
+
+# The repository is derived from the edited file, not from the working
+# directory, so an edit inside a git worktree rebuilds that worktree's docs.
+repo=$(git -C "$(dirname "$file")" rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -x "$repo/dev/docs-build" ] || exit 0
+
+# `*` in a case pattern matches slashes too, so these cover subdirectories. An
+# unfinished earlier build is reason enough to run whatever was edited: some
+# environments kill background processes when the session that spawned them
+# ends, and this is what makes the docs catch up again rather than stay stale.
+case ${file#"$repo"/} in
+    docs/*.rst|docs/conf.py|README.rst) ;;
+    kasvimuseo/*.py|ylaneenkasvit/*.py) ;;
+    *) [ -e "$repo/.dev/docs/.incomplete" ] || exit 0 ;;
+esac
+
+"$repo/dev/docs-build" >/dev/null 2>&1
+exit 0

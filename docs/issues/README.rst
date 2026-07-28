@@ -56,7 +56,7 @@ None are fixed: each one either changes behaviour that is visible in
 production, deletes code, or commits to a piece of work, so each wants a
 decision first.
 
-They come from two pieces of work. **001-018** came out of the test coverage
+They come from three pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current
 behaviour, so fixing one means deliberately changing a test.
 **019-036** came out of the dependency and platform upgrade analysis on branch
@@ -65,7 +65,8 @@ behaviour, so fixing one means deliberately changing a test.
 versions rather than code paths a test can reach.
 **037** came out of a later walkthrough of how photo management is meant to be
 used, and is about missing documentation rather than a defect, so it has no
-``Evidence`` entry either.
+``Evidence`` entry either. **038** came out of setting up this documentation
+build on branch ``sphinx-docs``.
 
 From the test coverage work
 ---------------------------
@@ -144,6 +145,20 @@ From the photo management walkthrough
 
 Read together with 002 and 003, which concern the same auto-attach signal: if
 that behaviour changes, the instructions asked for here change with it.
+
+
+From the documentation work
+---------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 038 Low      documentation / tooling The repository has no rendered documentation
+==== ======== ======================= ==================================================
+
+**038** is the only issue on this page being acted on rather than waiting for a
+decision: it carries the design of the Sphinx build in ``docs/``, including
+which of its workarounds fall away at which stage of ``docs/upgrade-plan.rst``.
 
 
 Already fixed

@@ -14,6 +14,8 @@
 #   app test [args]                     run the test suite
 #   app coverage [args]                 run the test suite and report coverage
 #   app shell                           shell inside the app container
+#   docs [--open]                       build the Sphinx docs (on the host)
+#   docs serve [--port N]               serve every checkout's docs on the tailnet
 #
 # `app run`, `app manage` and `app test` start PostgreSQL if it is down and stop
 # it again on exit, so the cluster only runs while it is actually needed. The
@@ -252,5 +254,10 @@ case "${1:-}" in
       shell)   with_db app_run_container "" sh ;;
       *)       die "usage: dev/kasvimuseo app build|run|manage|test|coverage|shell" ;;
     esac ;;
-  *) sed -n '2,20p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+  docs)
+    case "${2:-}" in
+      serve)   shift 2; exec "$REPO/dev/docs-serve" "$@" ;;
+      *)       shift; "$REPO/dev/docs-build" "$@" ;;
+    esac ;;
+  *) sed -n '2,22p' "${BASH_SOURCE[0]}" | cut -c3- ;;
 esac

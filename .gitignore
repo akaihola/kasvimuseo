@@ -23,6 +23,8 @@
 /ylaneenkasvit/local_settings.py
 /kasvimuseo/.pytest_cache/
 /.pytest_cache/
+# sphinx-autoapi's generated pages; scratch, deleted after each build
+/docs/api/
 /.coverage
 # Git worktrees live inside the repository, so they stay in the sandbox's
 # writable root and cannot be orphaned somewhere outside it.
