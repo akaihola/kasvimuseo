@@ -1,0 +1,9 @@
+# Documentation toolchain. Deliberately separate from requirements/*.txt: those
+# are the Python 2.7 application's, and this runs on the host's Python 3 without
+# ever importing the application. See docs/issues/038-no-rendered-documentation.rst.
+sphinx==9.1.0
+# Parses the source statically instead of importing it, which is the only thing
+# that works while the app is Python 2.7 / Django 1.5. Replace with
+# sphinx.ext.autodoc at upgrade-plan Stage 10.
+sphinx-autoapi==3.8.0
+furo==2025.12.19

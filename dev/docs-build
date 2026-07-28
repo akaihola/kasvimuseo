@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Build the Sphinx documentation into .dev/docs/html/.
+#
+# Runs on the host's Python 3 via uv, entirely outside the Python 2.7 app
+# container: nothing here imports the application. See
+# docs/issues/038-no-rendered-documentation.rst.
+#
+# Usage: dev/docs-build [--open] [sphinx-build args...]
+#
+# Concurrent invocations collapse: the first takes the lock and builds, the rest
+# mark the tree dirty and exit, and the running build repeats once at the end so
+# edits made while it was running are not lost. dev/docs-hook relies on that.
+
+set -euo pipefail
+
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+out=$repo/.dev/docs
+log=$out/build.log
+
+open_after=no
+if [ "${1:-}" = "--open" ]; then
+    open_after=yes
+    shift
+fi
+
+mkdir -p "$out"
+
+# -n: never queue a second build behind the running one; leave a marker instead,
+# which the running build picks up when it finishes.
+exec 9>"$out/.lock"
+if ! flock -n 9; then
+    touch "$out/.dirty"
+    echo "docs: a build is already running, marked for rebuild" >&2
+    exit 0
+fi
+
+# Cleared only on success, so a build that is killed part-way leaves the marker
+# behind and dev/docs-hook knows to finish the job on the next edit. Sphinx is
+# incremental, so that costs seconds, not another full build.
+touch "$out/.incomplete"
+
+for _ in 1 2 3; do
+    rm -f "$out/.dirty"
+    {
+        echo "=== $(date --iso-8601=seconds) ==="
+        uv run --no-project --with-requirements "$repo/docs/requirements.txt" \
+            sphinx-build -b html \
+            -d "$out/doctrees" \
+            "$repo/docs" "$out/html" "$@"
+    } >"$log" 2>&1 || {
+        status=$?
+        echo "docs: build failed, see $log" >&2
+        tail -n 20 "$log" >&2
+        exit $status
+    }
+    [ -e "$out/.dirty" ] || break
+done
+rm -f "$out/.incomplete"
+
+echo "docs: $out/html/index.html"
+if [ "$open_after" = yes ]; then
+    xdg-open "$out/html/index.html" >/dev/null 2>&1 &
+fi

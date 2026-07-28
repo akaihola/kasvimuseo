@@ -1,0 +1,227 @@
+==============================================
+Issue 038: The repository has no rendered docs
+==============================================
+
+:Status: In progress
+:Severity: Low
+:Area: documentation / tooling
+:Reported: 2026-07-28
+:Source: Documentation request, branch ``sphinx-docs``
+:Evidence: (none)
+:Decision: undecided
+:Resolution: (none yet)
+
+Problem
+=======
+
+``docs/`` holds four substantial reStructuredText documents and 37 issue files,
+and they are only ever read as source. There is no front page, no index, no
+cross-referencing between an issue and the code it is about, and no rendered
+form to hand to anyone. The API surface -- ``kasvimuseo`` and
+``ylaneenkasvit`` -- is documented nowhere at all.
+
+The obvious answer is Sphinx, and the documents are already reStructuredText.
+The obstacle is the runtime: the application is Python 2.7 / Django 1.5 (issue
+036), so the code cannot be imported by anything modern, and modern Sphinx
+cannot run on Python 2.7. Any documentation build has to sit *outside* the
+application runtime until the upgrade catches up with it.
+
+Decision
+========
+
+Build the documentation with a **host-side Python 3 toolchain that never
+imports the application**, and rebuild it automatically -- in the background,
+never blocking -- whenever a coding agent edits documentation or source.
+
+Two conventions in this repository are load-bearing for the design:
+
+* ``.dev/`` is throwaway state, gitignored, safe to delete (see ``README.rst``).
+  The rendered HTML belongs there, not in the tree.
+* ``dev/kasvimuseo`` is the single documented entry point for development
+  commands. The documentation build is one more subcommand.
+
+Design
+======
+
+Toolchain
+---------
+
+``docs/requirements.txt`` pins ``sphinx``, ``sphinx-autoapi`` and ``furo``, and
+every invocation is::
+
+    uv run --no-project --with-requirements docs/requirements.txt sphinx-build ...
+
+``--no-project`` matters: there is no ``pyproject.toml`` here, and the
+requirement sets under ``requirements/`` are the Python 2.7 application's, which
+``uv`` cannot resolve at all (its floor is Python 3.6). The documentation
+toolchain and the application share no environment, no interpreter and no lock
+file. That is the whole trick that makes this possible today.
+
+The API index: autoapi, not autodoc
+-----------------------------------
+
+``sphinx.ext.autodoc`` imports each module to introspect it. That requires a
+working Django 1.5 environment on Python 2.7, i.e. the dev container, where
+modern Sphinx cannot run. **sphinx-autoapi** instead parses the source
+statically and never executes it, so it works from the host against Python 2-era
+code.
+
+One file cannot be parsed by a Python 3 tokeniser at all:
+``kasvimuseo/migrations/0011_extract_lighting.py`` uses the Python 2 ``ur''``
+string prefix. Migrations are excluded from the API index regardless -- 19
+South migrations are noise in an API reference -- so the exclusion is not a
+workaround borrowed for the occasion.
+
+Layout
+------
+
+``docs/`` is the Sphinx source directory; the existing documents stay where they
+are and are wired into the tree rather than moved.
+
+============================ =========================================
+``docs/conf.py``             new
+``docs/index.rst``           new -- front page, project description
+``docs/issues/index.rst``    new -- issue list, glob toctree
+``docs/requirements.txt``    new -- pinned doc toolchain
+``docs/issues/*.rst``        existing, unchanged
+``docs/*-plan.rst`` etc.     existing, unchanged
+============================ =========================================
+
+The issue list uses a ``:glob:`` toctree over ``0*``, so a new issue file appears
+in the rendered list with no edit anywhere else. The API pages are generated
+under ``/api/`` from ``kasvimuseo`` and ``ylaneenkasvit``, ignoring migrations
+and tests.
+
+Output goes to ``.dev/docs/html/``, doctrees to ``.dev/docs/doctrees/``.
+
+Automatic rebuild that does not block the agent
+-----------------------------------------------
+
+``dev/docs-build`` runs the build under ``flock -n``, so overlapping invocations
+collapse into one instead of stacking, and logs to ``.dev/docs/build.log``.
+
+``dev/docs-hook`` is what a ``PostToolUse`` hook calls. It reads the hook JSON on
+standard input and exits immediately unless the edited path is documentation or
+Python source; for one that is, it runs the build. The hook is registered with
+``"async": true``, which is the harness's own mechanism for a hook that must not
+hold up the agent -- and, unlike detaching the build inside the script, it
+leaves the process owned by something that will not reap it.
+
+The hook resolves the repository root from the *edited file*, not from the
+agent's working directory, so edits made in a ``git worktree`` rebuild that
+worktree's documentation rather than the base checkout's.
+
+One thing measured while building this: **a sandboxed agent environment kills a
+detached process when the call that spawned it ends.** The first version of the
+hook used ``setsid nohup``, and in the sandbox used here that build died
+part-way through, every time -- which is what pointed at ``"async": true`` as
+the right mechanism instead.
+
+Nothing is lost when a build is killed -- Sphinx keeps its doctrees, so the next
+one costs about six seconds rather than the forty a cold build takes -- but the
+documentation would silently stay stale. ``dev/docs-build`` therefore leaves a
+``.dev/docs/.incomplete`` marker for the duration of a build and clears it only
+on success, and the hook treats that marker as reason enough to build again,
+whatever was edited. The docs catch up on the next edit instead of waiting for
+someone to notice.
+
+Serving it
+----------
+
+``dev/docs-serve`` (``dev/kasvimuseo docs serve``) serves every checkout at
+once: the main one and each ``git worktree``, each from its own
+``.dev/docs/html/``, under ``/<branch>/``, with an index at ``/`` and a switcher
+injected into each page that moves to the same path in another checkout. The
+main checkout also answers at ``/main/``, because its branch changes underneath
+a bookmark. The checkout list comes from ``git worktree list`` on every request,
+so worktrees appearing and disappearing need no restart.
+
+It binds to the machine's Tailscale address when ``tailscale ip -4`` answers,
+which keeps the docs on the tailnet rather than on every interface; ``--bind``
+overrides it and ``0.0.0.0`` is the fallback. It is stdlib Python 3 -- no part
+of the Sphinx toolchain is needed to *read* the docs, only to build them --
+and it never writes: the injected switcher exists only in the response, never in
+the built HTML.
+
+Per-checkout builds are the point. Each worktree renders its own branch, so a
+documentation change can be read as it will look before it is merged, from a
+phone or another machine, without touching the main checkout.
+
+Migration to modern practice, as the stack catches up
+=====================================================
+
+Everything above is shaped by a Python 2.7 application, and each constraint has
+a defined point in ``docs/upgrade-plan.rst`` at which it stops applying. The
+documentation build should be revisited at these points rather than left to
+ossify.
+
+======================= ================================================================
+Trigger                 Change
+======================= ================================================================
+Stage 10 (Python 3.7)   Application becomes importable by a modern interpreter.
+                        Replace sphinx-autoapi with ``sphinx.ext.autodoc`` +
+                        ``autosummary``, which reads real signatures, decorators and
+                        inherited members instead of an AST approximation. Requires a
+                        Django settings module and ``django.setup()`` in ``conf.py``.
+                        Keep autoapi until this stage: it is the only option that works.
+Stage 10                Drop the ``0011_extract_lighting.py`` parse exclusion note; the
+                        ``ur''`` prefix is gone by then (issue 016 territory).
+Stage 10                ``uv`` can finally resolve the application itself. Replace
+                        ``docs/requirements.txt`` with a ``pyproject.toml``
+                        ``[dependency-groups] docs = [...]`` entry, built with
+                        ``uv run --group docs``, and a real ``uv.lock`` -- one
+                        environment definition instead of two.
+Stage 10                Add ``sphinx.ext.intersphinx`` against the Python and Django
+                        object inventories, pinned to the version actually in use, so
+                        ``ForeignKey`` and ``QuerySet`` in docstrings become links.
+                        Pointless before then: docs.djangoproject.com no longer
+                        publishes an inventory for 1.5.
+Stage 11+ (Django 2.0)  Consider ``sphinxcontrib-django`` for model field tables in the
+                        API reference. It requires Django >= 2.
+CI exists (issue 018)   Move the build into CI with ``-W --keep-going`` so a broken
+                        cross-reference fails the pipeline, and publish the HTML
+                        (GitHub Pages or Read the Docs) instead of relying on a local
+                        ``.dev/`` directory. The hook stays as the fast local loop,
+                        and ``dev/docs-serve`` stays useful for unmerged branches --
+                        which is exactly what a published site cannot show.
+Any time                ``sphinx-autobuild`` would give ``dev/docs-serve`` live reload
+                        and rebuild-on-change in one process. It is a dependency and a
+                        different design -- one checkout per process -- so it is worth
+                        it only if the hook turns out not to be enough.
+Any time                If the docs server should survive a logout, it is a systemd
+                        user unit, not a change to the script. Deliberately left out:
+                        a foreground process that dies with the terminal is the
+                        expected behaviour of a development tool.
+Any time after CI       Turn on ``sphinx.ext.doctest`` and ``coverage`` builders, so
+                        examples in the documentation are executed and undocumented
+                        public API is reported.
+Any time                If Markdown becomes preferable for new documents, add ``myst``
+                        rather than converting the existing reStructuredText. The two
+                        coexist in one project.
+======================= ================================================================
+
+Two things deliberately do **not** change with the stack. The output stays in
+``.dev/`` and out of version control -- rendered HTML in a diff is noise. And
+the rebuild stays detached and non-blocking; a documentation build is never
+worth making an agent wait.
+
+Not done here
+=============
+
+The build runs without ``-W``. The existing hand-written documents turned out to
+be clean -- they render under Sphinx with no warnings at all -- but the
+generated API pages produce one:
+
+    ``duplicate object description of
+    kasvimuseo.models.get_next_observation_extid``
+
+``models.py`` defines that function and then rebinds the name to
+``lazy(get_next_observation_extid, unicode)``, so autoapi documents a function
+and a module attribute under one name. It is a fair description of the source,
+not a defect in the build, and it is why ``-W`` is not on yet. Warnings are in
+``.dev/docs/build.log``.
+
+The ``PostToolUse`` hook has to be registered in ``.claude/settings.json``, which
+coding agents cannot write to. The scripts are in the repository and work when
+run by hand; the registration is a one-line manual step, recorded in
+``README.rst``.

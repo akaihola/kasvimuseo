@@ -77,6 +77,63 @@ directory, including material no row points at, still needs SSH::
 
 
 
+Documentation
+=============
+
+``docs/`` is a Sphinx project: this file, the issue register, the plans, and an
+API reference generated from the source. Build it into ``.dev/docs/html/``::
+
+    $ dev/kasvimuseo docs --open
+
+It runs on the host's Python 3 through ``uv``, not in the app container, and
+never imports the application -- see
+``docs/issues/038-no-rendered-documentation.rst`` for why, and for how it should
+change as the stack is upgraded. The toolchain is pinned in
+``docs/requirements.txt``; nothing needs installing beforehand.
+
+To rebuild automatically whenever a coding agent edits documentation or Python
+source, register the hook in ``.claude/settings.json``. Agents cannot write that
+file -- the harness masks it -- so this one is by hand::
+
+    {
+      "hooks": {
+        "PostToolUse": [
+          {
+            "matcher": "Write|Edit|MultiEdit",
+            "hooks": [
+              {"type": "command", "command": "dev/docs-hook", "async": true}
+            ]
+          }
+        ]
+      }
+    }
+
+``async`` is the part that matters: the hook runs in the background and the
+agent carries on. ``dev/docs-hook`` exits immediately for an edit that touches
+nothing the documentation is built from, and a rebuild after one that does takes
+about six seconds.
+
+Reading the docs from another machine
+-------------------------------------
+
+::
+
+    $ dev/kasvimuseo docs serve
+
+Serves every checkout of the repository at once -- the main one and each
+worktree, each from its own ``.dev/docs/html/`` -- on port 8800, bound to this
+machine's Tailscale address, so it is reachable from the tailnet and from
+nowhere else. ``/`` lists the checkouts; each is at ``/<branch>/``, the main
+checkout also at the fixed ``/main/`` because its branch changes. Every page
+gets a switcher in the corner that jumps to the same page in another checkout.
+
+The list is re-read per request, so worktrees added or removed while it runs
+need no restart. It serves what has been built and nothing else: a checkout
+whose docs are missing says so, and building it is ``dev/kasvimuseo docs``
+*in that checkout*. Stdlib Python 3 only -- ``--port`` and ``--bind`` override
+the defaults.
+
+
 Using Ansible for deployment, update and maintenance
 ====================================================
 
