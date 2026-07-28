@@ -11,6 +11,7 @@ Issue 040: Django ships no translations, so the admin chrome is English
 :Depends on: (none)
 :Blocks: (none)
 :Related: 036 -- option 3 is to wait for the upgrade to retire Django 1.5
+    044 -- the submit row, where one button translates and two do not
 :Decision: undecided
 :Resolution: (none yet)
 
@@ -54,6 +55,15 @@ users are Finnish-speaking gardeners, and the admin is the whole application:
 there is no separate front end to log into. Half-translated chrome is worse
 than either extreme, because ``Add``/``Change`` sit on the same row as the
 Finnish model names.
+
+The submit row of any change form shows the same seam inside a single row of
+buttons: ``Tallenna``, ``Save and add another``, ``Save and continue editing``.
+``kasvimuseo/locale/fi/LC_MESSAGES/django.po`` carries a ``Save`` msgid of its
+own -- the project catalog *is* loaded, so that one button translates -- and
+has no entry for the two longer labels, which fall back to Django's unreachable
+catalog and stay English. Filling in those two msgids in the project catalog
+would cover the strings that matter most without moving anything. Issue 044 is
+about the same three buttons.
 
 Options
 =======

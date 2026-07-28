@@ -13,6 +13,7 @@ Issue 017: Browser test suite is unrunnable, so the Vue label editor is untested
 :Related: 018 -- both are about whether tests are run at all
     010, 039 -- label editor behaviour that neither covers
     013 -- the FIXMEs a browser test would settle
+    045, 046, 047 -- label editor and tablet behaviour no test can see
 :Decision: undecided
 :Resolution: (none yet)
 

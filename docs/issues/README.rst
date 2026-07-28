@@ -72,7 +72,7 @@ This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
 order of implementation" in :doc:`index`.
 
-They come from five pieces of work. **001-018** came out of the test coverage
+They come from six pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current
 behaviour, so fixing one means deliberately changing a test.
 **019-036** came out of the dependency and platform upgrade analysis on branch
@@ -90,6 +90,10 @@ while 041 is a defect the suite reaches only with unique test data.
 **042** was written as an implementation plan on branch
 ``species-photo-always-switch`` and filed here instead, since the change it
 proposes wants a decision before it is made.
+**043-047** were reported by the maintainer rather than found by a piece of
+work, and were split out of ``incoming.rst``. They are the only ones written
+from somebody using the application: two of them (044, 045) could not be
+reproduced from the description alone and say plainly what is still needed.
 
 From the test coverage work
 ---------------------------
@@ -206,6 +210,32 @@ changes how the application is built. 041 was invisible while the view it
 concerns had no link; the link added by the same work is what exposed it, and
 it needs a ruling on what a duplicate museum number means before it can be
 fixed.
+
+
+Reported by the maintainer
+--------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 043 Low      admin / photos          The photo changelist cannot be sorted by name
+ 044 High     admin / grappelli       Save buttons reported missing on the species form
+ 045 Medium   templates / mobile      The application is not usable on an iPad
+ 046 Low      templates / labels UI   The label editor opens at print size
+ 047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
+==== ======== ======================= ==================================================
+
+Split out of ``incoming.rst``, where they were written down as they were
+noticed. Unlike the rest of this register they describe symptoms rather than
+causes, so each says how far the cause was traced.
+
+043 is the one that is ready to be done: the cause is known and the fix is one
+attribute. 047 likewise, once it is decided which printer to draw. 046 needs a
+ruling on whether the page gets a zoom control or just a smaller default. 044
+and 045 are the two that cannot move without the reporter: 044 could not be
+reproduced -- the buttons render, and no July change touched the page -- and
+045 arrived as a single sentence whose scope has to be settled before any of it
+can be estimated.
 
 
 Already fixed
