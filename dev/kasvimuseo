@@ -11,11 +11,13 @@
 #   app build                           build the Python 2.7 dev image
 #   app run                             Django dev server ($KASVIMUSEO_PORT:8000)
 #   app manage <args...>                run a manage.py command
-#   app test [args]                     run the unit tests (no database needed)
+#   app test [args]                     run the test suite
+#   app coverage [args]                 run the test suite and report coverage
 #   app shell                           shell inside the app container
 #
-# `app run` and `app manage` start PostgreSQL if it is down and stop it again on
-# exit, so the cluster only runs while it is actually needed.
+# `app run`, `app manage` and `app test` start PostgreSQL if it is down and stop
+# it again on exit, so the cluster only runs while it is actually needed. The
+# tests build their own data, so they need no production dump and no media.
 set -euo pipefail
 
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -162,8 +164,20 @@ print("{0} fetched, {1} failed, {2} already present".format(
 }
 
 CONTAINER=kasvimuseo-dev-$$
+TEST_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
+
+# local_settings.py is untracked, so a fresh clone has none, and the app would
+# silently fall back to production's static URL and ignore the database
+# environment variables below.
+ensure_local_settings() {
+    local settings=$REPO/ylaneenkasvit/local_settings.py
+    [ -f "$settings" ] && return
+    cp "$REPO/ylaneenkasvit/local_settings.development.py" "$settings"
+    echo "Created ylaneenkasvit/local_settings.py from local_settings.development.py" >&2
+}
 
 app_run_container() {
+    ensure_local_settings
     local extra=$1; shift
     # Named so the exit trap can reap it: podman leaves the container running if
     # its client process is killed rather than interrupted.
@@ -173,6 +187,8 @@ app_run_container() {
         -e "KASVIMUSEO_DB_PORT=$PGPORT" \
         -e "KASVIMUSEO_DB_NAME=$DB_NAME" \
         -e "KASVIMUSEO_DB_USER=$DB_USER" \
+        -e "KASVIMUSEO_DB_PASSWORD=$DB_PASSWORD" \
+        -e "KASVIMUSEO_TEST_SUFFIX=${KASVIMUSEO_TEST_SUFFIX:-}" \
         $extra "$IMAGE" "$@"
 }
 
@@ -219,11 +235,22 @@ case "${1:-}" in
       run)     with_db app_run_container "-p ${KASVIMUSEO_PORT:-8000}:8000" \
                    python ylaneenkasvit/manage.py runserver 0.0.0.0:8000 ;;
       manage)  shift 2; with_db app_run_container "" python ylaneenkasvit/manage.py "$@" ;;
-      # The unit tests are pure mocks, so they need no database.
-      test)    shift 2; app_run_container "-w /src/kasvimuseo" \
-                   python -m pytest "${@:-tests}" ;;
+      # Most tests build their own data in a test database, so unlike the app
+      # itself they need the cluster but never a production dump or media.
+      # The image sets DJANGO_SETTINGS_MODULE for the app, and pytest-django
+      # lets the environment outrank pytest.ini, so point it at the test
+      # settings explicitly.
+      test)    shift 2; with_db app_run_container "$TEST_ENV" \
+                   python -m pytest "$@" ;;
+      coverage)
+               shift 2; with_db app_run_container "$TEST_ENV" sh -c \
+                 "coverage run --source=kasvimuseo,ylaneenkasvit \
+                               --omit='*/migrations/*,*/tests/*,\
+*/external_migrations/*,*/manage.py,*/wsgi.py,*/*settings*.py' \
+                               -m pytest -q $* >/dev/null;
+                  coverage report -m" ;;
       shell)   with_db app_run_container "" sh ;;
-      *)       die "usage: dev/kasvimuseo app build|run|manage|test|shell" ;;
+      *)       die "usage: dev/kasvimuseo app build|run|manage|test|coverage|shell" ;;
     esac ;;
-  *) sed -n '2,18p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+  *) sed -n '2,20p' "${BASH_SOURCE[0]}" | cut -c3- ;;
 esac
