@@ -363,24 +363,11 @@ changelist smoke tests, without being tested directly -- as intended.
 
 Defects 1--4 are fixed. Three further findings came out of writing the tests
 and are **not** fixed, because each changes behaviour that is visible in
-production and so wants a decision first:
-
-1. **``SpeciesManager.public_planted`` ignores ``removal_date``**, unlike
-   ``PlantingManager`` and ``ObservationManager``. Worse, its inner loop walks
-   *every* planting of the species, including ones in non-public beds, so a
-   species whose public plantings have all been removed still appears on the
-   public species list. Pinned as-is by tests in both ``test_models.py`` and
-   ``test_views.py``.
-2. **``planted_species_report`` raises ``NoReverseMatch``** when a selected
-   species has a NULL ``external_id``: ``unicode(None)`` is ``'None'`` and the
-   URL pattern only accepts ``[\d,]+``.
-3. **``autoconnect_photo_to_species`` can break every Photo save.** It catches
-   only ``Species.DoesNotExist``, but ``name_fi`` has no unique constraint, so
-   two photoless species sharing a name make the receiver raise
-   ``MultipleObjectsReturned`` -- from a ``post_save`` receiver connected for
-   every model, which would take down the Photo admin. Its species lookup is
-   also case-sensitive on the ``name_fi`` side, so a capitalised ``name_fi``
-   can never be auto-attached.
+production and so wants a decision first: the public species list showing
+removed species (``docs/issues/001``), the Create Species Sheets action
+raising on a species with no external id (``docs/issues/009``), and the photo
+auto-attach receiver being able to break every Photo save
+(``docs/issues/002``, with the matching semantics in ``docs/issues/003``).
 
 Two notes for whoever writes the next tests:
 
@@ -432,39 +419,28 @@ prove it:
   CareAdmin) -- every documented ``list_filter`` narrows the rows correctly,
   and the Grappelli filter pulldown renders working links.
 
-Further findings, none fixed
-----------------------------
+Where the findings live
+-----------------------
 
-1. **``planted-observation.html`` line 13 hardcodes**
-   ``<img src="dummy.jpg" />`` -- a broken image on every observation page.
-2. **The public species list has no search box.** In
-   ``planted-species-list.html`` the jQuery-Mobile attributes are prefixed with
-   an ``X`` (``Xdata-filter``, ``Xdata-filter-placeholder="Etsi kasvin
-   nimellä..."``, ``Xdata-filter-theme``), which disables the filter.
-3. **``planted-species-compact.html`` (165 lines) is dead.** Nothing references
-   it; ``PlantedSpeciesCompact`` renders ``planted-species.html`` with the
-   compact *base*. It is also internally inconsistent, mixing top-level
-   ``{{ species.* }}`` with ``{{ page.beds }}``, so it would render blank names
-   and photos if it were ever wired up.
-4. **An unknown species external id renders an empty 200 page**, not a 404.
-5. **``/photologue/gallery/`` raises on an empty database** -- a date archive
-   view with ``allow_empty`` off, reachable from the admin.
-6. **The admin login gate does not redirect**: Django 1.5 returns 200 with the
-   login form at the requested URL rather than 302 to ``admin:login``. No data
-   leaks.
-7. **``identifier_for_field`` has dead code** -- it assigns ``label = attr.name``
-   and never returns it, falling through to ``'__unknown__'``. In the vendored
-   fork, so out of scope.
+Everything this work turned up is filed under ``docs/issues/``, one document
+per actionable finding, with a status field to track the decision on each.
+``docs/issues/README.rst`` indexes them and explains the convention. In short:
+a broken placeholder image on every observation page, a search box disabled on
+the public species list, a dead 165-line template, an unknown species id
+rendering an empty page rather than a 404, the photologue gallery index raising
+on an empty database, the labels API pairing items to labels by position, and
+the report pages opening every image file just to pick a CSS class.
 
-The IOError-on-missing-media hazard the README warns about traces to
-``{{ page.species.photo.image.width }}`` inside an **HTML comment** in
-``planted-species.html``, used for a horizontal/vertical class. Django still
-opens every image file to evaluate it.
+The last of those is the IOError-on-missing-media hazard the README warns
+about: it comes from ``{{ page.species.photo.image.width }}`` in
+``planted-species.html``, used both in a debug HTML comment and in a real
+``horizontal``/``vertical`` class, so removing the comment alone does not
+remove the file access. See ``docs/issues/011``.
 
 The 626-line Vue label editor in ``planting-labels.html`` is covered only at
 the server contract level -- 200, the mount point, the data endpoint URL and
 the Vue script. Its real behaviour needs a browser, i.e. a repaired
-``integration_tests/`` suite.
+``integration_tests/`` suite; see ``docs/issues/017``.
 
 
 Sequencing
