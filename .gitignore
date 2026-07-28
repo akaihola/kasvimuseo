@@ -24,3 +24,7 @@
 /kasvimuseo/.pytest_cache/
 /.pytest_cache/
 /.coverage
+# Git worktrees live inside the repository, so they stay in the sandbox's
+# writable root and cannot be orphaned somewhere outside it.
+/.worktrees/
+/.claude/worktrees/
