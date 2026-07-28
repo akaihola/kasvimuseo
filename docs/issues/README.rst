@@ -67,6 +67,10 @@ versions rather than code paths a test can reach.
 to be used: 037 is about missing documentation rather than a defect, and 039 is a
 defect the suite happens not to reach, so neither has an ``Evidence`` entry.
 **038** came out of setting up this documentation build on branch ``sphinx-docs``.
+**040 and 041** came out of walking through the admin front page on branch
+``dashboard-usability``: 040 is a packaging accident in a dependency rather than
+anything this repository does wrong, so it has no ``Evidence`` entry either,
+while 041 is a defect the suite reaches only with unique test data.
 
 From the test coverage work
 ---------------------------
@@ -162,6 +166,24 @@ From the documentation work
 **038** is the only issue on this page being acted on rather than waiting for a
 decision: it carries the design of the Sphinx build in ``docs/``, including
 which of its workarounds fall away at which stage of ``docs/upgrade-plan.rst``.
+
+
+From the dashboard walkthrough
+------------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 040 Medium   packaging / i18n        Django ships no translations, admin chrome English
+ 041 Medium   views / public site     Duplicate observation numbers crash the observation page
+==== ======== ======================= ==================================================
+
+Both were found by looking at the rendered admin front page while linking the
+custom views from it. 040's fix is one line in each image definition, but it
+changes how the application is built. 041 was invisible while the view it
+concerns had no link; the link added by the same work is what exposed it, and
+it needs a ruling on what a duplicate museum number means before it can be
+fixed.
 
 
 Already fixed

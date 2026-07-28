@@ -42,6 +42,27 @@ def test_bed_admin_map():
 
 
 @pytest.mark.django_db
+def test_observation_admin_page():
+    observation = factories.create_observation(external_id=42)
+    modeladmin = admin.ObservationAdmin(Observation, django_admin.site)
+
+    result = modeladmin.page(observation)
+
+    url = reverse('planted-observation', args=[observation.external_id])
+    assert result == '<a href="{0}">sivu</a>'.format(url)
+
+
+@pytest.mark.django_db
+def test_observation_admin_page_without_an_external_id():
+    """``external_id`` is optional, and the public URL is keyed by it."""
+    observation = factories.create_observation()
+    modeladmin = admin.ObservationAdmin(Observation, django_admin.site)
+
+    assert observation.external_id is None
+    assert modeladmin.page(observation) == ''
+
+
+@pytest.mark.django_db
 def test_photo_admin_image_filename(photo_factory):
     photo = photo_factory()
     modeladmin = admin.PhotoAdmin(Photo, django_admin.site)
