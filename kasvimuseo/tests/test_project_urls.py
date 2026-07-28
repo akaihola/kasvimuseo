@@ -131,6 +131,7 @@ def module_title(title, collapsible=False):
 # module below.
 DASHBOARD_LINKS = ['planted-species-list',
                    'admin:kasvimuseo_species_changelist',
+                   'admin:kasvimuseo_observation_changelist',
                    'planting-label',
                    'pl-gallery-archive']
 
@@ -167,6 +168,33 @@ def test_dashboard_skips_the_bed_maps_without_beds(admin_client):
     body = content(admin_client.get(reverse('admin:index')))
 
     assert module_title('Bed maps', collapsible=True) not in body
+
+
+MODEL_GROUP_TITLES = ['Base data', 'Observations and plantings', 'Photos']
+
+
+@pytest.mark.parametrize('title', MODEL_GROUP_TITLES)
+def test_dashboard_names_every_model_group(admin_client, title):
+    """The generated groups had no titles, so the page opened unlabelled."""
+    response = admin_client.get(reverse('admin:index'))
+
+    assert module_title(title, collapsible=True) in content(response)
+
+
+@pytest.mark.parametrize('title', MODEL_GROUP_TITLES)
+def test_dashboard_leaves_the_model_groups_open(admin_client, title):
+    """Naming the groups made them collapsible, so pin that they start open.
+
+    Grappelli 2.4 reads the initial state from the ``grp-open``/``grp-closed``
+    class ``render_css_classes`` adds to the module's ``div``; nothing on the
+    dashboard should hide its model links behind a click.
+    """
+    body = content(admin_client.get(reverse('admin:index')))
+
+    before = body[:body.index(module_title(title, collapsible=True))]
+    opening_tag = '<div' + before.rsplit('<div', 1)[-1]
+    assert 'grp-open' in opening_tag
+    assert 'grp-closed' not in opening_tag
 
 
 def test_dashboard_renders_the_reports_module(admin_client):

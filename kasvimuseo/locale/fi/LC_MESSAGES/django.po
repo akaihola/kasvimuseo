@@ -44,6 +44,14 @@ msgstr "Lisätiedot"
 msgid "Address"
 msgstr "Osoite"
 
+#: admin.py:215
+msgid "page"
+msgstr "sivu"
+
+#: admin.py:216
+msgid "show page"
+msgstr "näytä sivu"
+
 #: admin.py:303
 msgid "map"
 msgstr "kartta"
