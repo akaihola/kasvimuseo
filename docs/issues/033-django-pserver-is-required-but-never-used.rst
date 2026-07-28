@@ -8,6 +8,9 @@ Issue 033: django-pserver is required but never used
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: 036 -- Stage 0
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,9 @@ Issue 005: Search box on the public species list is disabled
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_templates.py
+:Depends on: (none)
+:Blocks: (none)
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

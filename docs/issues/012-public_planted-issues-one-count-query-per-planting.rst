@@ -8,6 +8,9 @@ Issue 012: public_planted issues one COUNT query per planting
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_models.py (query counts asserted around the managers)
+:Depends on: (none)
+:Blocks: 001 -- fix the query cost before changing what the loop means
+:Related: 001 -- the same ``any(...)`` loop
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,9 @@ Issue 031: Three dependencies are installed from URLs, not from PyPI
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: 032 -- deleting ``fabfile.py`` removes ``flax``, one of the three
+:Blocks: 036 -- Stage 0
+:Related: 032
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,9 @@ Issue 016: remove_diacritics silently breaks on Python 3
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_forms.py::test_remove_diacritics_returns_a_text_string
+:Depends on: (none)
+:Blocks: 036 -- silent slug corruption at Stage 10, the Python 3 flip
+:Related: 024 -- the other Python 3 landmine already on file
 :Decision: undecided
 :Resolution: (none yet)
 

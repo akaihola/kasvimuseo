@@ -8,6 +8,10 @@ Issue 028: photologue <= 3.15.1 breaks on Pillow 10 and later
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none -- confirmed at runtime, see below)
+:Depends on: (none)
+:Blocks: 027 -- a constraint the lock must carry
+    036 -- Stages 2-16
+:Related: 035 -- photologue is the package on both sides of this
 :Decision: undecided
 :Resolution: (none yet)
 

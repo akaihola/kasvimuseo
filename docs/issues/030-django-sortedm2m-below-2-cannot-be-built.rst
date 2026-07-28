@@ -8,6 +8,10 @@ Issue 030: django-sortedm2m < 2.0.0 cannot be built by modern tools
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: 027 -- a constraint the lock must carry
+    036 -- Stage 2 and Stages 4-11
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

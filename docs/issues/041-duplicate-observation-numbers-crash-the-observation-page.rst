@@ -8,6 +8,10 @@ Issue 041: Duplicate observation numbers crash the observation page
 :Reported: 2026-07-28
 :Source: Dashboard walkthrough, branch ``dashboard-usability``
 :Evidence: ``kasvimuseo/tests/test_views.py`` covers the view with unique ids only
+:Depends on: (none)
+:Blocks: (none)
+:Related: 007 -- the same family of missing lookup guards on the public views
+    009 -- the same ``external_id`` column, seen from the admin side
 :Decision: undecided
 :Resolution: (none yet)
 

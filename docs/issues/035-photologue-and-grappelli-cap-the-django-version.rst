@@ -8,6 +8,10 @@ Issue 035: photologue and grappelli cap which Django can ever be used
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 036 -- the ceiling that will make it recur
+    028 -- the same two packages
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,9 @@ Issue 001: Public species list shows removed species
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_models.py::test_species_manager_ignores_removal_date, kasvimuseo/tests/test_views.py::test_planted_species_list_shows_only_public_planted
+:Depends on: 012 -- do the behaviour-preserving query fix first, so the semantic change lands on clean code
+:Blocks: (none)
+:Related: 012 -- the same ``any(...)`` loop
 :Decision: undecided
 :Resolution: (none yet)
 
