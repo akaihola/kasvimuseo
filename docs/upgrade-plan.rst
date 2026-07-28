@@ -35,8 +35,9 @@ Everything below is derived from primary sources, not from recollection:
   three breakages that metadata alone does not reveal — see
   `Part 3b — Cross-package breakages`_. The resulting lock sets are in
   `Appendix A — Resolved lock set per stage`_.
-* **A real installation of the Stage 19 target**, verified with ``pipdeptree``
-  and a Django ``check`` run — see `The destination is verified`_.
+* **Real installations of the Stage 18 and Stage 19 targets**, verified with
+  ``pipdeptree`` and a Django ``check`` run — see
+  `The destination is verified`_.
 
 Two limits are worth stating up front. ``uv`` refuses to target Python below
 3.6, so **no Python 2.7 stage could be resolved with it**; Stages 0–9 rest on
@@ -54,9 +55,11 @@ The destination is verified
 
 .. _`The destination is verified`:
 
-The Stage 19 endpoint is not a projection. Installed together on Python 3.14 —
-Django 6.0.7, django-grappelli 5.0.0, django-photologue 3.20,
-django-sortedm2m 4.0.0, psycopg2-binary 2.9.12, gunicorn 26.0.0 — the stack:
+The far end of this plan is not a projection. **Two stages were installed and
+run for real**: Stage 19 (Django 6.0.7, grappelli 5.0.0, photologue 3.20) and
+Stage 18 (Django 5.2.16, grappelli 4.0.4, photologue 3.19, Pillow 12.3.0). Both
+behave identically on the checks below. Taking Stage 19 as the example — with
+django-sortedm2m 4.0.0, psycopg2-binary 2.9.12 and gunicorn 26.0.0 — the stack:
 
 * imports and starts (``django.setup()`` with all eleven apps, including
   ``grappelli.dashboard``, which this project's ``dashboard.py`` depends on);
@@ -437,8 +440,7 @@ Observed directly in ``photologue/models.py`` across every release, and in
 =========================== =========================================
 photologue                  Resampling API used
 =========================== =========================================
-2.6.1 … **3.15.1**          ``Image.ANTIALIAS``, ``Image.FLIP_*``,
-                            ``Image.ROTATE_*``
+2.6.1 … **3.15.1**          ``Image.ANTIALIAS``
 **3.16** … 3.20             ``Image.Resampling.LANCZOS``
 =========================== =========================================
 
@@ -449,6 +451,15 @@ Pillow                      State
 9.1.0 … 9.5.0               both present (the overlap window)
 **10.0.0** …                ``ANTIALIAS`` **removed**
 =========================== =========================================
+
+Confirmed at runtime on Pillow 12.3.0::
+
+    >>> PIL.Image.ANTIALIAS
+    AttributeError: module 'PIL.Image' has no attribute 'ANTIALIAS'
+
+photologue ≤ 3.15.1 also uses ``Image.FLIP_LEFT_RIGHT`` and
+``Image.ROTATE_180``, but **those are fine** — they still exist in Pillow 12 as
+module-level aliases. ``ANTIALIAS`` is the only casualty.
 
 So:
 
