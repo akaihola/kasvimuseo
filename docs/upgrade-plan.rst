@@ -19,8 +19,9 @@ Everything below is derived from primary sources, not from recollection:
 
 * PyPI JSON metadata for every package in the tree — each release, its
   ``requires_python``, its ``requires_dist`` and its ``Framework :: Django ::``
-  classifiers. 2241 individual release records; the full listing is in
-  ``dependency-inventory.rst`` next to this file.
+  classifiers — 2371 release records across 49 packages. The full listing is in
+  ``dependency-inventory.rst`` next to this file; it covers every package in all
+  four requirements files, including the Python 2 backports.
 * The **source tarballs** of 20 Django releases (1.5.12 … 6.0.7), extracted and
   grepped for the exact modules, functions and settings this project uses. The
   "removed in" columns in `Django API removals`_ are observations of what is
@@ -965,6 +966,45 @@ Parts 2.4 and 2.6.
 Stages 0–9 run on Python 2.7, which ``uv`` cannot target, so they have no
 generated lock. Build those the way the project already does: ``pip install
 --no-deps`` against a hand-maintained pin list.
+
+The test stack
+--------------
+
+``testing.txt`` moves on its own schedule, driven by pytest-django (Part 2.4).
+The direct pins per stage:
+
+========== ============ ================= ========== ==========
+Stage      Django       pytest-django     pytest     coverage
+========== ============ ================= ========== ==========
+0 – 6      1.5 – 1.8    2.9.1             3.5.0      4.5.4
+7          1.9          2.9.1             3.5.0      5.5
+8          1.10         3.1.2             3.10.1     5.5
+9          1.11 (py2.7) 3.10.0            4.6.11     5.5
+10 – 12    1.11 – 2.1   3.10.0            4.6.11     5.5
+13 – 15    2.2 – 3.1    4.5.2             6.2.5      7.2.7
+16         3.2          4.5.2             6.2.5      7.2.7
+17         4.2          4.8.0             8.3.5      7.6.1
+18         5.2          4.11.1            8.3.5      7.6.1
+19         6.0          4.12.0            9.1.1      7.15.2
+========== ============ ================= ========== ==========
+
+Four of these were resolved to check they hold together. Stage 10, on
+Python 3.7, is the awkward one — pytest 4.6.11 drags in the whole
+``atomicwrites`` / ``more-itertools`` / ``py`` / ``zipp`` cluster::
+
+    atomicwrites==1.4.1     more-itertools==9.1.0   pytest==4.6.11
+    attrs==24.2.0           packaging==24.0         pytest-django==3.10.0
+    coverage==5.5           pluggy==0.13.1          six==1.17.0
+    django==1.11.29         py==1.11.0              typing-extensions==4.7.1
+    importlib-metadata==6.7.0  pytz==2026.3.post1   wcwidth==0.2.14, zipp==3.15.0
+
+By Stage 19 that has collapsed to nine packages total::
+
+    asgiref==3.12.1   iniconfig==2.3.0   pluggy==1.6.0      pytest-django==4.12.0
+    coverage==7.15.2  packaging==26.2    pygments==2.20.0   sqlparse==0.5.5
+    django==6.0.7     pytest==9.1.1
+
+``mock`` and ``pbr`` drop out at Stage 10 in favour of ``unittest.mock``.
 
 Stage 10 — Django 1.11.29 (LTS), Python 3.7
 -------------------------------------------
