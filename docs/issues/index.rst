@@ -41,15 +41,26 @@ How this is ranked
 * **The upgrade is last** because it is a programme rather than a fix, and
   because most of the list is a prerequisite for it.
 
-1. Find out what production actually runs
------------------------------------------
+1. Find out what is actually true
+----------------------------------
 
-Before anything else, and independent of all of it. Neither is a code change;
-both change what the rest of the list means.
+Before anything else, and independent of all of it. None of these is a code
+change yet; each changes what the rest of the list means. The first two are a
+question to whoever reported them, the last two a look at the server.
 
 ==== ======== =============================================================
   ID Severity Why first
 ==== ======== =============================================================
+ 044 High     If the save buttons really are gone, the species data cannot
+              be edited at all, which outranks everything below. It could
+              not be reproduced -- they render, and they are visible and
+              clickable in a browser -- so the next step is four questions
+              to the reporter, not a commit.
+ 045 Medium   "Everything works on an iPad" has no scope yet. The answer
+              decides whether this is one ``<meta>`` tag or a rewrite of
+              the label editor's drag-and-drop, and it may also answer 044.
+              Once scoped, its parts rank themselves among the groups
+              below.
  026 Medium   The answer is either "the deployment is not reproducible" or
               "production is serving with ``DEBUG`` on", which is a live
               information-disclosure problem. One look at the server
@@ -99,6 +110,17 @@ Small, self-contained, each visible to a visitor or to the gardeners.
               application, on the page it opens on. One line per image
               definition -- but it changes how the application is built,
               which is why it is here rather than in group 2.
+ 043 Low      The one column the photo changelist is searched by is the one
+              that cannot be sorted. One attribute, cause known, and the
+              only reported issue whose fix needs no decision at all.
+ 047 Medium   The label editor's print toggle is drawn with a character no
+              Linux font carries, and its ``<label for>`` points at nothing,
+              so the symbol is both invisible and inert. Pick a printer and
+              fix the ``for`` in the same edit.
+ 046 Low      The same page opens at printed size, so arranging labels
+              starts with a manual zoom. Last of this group: a safe interim
+              exists -- the browser's own zoom -- and the fix wants a ruling
+              on whether the page gets a control or just a smaller default.
 ==== ======== =============================================================
 
 4. The photo path
