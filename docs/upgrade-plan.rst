@@ -715,6 +715,15 @@ Stage 5 — Django 1.6.11 → 1.7.11: the South cut
 * ``django-grappelli`` → 2.6.5.
 * ``pytest-django`` 2.9.1 still works — do not touch the test stack yet.
 
+This was attempted once before. A branch ``py36`` on the Bitbucket remote held
+three commits from 10 January 2020 — "Only use South on Django <1.8. Add Sites
+framework", "Update Django and Photologue, drop South" and "Fix pytest settings"
+— touching 7 files, never merged and never finished. It was deleted in July 2026
+as superseded by this plan, which covers the same ground one Django version at a
+time instead of in one jump. Recorded here because the *idea* is worth knowing
+about even though the code was not worth keeping: the earlier attempt also
+concluded that South has to go together with the Sites framework arriving.
+
 Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 --------------------------------------
 

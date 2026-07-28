@@ -56,7 +56,7 @@ None are fixed: each one either changes behaviour that is visible in
 production, deletes code, or commits to a piece of work, so each wants a
 decision first.
 
-They come from four pieces of work. **001-018** came out of the test coverage
+They come from five pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current
 behaviour, so fixing one means deliberately changing a test.
 **019-036** came out of the dependency and platform upgrade analysis on branch
@@ -71,6 +71,9 @@ defect the suite happens not to reach, so neither has an ``Evidence`` entry.
 ``dashboard-usability``: 040 is a packaging accident in a dependency rather than
 anything this repository does wrong, so it has no ``Evidence`` entry either,
 while 041 is a defect the suite reaches only with unique test data.
+**042** was written as an implementation plan on branch
+``species-photo-always-switch`` and filed here instead, since the change it
+proposes wants a decision before it is made.
 
 From the test coverage work
 ---------------------------
@@ -146,12 +149,15 @@ From the photo management walkthrough
 ==== ======== ======================= ==================================================
  037 Medium   admin / usability       No in-UI instructions for managing plant photos
  039 Medium   views / labels API      The label photo is saved but never read back
+ 042 Medium   models / photos         A species photo cannot be replaced once set
 ==== ======== ======================= ==================================================
 
 Read together with 002 and 003, which concern the same auto-attach signal: if
 that behaviour changes, the instructions asked for here change with it. 039 is
 the reason 037 has nothing honest to say about choosing a photo: the one control
-that looks like it chooses one writes a value the application never reads.
+that looks like it chooses one writes a value the application never reads. 042
+is the capability behind 037's missing instructions, and it arrived as a plan
+for a one-line fix whose side effects are the part that wants deciding.
 
 
 From the documentation work
