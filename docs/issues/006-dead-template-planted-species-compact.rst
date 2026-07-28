@@ -8,6 +8,9 @@ Issue 006: Dead template: planted-species-compact.html
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_templates.py (covers the live path instead)
+:Depends on: (none)
+:Blocks: (none)
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

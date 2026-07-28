@@ -8,6 +8,9 @@ Issue 015: bush_shadow mixes integer and float division
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_templatetags.py
+:Depends on: (none)
+:Blocks: (none)
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

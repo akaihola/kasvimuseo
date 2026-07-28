@@ -8,6 +8,11 @@ Issue 017: Browser test suite is unrunnable, so the Vue label editor is untested
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: integration_tests/ (not part of the default suite)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 018 -- both are about whether tests are run at all
+    010, 039 -- label editor behaviour that neither covers
+    013 -- the FIXMEs a browser test would settle
 :Decision: undecided
 :Resolution: (none yet)
 

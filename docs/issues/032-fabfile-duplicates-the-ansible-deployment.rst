@@ -8,6 +8,10 @@ Issue 032: fabfile.py duplicates the Ansible deployment, in Python 2
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: 031 -- removes the ``flax`` third of it
+    036 -- Stage 0
+:Related: 031
 :Decision: undecided
 :Resolution: (none yet)
 

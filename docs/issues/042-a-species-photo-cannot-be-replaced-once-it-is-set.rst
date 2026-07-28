@@ -8,6 +8,10 @@ Issue 042: A species photo cannot be replaced once it is set
 :Reported: 2026-07-28
 :Source: Implementation plan on branch ``species-photo-always-switch``
 :Evidence: (none)
+:Depends on: 002 -- the ``MultipleObjectsReturned`` risk this change widens
+:Blocks: 037 -- the capability the missing instructions would describe
+:Related: 003 -- the same auto-attach receiver
+    039 -- the control that looks like it should do this
 :Decision: undecided
 :Resolution: (none yet)
 

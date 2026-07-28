@@ -8,6 +8,11 @@ Issue 039: The label photo is saved but never read back
 :Reported: 2026-07-28
 :Source: Walkthrough of how photo management is meant to be used
 :Evidence: (none -- no test round-trips a photo choice through the API)
+:Depends on: (none)
+:Blocks: 037 -- option 3 there depends on what this decides
+:Related: 010 -- the same ``post`` handler
+    042 -- the control that looks like it should set the species photo
+    017 -- the Vue editor has no browser test
 :Decision: undecided
 :Resolution: (none yet)
 

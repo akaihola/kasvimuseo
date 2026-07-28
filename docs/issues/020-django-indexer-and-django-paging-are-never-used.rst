@@ -8,6 +8,9 @@ Issue 020: django-indexer and django-paging are unused
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none -- ``grep -rn "indexer\|paging" --include='*.py' --include='*.html'`` matches only ``INSTALLED_APPS``)
+:Depends on: (none)
+:Blocks: 036 -- Stage 0
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

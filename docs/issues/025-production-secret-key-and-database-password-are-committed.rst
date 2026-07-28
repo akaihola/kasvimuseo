@@ -8,6 +8,9 @@ Issue 025: Production SECRET_KEY and database password are committed
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 026 -- the same file, and the same question of what the server carries that the repository does not
 :Decision: undecided
 :Resolution: (none yet)
 

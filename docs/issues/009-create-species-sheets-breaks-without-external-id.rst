@@ -8,6 +8,10 @@ Issue 009: Create Species Sheets breaks on a species with no external id
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_admin.py::test_planted_species_report_with_null_external_id
+:Depends on: (none)
+:Blocks: (none)
+:Related: 041 -- the same ``external_id`` column, seen from the admin side
+    007 -- the same family of missing lookup guards
 :Decision: undecided
 :Resolution: (none yet)
 

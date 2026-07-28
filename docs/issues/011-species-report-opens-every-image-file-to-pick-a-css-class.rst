@@ -8,6 +8,9 @@ Issue 011: Species report opens every image file to pick a CSS class
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_templates.py (uses real JPEG fixtures for these views)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 004 -- option 2 there depends on how the species photo is rendered
 :Decision: undecided
 :Resolution: (none yet)
 

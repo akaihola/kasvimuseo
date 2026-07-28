@@ -8,6 +8,9 @@ Issue 027: Requirements declare no upper bounds; --no-deps is load-bearing
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none -- reproduce with ``uv pip compile`` on any stage's direct pins)
+:Depends on: 028, 029, 030 -- the lock has to record their constraints, so settle them first
+:Blocks: 036 -- every upgrade stage needs a complete, reproducible lock
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

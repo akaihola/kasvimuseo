@@ -8,6 +8,9 @@ Issue 022: Dead /media/grappelli/ route and ADMIN_MEDIA_PREFIX
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: 036 -- Stage 0, and one of the three string-view routes Django 1.10 stops accepting
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

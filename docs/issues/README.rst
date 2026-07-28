@@ -41,6 +41,18 @@ Metadata fields
     *today*, so fixing the issue means deliberately changing a test rather than
     discovering a surprise.
 
+``Depends on`` / ``Blocks`` / ``Related``
+    How this issue sits against the others. ``Depends on`` lists the issues that
+    should be settled or fixed **before** this one, with the reason; ``Blocks``
+    is the same relation seen from the other end; ``Related`` is shared code, a
+    shared decision or a shared cause with no ordering implied. ``Depends on``
+    and ``Blocks`` are kept consistent in both directions, so the graph can be
+    read from either file. ``(none)`` means exactly that -- the field is always
+    present, so a missing edge is a statement rather than an omission.
+
+    The order these dependencies imply is worked out once, for the whole list,
+    in :doc:`index` under "Suggested order of implementation".
+
 ``Decision``
     Left as ``undecided`` until the maintainer rules on it. This is the field to
     fill in when reviewing the list.
@@ -55,6 +67,10 @@ Open issues
 None are fixed: each one either changes behaviour that is visible in
 production, deletes code, or commits to a piece of work, so each wants a
 decision first.
+
+This page groups them by **where they came from**, which is how to read them.
+For the order to *do* them in, which cuts across those groups, see "Suggested
+order of implementation" in :doc:`index`.
 
 They come from five pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current

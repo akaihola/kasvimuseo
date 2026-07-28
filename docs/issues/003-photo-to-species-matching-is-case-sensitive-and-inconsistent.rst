@@ -8,6 +8,9 @@ Issue 003: Photo-to-species matching is case-sensitive and inconsistent
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_signals.py, kasvimuseo/tests/test_photos_integration.py
+:Depends on: (none)
+:Blocks: 037 -- the filename convention documented there is this matching rule
+:Related: 002, 042 -- the same auto-attach receiver
 :Decision: undecided
 :Resolution: (none yet)
 

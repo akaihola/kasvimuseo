@@ -8,6 +8,9 @@ Issue 014: Dead code in the vendored identifier_for_field
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_admin_changelist.py (covers the reachable branches)
+:Depends on: 034 -- if the fork is retired, this file goes with it and there is nothing to fix
+:Blocks: (none)
+:Related: 034 -- the same vendored file
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,9 @@ Issue 021: gunicorn is an INSTALLED_APP for a command that is gone
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: 036 -- Stage 0
+:Related: 029 -- the real gunicorn constraint, as distinct from this cosmetic one
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,10 @@ Issue 002: Photo auto-attach can break every Photo save
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_signals.py
+:Depends on: (none)
+:Blocks: 042 -- dropping ``photo__isnull=True`` widens this same fault
+    037 -- the instructions asked for there describe this receiver
+:Related: 003, 042 -- the same auto-attach receiver
 :Decision: undecided
 :Resolution: (none yet)
 
