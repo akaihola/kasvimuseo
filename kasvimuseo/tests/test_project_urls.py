@@ -119,8 +119,60 @@ def test_dashboard_links_to_every_configured_model(admin_client, model):
     assert 'href="{0}"'.format(url) in content(response)
 
 
-def module_title(title):
-    return '<h2 class="module_title">{0}</h2>'.format(ugettext(title))
+def module_title(title, collapsible=False):
+    return '<h2 class="module_title{0}">{1}</h2>'.format(
+        ' grp-collapse-handler' if collapsible else '', ugettext(title))
+
+
+# The reports and tools the "Reports and tools" module links to. Every custom
+# view outside the admin is reachable from here: the two which need object ids
+# in the URL are reached through the pages these links lead to -- the species
+# sheets through the ``Species`` changelist action, the bed maps through the
+# module below.
+DASHBOARD_LINKS = ['planted-species-list',
+                   'admin:kasvimuseo_species_changelist',
+                   'planting-label',
+                   'pl-gallery-archive']
+
+
+@pytest.mark.parametrize('url_name', DASHBOARD_LINKS)
+def test_dashboard_links_to_every_report(admin_client, url_name):
+    response = admin_client.get(reverse('admin:index'))
+
+    assert 'href="{0}"'.format(reverse(url_name)) in content(response)
+
+
+def test_dashboard_describes_the_reports(admin_client):
+    """The overridden link list template renders ``description`` as help text."""
+    body = content(admin_client.get(reverse('admin:index')))
+
+    assert ('<p class="grp-help">{0}</p>'
+            .format(ugettext('The public Photologue galleries'))) in body
+
+
+def test_dashboard_links_to_the_map_of_every_bed(admin_client, db):
+    beds = [Bed.objects.create(name='1', plot=Plot.objects.create(name='Piha')),
+            Bed.objects.create(name='Kellarinseinusta')]
+
+    body = content(admin_client.get(reverse('admin:index')))
+
+    assert module_title('Bed maps', collapsible=True) in body
+    for bed in beds:
+        assert '<a class="grp-link-internal" href="{0}">{1}</a>'.format(
+            reverse('bed-map', kwargs={'pk': bed.pk}), bed) in body
+
+
+def test_dashboard_skips_the_bed_maps_without_beds(admin_client):
+    """``DashboardModule.is_empty`` drops a link list with no children."""
+    body = content(admin_client.get(reverse('admin:index')))
+
+    assert module_title('Bed maps', collapsible=True) not in body
+
+
+def test_dashboard_renders_the_reports_module(admin_client):
+    response = admin_client.get(reverse('admin:index'))
+
+    assert module_title('Reports and tools') in content(response)
 
 
 def test_dashboard_renders_the_administration_module(admin_client):
