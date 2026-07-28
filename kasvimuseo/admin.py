@@ -197,9 +197,25 @@ class ObservationAdmin(admin.ModelAdmin):
                     'stories',
                     'pictures',
                     'notes',
-                    'environment',)
+                    'environment',
+                    'page',)
     # FIXME: filtering doesn't work
     list_filter = 'origin', 'species__type', 'date',
+
+    def page(self, obj):
+        """Links the public page of the observation, as ``BedAdmin`` does.
+
+        The URL is keyed by ``external_id``, which the museum's own numbering
+        fills in but the model leaves optional, so an observation without one
+        has no page to link.
+        """
+        if obj.external_id is None:
+            return u''
+        url = reverse('planted-observation', args=[obj.external_id])
+        return u'<a href="{0}">{1}</a>'.format(url, _(u'page'))
+    page.short_description = _(u'show page')
+    page.allow_tags = True
+
     fieldsets = ((_(u'Basic information'),
                   {'fields': ('external_id',
                               'origin',
