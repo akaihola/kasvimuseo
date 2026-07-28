@@ -108,7 +108,9 @@ def test_species_visible_when_only_one_of_its_plantings_is():
 def test_species_manager_ignores_removal_date():
     """Pins a known inconsistency: ``SpeciesManager`` never looks at
     ``removal_date``, so a removed planting still makes its species public
-    while the planting and observation managers hide it."""
+    while the planting and observation managers hide it.
+
+    See docs/issues/001."""
     planting = create_planted(removed=True, cares=[4])
     assert list(models.Species.objects.public_planted()) == [
         planting.observation.species]

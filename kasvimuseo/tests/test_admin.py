@@ -91,6 +91,8 @@ def test_planted_species_report_with_null_external_id():
 
     ``external_id`` is nullable, ``unicode(None)`` is ``'None'``, and the
     ``planted-species`` URL only accepts ``[\\d,]+``.
+
+    See docs/issues/009.
     """
     factories.create_species(external_id=None)
 

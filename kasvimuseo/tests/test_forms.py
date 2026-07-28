@@ -74,7 +74,7 @@ def test_remove_diacritics_returns_a_text_string():
 
     On Python 3 ``filter()`` returns an iterator, so ``slugify`` would receive
     a ``<filter object ...>`` repr and silently mangle every slug. This test
-    fails loudly at migration time instead.
+    fails loudly at migration time instead. See docs/issues/016.
     """
     result = remove_diacritics('Kevätesikko ähkyssä')
     assert isinstance(result, type('')), \
