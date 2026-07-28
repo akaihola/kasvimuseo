@@ -227,3 +227,17 @@ The ``PostToolUse`` hook has to be registered in ``.claude/settings.json``, whic
 coding agents cannot write to. The scripts are in the repository and work when
 run by hand; the registration is a one-line manual step, recorded in
 ``README.rst``.
+
+Sphinx deletes no page whose source has gone, so renaming a document leaves its
+old HTML in ``.dev/docs/html/`` -- reachable by URL and by nothing else, since
+no index links to it. Rather than teach the build which outputs belong to which
+sources, ``dev/kasvimuseo docs --clean`` throws the output away and rebuilds,
+which costs thirteen seconds. This happened for real once already, when issue
+037 became 038 mid-review.
+
+Two limits worth knowing about the automatic rebuild. It is driven by the
+harness's ``Write|Edit|MultiEdit`` events, so a file changed by ``sed`` in a
+shell, by ``git checkout``, or by a human in an editor does not trigger it --
+``dev/kasvimuseo docs`` does. And the hook watches ``docs/``, ``kasvimuseo/``,
+``ylaneenkasvit/`` and ``README.rst`` by name: a new top-level package would
+need adding to that list in ``dev/docs-hook``.

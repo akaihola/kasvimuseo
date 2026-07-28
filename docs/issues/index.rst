@@ -20,4 +20,4 @@ All issues
    :maxdepth: 1
    :glob:
 
-   0*
+   [0-9]*

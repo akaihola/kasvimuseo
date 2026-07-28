@@ -5,7 +5,11 @@
 # container: nothing here imports the application. See
 # docs/issues/038-no-rendered-documentation.rst.
 #
-# Usage: dev/docs-build [--open] [sphinx-build args...]
+# Usage: dev/docs-build [--open] [--clean] [sphinx-build args...]
+#
+# --clean throws away the output first. Sphinx never deletes a page whose source
+# is gone, so a renamed document leaves its old HTML behind, reachable by URL
+# and by nothing else; this is how to get rid of it.
 #
 # Concurrent invocations collapse: the first takes the lock and builds, the rest
 # mark the tree dirty and exit, and the running build repeats once at the end so
@@ -18,10 +22,14 @@ out=$repo/.dev/docs
 log=$out/build.log
 
 open_after=no
-if [ "${1:-}" = "--open" ]; then
-    open_after=yes
-    shift
-fi
+clean=no
+while true; do
+    case "${1:-}" in
+        --open)  open_after=yes; shift ;;
+        --clean) clean=yes; shift ;;
+        *)       break ;;
+    esac
+done
 
 mkdir -p "$out"
 
@@ -38,6 +46,11 @@ fi
 # behind and dev/docs-hook knows to finish the job on the next edit. Sphinx is
 # incremental, so that costs seconds, not another full build.
 touch "$out/.incomplete"
+
+# After the lock, so this cannot delete the output from under a running build.
+if [ "$clean" = yes ]; then
+    rm -rf "$out/html" "$out/doctrees"
+fi
 
 for _ in 1 2 3; do
     rm -f "$out/.dirty"

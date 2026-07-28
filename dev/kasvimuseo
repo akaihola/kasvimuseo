@@ -14,7 +14,7 @@
 #   app test [args]                     run the test suite
 #   app coverage [args]                 run the test suite and report coverage
 #   app shell                           shell inside the app container
-#   docs [--open]                       build the Sphinx docs (on the host)
+#   docs [--open] [--clean]             build the Sphinx docs (on the host)
 #   docs serve [--port N]               serve every checkout's docs on the tailnet
 #
 # `app run`, `app manage` and `app test` start PostgreSQL if it is down and stop

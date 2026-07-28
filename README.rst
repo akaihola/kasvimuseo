@@ -85,6 +85,10 @@ API reference generated from the source. Build it into ``.dev/docs/html/``::
 
     $ dev/kasvimuseo docs --open
 
+Sphinx never deletes a page whose source has gone, so after renaming or
+removing a document, ``dev/kasvimuseo docs --clean`` throws the output away and
+builds it again from nothing.
+
 It runs on the host's Python 3 through ``uv``, not in the app container, and
 never imports the application -- see
 ``docs/issues/038-no-rendered-documentation.rst`` for why, and for how it should
