@@ -40,12 +40,24 @@ Everything below is derived from primary sources, not from recollection:
   ``pipdeptree`` and a Django ``check`` run — see
   `The destination is verified`_.
 
-Two limits are worth stating up front. ``uv`` refuses to target Python below
-3.6, so **no Python 2.7 stage could be resolved with it**; Stages 0–9 rest on
-PyPI metadata and changelogs alone. And no interpreter older than 3.14 was
-available here, so resolutions for Stages 10–18 use the correct *environment
-markers* for their target Python but were evaluated with a modern build backend.
-Where that distinction matters, it is called out.
+Three limits are worth stating up front, because they bound how much of this is
+verified rather than reasoned:
+
+#. ``uv`` refuses to target Python below 3.6, so **no Python 2.7 stage could be
+   resolved with it**. Stages 0–9 rest on PyPI metadata and changelogs alone.
+#. No interpreter older than 3.14 was available, so the resolutions for
+   Stages 10–18 use the correct *environment markers* for their target Python
+   but were evaluated with a modern build backend. Where that distinction
+   matters (3b.3) it is called out.
+#. ``podman`` was not usable in this environment, so **the project's own
+   container was never built or run**. Nothing here was tested against the
+   actual application code or a real database — no migration was executed, no
+   page was rendered. Stages 18 and 19 were verified as *dependency stacks*
+   (see below), not as this project running.
+
+In short: the constraints between packages are verified; the interaction between
+those packages and this project's own code is analysed from its source but not
+executed. The first stage to run should be treated as a test of that reasoning.
 
 Where a compatibility claim could **not** be verified from a primary source it
 is marked "unverified" rather than asserted.
