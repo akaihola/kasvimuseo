@@ -1,35 +1,48 @@
-==============
-Ylåneen kasvit
-==============
+==========
+Kasvimuseo
+==========
 
-A plant catalogue for the gardens of Ylåne: what is planted, where, and what has
-been observed growing there. It is a Django application with two parts -- a
-maintained catalogue behind the admin, and a small public site that renders it.
+A catalogue of heritage garden plants: where a plant was found, who grew it,
+what it is, and which bed it now lives in. The ``kasvimuseo`` application runs
+two sites from one codebase -- *Yläneen perinnekasvit* and *Kajalan kasvimaat*,
+each with its own settings module, database and media host. Most of the work
+happens in the Django admin; a handful of public pages render the result.
 
-The catalogue
-=============
+Provenance, not just plants
+===========================
 
-The data model is in :mod:`kasvimuseo.models`:
+The data model in :mod:`kasvimuseo.models` is built around where a plant came
+from, which is what makes it a *museum* rather than a plant list:
 
 ``Species``
     The botanical record -- genus, species, subspecies, variety, Finnish name,
     height and width, spacing, flower colour, flowering months, lighting,
     substrate and cultivation history.
 
-``Location``, ``Plot``, ``Bed``
-    Where things grow, from a site down to an individual bed, with contacts
-    attached to a location.
-
-``Planting``
-    A species in a bed: how many, planted when, at what distance, with a
-    printable ``Label``.
+``Location``, ``Contact``
+    A place a plant was collected from -- village, area, address, its history --
+    and the people connected to it.
 
 ``Observation``
-    What was actually seen, when, and by whom -- the field record, kept separate
-    from the plan.
+    One specimen, recorded at its ``origin`` location: the species, the date, the
+    variation, what it looked like, the stories told about it, and the nickname
+    it was known by. This, not ``Species``, is what gets planted.
+
+``Plot``, ``Bed``
+    The growing area the collection is kept in, a bed at a time. A bed can be
+    marked ``public``, which is what the public pages list.
+
+``Planting``
+    An observation planted in a bed: how many, planted when, at what distance
+    from the left and the front, how wide and deep it grew, when it was removed,
+    and the printable ``Label`` it carries.
+
+``Care``
+    What was done to a planting, and when.
 
 ``PlantingPhoto``, photologue ``Photo``
-    Photographs, matched to species by name and served from a public media host.
+    Photographs. Photologue photos are matched to species by filename and served
+    from a public media host; see issues 002 and 003 for the sharp edges in that.
 
 The public site
 ===============

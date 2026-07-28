@@ -7,7 +7,7 @@ container, and nothing here imports the application. See
 ``docs/upgrade-plan.rst`` at which each workaround can be dropped.
 """
 
-project = 'Ylåneen kasvit'
+project = 'Kasvimuseo'
 copyright = 'Antti Kaihola'
 author = 'Antti Kaihola'
 # Kept in step with setup.py by hand; setup.py cannot be imported here.
@@ -55,4 +55,4 @@ suppress_warnings = [
 # -- HTML output ------------------------------------------------------------
 
 html_theme = 'furo'
-html_title = 'Ylåneen kasvit'
+html_title = 'Kasvimuseo'

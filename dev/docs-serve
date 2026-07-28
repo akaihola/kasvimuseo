@@ -109,7 +109,7 @@ def landing(found):
         )
 
     return """<!doctype html>
-<html><head><meta charset="utf-8"><title>Ylåneen kasvit documentation</title>
+<html><head><meta charset="utf-8"><title>Kasvimuseo documentation</title>
 <style>
  body {{ font: 15px/1.6 system-ui, sans-serif; margin: 3em auto; max-width: 46em; }}
  table {{ border-collapse: collapse; width: 100%; }}
@@ -117,7 +117,7 @@ def landing(found):
  tr + tr {{ border-top: 1px solid #ddd; }}
  .t {{ color: #666; font-size: 90%; }}
 </style></head><body>
-<h1>Ylåneen kasvit documentation</h1>
+<h1>Kasvimuseo documentation</h1>
 <p>One entry per checkout of the repository. Each is built independently by
 <code>dev/kasvimuseo docs</code> in that checkout; this only serves what is
 there.</p>

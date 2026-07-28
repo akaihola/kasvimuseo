@@ -14,8 +14,9 @@ Issue 038: The repository has no rendered docs
 Problem
 =======
 
-``docs/`` holds four substantial reStructuredText documents and 37 issue files,
-and they are only ever read as source. There is no front page, no index, no
+``docs/`` holds three substantial reStructuredText documents -- the upgrade plan,
+the dependency inventory and the test coverage plan -- and 38 issue files, and
+they are only ever read as source. There is no front page, no index, no
 cross-referencing between an issue and the code it is about, and no rendered
 form to hand to anyone. The API surface -- ``kasvimuseo`` and
 ``ylaneenkasvit`` -- is documented nowhere at all.
@@ -118,7 +119,8 @@ part-way through, every time -- which is what pointed at ``"async": true`` as
 the right mechanism instead.
 
 Nothing is lost when a build is killed -- Sphinx keeps its doctrees, so the next
-one costs about six seconds rather than the forty a cold build takes -- but the
+one costs about six seconds against the twelve a full build takes (and the
+forty of the very first run, which also downloads the toolchain) -- but the
 documentation would silently stay stale. ``dev/docs-build`` therefore leaves a
 ``.dev/docs/.incomplete`` marker for the duration of a build and clears it only
 on success, and the hook treats that marker as reason enough to build again,
