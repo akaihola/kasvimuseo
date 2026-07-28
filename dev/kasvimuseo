@@ -244,8 +244,9 @@ case "${1:-}" in
                    python -m pytest "$@" ;;
       coverage)
                shift 2; with_db app_run_container "$TEST_ENV" sh -c \
-                 "coverage run --source=kasvimuseo \
-                               --omit='*/migrations/*,*/tests/*' \
+                 "coverage run --source=kasvimuseo,ylaneenkasvit \
+                               --omit='*/migrations/*,*/tests/*,\
+*/external_migrations/*,*/manage.py,*/wsgi.py,*/*settings*.py' \
                                -m pytest -q $* >/dev/null;
                   coverage report -m" ;;
       shell)   with_db app_run_container "" sh ;;
