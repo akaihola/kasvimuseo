@@ -11,6 +11,7 @@ also listed individually, and a new file appears here without editing anything.
    :maxdepth: 1
 
    The register and its conventions <README>
+   Reported, not yet split into files <incoming>
 
 All issues
 ==========
