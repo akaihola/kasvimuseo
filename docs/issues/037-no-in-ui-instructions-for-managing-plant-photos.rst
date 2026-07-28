@@ -49,18 +49,20 @@ Replacing a photo
     becomes a silent alternative and the old one stays primary.
 
 Choosing the primary photo
-    The chevrons in the label editor set ``Label.photo``, not ``Species.photo`` -- they
-    change the photo on that printed label only. Nothing in the interface distinguishes
-    "the photo for this species" from "the photo on this label", and there is no control
-    anywhere for the former.
+    The chevrons in the label editor write ``Label.photo``, not ``Species.photo``, and
+    the read path never looks at ``Label.photo`` again -- see issue 039 -- so the choice
+    is lost on the next load. There is no control anywhere for ``Species.photo``, which
+    is the value everything actually renders from. Nothing in the interface distinguishes
+    "the photo for this species" from "the photo on this label", and the one control that
+    looks like it chooses does neither.
 
 Impact
 ======
 
 A user who is not the author cannot upload, remove, replace or re-select a plant photo
-without reading the source. Photos that fail to attach fail silently, and a per-label
-override is easily mistaken for a permanent change, so the reports print the wrong plant
-picture with no indication that anything went wrong.
+without reading the source. Photos that fail to attach fail silently, and the photo
+chooser looks like it works, so the reports print the wrong plant picture with no
+indication that anything went wrong.
 
 Options
 =======
@@ -74,14 +76,15 @@ Options
    ordinary edits rather than side effects of the signal. Then the help text has
    something true to point at.
 3. **Label the label editor.** Give the chevron buttons ``title``/``aria-label`` text and
-   put one line above the sheet saying that the choice applies to this label only. The
-   buttons are currently glyphs with no accessible name.
+   put one line above the sheet saying what the choice applies to. The buttons are
+   currently glyphs with no accessible name. What the line should say depends on issue
+   039: today the honest wording is "the choice is not kept".
 4. **One place to link to.** A short "Kasvikuvat" page in the admin, linked from both the
    photo list and the label editor, describing upload, remove, replace and select in four
    paragraphs -- worth it only if 1--3 are not enough on their own.
 
-Options 1 and 3 are text-only and independent of everything else on this list. Option 2
-is a behaviour change and interacts with issues 002 and 003, which are about the same
-auto-attach signal: if the signal is reworked there, the instructions written here have
-to be rewritten too. Deciding 002 and 003 first would avoid documenting behaviour that is
-about to change.
+Option 1 is text-only and independent of everything else on this list. Option 2 is a
+behaviour change and interacts with issues 002 and 003, which are about the same
+auto-attach signal; option 3 depends on issue 039. If those are reworked, the
+instructions written here have to be rewritten too, so deciding 002, 003 and 039 first
+would avoid documenting behaviour that is about to change.

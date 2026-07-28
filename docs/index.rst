@@ -42,7 +42,8 @@ from, which is what makes it a *museum* rather than a plant list:
 
 ``PlantingPhoto``, photologue ``Photo``
     Photographs. Photologue photos are matched to species by filename and served
-    from a public media host; see issues 002 and 003 for the sharp edges in that.
+    from a public media host; see issues 002, 003, 037 and 039 for the sharp
+    edges in that. ``PlantingPhoto`` is declared but used nowhere.
 
 The public site
 ===============
