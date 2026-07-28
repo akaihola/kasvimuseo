@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 
 import pytest
 from django.contrib.admin.models import LogEntry
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from django.utils.translation import ugettext
@@ -141,6 +141,40 @@ def test_dashboard_links_to_every_report(admin_client, url_name):
     response = admin_client.get(reverse('admin:index'))
 
     assert 'href="{0}"'.format(reverse(url_name)) in content(response)
+
+
+@pytest.fixture
+def staff_client(client, db):
+    """Logged in as a gardener, not an administrator.
+
+    The museum's own ``käyttäjä`` group grants add/change/delete on the
+    ``kasvimuseo`` and ``photologue`` models and nothing from ``auth``, which
+    is what the three non-superuser accounts in production have.
+    """
+    user = User.objects.create_user('puutarhuri', 'p@invalid', PASSWORD)
+    user.is_staff = True
+    user.save()
+    user.user_permissions = Permission.objects.filter(
+        content_type__app_label__in=('kasvimuseo', 'photologue'))
+    client.login(username=user.username, password=PASSWORD)
+    return client
+
+
+def test_dashboard_serves_a_staff_member_without_admin_rights(staff_client):
+    """The reports are for the gardeners, so they must not need admin rights.
+
+    The link lists carry no permission check of their own -- every report they
+    point at is either a public view or a changelist the group can open.
+    """
+    body = content(staff_client.get(reverse('admin:index')))
+
+    assert module_title('Reports and tools') in body
+    for url_name in DASHBOARD_LINKS:
+        assert 'href="{0}"'.format(reverse(url_name)) in body
+    # Grappelli filters ModelList modules by permission, so the group that
+    # lists Users and Groups disappears for a user with no ``auth`` rights.
+    assert module_title('Administration') not in body
+    assert 'href="{0}"'.format(reverse('admin:auth_user_changelist')) not in body
 
 
 def test_dashboard_describes_the_reports(admin_client):
