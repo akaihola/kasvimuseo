@@ -62,8 +62,8 @@ throwaway PostgreSQL cluster beside it. One script drives everything::
     $ dev/kasvimuseo db bootstrap
     $ dev/kasvimuseo app run
 
-:doc:`development` has the rest: production dumps, media, tests, and the Ansible
-deployment.
+:doc:`development` has the rest: production dumps, media, tests, the Ansible
+deployment, and how these pages are built and served.
 
 The state of the code
 =====================
