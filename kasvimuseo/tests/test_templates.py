@@ -356,6 +356,7 @@ def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(client):
 @pytest.mark.parametrize('url_name', ['planted-species',
                                       'planted-species-compact'])
 def test_unknown_external_id_renders_an_empty_report(client, url_name):
+    """Pins current behaviour; see docs/issues/007."""
     create_planted(name_fi='valkonarsissi', external_id=1)
 
     content = page(client.get(species_url(url_name, 999999)))

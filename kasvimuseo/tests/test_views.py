@@ -27,6 +27,7 @@ def label_item(species, external_ids, visible=True):
 
 @pytest.mark.django_db
 def test_planted_species_list_shows_only_public_planted(client):
+    """Pins current behaviour; see docs/issues/001."""
     create_planted(name_fi='ahdekaunokki', external_id=1)
     create_planted(name_fi='valkonarsissi', external_id=2)
     create_planted(name_fi='piilokasvi', external_id=3, public=False)
