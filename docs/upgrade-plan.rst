@@ -465,9 +465,24 @@ module-level aliases. ``ANTIALIAS`` is the only casualty.
 So:
 
 * **photologue ≤ 3.15.1 requires ``Pillow<10``.** Every stage from 2 through 16
-  needs that upper bound written down. Without it, thumbnail generation raises
-  ``AttributeError: module 'PIL.Image' has no attribute 'ANTIALIAS'`` — at image
-  upload time, not at startup, so a smoke test will not catch it.
+  needs that upper bound written down.
+
+  Note *where* it fails. The call sits in ``ImageModel.resize_image()``, reached
+  from ``create_size()``, which is called from ``_get_SIZE_url()`` — the lazy
+  accessor behind ``photo.get_display_url()``, and only *when the cached file
+  does not already exist*::
+
+      def _get_SIZE_url(self, size):
+          photosize = PhotoSizeCache().sizes.get(size)
+          if not self.size_exists(photosize):
+              self.create_size(photosize)     # <-- AttributeError here
+
+  ``kasvimuseo/photos.py`` calls ``get_display_url()`` for every photo on the
+  species pages, so this surfaces as a **500 on page render**, not at upload and
+  not at startup. And because it is guarded by ``size_exists()``, a developer
+  with a warm cache directory will never see it while production, or anyone who
+  ran ``media fetch`` without the derived sizes, breaks immediately. Nothing
+  short of rendering a page with an uncached photo size will catch it.
 * **photologue ≥ 3.16 requires ``Pillow>=9.1``, not ``>=9``.** Its own metadata
   says ``Pillow>=9``, which is wrong by one minor version: ``Image.Resampling``
   does not exist in Pillow 9.0.0. Constrain it yourself.
