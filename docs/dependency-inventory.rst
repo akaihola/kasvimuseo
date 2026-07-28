@@ -2,7 +2,8 @@
  Complete dependency version inventory (generated)
 =====================================================
 
-:Generated: 2026-07-28 from PyPI JSON metadata (2241 individual release records)
+:Generated: 2026-07-28 from PyPI JSON metadata (2371 individual release records,
+            49 packages)
 :Companion to: ``upgrade-plan.rst`` — that document explains *what to do*; this
                one is the raw evidence it was derived from.
 
@@ -1597,3 +1598,190 @@ typing-extensions
 * **4.14.0 – 4.16.0 (4 releases)**
     :Python: ``>=3.9``
     :Requires: nothing declared
+
+Python 2 backports and tooling
+==============================
+
+These exist in ``requirements/integration-tests.txt`` and ``requirements/dev.txt``
+only to keep the Python 2.7 toolchain working. All of them are dropped at
+Stage 10 of the upgrade plan; they are listed for completeness.
+
+django-pserver
+--------------
+* **0.2**
+    :Python: ``-``
+    :Requires: nothing declared
+
+configparser
+------------
+* **3.5.0 – 3.5.1 (2 releases)**
+    :Python: ``clf:2.6,2.7,3.4,3.5``
+    :Requires: nothing declared
+* **3.5.2**
+    :Python: ``clf:2.6,2.7,3.4,3.5``
+    :Requires: ``ordereddict;python_version=="2.6"``
+* **3.5.3**
+    :Python: ``>=2.6``
+    :Requires: ``ordereddict;python_version=="2.6"; ordereddict;python_version=="2.6"``
+* **3.7.0 – 3.7.1 (2 releases)**
+    :Python: ``>=2.6``
+    :Requires: ``ordereddict;python_version=="2.6"``
+* **3.7.2 – 4.0.2 (6 releases)**
+    :Python: ``>=2.6``
+    :Requires: nothing declared
+* **5.0.0 – 5.2.0 (5 releases)**
+    :Python: ``>=3.6``
+    :Requires: nothing declared
+* **5.3.0**
+    :Python: ``>=3.7``
+    :Requires: nothing declared
+* **6.0.0 – 7.1.0 (5 releases)**
+    :Python: ``>=3.8``
+    :Requires: nothing declared
+* **7.2.0**
+    :Python: ``>=3.9``
+    :Requires: nothing declared
+
+contextlib2
+-----------
+* **0.1 – 0.4.0 (5 releases)**
+    :Python: ``-``
+    :Requires: nothing declared
+* **0.5.0 – 0.5.2 (3 releases)**
+    :Python: ``clf:2.7,3.4,3.5``
+    :Requires: nothing declared
+* **0.5.3 – 0.5.5 (3 releases)**
+    :Python: ``clf:2.6,2.7,3.3,3.4,3.5``
+    :Requires: nothing declared
+* **0.6.0**
+    :Python: ``>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*``
+    :Requires: nothing declared
+* **21.6.0**
+    :Python: ``>=3.6``
+    :Requires: nothing declared
+
+funcsigs
+--------
+* **0.1 – 0.4 (4 releases)**
+    :Python: ``clf:2.6,2.7,3.2,3.3``
+    :Requires: nothing declared
+* **1.0.0 – 1.0.2 (3 releases)**
+    :Python: ``clf:2.6,2.7,3.3,3.4,3.5``
+    :Requires: nothing declared
+
+pathlib2
+--------
+* **2.0 – 2.1.0 (3 releases)**
+    :Python: ``clf:2.6,2.7,3.2,3.3,3.4``
+    :Requires: nothing declared
+* **2.2.0 – 2.3.0 (3 releases)**
+    :Python: ``clf:2.6,2.7,3.2,3.3,3.4,3.5,3.6``
+    :Requires: nothing declared
+* **2.3.2**
+    :Python: ``clf:2.6,2.7,3.3,3.4,3.5,3.6``
+    :Requires: ``scandir;python_version<"3.5"; six``
+* **2.3.3 – 2.3.5 (3 releases)**
+    :Python: ``clf:2.6,2.7,3.4,3.5,3.6,3.7``
+    :Requires: ``scandir;python_version<"3.5"; six``
+* **2.3.6**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8,3.9``
+    :Requires: ``scandir;python_version<"3.5"; six``
+* **2.3.7**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8,3.9``
+    :Requires: ``scandir;python_version<"3.5"; six; typing;python_version<"3.5"``
+
+scandir
+-------
+* **0.4 – 1.1 (7 releases)**
+    :Python: ``clf:2.6,2.7,3.2,3.3,3.4``
+    :Requires: nothing declared
+* **1.2 – 1.4 (3 releases)**
+    :Python: ``clf:2.6,2.7,3.2,3.3,3.4,3.5``
+    :Requires: nothing declared
+* **1.5**
+    :Python: ``clf:2.6,2.7,3.2,3.3,3.4,3.5,3.6``
+    :Requires: nothing declared
+* **1.6 – 1.7 (2 releases)**
+    :Python: ``clf:2.6,2.7,3.3,3.4,3.5,3.6``
+    :Requires: nothing declared
+* **1.8 – 1.9.0 (2 releases)**
+    :Python: ``clf:2.6,2.7,3.4,3.5,3.6``
+    :Requires: nothing declared
+* **1.10.0**
+    :Python: ``clf:2.7,3.4,3.5,3.6,3.7``
+    :Requires: nothing declared
+
+wcwidth
+-------
+* **0.0.1 – 0.1.4 (6 releases)**
+    :Python: ``clf:2.7,3.3,3.4``
+    :Requires: nothing declared
+* **0.1.5 – 0.1.9 (5 releases)**
+    :Python: ``clf:2.7,3.4,3.5``
+    :Requires: nothing declared
+* **0.2.0**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8``
+    :Requires: ``backports.functools-lru-cache>=1.2.1;python_version<"3.2"``
+* **0.2.1**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8``
+    :Requires: nothing declared
+* **0.2.2 – 0.2.5 (4 releases)**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8``
+    :Requires: ``backports.functools-lru-cache>=1.2.1;python_version<"3.2"``
+* **0.2.6**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8``
+    :Requires: nothing declared
+* **0.2.7 – 0.2.13 (7 releases)**
+    :Python: ``clf:2.7,3.5,3.6,3.7,3.8,3.9,3.10,3.11,3.12``
+    :Requires: ``backports.functools-lru-cache>=1.2.1;python_version<"3.2"``
+* **0.2.14**
+    :Python: ``>=3.6``
+    :Requires: nothing declared
+* **0.3.0 – 0.8.2 (15 releases)**
+    :Python: ``>=3.8``
+    :Requires: nothing declared
+
+podman-compose
+--------------
+* **0.1.3 – 0.1.5 (3 releases)**
+    :Python: ``clf:2.7,3.5,3.6,3.7``
+    :Requires: ``pyyaml``
+* **0.1.8 – 0.1.9 (2 releases)**
+    :Python: ``clf:3.5,3.6,3.7``
+    :Requires: ``pyyaml``
+* **0.1.10 – 1.0.3 (4 releases)**
+    :Python: ``clf:3.5,3.6,3.7``
+    :Requires: ``python-dotenv; pyyaml``
+* **1.0.6**
+    :Python: ``clf:3.5,3.6,3.7,3.8,3.9,3.10``
+    :Requires: ``python-dotenv; pyyaml``
+* **1.1.0 – 1.2.0 (2 releases)**
+    :Python: ``clf:3.7,3.8,3.9,3.10,3.11``
+    :Requires: ``python-dotenv; pyyaml``
+* **1.3.0 – 1.4.1 (3 releases)**
+    :Python: ``clf:3.9,3.10,3.11,3.12,3.13``
+    :Requires: ``python-dotenv; pyyaml``
+* **1.5.0 – 1.6.0 (2 releases)**
+    :Python: ``>=3.9``
+    :Requires: ``python-dotenv; pyyaml``
+
+
+Dependencies with no PyPI presence
+==================================
+
+Three requirements are installed from URLs rather than from PyPI, so they have
+no version history to inventory:
+
+``django-jqm``
+    ``https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip`` — a personal
+    fork. Contents: seven templates, two static files, and three near-empty
+    modules (``models.py``, ``views.py``, ``__init__.py``). The upgrade plan
+    recommends vendoring it into the repository at Stage 0.
+
+``flax``
+    ``git+https://github.com/akaihola/django-flax`` at a pinned commit. Used
+    only by ``fabfile.py``. Superseded by ``ansible/install.yaml``.
+
+``podman-compose``
+    ``https://github.com/containers/podman-compose/archive/devel.zip`` — pinned
+    to a moving branch, not a release. Development tooling only.
