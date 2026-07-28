@@ -56,17 +56,17 @@ None are fixed: each one either changes behaviour that is visible in
 production, deletes code, or commits to a piece of work, so each wants a
 decision first.
 
-They come from three pieces of work. **001-018** came out of the test coverage
+They come from four pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current
 behaviour, so fixing one means deliberately changing a test.
 **019-036** came out of the dependency and platform upgrade analysis on branch
 ``requirements-update-plan`` (``docs/upgrade-plan.rst``). Those mostly have no
 ``Evidence`` entry, because they concern configuration, packaging and future
 versions rather than code paths a test can reach.
-**037** came out of a later walkthrough of how photo management is meant to be
-used, and is about missing documentation rather than a defect, so it has no
-``Evidence`` entry either. **038** came out of setting up this documentation
-build on branch ``sphinx-docs``.
+**037 and 039** came out of a later walkthrough of how photo management is meant
+to be used: 037 is about missing documentation rather than a defect, and 039 is a
+defect the suite happens not to reach, so neither has an ``Evidence`` entry.
+**038** came out of setting up this documentation build on branch ``sphinx-docs``.
 
 From the test coverage work
 ---------------------------
@@ -141,10 +141,13 @@ From the photo management walkthrough
   ID Severity Area                    Title
 ==== ======== ======================= ==================================================
  037 Medium   admin / usability       No in-UI instructions for managing plant photos
+ 039 Medium   views / labels API      The label photo is saved but never read back
 ==== ======== ======================= ==================================================
 
 Read together with 002 and 003, which concern the same auto-attach signal: if
-that behaviour changes, the instructions asked for here change with it.
+that behaviour changes, the instructions asked for here change with it. 039 is
+the reason 037 has nothing honest to say about choosing a photo: the one control
+that looks like it chooses one writes a value the application never reads.
 
 
 From the documentation work
