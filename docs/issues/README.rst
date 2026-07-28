@@ -63,6 +63,9 @@ behaviour, so fixing one means deliberately changing a test.
 ``requirements-update-plan`` (``docs/upgrade-plan.rst``). Those mostly have no
 ``Evidence`` entry, because they concern configuration, packaging and future
 versions rather than code paths a test can reach.
+**037** came out of a later walkthrough of how photo management is meant to be
+used, and is about missing documentation rather than a defect, so it has no
+``Evidence`` entry either.
 
 From the test coverage work
 ---------------------------
@@ -128,6 +131,19 @@ can be decided immediately. 019, 023 and 024 are one-line defensive changes that
 are no-ops today and prevent silent breakage later -- the cheapest things on this
 list. 027 is the one with a real design decision in it. 034 wants deciding before
 the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions.
+
+
+From the photo management walkthrough
+-------------------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 037 Medium   admin / usability       No in-UI instructions for managing plant photos
+==== ======== ======================= ==================================================
+
+Read together with 002 and 003, which concern the same auto-attach signal: if
+that behaviour changes, the instructions asked for here change with it.
 
 
 Already fixed
