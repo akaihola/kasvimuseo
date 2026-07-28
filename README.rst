@@ -85,9 +85,13 @@ API reference generated from the source. Build it into ``.dev/docs/html/``::
 
     $ dev/kasvimuseo docs --open
 
-Sphinx never deletes a page whose source has gone, so after renaming or
-removing a document, ``dev/kasvimuseo docs --clean`` throws the output away and
-builds it again from nothing.
+The build treats warnings as errors, so a malformed page or a document nothing
+links to makes it exit non-zero -- while still writing the HTML, so the docs
+stay current either way. Two reasons to use ``--clean``: an incremental build
+re-reads only what changed, so it cannot report a problem in a file nobody
+touched, and Sphinx never deletes a page whose source has gone::
+
+    $ dev/kasvimuseo docs --clean
 
 It runs on the host's Python 3 through ``uv``, not in the app container, and
 never imports the application -- see
@@ -115,7 +119,9 @@ file -- the harness masks it -- so this one is by hand::
 ``async`` is the part that matters: the hook runs in the background and the
 agent carries on. ``dev/docs-hook`` exits immediately for an edit that touches
 nothing the documentation is built from, and a rebuild after one that does takes
-about six seconds.
+about six seconds. It stays silent when the build succeeds and reports the file
+and line when it does not, so a page broken by an edit is not discovered a week
+later.
 
 Reading the docs from another machine
 -------------------------------------

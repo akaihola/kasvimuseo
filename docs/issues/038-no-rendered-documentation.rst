@@ -67,6 +67,12 @@ modern Sphinx cannot run. **sphinx-autoapi** instead parses the source
 statically and never executes it, so it works from the host against Python 2-era
 code.
 
+Because the descriptions are read off the syntax tree rather than off live
+objects, every entry links to its own source through ``sphinx.ext.viewcode``.
+That extension has to be listed **before** ``autoapi.extension`` in
+``conf.py``: in the other order autoapi never hands it the parsed source, the
+``[source]`` links quietly do not appear, and nothing warns.
+
 One file cannot be parsed by a Python 3 tokeniser at all:
 ``kasvimuseo/migrations/0011_extract_lighting.py`` uses the Python 2 ``ur''``
 string prefix. Migrations are excluded from the API index regardless -- 19
@@ -149,6 +155,32 @@ Per-checkout builds are the point. Each worktree renders its own branch, so a
 documentation change can be read as it will look before it is merged, from a
 phone or another machine, without touching the main checkout.
 
+A warning is a failure
+----------------------
+
+The build runs with ``-W``, so a malformed page, a broken cross-reference or a
+document nobody linked to makes it exit non-zero. Sphinx 9 keeps going after a
+warning rather than stopping at the first, so the HTML is still written: the
+docs stay current *and* the problem is reported. ``dev/docs-hook`` throws away
+standard output and lets standard error through, which means a rebuild that
+went fine says nothing at all and a rebuild that did not names the file and the
+line.
+
+This is worth the strictness only because the tree is genuinely warning-free,
+and getting there took one targeted exclusion. ``models.py`` defines
+``get_next_observation_extid`` and then rebinds the name to
+``lazy(get_next_observation_extid, unicode)``, so autoapi documented a function
+and a module attribute under one name and warned about the duplicate. An
+``autoapi-skip-member`` handler in ``conf.py`` drops the attribute and keeps the
+function. That is the only thing silenced by name; everything else that warns is
+meant to be fixed.
+
+One trap comes with this. **An incremental build only re-reads changed files, so
+warnings from everything else are not re-emitted** -- a page can be broken and
+quiet until something touches it again. ``dev/kasvimuseo docs --clean`` reads
+the whole tree, and is what to run before believing a clean build. This is how
+the malformed title of issue 042 went unnoticed for a day.
+
 Migration to modern practice, as the stack catches up
 =====================================================
 
@@ -180,12 +212,14 @@ Stage 10                Add ``sphinx.ext.intersphinx`` against the Python and Dj
                         publishes an inventory for 1.5.
 Stage 11+ (Django 2.0)  Consider ``sphinxcontrib-django`` for model field tables in the
                         API reference. It requires Django >= 2.
-CI exists (issue 018)   Move the build into CI with ``-W --keep-going`` so a broken
-                        cross-reference fails the pipeline, and publish the HTML
-                        (GitHub Pages or Read the Docs) instead of relying on a local
-                        ``.dev/`` directory. The hook stays as the fast local loop,
-                        and ``dev/docs-serve`` stays useful for unmerged branches --
-                        which is exactly what a published site cannot show.
+CI exists (issue 018)   Run ``dev/kasvimuseo docs --clean`` in CI, where ``--clean`` is
+                        the point: it re-reads every file, so a warning in a page
+                        nobody touched still fails the pipeline. ``-W`` is already on
+                        locally. Publish the HTML (GitHub Pages or Read the Docs)
+                        instead of relying on a local ``.dev/`` directory. The hook
+                        stays as the fast local loop, and ``dev/docs-serve`` stays
+                        useful for unmerged branches -- which is exactly what a
+                        published site cannot show.
 Any time                ``sphinx-autobuild`` would give ``dev/docs-serve`` live reload
                         and rebuild-on-change in one process. It is a dependency and a
                         different design -- one checkout per process -- so it is worth
@@ -209,19 +243,6 @@ worth making an agent wait.
 
 Not done here
 =============
-
-The build runs without ``-W``. The existing hand-written documents turned out to
-be clean -- they render under Sphinx with no warnings at all -- but the
-generated API pages produce one:
-
-    ``duplicate object description of
-    kasvimuseo.models.get_next_observation_extid``
-
-``models.py`` defines that function and then rebinds the name to
-``lazy(get_next_observation_extid, unicode)``, so autoapi documents a function
-and a module attribute under one name. It is a fair description of the source,
-not a defect in the build, and it is why ``-W`` is not on yet. Warnings are in
-``.dev/docs/build.log``.
 
 The ``PostToolUse`` hook has to be registered in ``.claude/settings.json``, which
 coding agents cannot write to. The scripts are in the repository and work when

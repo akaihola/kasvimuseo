@@ -14,8 +14,11 @@ author = 'Antti Kaihola'
 release = '0.2.1.dev0'
 
 extensions = [
-    'autoapi.extension',
+    # Order matters: viewcode must be loaded before autoapi, or autoapi never
+    # hands it the parsed source and the "[source]" links silently do not
+    # appear. Nothing warns about this.
     'sphinx.ext.viewcode',
+    'autoapi.extension',
 ]
 
 exclude_patterns = ['_build']
@@ -51,6 +54,24 @@ suppress_warnings = [
     # package it is not pointed at. Expected, and not something to fix here.
     'autoapi.python_import_resolution',
 ]
+
+# ``models.py`` defines get_next_observation_extid and then rebinds the name to
+# lazy(get_next_observation_extid, unicode), so autoapi sees both a function and
+# a module attribute under one name and warns about the duplicate. The function
+# is the one worth documenting; dropping the attribute leaves the build with no
+# warnings at all, which is what lets dev/docs-build run with -W and so notice
+# the day someone's edit breaks a page.
+_LAZY_REBINDINGS = {'kasvimuseo.models.get_next_observation_extid'}
+
+
+def _skip_lazy_rebinding(app, what, name, obj, skip, options):
+    if what == 'data' and name in _LAZY_REBINDINGS:
+        return True
+    return skip
+
+
+def setup(app):
+    app.connect('autoapi-skip-member', _skip_lazy_rebinding)
 
 # -- HTML output ------------------------------------------------------------
 
