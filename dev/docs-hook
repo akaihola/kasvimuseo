@@ -42,5 +42,8 @@ case ${file#"$repo"/} in
     *) [ -e "$repo/.dev/docs/.incomplete" ] || exit 0 ;;
 esac
 
-"$repo/dev/docs-build" >/dev/null 2>&1
-exit 0
+# Standard output is the path of the built index, which nobody needs told after
+# every edit; standard error is what the build says when it fails, and that is
+# worth surfacing. A silent documentation build that has been broken for a week
+# is worse than no build at all.
+"$repo/dev/docs-build" >/dev/null

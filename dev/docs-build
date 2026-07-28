@@ -38,7 +38,9 @@ mkdir -p "$out"
 exec 9>"$out/.lock"
 if ! flock -n 9; then
     touch "$out/.dirty"
-    echo "docs: a build is already running, marked for rebuild" >&2
+    # Not an error, and dev/docs-hook lets standard error through: keep this
+    # off it, or every overlapping edit reports a problem that is not one.
+    echo "docs: a build is already running, marked for rebuild"
     exit 0
 fi
 
@@ -56,14 +58,26 @@ for _ in 1 2 3; do
     rm -f "$out/.dirty"
     {
         echo "=== $(date --iso-8601=seconds) ==="
+        # -W: a warning is a broken page, and a background build nobody watches
+        # has to say so. Sphinx 9 keeps going after one, so the HTML is still
+        # written and only the exit status differs -- the docs stay current
+        # while dev/docs-hook reports what went wrong.
         uv run --no-project --with-requirements "$repo/docs/requirements.txt" \
-            sphinx-build -b html \
+            sphinx-build -b html -W \
             -d "$out/doctrees" \
             "$repo/docs" "$out/html" "$@"
     } >"$log" 2>&1 || {
         status=$?
+        # A build that warned still wrote its output, so it is finished, not
+        # interrupted: clear the marker. Only a killed build leaves it behind,
+        # which is exactly what it is for.
+        rm -f "$out/.incomplete"
         echo "docs: build failed, see $log" >&2
-        tail -n 20 "$log" >&2
+        # What went wrong, not the last twenty lines of progress meter. A build
+        # can also fail with neither word in it -- uv unable to resolve the
+        # toolchain, say -- so fall back to the tail when nothing matches.
+        grep -E 'WARNING|ERROR|Exception' "$log" | tail -n 10 >&2 ||
+            tail -n 10 "$log" >&2
         exit $status
     }
     [ -e "$out/.dirty" ] || break
