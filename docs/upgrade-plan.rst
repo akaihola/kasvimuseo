@@ -63,6 +63,37 @@ Where a compatibility claim could **not** be verified from a primary source it
 is marked "unverified" rather than asserted.
 
 
+Where the findings live
+-----------------------
+
+This document is the *reasoning*: the constraints, the ordering they force, and
+the evidence behind both. Everything actionable that came out of it is filed
+separately under ``docs/issues/``, one document per finding, each with a
+``Status`` and ``Decision`` field so the decisions can be tracked.
+``docs/issues/README.rst`` indexes them and explains the convention.
+
+Issues **019-036** came from this work. ``docs/issues/036`` is the umbrella for
+the modernisation itself and points at the rest; start there. The mapping back
+into this document:
+
+=================== ===========================================================
+Issue               Analysed in
+=================== ===========================================================
+019, 023            Part 3, the two settings landmines
+024                 Part 3, Python 2 → 3 code work
+025, 026            Part 6
+027, 028, 029, 030  Part 3b, and Appendix A for the resulting locks
+020, 021, 022,      Part 5, packages and configuration that stop being needed
+031, 032, 033
+034                 Part 6, "The admin-list fork is the real cost"
+035                 Parts 2.2 and 2.3, the grappelli and photologue ladders
+036                 Part 4, the whole staged sequence
+=================== ===========================================================
+
+Issue ``016``, filed by the test coverage work, is the other Python 3 landmine
+and is a prerequisite of Stage 10.
+
+
 The destination is verified
 ---------------------------
 
@@ -951,15 +982,16 @@ have the C libraries it links against. Each stage should also bump the base
 image; the Python flip in Stage 10 is the point where this stops being a
 liability.
 
-Two things worth fixing while you are in there
-----------------------------------------------
+Two security questions, independent of the upgrade
+---------------------------------------------------
 
-* ``ylaneenkasvit/ylaneenkasvit_settings.py`` contains a committed production
-  ``SECRET_KEY`` and database password. Both are in git history. Rotate them and
-  move them to the environment.
-* ``ALLOWED_HOSTS`` is only set in the development settings. It becomes
-  mandatory (with ``DEBUG = False``) from Django 1.5 onwards — verify production
-  actually sets it.
+Both concern ``ylaneenkasvit_settings.py``, which the upgrade will touch
+repeatedly, so they are worth deciding first: the committed production
+``SECRET_KEY`` and database password (``docs/issues/025``), and the fact that
+``ALLOWED_HOSTS`` is set nowhere in the repository at all
+(``docs/issues/026``) — which, given that Django 1.5 rejects every request when
+it is empty and ``DEBUG`` is off, means production is relying on something this
+repository does not contain.
 
 Suggested checkpointing
 -----------------------
