@@ -17,9 +17,10 @@ How this was produced
 
 Everything below is derived from primary sources, not from recollection:
 
-* PyPI JSON metadata for all 45 packages in the tree — every release, its
+* PyPI JSON metadata for every package in the tree — each release, its
   ``requires_python``, its ``requires_dist`` and its ``Framework :: Django ::``
-  classifiers (1623 individual release records).
+  classifiers. 2241 individual release records; the full listing is in
+  ``dependency-inventory.rst`` next to this file.
 * The **source tarballs** of 20 Django releases (1.5.12 … 6.0.7), extracted and
   grepped for the exact modules, functions and settings this project uses. The
   "removed in" columns in `Django API removals`_ are observations of what is
@@ -29,9 +30,58 @@ Everything below is derived from primary sources, not from recollection:
   their ``CHANGELOG``, ``README`` and ``tox.ini`` files, which state
   Django support far more accurately than their (frequently stale) PyPI
   classifiers.
+* **``uv pip compile``**, run once per stage, to check that each stage's pin set
+  actually resolves and to obtain its full transitive closure. This turned up
+  three breakages that metadata alone does not reveal — see
+  `Part 3b — Cross-package breakages`_. The resulting lock sets are in
+  `Appendix A — Resolved lock set per stage`_.
+* **A real installation of the Stage 19 target**, verified with ``pipdeptree``
+  and a Django ``check`` run — see `The destination is verified`_.
+
+Two limits are worth stating up front. ``uv`` refuses to target Python below
+3.6, so **no Python 2.7 stage could be resolved with it**; Stages 0–9 rest on
+PyPI metadata and changelogs alone. And no interpreter older than 3.14 was
+available here, so resolutions for Stages 10–18 use the correct *environment
+markers* for their target Python but were evaluated with a modern build backend.
+Where that distinction matters, it is called out.
 
 Where a compatibility claim could **not** be verified from a primary source it
 is marked "unverified" rather than asserted.
+
+
+The destination is verified
+---------------------------
+
+.. _`The destination is verified`:
+
+The Stage 19 endpoint is not a projection. Installed together on Python 3.14 —
+Django 6.0.7, django-grappelli 5.0.0, django-photologue 3.20,
+django-sortedm2m 4.0.0, psycopg2-binary 2.9.12, gunicorn 26.0.0 — the stack:
+
+* imports and starts (``django.setup()`` with all eleven apps, including
+  ``grappelli.dashboard``, which this project's ``dashboard.py`` depends on);
+* passes ``manage.py check`` with **no issues**;
+* resolves a URLconf containing ``grappelli.urls``, ``admin.site.urls`` and the
+  namespaced ``photologue.urls``;
+* reports **no pending migrations** for any installed app.
+
+``pipdeptree`` on that environment gives the whole runtime tree::
+
+    django-grappelli==5.0.0
+    django-photologue==3.20
+    ├── Django [required: >=5.2,<6.1, installed: 6.0.7]
+    │   ├── asgiref [required: >=3.9.1, installed: 3.12.1]
+    │   └── sqlparse [required: >=0.5.0, installed: 0.5.5]
+    ├── django-sortedm2m [required: >=4.0.0, installed: 4.0.0]
+    └── pillow [required: >=12.0.0, installed: 12.3.0]
+    gunicorn==26.0.0
+    └── packaging [required: Any, installed: 26.2]
+    psycopg2-binary==2.9.12
+
+Note photologue's ``Django>=5.2,<6.1``: **photologue is the ceiling on the whole
+project's future**, not just its past. When Django 6.1 ships there will be no
+compatible photologue until upstream releases one. Grappelli behaves the same
+way. Both are worth watching — or, in the longer run, worth designing out.
 
 
 Part 1 — What is installed today
@@ -269,13 +319,18 @@ Package                      Ladder
 ``django-sortedm2m``         1.1.1 (Dj 1.5–1.8) → 1.5.0 (–1.9) → 2.0.0 (1.11–2.2)
                              → 3.0.0 (2.2–3.0) → 3.1.1 (2.2–3.2) → 4.0.0 (4.2–5.1)
 ``Pillow``                   6.2.2 last on py2.7 · 7.0 needs 3.5 · 9.0 → 3.7 ·
-                             10.0 → 3.8 · 12.0 → 3.10
+                             10.0 → 3.8 · 12.0 → 3.10. **Also capped from above
+                             by photologue** — ``<10`` up to photologue 3.15.1,
+                             ``>=9.1`` from 3.16. See 3b.1; 9.5.0 satisfies both.
 ``ExifRead``                 2.1.2+ needed by photologue 3.4–3.19; 3.x needs py≥3.7;
-                             not needed at all from photologue 3.20
+                             not needed at all from photologue 3.20. API stable
+                             throughout — see 3b.4.
 ``django-model-utils``       needed only by photologue 2.8 – 3.1
 ``gunicorn``                 0.17.4 → 19.6.0 still ship the ``run_gunicorn`` Django
                              command; **19.7.1 removed it**. 20.0 needs py3.4,
-                             24.0 needs py3.10.
+                             24.0 needs py3.10. **≤20.1.0 imports ``pkg_resources``
+                             and so needs ``setuptools<82``; 21.2.0 does not.**
+                             Go straight to 21.2.0 — see 3b.2.
 ``django-extensions``        1.5.9 (Dj 1.4–1.8) → 1.6.7 (1.6–1.9) → 1.7.9 (1.8–1.11)
                              → 1.9.9 (1.8–2.0) → 2.2.9 (1.11–3.0, last with py2.7)
                              → 3.1.5 (2.2–3.2) → 3.2.3 (3.2–4.2) → 4.1 (4.2–5.2)
@@ -356,6 +411,134 @@ Python 2 → 3 code work (Stage 10)
   ``here('..', 'lib', 'python2.7', 'site-packages', 'photologue', 'templates')``
   in ``TEMPLATE_DIRS``. Remove it — ``APP_DIRS`` finds photologue's templates.
 * ``u'…'`` literals (≈200) are valid again from Python 3.3; leave them alone.
+
+
+Part 3b — Cross-package breakages
+=================================
+
+.. _`Part 3b — Cross-package breakages`:
+
+These are the answer to "which package versions will be broken if other packages
+are upgraded too far". None of them are visible in dependency metadata; all three
+were found by actually resolving each stage with ``uv`` and then reading the
+source of what it selected.
+
+The root cause is the same in every case: **the old packages declare only
+lower bounds.** photologue says ``Pillow>=6.0.0`` and means "6.0 or the handful
+of releases after it"; a resolver reads it as "anything from 6.0 to the heat
+death of the universe" and picks Pillow 12.
+
+3b.1 photologue ≤ 3.15.1 versus Pillow ≥ 10
+-------------------------------------------
+
+Observed directly in ``photologue/models.py`` across every release, and in
+``PIL/Image.py`` across every Pillow wheel:
+
+=========================== =========================================
+photologue                  Resampling API used
+=========================== =========================================
+2.6.1 … **3.15.1**          ``Image.ANTIALIAS``, ``Image.FLIP_*``,
+                            ``Image.ROTATE_*``
+**3.16** … 3.20             ``Image.Resampling.LANCZOS``
+=========================== =========================================
+
+=========================== =========================================
+Pillow                      State
+=========================== =========================================
+… 9.0.0                     ``ANTIALIAS`` present, no ``Resampling``
+9.1.0 … 9.5.0               both present (the overlap window)
+**10.0.0** …                ``ANTIALIAS`` **removed**
+=========================== =========================================
+
+So:
+
+* **photologue ≤ 3.15.1 requires ``Pillow<10``.** Every stage from 2 through 16
+  needs that upper bound written down. Without it, thumbnail generation raises
+  ``AttributeError: module 'PIL.Image' has no attribute 'ANTIALIAS'`` — at image
+  upload time, not at startup, so a smoke test will not catch it.
+* **photologue ≥ 3.16 requires ``Pillow>=9.1``, not ``>=9``.** Its own metadata
+  says ``Pillow>=9``, which is wrong by one minor version: ``Image.Resampling``
+  does not exist in Pillow 9.0.0. Constrain it yourself.
+
+Pillow 9.5.0 is the last release that satisfies both sides, and it is the right
+pin for every stage up to and including 16.
+
+3b.2 gunicorn ≤ 20.1.0 versus setuptools ≥ 82
+----------------------------------------------
+
+``pkg_resources`` — the import — appears in:
+
+=================== ==============================================
+gunicorn            ``pkg_resources`` imported in
+=================== ==============================================
+19.10.0             ``util.py``, ``app/pasterapp.py``
+20.1.0              ``util.py``, ``workers/ggevent.py``,
+                    ``workers/geventlet.py``
+**21.2.0** …        nothing
+=================== ==============================================
+
+and ``setuptools`` **82.0.0 stopped shipping ``pkg_resources`` altogether**
+(present through 81.0.0, gone from 82.0.0).
+
+Unbounded resolution of Stages 13–15 selects ``gunicorn==20.1.0`` *and*
+``setuptools==82.0.1`` together, which is a gunicorn that cannot start.
+
+The fix is free: **go to gunicorn 21.2.0 as early as Stage 10.** It requires only
+Python ≥ 3.5, it is independent of Django, and it removes the constraint
+permanently. There is no reason to spend stages sitting on gunicorn 20.
+
+3b.3 django-sortedm2m < 2.0.0 cannot be built by a modern toolchain
+--------------------------------------------------------------------
+
+sortedm2m 1.1.1 through 1.5.0 are **sdist-only** — no wheels were ever
+published, so every install builds from source. Their ``setup.py`` wraps
+``long_description`` in a custom ``UltraMagicString`` class, and modern
+setuptools does::
+
+    File "setuptools/_core_metadata.py", line 221, in write_pkg_file
+        if not long_description.endswith("\n"):
+    AttributeError: 'UltraMagicString' object has no attribute 'endswith'
+
+Wheels first appear at 2.0.0. This bites Stages 2 and 4–11, which need
+sortedm2m 1.1.1 → 1.5.0 to match their photologue.
+
+Not a blocker, but it dictates *how* those stages are built: they must run
+inside a period-appropriate image with an old ``setuptools`` (< 60) and an
+interpreter that still has ``distutils`` (< 3.12). That is already true of the
+Python 2.7 container, and stays true for a Python 3.7 one. It only becomes a
+problem if someone tries to rebuild an early stage on a current machine.
+
+*This one could not be fully verified here:* the workaround needs
+``setuptools<60``, which will not import on Python 3.12+ (no ``distutils``), and
+no older interpreter was available. The failure is confirmed; the fix is
+inferred.
+
+3b.4 What is *not* a problem
+-----------------------------
+
+Worth recording, so nobody re-investigates:
+
+* **ExifRead is safe across the whole range.** photologue calls exactly one
+  function, ``exifread.process_file``, and it is present and unchanged from
+  2.1.2 through 3.5.1. The 2.x → 3.x major bump does not affect this project.
+* **pytz is safe.** Django 1.11–3.2 depend on it unbounded, but pytz is a data
+  package with a stable API; a 2026 release works with Django 1.11.
+* **sqlparse and asgiref are safe** — Django bounds them itself
+  (``asgiref<4``, ``sqlparse>=0.3.1``).
+
+The general rule this implies
+------------------------------
+
+**Every stage's requirements file must be a full lock, not a list of direct
+pins.** The existing ``dev/Containerfile`` already does this by hand, with
+``pip install --no-deps`` plus two manually chosen extras, and a comment
+explaining that it "avoids photologue dragging in an incompatible Pillow" —
+this analysis is that comment, generalised and made explicit.
+
+The mechanism to adopt is ``uv pip compile``: keep a short ``*.in`` per stage
+with the direct pins and the upper bounds established above, and commit the
+generated fully-pinned ``*.txt``. `Appendix A — Resolved lock set per stage`_
+gives the output for every stage that could be resolved.
 
 
 Part 4 — The upgrade sequence
@@ -533,10 +716,18 @@ Django 1.11):
 Then flip the base image ``python:2.7-alpine`` → ``python:3.7-alpine`` and the
 ceiling versions:
 
-* ``Pillow`` 6.2.2 → 7.x
+* ``Pillow`` 6.2.2 → **9.5.0** — the highest that still has ``Image.ANTIALIAS``,
+  which photologue needs until 3.16 (3b.1), and the highest that supports
+  Python 3.7
 * ``psycopg2-binary`` stays 2.8.6 (still the ceiling until Django 3.1)
-* ``gunicorn`` → 19.10.0 or 20.x
+* ``gunicorn`` → **21.2.0**, skipping 19.x and 20.x entirely. It needs only
+  Python ≥3.5, is independent of Django, and is the first release free of
+  ``pkg_resources`` (3b.2). Sitting on gunicorn 20 buys nothing and costs a
+  ``setuptools<82`` constraint for the next eight stages.
 * ``selenium`` 3.141.0 → 4.x, ``Fabric`` 1.6 → 3.x *or* delete both (see Part 5)
+
+The full resolved lock for this stage — and every stage after it — is in
+`Appendix A — Resolved lock set per stage`_.
 
 And delete: ``six``, ``mock``, ``pbr``, ``funcsigs``, and the eleven Python-2
 backports in ``integration-tests.txt``.
@@ -749,8 +940,215 @@ An honest estimate of where the effort is concentrated:
 #. Everything else, which is largely mechanical import rewrites
 
 
-Appendix — a note on the working tree
-=====================================
+Appendix A — Resolved lock set per stage
+========================================
+
+.. _`Appendix A — Resolved lock set per stage`:
+
+Each set below is the **complete transitive closure** produced by
+``uv pip compile --python-version <py>`` from that stage's direct pins, with the
+upper bounds from `Part 3b — Cross-package breakages`_ applied. Runtime
+(``production.txt``) only — test and development pins follow the ladders in
+Parts 2.4 and 2.6.
+
+Stages 0–9 run on Python 2.7, which ``uv`` cannot target, so they have no
+generated lock. Build those the way the project already does: ``pip install
+--no-deps`` against a hand-maintained pin list.
+
+Stage 10 — Django 1.11.29 (LTS), Python 3.7
+-------------------------------------------
+
+::
+
+    django-grappelli==2.10.4
+    django-photologue==3.7
+    django-sortedm2m==1.3.3
+    django==1.11.29
+    exifread==3.5.1
+    gunicorn==21.2.0
+    importlib-metadata==6.7.0
+    packaging==24.0
+    pillow==9.5.0
+    psycopg2-binary==2.8.6
+    pytz==2021.3
+    typing-extensions==4.7.1
+    zipp==3.15.0
+
+``django-sortedm2m==1.3.3`` is pinned by hand — it is sdist-only and modern setuptools cannot
+build it, so a resolver cannot select it (see 3b.3), but photologue's floor for
+this stage requires it.
+
+Stage 11 — Django 2.0.13, Python 3.7
+------------------------------------
+
+::
+
+    django-grappelli==2.11.2
+    django-photologue==3.8.1
+    django-sortedm2m==1.5.0
+    django==2.0.13
+    exifread==3.5.1
+    gunicorn==21.2.0
+    importlib-metadata==6.7.0
+    packaging==24.0
+    pillow==9.5.0
+    psycopg2-binary==2.8.6
+    pytz==2021.3
+    typing-extensions==4.7.1
+    zipp==3.15.0
+
+``django-sortedm2m==1.5.0`` is pinned by hand — it is sdist-only and modern setuptools cannot
+build it, so a resolver cannot select it (see 3b.3), but photologue's floor for
+this stage requires it.
+
+Stage 12 — Django 2.1.15, Python 3.7
+------------------------------------
+
+::
+
+    django==2.1.15
+    django-grappelli==2.12.4
+    django-photologue==3.9
+    django-sortedm2m==2.0.0
+    exifread==3.5.1
+    gunicorn==21.2.0
+    importlib-metadata==6.7.0
+    packaging==24.0
+    pillow==9.5.0
+    psycopg2-binary==2.8.6
+    pytz==2021.3
+    six==1.17.0
+    typing-extensions==4.7.1
+    zipp==3.15.0
+
+Stage 13 — Django 2.2.28 (LTS), Python 3.9
+------------------------------------------
+
+::
+
+    django==2.2.28
+    django-grappelli==2.13.4
+    django-photologue==3.10
+    django-sortedm2m==2.0.0
+    exifread==3.5.1
+    gunicorn==21.2.0
+    packaging==26.2
+    pillow==9.5.0
+    psycopg2-binary==2.8.6
+    pytz==2026.3.post1
+    six==1.17.0
+    sqlparse==0.5.5
+
+Stage 14 — Django 3.0.14, Python 3.9
+------------------------------------
+
+::
+
+    asgiref==3.11.1
+    django==3.0.14
+    django-grappelli==2.14.2
+    django-photologue==3.11
+    django-sortedm2m==3.0.0
+    exifread==3.5.1
+    gunicorn==21.2.0
+    packaging==26.2
+    pillow==9.5.0
+    psycopg2-binary==2.8.6
+    pytz==2026.3.post1
+    sqlparse==0.5.5
+    typing-extensions==4.16.0
+
+Stage 15 — Django 3.1.14, Python 3.9
+------------------------------------
+
+::
+
+    asgiref==3.11.1
+    django==3.1.14
+    django-grappelli==2.14.4
+    django-photologue==3.13
+    django-sortedm2m==3.0.2
+    exifread==3.5.1
+    gunicorn==21.2.0
+    packaging==26.2
+    pillow==9.5.0
+    psycopg2-binary==2.9.5
+    pytz==2026.3.post1
+    sqlparse==0.5.5
+    typing-extensions==4.16.0
+
+Stage 16 — Django 3.2.25 (LTS), Python 3.10
+-------------------------------------------
+
+::
+
+    asgiref==3.12.1
+    django==3.2.25
+    django-grappelli==2.15.7
+    django-photologue==3.14
+    django-sortedm2m==3.1.1
+    exifread==3.5.1
+    gunicorn==21.2.0
+    packaging==26.2
+    pillow==9.5.0
+    psycopg2-binary==2.9.9
+    pytz==2026.3.post1
+    sqlparse==0.5.5
+    typing-extensions==4.16.0
+
+Stage 17 — Django 4.2.30 (LTS), Python 3.12
+-------------------------------------------
+
+::
+
+    asgiref==3.12.1
+    django==4.2.30
+    django-grappelli==3.0.10
+    django-photologue==3.18
+    django-sortedm2m==4.0.0
+    exifread==3.5.1
+    gunicorn==23.0.0
+    packaging==26.2
+    pillow==12.3.0
+    psycopg2-binary==2.9.10
+    sqlparse==0.5.5
+
+Stage 18 — Django 5.2.16 (LTS), Python 3.12
+-------------------------------------------
+
+::
+
+    asgiref==3.12.1
+    django==5.2.16
+    django-grappelli==4.0.4
+    django-photologue==3.19
+    django-sortedm2m==4.0.0
+    exifread==3.5.1
+    gunicorn==26.0.0
+    packaging==26.2
+    pillow==12.3.0
+    psycopg2-binary==2.9.12
+    sqlparse==0.5.5
+
+Stage 19 — Django 6.0.7, Python 3.12
+------------------------------------
+
+::
+
+    asgiref==3.12.1
+    django==6.0.7
+    django-grappelli==5.0.0
+    django-photologue==3.20
+    django-sortedm2m==4.0.0
+    gunicorn==26.0.0
+    packaging==26.2
+    pillow==12.3.0
+    psycopg2-binary==2.9.12
+    sqlparse==0.5.5
+
+
+Appendix B — a note on the working tree
+=======================================
 
 While this analysis was being produced the working copy was switched from branch
 ``test-coverage_g78`` to ``master`` by something outside this session. The
