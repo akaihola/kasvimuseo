@@ -79,6 +79,7 @@ problem, each with a status.
    :caption: Contents
 
    development
+   user-guide
    issues/index
 
 .. toctree::
