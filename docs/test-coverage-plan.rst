@@ -392,6 +392,81 @@ Two notes for whoever writes the next tests:
   top-level ``{{ next }}`` as its only "Jatka >>" link.
 
 
+Second round: user-facing functionality
+=======================================
+
+97 % line coverage turned out to overstate how much *functionality* was
+verified. Four gaps were left:
+
+* **No admin form had ever been submitted.** All 25 admin tests were GETs or
+  direct method calls, so inlines, validation and saving were untested, and
+  ``forms.py`` reached 100 % through unit tests of ``PhotoForm.clean`` alone.
+* **The project package was not measured at all** -- ``--source=kasvimuseo``
+  hid ``ylaneenkasvit/dashboard.py`` at 0 %.
+* **The customised admin changelist output was never asserted**, though
+  emitting field-name CSS classes is the only reason the vendored
+  ``kasvimuseo_admin_list`` fork exists.
+* **The report templates were checked only to "200, and the name appears"**.
+
+Four more packages close those: ``test_admin_forms.py`` (create, edit, delete,
+inlines carrying data, validation failures, a real JPEG upload driving
+``PhotoForm.clean`` and the autoconnect signal), ``test_admin_changelist.py``
+(field-name classes, sorting, fieldsets, ordering, per-admin stylesheet),
+``test_templates.py`` (what the report pages actually render, including the
+empty branches) and ``test_project_urls.py`` (root redirect, login/logout,
+404, dashboard modules).
+
+**245 tests, 98 % over both packages.** Everything is at 100 % except
+``models.py`` (99 %) and the vendored ``kasvimuseo_admin_list.py`` (91 %),
+which is still not tested directly by design.
+
+Two stale comments
+------------------
+
+Both standing ``# FIXME`` comments in ``admin.py`` are wrong, and tests now
+prove it:
+
+* ``# FIXME: action selection doesn't work`` -- "Create Species Sheets" driven
+  through the changelist POST returns a 302 to ``/planted-species/22,11/``.
+* ``# FIXME: filtering doesn't work`` (on SpeciesAdmin, ObservationAdmin and
+  CareAdmin) -- every documented ``list_filter`` narrows the rows correctly,
+  and the Grappelli filter pulldown renders working links.
+
+Further findings, none fixed
+----------------------------
+
+1. **``planted-observation.html`` line 13 hardcodes**
+   ``<img src="dummy.jpg" />`` -- a broken image on every observation page.
+2. **The public species list has no search box.** In
+   ``planted-species-list.html`` the jQuery-Mobile attributes are prefixed with
+   an ``X`` (``Xdata-filter``, ``Xdata-filter-placeholder="Etsi kasvin
+   nimellä..."``, ``Xdata-filter-theme``), which disables the filter.
+3. **``planted-species-compact.html`` (165 lines) is dead.** Nothing references
+   it; ``PlantedSpeciesCompact`` renders ``planted-species.html`` with the
+   compact *base*. It is also internally inconsistent, mixing top-level
+   ``{{ species.* }}`` with ``{{ page.beds }}``, so it would render blank names
+   and photos if it were ever wired up.
+4. **An unknown species external id renders an empty 200 page**, not a 404.
+5. **``/photologue/gallery/`` raises on an empty database** -- a date archive
+   view with ``allow_empty`` off, reachable from the admin.
+6. **The admin login gate does not redirect**: Django 1.5 returns 200 with the
+   login form at the requested URL rather than 302 to ``admin:login``. No data
+   leaks.
+7. **``identifier_for_field`` has dead code** -- it assigns ``label = attr.name``
+   and never returns it, falling through to ``'__unknown__'``. In the vendored
+   fork, so out of scope.
+
+The IOError-on-missing-media hazard the README warns about traces to
+``{{ page.species.photo.image.width }}`` inside an **HTML comment** in
+``planted-species.html``, used for a horizontal/vertical class. Django still
+opens every image file to evaluate it.
+
+The 626-line Vue label editor in ``planting-labels.html`` is covered only at
+the server contract level -- 200, the mount point, the data endpoint URL and
+the Vue script. Its real behaviour needs a browser, i.e. a repaired
+``integration_tests/`` suite.
+
+
 Sequencing
 ==========
 
