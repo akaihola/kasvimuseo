@@ -19,12 +19,18 @@ class CustomIndexDashboard(Dashboard):
     """Custom index dashboard for kasvit.ambitone.com"""
 
     def init_with_context(self, context):
-        # append an app list module for "Applications"
+        # The three groups below were generated without titles, which left the
+        # dashboard opening on three unlabelled blocks of model links. Naming
+        # them also gives them a collapse handler, which Grappelli hangs on the
+        # title. Their "collapse" css class predates Grappelli 2.4, which
+        # decides the initial state from "grp-open"/"grp-closed" instead, so it
+        # is only dead weight in the class attribute now.
+
+        # append an app list module for the garden and the people around it
         self.children.append(modules.ModelList(
-            u'',
+            _('Base data'),
             collapsible=True,
             column=1,
-            css_classes=('collapse',),
             models=('kasvimuseo.models.Species',
                     'kasvimuseo.models.Location',
                     'kasvimuseo.models.Contact',
@@ -32,12 +38,11 @@ class CustomIndexDashboard(Dashboard):
                     'kasvimuseo.models.Bed',),
         ))
 
-        # append an app list module for "Applications"
+        # append an app list module for what grows where
         self.children.append(modules.ModelList(
-            u'',
+            _('Observations and plantings'),
             collapsible=True,
             column=1,
-            css_classes=('collapse',),
             models=('kasvimuseo.models.Observation',
                     'kasvimuseo.models.Planting',
                     'kasvimuseo.models.Care',),
@@ -45,10 +50,9 @@ class CustomIndexDashboard(Dashboard):
 
         # append an app list module for "Photos"
         self.children.append(modules.ModelList(
-            u'',
+            _('Photos'),
             collapsible=True,
             column=1,
-            css_classes=('collapse',),
             models=('photologue.models.Gallery',
                     'photologue.models.Photo',),
         ))
@@ -78,6 +82,11 @@ class CustomIndexDashboard(Dashboard):
                  False,
                  _('Tick the species in the list and run the '
                    '"Create Species Sheets" action')),
+                (_('Observation pages'),
+                 reverse('admin:kasvimuseo_observation_changelist'),
+                 False,
+                 _('Open the page of a single observation from the "page" '
+                   'link in the list')),
                 (_('Planting labels'),
                  reverse('planting-label'),
                  False,
