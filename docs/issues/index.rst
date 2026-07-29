@@ -45,22 +45,19 @@ How this is ranked
 ----------------------------------
 
 Before anything else, and independent of all of it. None of these is a code
-change yet; each changes what the rest of the list means. The first two are a
-question to whoever reported them, the last two a look at the server.
+change yet; each changes what the rest of the list means. The first is a look
+at a browser, the other two a look at the server.
 
 ==== ======== =============================================================
   ID Severity Why first
 ==== ======== =============================================================
- 044 High     If the save buttons really are gone, the species data cannot
-              be edited at all, which outranks everything below. It could
-              not be reproduced -- they render, and they are visible and
-              clickable in a browser -- so the next step is four questions
-              to the reporter, not a commit.
- 045 Medium   "Everything works on an iPad" has no scope yet. The answer
-              decides whether this is one ``<meta>`` tag or a rewrite of
-              the label editor's drag-and-drop, and it may also answer 044.
-              Once scoped, its parts rank themselves among the groups
-              below.
+ 044 High     Three models cannot be edited at all in the reporter's
+              Firefox, which outranks everything below. The bar cannot be
+              missing from the HTML -- Grappelli renders it
+              unconditionally -- and it could not be reproduced in either
+              engine, at four window sizes, on the production data. So the
+              next step is four checks in the browser that shows it, not a
+              commit.
  026 Medium   The answer is either "the deployment is not reproducible" or
               "production is serving with ``DEBUG`` on", which is a live
               information-disclosure problem. One look at the server
@@ -113,14 +110,21 @@ Small, self-contained, each visible to a visitor or to the gardeners.
  043 Low      The one column the photo changelist is searched by is the one
               that cannot be sorted. One attribute, cause known, and the
               only reported issue whose fix needs no decision at all.
- 047 Medium   The label editor's print toggle is drawn with a character no
+ 046 Low      The label editor opens at printed size, so on the iPad it
+              shows one label per row and will not zoom out. Ruled: 50 % on
+              screen, print unaffected. One rule in ``@media screen``, plus
+              the drag preview's matching constant.
+ 047 Medium   The same page's print toggle is drawn with a character no
               Linux font carries, and its ``<label for>`` points at nothing,
               so the symbol is both invisible and inert. Pick a printer and
               fix the ``for`` in the same edit.
- 046 Low      The same page opens at printed size, so arranging labels
-              starts with a manual zoom. Last of this group: a safe interim
-              exists -- the browser's own zoom -- and the fix wants a ruling
-              on whether the page gets a control or just a smaller default.
+ 045 Medium   The rest of the tablet work, now that its scope is settled:
+              a viewport tag, a print button, and a toggle that does not
+              need a hover. Its large half -- replacing drag-and-drop with
+              pointer events so numbers can be moved by touch -- is
+              deliberately not here; it wants the browser suite of 017
+              first, since it rewrites the one part of the editor no test
+              can see.
 ==== ======== =============================================================
 
 4. The photo path

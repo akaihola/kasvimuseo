@@ -92,8 +92,9 @@ while 041 is a defect the suite reaches only with unique test data.
 proposes wants a decision before it is made.
 **043-047** were reported by the maintainer rather than found by a piece of
 work, and were split out of ``incoming.rst``. They are the only ones written
-from somebody using the application: two of them (044, 045) could not be
-reproduced from the description alone and say plainly what is still needed.
+from somebody using the application, so they arrived as symptoms; the detail
+that placed them -- browser, device, which models -- came from asking. 044 is
+still not reproducible even with it.
 
 From the test coverage work
 ---------------------------
@@ -219,23 +220,27 @@ Reported by the maintainer
   ID Severity Area                    Title
 ==== ======== ======================= ==================================================
  043 Low      admin / photos          The photo changelist cannot be sorted by name
- 044 High     admin / grappelli       Save buttons reported missing on the species form
- 045 Medium   templates / mobile      The application is not usable on an iPad
+ 044 High     admin / grappelli       Save buttons missing on three change forms
+ 045 Medium   templates / mobile      The label editor is unusable on an iPad
  046 Low      templates / labels UI   The label editor opens at print size
  047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
 ==== ======== ======================= ==================================================
 
 Split out of ``incoming.rst``, where they were written down as they were
 noticed. Unlike the rest of this register they describe symptoms rather than
-causes, so each says how far the cause was traced.
+causes, so each says how far the cause was traced, and each was taken back to
+the reporter once for the detail that could only come from the machine it
+happens on.
 
-043 is the one that is ready to be done: the cause is known and the fix is one
-attribute. 047 likewise, once it is decided which printer to draw. 046 needs a
-ruling on whether the page gets a zoom control or just a smaller default. 044
-and 045 are the two that cannot move without the reporter: 044 could not be
-reproduced -- the buttons render, and no July change touched the page -- and
-045 arrived as a single sentence whose scope has to be settled before any of it
-can be estimated.
+043 is ready to be done: the cause is known and the fix is one attribute. 046
+is the only one on this page with a ruling already recorded -- 50 % on screen,
+print unaffected -- and 047 needs one more, which printer glyph to draw. 045
+has its scope: the admin works on the tablet, so the work is the label editor
+and printing, and its large half is a drag-and-drop rewrite that should wait
+for 017. 044 is the one that is stuck: three models cannot be edited in the
+reporter's Firefox, Grappelli renders the bar unconditionally, and it does not
+reproduce in either engine on the production data -- so it lists four checks to
+run in the browser that shows it.
 
 
 Already fixed

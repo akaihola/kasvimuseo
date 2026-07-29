@@ -58,8 +58,10 @@ Two further defects in the same three lines
   ``<label>``. Vue renders one copy of this markup per label, so a single
   shared id would be wrong anyway -- it needs a per-label id, or the checkbox
   wrapped inside the ``<label>`` element, which needs no id at all.
-* The control is invisible until hovered (``.remove { opacity: 0 }``), so on a
-  touch screen it cannot be found at all. See issue 045.
+* The control is invisible until hovered (``.remove { opacity: 0 }``). On the
+  iPad of issue 045 this is confirmed rather than predicted: it appears only
+  after a tap that was meant to do something else, because Safari fakes the
+  hover on first touch.
 
 Options
 =======
