@@ -363,6 +363,11 @@ class PhotoAdmin(PhotologuePhotoAdmin):
 
     def image_filename(self, obj):
         return obj.image.name.split('/')[-1]
+    # Every photo is stored flat under ``photologue/photos/`` -- photologue's
+    # ``get_storage_path`` joins PHOTOLOGUE_DIR, 'photos' and the file name --
+    # so ``image`` is the file name behind one constant prefix, and ordering by
+    # it is ordering by name. Issue 043.
+    image_filename.admin_order_field = 'image'
 
     class Media:
         css = CSS
