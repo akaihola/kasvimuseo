@@ -101,16 +101,17 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 004, 005, 007, 008, 009, 040, 041, 043 and 048 are open: each one either
-changes behaviour that is visible in production, deletes code, or commits to a
-piece of work, so each wants a decision first. Seven of the exceptions --
+All but 002, 004, 005, 007, 008, 009, 040, 041, 043 and 048 are open: each one
+either changes behaviour that is visible in production, deletes code, or commits
+to a piece of work, so each wants a decision first. Eight of the exceptions --
 restoring an action that crashes, two missing lookup guards, an archive view
 that refused to render an empty list, a missing sort link the maintainer asked
-to have done rather than ruled on, a placeholder image, and a search box
-switched off by a typo -- needed no ruling, and stay in the tables with
-``Status: Fixed``. 040 and 048 did need one -- 040 between its three options,
-048 between three shapes of a deliberate design change -- and both were ruled
-and fixed the same day; their files carry the reasoning. 041 is fixed only as
+to have done rather than ruled on, a placeholder image, a search box switched
+off by a typo, and a receiver that could raise on any save -- needed no ruling,
+and stay in the tables with ``Status: Fixed``. 040 and 048 did need one -- 040
+between its three options, 048 between three shapes of a deliberate design
+change -- and both were ruled and fixed the same day; their files carry the
+reasoning. 041 is fixed only as
 far as its crash goes: the product question inside it is still open, which is
 why its ``Status`` says so. 004 and 005 arrived with options that looked like
 questions and were not: in both, ``git log`` showed the defect was left-behind
