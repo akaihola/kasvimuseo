@@ -108,9 +108,12 @@ Small, self-contained, each visible to a visitor or to the gardeners.
 .. issue-rank::
 
    004: A broken image on every observation page; deleting one tag fixes it.
-   005: The species-list search box is switched off by an ``X`` prefix on four
-      attributes. The feature was built and then disabled; turning it back on
-      is a four-character edit.
+      **Fixed**: option 1, the tag is gone. It was scaffolding left in the
+      commit that added the page, not a photo that went missing.
+   005: The species-list search box is switched off by an ``X`` prefix on three
+      attributes. **Fixed**: option 1, the prefixes are gone. The history shows
+      the feature was never disabled -- the ``X`` was a work-in-progress marker
+      in the commit that wrote the page, applied to the loop variable as well.
    007: An unknown species id rendered a blank page instead of 404. **Fixed**:
       same family as 041, and it was done alongside it.
    040: Half the admin chrome is English on a Finnish-only application, on the
