@@ -2,20 +2,22 @@
 Issue 043: The photo changelist cannot be sorted by name
 =========================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Low
 :Area: admin / photos
 :Reported: 2026-07-29
 :Source: Maintainer report, ``docs/issues/incoming.rst``
-:Evidence: ``kasvimuseo/tests/test_admin_changelist.py`` asserts the columns, not their sort links
+:Evidence: ``kasvimuseo/tests/test_admin_changelist.py`` --
+    ``test_photo_changelist_file_name_header_is_a_sort_link`` and
+    ``test_photo_changelist_sorting_orders_the_rows`` now pin the fixed
+    behaviour, next to the column test that pinned the old one
 :Depends on: (none)
 :Blocks: (none)
 :Related: 003 -- the same photo file names, seen from the matching side
-:Decision: Asked for as work rather than as a question when it was reported:
-    research whether it is possible, plan it, implement it red/green, and
-    document it, in a worktree. The two sub-decisions it needs -- collation and
-    the path prefix -- are in "Options" and are the implementer's to make.
-:Resolution: (none yet)
+:Decision: ``image_filename.admin_order_field = 'image'``. Case is left to the
+    database rather than forced to lower case, and the ordering assumes every
+    photo stays in one directory; both are argued in "Decision" below.
+:Resolution: Fixed in ee08991.
 
 Problem
 =======
@@ -73,6 +75,65 @@ The reporter asks for this one to be done rather than decided: research whether
 it is possible (it is -- above), write a plan, implement it red/green with a
 test that asserts the header carries a sort link and that ``?o=`` orders the
 rows, and document it. Work in a worktree.
+
+Decision
+========
+
+The one line, on ``PhotoAdmin.image_filename`` in ``kasvimuseo/admin.py``. The
+two sub-decisions it needed:
+
+**Case: left to the database.** The two clusters this project runs on do not
+agree, and the one the maintainer actually sorts photos on already does the
+right thing:
+
+* production creates ``ylaneenkasvit`` through ``geerlingguy.postgresql``, and
+  ``ansible/vars/main.yml`` sets no ``lc_collate``, so it takes the role's
+  default ``en_US.UTF-8`` (``roles/geerlingguy.postgresql/tasks/databases.yml``).
+  Under that collation case is not the first thing compared, so ``Kuva.jpg``
+  and ``kuva.jpg`` land together, which is what somebody looking for a file
+  wants.
+* the development cluster is ``initdb --locale=C.UTF-8``
+  (``dev/kasvimuseo``, ``db_init``), which is byte order: every upper-case
+  initial sorts before every lower-case one.
+
+Forcing case-insensitivity would mean ordering by ``lower(image)``, and on
+Django 1.5 -- no ``Lower()`` before 1.8 -- that is a ``queryset()`` override
+adding ``.extra(select={...})`` and an ``admin_order_field`` naming the alias:
+several lines of version-specific code, and a sort no index can serve, to
+change nothing in production and only tidy a local cluster's dumps. So: not
+forced. The tests order lower-case file names only, so they pass under either
+collation, and the divergence is written down here rather than fixed silently
+in one of the two places.
+
+This is consistent with issue 003, which normalises case in Python, and the
+reason the answers take different shapes is the operation, not the data. 003
+compares for **equality**, and no PostgreSQL collation folds case for
+equality -- ``'Kuva' = 'kuva'`` is false under ``en_US.UTF-8`` as much as under
+``C`` -- so a match that must ignore case has to say so itself. Ordering is the
+one place the collation already does it. Both answers say the same thing: case
+must not decide whether the user finds the photo.
+
+**The prefix: the fix assumes one directory.** Ordering by ``image`` orders by
+the whole stored path, directory first, and it is ordering by file name only
+because photologue's ``get_storage_path`` puts every photo in exactly one
+directory, ``photologue/photos/``. That holds for the installed photologue
+2.6.1 and for the production media tree. If ``PHOTOLOGUE_DIR`` changes, or
+photologue ever grows per-gallery or per-date subdirectories, the column
+silently becomes "sort by directory, then by name" -- the same rows, grouped
+wrong, with nothing failing. The suite would not catch it either: its photos
+all land in one directory too. That is the assumption this fix rests on, and
+the note is the whole mitigation; the alternative -- storing the base name in
+its own indexed column -- is not worth it for a one-directory installation.
+
+Resolution
+==========
+
+``kasvimuseo/admin.py`` sets ``image_filename.admin_order_field = 'image'``,
+and ``kasvimuseo/tests/test_admin_changelist.py`` gains two tests beside
+``test_photo_changelist_shows_the_file_name``: the header now carries the
+``sortable`` class and an ``?o=`` link, and following that link orders the rows
+by file name in both directions. Both failed before the attribute and pass
+after it. Commit ee08991.
 
 See also
 ========
