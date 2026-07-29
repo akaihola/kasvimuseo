@@ -10,7 +10,8 @@ from __future__ import unicode_literals
 
 import pytest
 from django.contrib import admin as django_admin
-from django.core.urlresolvers import NoReverseMatch, reverse
+from django.contrib.messages.storage import default_storage
+from django.core.urlresolvers import reverse
 
 from kasvimuseo import admin
 from kasvimuseo.models import (
@@ -93,32 +94,103 @@ def test_species_admin_photo_image_without_photo():
     assert modeladmin.photo_image(species) == ''
 
 
+@pytest.fixture
+def species_admin_action(rf):
+    """Call ``planted_species_report`` the way the admin does.
+
+    Returns a callable taking a queryset and giving back the action's response
+    and the messages it left. ``message_user`` goes through
+    ``django.contrib.messages``, whose storage is normally installed by
+    ``MessageMiddleware``; ``RequestFactory`` runs no middleware, so install it
+    here.
+    """
+    modeladmin = admin.SpeciesAdmin(Species, django_admin.site)
+    request = rf.post(reverse('admin:kasvimuseo_species_changelist'))
+    request.session = {}
+    request._messages = default_storage(request)
+
+    def call(queryset):
+        response = admin.planted_species_report(modeladmin, request, queryset)
+        return response, [message.message for message in request._messages]
+
+    return call
+
+
 @pytest.mark.django_db
-def test_planted_species_report():
+def test_planted_species_report(species_admin_action):
     factories.create_species(name_fi='valkonarsissi', external_id=11)
     factories.create_species(name_fi='keltanarsissi', external_id=22)
 
-    response = admin.planted_species_report(
-        None, None, Species.objects.order_by('external_id'))
+    response, messages = species_admin_action(
+        Species.objects.order_by('external_id'))
 
     assert response.status_code == 302
     assert response['Location'] == reverse(
         'planted-species', kwargs={'species_external_ids': '11,22'})
+    assert messages == []
 
 
 @pytest.mark.django_db
-def test_planted_species_report_with_null_external_id():
-    """A species without an id makes the action raise instead of redirect.
+def test_planted_species_report_with_null_external_id(species_admin_action):
+    """A species without an id is left out, and the user is told which.
 
-    ``external_id`` is nullable, ``unicode(None)`` is ``'None'``, and the
-    ``planted-species`` URL only accepts ``[\\d,]+``.
+    ``external_id`` is nullable and the ``planted-species`` URL only accepts
+    ``[\\d,]+``, so such a species cannot appear in the report at all.
 
     See docs/issues/009.
     """
-    factories.create_species(external_id=None)
+    factories.create_species(name_fi='valkonarsissi', external_id=11)
+    factories.create_species(name_fi='nimetön', external_id=None)
 
-    with pytest.raises(NoReverseMatch):
-        admin.planted_species_report(None, None, Species.objects.all())
+    response, messages = species_admin_action(
+        Species.objects.order_by('external_id'))
+
+    assert response.status_code == 302
+    assert response['Location'] == reverse(
+        'planted-species', kwargs={'species_external_ids': '11'})
+    assert messages == ['Raportista jäivät pois, koska niillä ei ole '
+                        'LajiNroa: nimetön']
+
+
+@pytest.mark.django_db
+def test_planted_species_report_with_only_null_external_ids(
+        species_admin_action):
+    """With nothing left to report on, say so rather than redirect."""
+    factories.create_species(name_fi='nimetön', external_id=None)
+
+    response, messages = species_admin_action(Species.objects.all())
+
+    assert response is None
+    assert messages == ['Raportista jäivät pois, koska niillä ei ole '
+                        'LajiNroa: nimetön',
+                        'Yhdelläkään valitulla lajilla ei ole LajiNroa, '
+                        'joten raporttia ei voi luoda.']
+
+
+@pytest.mark.django_db
+def test_planted_species_report_through_the_admin(admin_client):
+    """The action really is reachable, and ``message_user`` really works.
+
+    Issue 023 notes that ``django.contrib.messages`` is not in
+    ``INSTALLED_APPS``; its middleware nevertheless is, by way of Django's
+    default ``MIDDLEWARE_CLASSES``, which is what ``message_user`` needs.
+    """
+    factories.create_species(name_fi='valkonarsissi', external_id=11)
+    factories.create_species(name_fi='nimetön', external_id=None)
+    url = reverse('admin:kasvimuseo_species_changelist')
+    selected = [species.pk for species in Species.objects.all()]
+
+    response = admin_client.post(url, {'action': 'planted_species_report',
+                                       '_selected_action': selected})
+
+    assert response.status_code == 302
+    assert response['Location'].endswith(
+        reverse('planted-species', kwargs={'species_external_ids': '11'}))
+    # The message survives the redirect, so it is on the next page the
+    # gardener sees rather than lost.
+    changelist = admin_client.get(url)
+    assert ('Raportista jäivät pois, koska niillä ei ole LajiNroa: nimetön'
+            in changelist.content.decode('utf-8'))
 
 
 REGISTERED_MODELS = [Species, Location, Planting, Observation, Care, Contact,

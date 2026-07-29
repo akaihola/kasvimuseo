@@ -64,9 +64,10 @@ Metadata fields
 Open issues
 ===========
 
-None are fixed: each one either changes behaviour that is visible in
+All but 009 are open: each one either changes behaviour that is visible in
 production, deletes code, or commits to a piece of work, so each wants a
-decision first.
+decision first. 009 is the exception -- restoring an action that crashes needed
+no ruling -- and stays in the table with ``Status: Fixed``.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
