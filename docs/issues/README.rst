@@ -101,12 +101,13 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 007, 009 and 041 are open: each one either changes behaviour that is
-visible in production, deletes code, or commits to a piece of work, so each
-wants a decision first. The three exceptions -- restoring an action that
-crashes, and two missing lookup guards -- needed no ruling, and stay in the
-tables with ``Status: Fixed``. 041 is fixed only as far as its crash goes: the
-product question inside it is still open, which is why its ``Status`` says so.
+All but 007, 008, 009 and 041 are open: each one either changes behaviour that
+is visible in production, deletes code, or commits to a piece of work, so each
+wants a decision first. The four exceptions -- restoring an action that
+crashes, two missing lookup guards, and an archive view that refused to render
+an empty list -- needed no ruling, and stay in the tables with ``Status:
+Fixed``. 041 is fixed only as far as its crash goes: the product question
+inside it is still open, which is why its ``Status`` says so.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
