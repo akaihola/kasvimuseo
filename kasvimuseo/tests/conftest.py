@@ -45,11 +45,20 @@ def photo_factory(media_root):
     """Return a builder for photologue ``Photo`` objects backed by real files."""
     from photologue.models import Photo
 
-    def create_photo(title='valkonarsissi kukassa', width=8, height=8):
+    def create_photo(title='valkonarsissi kukassa', width=8, height=8,
+                     filename=None):
+        """Build a ``Photo``.
+
+        ``filename`` defaults to the title, which is how the photographs in
+        this database are usually named -- but only usually, and the two are
+        read by different code: the title chooses the species, the file name
+        tells namesakes apart. Tests that care about the difference pass both.
+        """
         photo = Photo(title=title, title_slug=title.replace(' ', '-'))
+        name = '{0}.jpg'.format(filename or title.replace(' ', '-'))
         photo.image.save(
-            '{0}.jpg'.format(title.replace(' ', '-')),
-            SimpleUploadedFile('{0}.jpg'.format(title.replace(' ', '-')),
+            name,
+            SimpleUploadedFile(name,
                                jpeg_bytes(width, height),
                                content_type=str('image/jpeg')),
             save=False)
