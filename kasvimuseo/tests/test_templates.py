@@ -77,6 +77,19 @@ def test_species_list_omits_a_species_whose_plantings_were_cared_to_zero(
     assert 'ahdekaunokki' in content
 
 
+@pytest.mark.django_db
+def test_species_list_offers_the_jquery_mobile_search_box(client):
+    """The filter attributes were ``X``-prefixed and inert; see issues/005."""
+    create_planted(name_fi='ahdekaunokki', external_id=1)
+
+    content = page(client.get(reverse('planted-species-list')))
+
+    assert 'Xdata-filter' not in content
+    assert 'data-filter="true"' in content
+    assert 'data-filter-placeholder="Etsi kasvin nimellä..."' in content
+    assert 'data-filter-theme="b"' in content
+
+
 # reports/planted-species.html on planted-species-base-printable.html
 
 
