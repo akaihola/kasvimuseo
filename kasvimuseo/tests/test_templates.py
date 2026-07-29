@@ -77,6 +77,19 @@ def test_species_list_omits_a_species_whose_plantings_were_cared_to_zero(
     assert 'ahdekaunokki' in content
 
 
+@pytest.mark.django_db
+def test_species_list_offers_the_jquery_mobile_search_box(client):
+    """The filter attributes were ``X``-prefixed and inert; see issues/005."""
+    create_planted(name_fi='ahdekaunokki', external_id=1)
+
+    content = page(client.get(reverse('planted-species-list')))
+
+    assert 'Xdata-filter' not in content
+    assert 'data-filter="true"' in content
+    assert 'data-filter-placeholder="Etsi kasvin nimellä..."' in content
+    assert 'data-filter-theme="b"' in content
+
+
 # reports/planted-species.html on planted-species-base-printable.html
 
 
@@ -273,6 +286,17 @@ def test_observation_page_shows_species_origin_and_beds(client):
     assert 'Yläne, Kirkonkylä' in content
     assert 'Piha/3' in content
     assert 'Havainto 42' in content
+
+
+@pytest.mark.django_db
+def test_observation_page_has_no_placeholder_image(client):
+    """``<img src="dummy.jpg" />`` was hardcoded here; see issues/004."""
+    create_planted(name_fi='valkonarsissi', external_id=42)
+
+    content = page(client.get(reverse('planted-observation', args=[42])))
+
+    assert 'dummy.jpg' not in content
+    assert '<img' not in content
 
 
 @pytest.mark.django_db
