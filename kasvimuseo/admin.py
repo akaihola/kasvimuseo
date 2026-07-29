@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from .forms import PhotoForm
 from kasvimuseo.models import (
@@ -51,7 +51,30 @@ class BedInline(admin.TabularInline):
 
 
 def planted_species_report(modeladmin, request, queryset):
-    external_ids = queryset.values_list('external_id', flat=True)
+    """Redirects to the printable report for the selected species.
+
+    The report URL is keyed by ``external_id``, which the museum's own
+    numbering fills in but the model leaves optional, so a species without one
+    cannot appear in the report at all -- ``ObservationAdmin.page`` skips such
+    rows for the same reason. Report on the ones that can be reported on, and
+    name the ones left out; if that is all of them, there is no report to make.
+
+    See docs/issues/009.
+    """
+    skipped = list(queryset.filter(external_id=None))
+    external_ids = list(queryset.exclude(external_id=None)
+                        .values_list('external_id', flat=True))
+    if skipped:
+        modeladmin.message_user(
+            request,
+            ugettext(u'Left out of the report, having no LajiNro: %s')
+            % u', '.join(unicode(species) for species in skipped))
+    if not external_ids:
+        modeladmin.message_user(
+            request,
+            ugettext(u'None of the selected species has a LajiNro, '
+                     u'so there is no report to create.'))
+        return
     external_ids_param = u','.join(unicode(external_id)
                                    for external_id in external_ids)
     url = reverse('planted-species',

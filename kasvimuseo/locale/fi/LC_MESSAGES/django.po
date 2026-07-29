@@ -16,7 +16,7 @@ msgstr ""
 msgid "Edit"
 msgstr "Muokkaa"
 
-#: admin.py:31 admin.py:236
+#: admin.py:31 admin.py:259
 msgid ""
 "Erityiset hoitotapahtumat, suojaus, harvennus, sato, siementen keruu, "
 "taimien kasvatus, myynti jne."
@@ -24,43 +24,54 @@ msgstr ""
 "Erityiset hoitotapahtumat, suojaus, harvennus, sato, siementen keruu, "
 "taimien kasvatus, myynti jne."
 
-#: admin.py:60
+#: admin.py:83
 msgid "Create Species Sheets"
 msgstr "Luo kasvilajien tietosivut"
 
-#: admin.py:175
+#: admin.py:70
+msgid "Left out of the report, having no LajiNro: %s"
+msgstr "Raportista jäivät pois, koska niillä ei ole LajiNroa: %s"
+
+#: admin.py:75
+msgid ""
+"None of the selected species has a LajiNro, so there is no report to create."
+msgstr ""
+"Yhdelläkään valitulla lajilla ei ole LajiNroa, joten raporttia ei voi "
+"luoda."
+
+#: admin.py:198
 msgid "(left,front) width×depth"
 msgstr "(vas,etu) lev×syv"
 
-#: admin.py:203 admin.py:264
+#: admin.py:226 admin.py:287
 msgid "Basic information"
 msgstr "Perustiedot"
 
-#: admin.py:210
+#: admin.py:233
 msgid "Extra information"
 msgstr "Lisätiedot"
 
-#: admin.py:273
+#: admin.py:296
 msgid "Address"
 msgstr "Osoite"
 
-#: admin.py:215
+#: admin.py:238
 msgid "page"
 msgstr "sivu"
 
-#: admin.py:216
+#: admin.py:239
 msgid "show page"
 msgstr "näytä sivu"
 
-#: admin.py:303
+#: admin.py:326
 msgid "map"
 msgstr "kartta"
 
-#: admin.py:305
+#: admin.py:328
 msgid "show map"
 msgstr "näytä kartta"
 
-#: admin.py:315
+#: admin.py:338
 msgid "Species to which the photo is attached"
 msgstr "Laji johon kuva liittyy"
 
