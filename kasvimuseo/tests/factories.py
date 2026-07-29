@@ -36,6 +36,11 @@ def create_species(name_fi='valkonarsissi', **kwargs):
     return models.Species.objects.create(name_fi=name_fi, **kwargs)
 
 
+def create_label(species=None, **kwargs):
+    return models.Label.objects.create(species=species or create_species(),
+                                       **kwargs)
+
+
 def create_observation(species=None, origin=None, **kwargs):
     kwargs.setdefault('date', OBSERVATION_DATE)
     return models.Observation.objects.create(

@@ -9,6 +9,8 @@ import operator
 from photologue.models import Photo
 from south.modelsinspector import add_introspection_rules
 
+from kasvimuseo import photo_matching
+
 try:
     unicode
 except NameError:
@@ -653,9 +655,9 @@ def autoconnect_photo_to_species(sender, instance, **kwargs):
     The receiver must be total: it runs on every save of a ``Photo``, and it
     used to run on every save of every model, so anything it cannot do it has
     to skip rather than raise. ``Species.name_fi`` carries no unique
-    constraint, so the lookup can match more than one photoless species; an
-    ambiguous match is skipped, because guessing between them would silently
-    attach the photo to the wrong species.
+    constraint, so the lookup can match more than one photoless species; those
+    go to ``photo_matching.disambiguate``, which either narrows them down to
+    one or returns nothing, and nothing means the photo stays unattached.
     """
     if sender != Photo:
         return
@@ -663,14 +665,18 @@ def autoconnect_photo_to_species(sender, instance, **kwargs):
     if not title_parts:
         return instance
     species_name = title_parts[0].lower()
+    photoless = Species.objects.filter(name_fi=species_name,
+                                       photo__isnull=True)
     try:
-        species = Species.objects.get(name_fi=species_name,
-                                      photo__isnull=True)
-    except (Species.DoesNotExist, Species.MultipleObjectsReturned):
-        pass
-    else:
-        species.photo = instance
-        species.save()
+        species = photoless.get()
+    except Species.DoesNotExist:
+        return instance
+    except Species.MultipleObjectsReturned:
+        species = photo_matching.disambiguate(photoless, instance.image.name)
+        if species is None:
+            return instance
+    species.photo = instance
+    species.save()
     return instance
 
 

@@ -4,18 +4,24 @@
 The receiver is connected to ``post_save`` for ``Photo``, and it keeps its own
 ``sender != Photo`` guard, so calling it for any other model is a no-op. It has
 to stay cheap and total, because it runs on every ``Photo`` the application
-saves: it bails out on a title with no words, and it swallows both
-``Species.DoesNotExist`` and ``Species.MultipleObjectsReturned`` -- ``name_fi``
-carries no unique constraint, so an ambiguous match is possible on the
-production data.
+saves: it bails out on a title with no words, and it never raises on a lookup
+that fails or matches too much. ``name_fi`` carries no unique constraint, so a
+title can name several species; those go to ``kasvimuseo.photo_matching``,
+which is tested on its own in ``test_photo_matching.py``. What is tested here
+is that the receiver asks it and abides by the answer, including the answer
+"no".
 """
 
 from __future__ import unicode_literals
 
+import datetime
+
 import pytest
 
 from kasvimuseo import models
-from kasvimuseo.tests.factories import create_species
+from kasvimuseo.tests.factories import (create_bed, create_care,
+                                        create_location, create_observation,
+                                        create_planting, create_species)
 
 
 @pytest.mark.django_db
@@ -85,15 +91,15 @@ def test_the_receiver_is_a_no_op_when_called_for_another_sender():
 
 
 @pytest.mark.django_db
-def test_photo_matching_two_photoless_species_attaches_to_neither(
+def test_photo_matching_two_indistinguishable_species_attaches_to_neither(
         photo_factory):
     """``name_fi`` is not unique, so the lookup can match more than once.
 
     Before this was fixed the ambiguous lookup raised
     ``MultipleObjectsReturned`` out of ``post_save``, which failed the whole
-    ``Photo`` save -- in the admin as well. The save now completes and the
-    photo is attached to neither candidate, because picking one of them would
-    be a guess.
+    ``Photo`` save -- in the admin as well. Nothing in the garden records or in
+    the file name tells these two apart, so the save completes and the photo is
+    attached to neither: picking one would be a guess.
     """
     first = create_species(name_fi='valkonarsissi')
     second = create_species(name_fi='valkonarsissi', species='pseudonarcissus')
@@ -102,6 +108,45 @@ def test_photo_matching_two_photoless_species_attaches_to_neither(
 
     assert models.Photo.objects.filter(pk=photo.pk).exists()
     assert models.Species.objects.get(pk=first.pk).photo is None
+    assert models.Species.objects.get(pk=second.pk).photo is None
+
+
+@pytest.mark.django_db
+def test_photo_goes_to_the_namesake_that_is_actually_in_the_garden(
+        photo_factory):
+    """Ambiguous by name, settled by the records: one of the two is planted."""
+    first = create_species(name_fi='valkonarsissi')
+    second = create_species(name_fi='valkonarsissi', species='pseudonarcissus')
+    create_planting(observation=create_observation(species=second),
+                    bed=create_bed())
+
+    photo = photo_factory(title='Valkonarsissi kukassa')
+
+    assert models.Species.objects.get(pk=second.pk).photo == photo
+    assert models.Species.objects.get(pk=first.pk).photo is None
+
+
+@pytest.mark.django_db
+def test_the_file_name_settles_what_the_title_cannot(photo_factory):
+    """The title chooses the species; the file name tells namesakes apart.
+
+    Both are planted and both were cared for on the same day, so the records
+    are no help. The photograph is named after the house one of them came
+    from, which is how these files tend to be named.
+    """
+    first = create_species(name_fi='valkonarsissi')
+    second = create_species(name_fi='valkonarsissi', species='pseudonarcissus')
+    for species, house in ((first, 'Mattila'), (second, 'Koivula')):
+        planting = create_planting(
+            observation=create_observation(
+                species=species, origin=create_location(name=house)),
+            bed=create_bed())
+        create_care(planting, date=datetime.date(2022, 6, 1))
+
+    photo = photo_factory(title='Valkonarsissi kukassa',
+                          filename='valkonarsissi-mattila-2019')
+
+    assert models.Species.objects.get(pk=first.pk).photo == photo
     assert models.Species.objects.get(pk=second.pk).photo is None
 
 
