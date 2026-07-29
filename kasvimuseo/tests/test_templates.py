@@ -355,13 +355,24 @@ def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(client):
 @pytest.mark.django_db
 @pytest.mark.parametrize('url_name', ['planted-species',
                                       'planted-species-compact'])
-def test_unknown_external_id_renders_an_empty_report(client, url_name):
-    """Pins current behaviour; see docs/issues/007."""
+def test_unknown_external_id_404s(client, url_name):
+    """Was an empty 200 page; see docs/issues/007."""
     create_planted(name_fi='valkonarsissi', external_id=1)
 
-    content = page(client.get(species_url(url_name, 999999)))
+    response = client.get(species_url(url_name, 999999))
 
-    # No 500, no exception: the queryset is simply empty, so the report has no
-    # species blocks and -- in the compact base -- no navigation either.
-    assert 'class="species"' not in content
-    assert 'valkonarsissi' not in content
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name', ['planted-species',
+                                      'planted-species-compact'])
+def test_partly_unknown_external_id_still_renders_what_matched(client,
+                                                               url_name):
+    """Only the wholly empty case 404s; see docs/issues/007."""
+    create_planted(name_fi='valkonarsissi', external_id=1)
+
+    content = page(client.get(
+        reverse(url_name, kwargs={'species_external_ids': '1,999999'})))
+
+    assert 'valkonarsissi' in content
