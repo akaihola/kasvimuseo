@@ -79,7 +79,8 @@ Each is reachable today, each has a fix that needs no product decision.
               on any save. The largest blast radius on the list, and 042
               cannot be done until it is fixed.
  009 Medium   The ``Create Species Sheets`` action 500s on a species with
-              no ``external_id``, which the production data has.
+              no ``external_id``, which the production data has. **Fixed**:
+              those species are skipped and named in an admin message.
  041 Medium   Eight of 311 observation pages 500 on a link that this
               repository has just made reachable. Option 1 stops the crash
               without waiting for the ruling on what a duplicate number
