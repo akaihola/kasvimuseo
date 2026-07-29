@@ -2,7 +2,7 @@
 Issue 047: The label print toggle uses a glyph no Linux font has
 ====================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Medium
 :Area: templates / labels UI
 :Reported: 2026-07-29
@@ -17,7 +17,11 @@ Issue 047: The label print toggle uses a glyph no Linux font has
 :Decision: Ruled by the maintainer on 2026-07-29: an inline SVG printer, and
     clicking it must toggle the checkbox. Option 2 below, with the ``<label>``
     defect fixed in the same change rather than left as a follow-up.
-:Resolution: (none yet)
+    Implemented as one ``fill="currentColor"`` path in a ``0 0 24 24`` viewBox,
+    sized by ``.remove svg { width: 40px; height: 40px }`` in place of the
+    ``font-size: 30pt``, with the checkbox wrapped inside the ``<label>`` and
+    ``.remove`` added to the ``@media print`` hide list.
+:Resolution: Fixed in 4e75b40.
 
 Problem
 =======
@@ -112,6 +116,44 @@ Rejected alternatives, recorded so they are not revisited
    system emoji font chooses, which cannot be styled to match the page.
 2. The Finnish word, which the user guide already uses. Cheapest, but it is a
    wide piece of text in a corner that has room for a glyph.
+
+Resolution
+==========
+
+Commit 4e75b40, together with issue 046. The three lines are now::
+
+    '    <div class="remove">' +
+    '        <label title="Tulosta tämä kyltti">' +
+    '            <svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '                <path fill="currentColor" fill-rule="evenodd"' +
+    '                      d="M6 2h12v6H6Z M2 9h20v8H2Z M4 11h3v2H4Z M6 18h12v4H6Z"/>' +
+    '            </svg>' +
+    '            <input type="checkbox" v-model="species.visible">' +
+    '        </label>' +
+    '    </div>' +
+
+Four rectangles under ``fill-rule="evenodd"``: the sheet going in, the body, an
+indicator light punched out of it, and the sheet coming out. The ``title`` gives
+the wrapping ``<label>`` an accessible name, since the ``<svg>`` is
+``aria-hidden``. ``font-size: 30pt`` is gone from ``.remove``, replaced by
+``.remove svg { width: 40px; height: 40px }`` plus
+``.remove label { display: inline-flex; align-items: center }`` to sit the
+checkbox beside it; ``.remove { opacity: 0 }`` is left for issue 045 to remove.
+``@media print`` now reads ``form, .hidden, button, .remove``.
+
+Verified in Chromium 149 on Linux, on the page's real markup (the browser suite
+of issue 017 still does not exist, and the server-side suite -- 337 passing --
+asserts this page's contract, not its rendering):
+
+* The icon draws as a printer, no replacement box: screenshotted at 8x device
+  scale and read back.
+* Clicking the ``<svg>`` flips ``species.visible`` -- the checkbox goes from
+  checked to unchecked and the ``<li>`` gains ``class="hidden"`` -- which the
+  old ``for="remove"`` could not do.
+* Under ``@media print`` the computed ``display`` of ``.remove`` is ``none``,
+  and the printed A4 PDF carries none of the icon's rectangles: forcing
+  ``.remove`` visible for comparison adds 18 small rectangles to the first page
+  (three per icon, six labels), and the as-printed PDF has none of them.
 
 See also
 ========
