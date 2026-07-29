@@ -24,7 +24,7 @@ Issue 002: Photo auto-attach can break every Photo save
     was narrowed to ``sender=Photo`` in the same change; the existing ``sender
     != Photo`` guard already made that a no-op for every other model, so it
     changes no behaviour, and the guard was kept.
-:Resolution: 6089276, refined in 120e93b
+:Resolution: 3b33d92, refined in 8d2f19d
 
 Problem
 =======
@@ -79,13 +79,15 @@ nothing -- absent evidence is not evidence against:
 2. one of those observations has a planting with no removal date;
 3. the species has labels.
 
-Then two rankings, the first that separates the field deciding:
+Then three rankings, the first that separates the field deciding:
 
 4. whose living plantings were cared for most recently;
 5. whose own names -- and the names of the places its observations came from,
    and the nicknames they go by -- best match the photo's **file name**. The
    title chooses the species, as it always has; the file name is what tells
-   namesakes apart, and the two are not always written the same way.
+   namesakes apart, and the two are not always written the same way;
+6. which of them has no photo yet. Added with 042, which is what made a
+   species that already has a photo a candidate at all.
 
 Similarity is ``difflib`` on accent-stripped, case-folded words, scored by
 corroboration: a field counts only if it clears ``MATCH_THRESHOLD``, and a
@@ -107,6 +109,24 @@ can now attach a photo to the wrong species. The two thresholds are what bound
 that, and they are module constants so they can be tuned without reading the
 algorithm.
 
-Option 3 stays available and would remove the ambiguity at the source rather
-than adjudicating it, but it needs a data migration and a look at the
-production data to know whether the existing rows allow it.
+What the production data says
+-----------------------------
+
+Checked against a restored copy while fixing 042, which is the change that made
+this fault reachable in the first place: 156 species, 113 with a photo, and
+exactly **one** duplicated ``name_fi`` -- two ``tarhakurjenmiekka``, both of
+which already have photos.
+
+Two things follow. While ``photo__isnull=True`` was in the lookup this crash
+could not actually happen in production, because the only two candidates it
+needs were filtered out before the lookup ran; it was a latent fault, waiting
+for either a second photoless namesake or for 042. And the disambiguation is
+not decoration: since 042 those two are ambiguous on every photo titled after
+them, and it is what tells them apart -- correctly, on their real names, which
+``test_signals.py`` now has a test for.
+
+**Option 3 is not applicable to this data as it stands.** A unique constraint on
+``name_fi`` would need the two ``tarhakurjenmiekka`` -- genuinely different
+plants, ``Iris x`` and ``Iris 'Cracchus'`` -- renamed or merged first. That is a
+decision about the collection rather than about the code, and it is the reason
+this was not the fix.
