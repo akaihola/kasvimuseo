@@ -109,7 +109,8 @@ Small, self-contained, each visible to a visitor or to the gardeners.
               which is why it is here rather than in group 2.
  043 Low      The one column the photo changelist is searched by is the one
               that cannot be sorted. One attribute, cause known, and the
-              only reported issue whose fix needs no decision at all.
+              only one of the five reports that never needed a ruling: it
+              arrived as work rather than as a question.
  046 Low      The label editor opens at printed size, so on the iPad it
               shows one label per row and will not zoom out. Ruled: 50 % on
               screen, print unaffected. One rule in ``@media screen``, plus
