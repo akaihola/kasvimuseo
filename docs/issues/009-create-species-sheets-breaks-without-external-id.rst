@@ -17,7 +17,7 @@ Issue 009: Create Species Sheets breaks on a species with no external id
     no ruling: option 2 would refuse work the gardener can have, and option 3
     is a data migration against production data that is not available here, so
     it is the maintainer's to decide.
-:Resolution: Fixed in COMMIT.
+:Resolution: Fixed in 4106caf.
 
 Problem
 =======
