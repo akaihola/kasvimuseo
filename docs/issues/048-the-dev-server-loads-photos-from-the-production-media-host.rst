@@ -21,7 +21,7 @@ Issue 048: The dev server loads photos from the production media host
 :Decision: Ruled on 2026-07-29: **option 3**, local first with the production
     media host as the fallback. The current behaviour was deliberate (see "Why
     it is like this"), so this was a design change rather than a repair.
-:Resolution: Fixed as ruled. ``MEDIA_URL`` is ``/media/`` in the development
+:Resolution: Fixed in c202290, as ruled. ``MEDIA_URL`` is ``/media/`` in the development
     settings, ``ylaneenkasvit.media.serve_media`` serves ``MEDIA_ROOT`` and
     redirects what is not there to the new ``MEDIA_FALLBACK_URL``, and
     ``media fetch`` fetches from that setting instead of from ``MEDIA_URL``.
