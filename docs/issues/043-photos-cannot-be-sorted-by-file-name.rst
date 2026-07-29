@@ -2,7 +2,7 @@
 Issue 043: The photo changelist cannot be sorted by name
 =========================================================
 
-:Status: Open
+:Status: Accepted
 :Severity: Low
 :Area: admin / photos
 :Reported: 2026-07-29
@@ -11,7 +11,10 @@ Issue 043: The photo changelist cannot be sorted by name
 :Depends on: (none)
 :Blocks: (none)
 :Related: 003 -- the same photo file names, seen from the matching side
-:Decision: undecided
+:Decision: Asked for as work rather than as a question when it was reported:
+    research whether it is possible, plan it, implement it red/green, and
+    document it, in a worktree. The two sub-decisions it needs -- collation and
+    the path prefix -- are in "Options" and are the implementer's to make.
 :Resolution: (none yet)
 
 Problem

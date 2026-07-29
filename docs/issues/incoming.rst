@@ -12,5 +12,7 @@ Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`046 <046-the-label-editor-opens-at-print-size>` and
 :doc:`047 <047-the-label-print-toggle-glyph-has-no-font-on-linux>`. The
 follow-up questions those raised were answered the same day, and the answers
-moved two of them: 044 turned out to be a truncated response rather than an
-admin defect, and is being worked as its own task, while 046 has its ruling.
+settled all five: 044 turned out to be a truncated response rather than an
+admin defect and is being worked as its own task, 045 has its scope, 046 and
+047 have their rulings, and 043 was asked for as work from the start. None is
+waiting on a decision.
