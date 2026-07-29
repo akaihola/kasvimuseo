@@ -101,13 +101,14 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 007, 008, 009 and 041 are open: each one either changes behaviour that
-is visible in production, deletes code, or commits to a piece of work, so each
-wants a decision first. The four exceptions -- restoring an action that
+All but 007, 008, 009, 040 and 041 are open: each one either changes behaviour
+that is visible in production, deletes code, or commits to a piece of work, so
+each wants a decision first. Four of the exceptions -- restoring an action that
 crashes, two missing lookup guards, and an archive view that refused to render
 an empty list -- needed no ruling, and stay in the tables with ``Status:
-Fixed``. 041 is fixed only as far as its crash goes: the product question
-inside it is still open, which is why its ``Status`` says so.
+Fixed``. 040 did need one, between its three options, and was ruled and fixed;
+its file carries the reasoning. 041 is fixed only as far as its crash goes: the
+product question inside it is still open, which is why its ``Status`` says so.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
@@ -127,7 +128,8 @@ defect the suite happens not to reach, so neither has an ``Evidence`` entry.
 **038** came out of setting up this documentation build on branch ``sphinx-docs``.
 **040 and 041** came out of walking through the admin front page on branch
 ``dashboard-usability``: 040 is a packaging accident in a dependency rather than
-anything this repository does wrong, so it has no ``Evidence`` entry either,
+anything this repository does wrong, so it had no ``Evidence`` entry until it
+was fixed and two assertions about Django's own strings were added with the fix,
 while 041 is a defect the suite reaches only with unique test data.
 **042** was written as an implementation plan on branch
 ``species-photo-always-switch`` and filed here instead, since the change it
@@ -249,8 +251,10 @@ From the dashboard walkthrough
 ==== ======== ======================= ==================================================
 
 Both were found by looking at the rendered admin front page while linking the
-custom views from it. 040's fix is one line in each image definition, but it
-changes how the application is built. 041 was invisible while the view it
+custom views from it. 040's fix is one step in each image definition, and it
+changes how the application is built; measuring it also corrected the file,
+since only the development image turned out to be affected. 041 was invisible
+while the view it
 concerns had no link; the link added by the same work is what exposed it, and
 it needs a ruling on what a duplicate museum number means before it can be
 fixed.
