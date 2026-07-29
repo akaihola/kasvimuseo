@@ -7,8 +7,8 @@ from collections import OrderedDict
 from itertools import groupby
 from operator import attrgetter
 
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render_to_response
+from django.http import Http404, HttpResponse
+from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.generic import View, ListView
 from django.views.generic.base import TemplateResponseMixin, TemplateView
@@ -194,6 +194,10 @@ class PlantedSpecies(TemplateResponseMixin, View):
     def get(self, request, species_external_ids):
         extid_list = species_external_ids.split(',')
         queryset = Species.objects.filter(external_id__in=extid_list)
+        if not queryset.exists():
+            # A list that matches nothing at all is a dead link, not a report;
+            # a partial match still renders what it found. See docs/issues/007.
+            raise Http404('No Species matches any of the given external ids.')
         context = self.get_context_data(queryset)
         if 'HTTP_REFERER' in request.META:
             context['next'] = request.META['HTTP_REFERER']
@@ -209,8 +213,16 @@ class PlantedSpeciesCompact(PlantedSpecies):
 
 
 def planted_observation(request, observation_external_id):
-    observation = get_object_or_404(Observation,
-                                    external_id=observation_external_id)
+    # Museum numbers are not unique -- a handful of them are shared by two
+    # observations -- so ``get_object_or_404`` raised ``MultipleObjectsReturned``
+    # instead of answering. Order explicitly and take the first match, so the
+    # same number always renders the same page. See docs/issues/041.
+    observations = (Observation.objects
+                    .filter(external_id=observation_external_id)
+                    .order_by('pk'))[:1]
+    if not observations:
+        raise Http404('No Observation matches the given museum number.')
+    observation = observations[0]
     plantings = observation.planting_set.all()
     beds = [planting.bed for planting in plantings]
     texts = []
