@@ -9,6 +9,8 @@ import operator
 from photologue.models import Photo
 from south.modelsinspector import add_introspection_rules
 
+from kasvimuseo import photo_matching
+
 try:
     unicode
 except NameError:
@@ -648,21 +650,44 @@ add_introspection_rules([], ["^photologue\.models\.TagField"])
 
 
 def autoconnect_photo_to_species(sender, instance, **kwargs):
+    """Attach a saved ``Photo`` to the species its title names.
+
+    The most recently saved photo wins, including over a photo the species
+    already has: this is the only place ``Species.photo`` is ever set, so
+    without that a species was stuck for good with whatever was uploaded first
+    (issue 042). The workflow it implies is "save the one you want last", and
+    it means correcting a title in the admin re-attaches that photo too.
+
+    The receiver must be total: it runs on every save of a ``Photo``, and it
+    used to run on every save of every model, so anything it cannot do it has
+    to skip rather than raise. ``Species.name_fi`` carries no unique
+    constraint, so the lookup can match more than one species; those go to
+    ``photo_matching.disambiguate``, which either narrows them down to one or
+    returns nothing, and nothing means the photo stays unattached.
+    """
     if sender != Photo:
         return
     title_parts = instance.title.split()
     if not title_parts:
         return instance
     species_name = title_parts[0].lower()
+    matches = Species.objects.filter(name_fi=species_name)
     try:
-        species = Species.objects.get(name_fi=species_name,
-                                      photo__isnull=True)
+        species = matches.get()
     except Species.DoesNotExist:
-        pass
-    else:
-        species.photo = instance
-        species.save()
+        return instance
+    except Species.MultipleObjectsReturned:
+        species = photo_matching.disambiguate(matches, instance.image.name)
+        if species is None:
+            return instance
+    species.photo = instance
+    species.save()
     return instance
 
 
-models.signals.post_save.connect(autoconnect_photo_to_species)
+# Connected for ``Photo`` alone rather than for every model. The ``sender !=
+# Photo`` guard above already made every other sender a no-op, so this changes
+# no behaviour -- it only stops the receiver being called at all on saves it
+# has nothing to do with. The guard stays, so the function is still safe to
+# call directly and to reconnect more widely.
+models.signals.post_save.connect(autoconnect_photo_to_species, sender=Photo)
