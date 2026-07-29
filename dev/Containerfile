@@ -10,6 +10,30 @@ COPY requirements/production.txt /tmp/production.txt
 RUN pip install --no-cache-dir --no-deps -r /tmp/production.txt \
  && pip install --no-cache-dir 'Pillow==6.2.2' 'django-sortedm2m==1.5.0'
 
+# Django 1.5.1 lists its locale catalogs, fixtures and project_template in
+# setup.py's `data_files` rather than `package_data`. That setup.py redirects
+# the `data` install scheme to `purelib` so they still land inside the package
+# -- but only when pip runs `setup.py install`; the wheel pip builds here
+# ignores the redirection and drops them in /usr/local/django, where gettext
+# never looks and the admin chrome stays English (issue 040). Move them back,
+# and fail the build rather than shipping an English admin if they are neither
+# in the package nor beside it.
+RUN set -e; \
+    prefix=/usr/local; \
+    pkg=$prefix/lib/python2.7/site-packages/django; \
+    if [ -d "$prefix/django" ]; then \
+        cp -a "$prefix/django"/. "$pkg"/; \
+        rm -rf "$prefix/django"; \
+    fi; \
+    for mo in conf/locale/fi contrib/admin/locale/fi; do \
+        test -f "$pkg/$mo/LC_MESSAGES/django.mo" || { \
+            echo "issue 040: $pkg/$mo/LC_MESSAGES/django.mo is missing and" \
+                 "there is no $prefix/django to take it from -- find where" \
+                 "pip put Django's data_files" >&2; \
+            exit 1; \
+        }; \
+    done
+
 # Test dependencies, as pinned in setup.py's tests_require.
 RUN pip install --no-cache-dir 'pytest==3.5.0' 'pytest-django==2.9.1' \
                                'coverage==4.5.4' \
