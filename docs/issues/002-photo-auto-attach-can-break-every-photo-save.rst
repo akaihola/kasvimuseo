@@ -2,8 +2,7 @@
 Issue 002: Photo auto-attach can break every Photo save
 =======================================================
 
-:Status: Open
-:Claimed: branch ``feature/fix-issue-002-photo-g9r``
+:Status: Fixed
 :Severity: High
 :Area: models / admin
 :Reported: 2026-07-28
@@ -13,8 +12,15 @@ Issue 002: Photo auto-attach can break every Photo save
 :Blocks: 042 -- dropping ``photo__isnull=True`` widens this same fault
     037 -- the instructions asked for there describe this receiver
 :Related: 003, 042 -- the same auto-attach receiver
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Option 1 -- catch ``MultipleObjectsReturned`` and skip the
+    auto-attach. It is the only option that cannot silently attach a photo to
+    the wrong species, and it needs no migration. Option 3 was not taken: a
+    unique constraint on ``name_fi`` wants a data migration and a look at the
+    production data, neither of which this change can do. The connection was
+    narrowed to ``sender=Photo`` in the same change; the existing ``sender !=
+    Photo`` guard already made that a no-op for every other model, so it
+    changes no behaviour, and the guard was kept.
+:Resolution: 6089276
 
 Problem
 =======
@@ -41,3 +47,23 @@ Options
 3. Add a unique constraint on ``name_fi`` -- bigger change, and the data may not allow it.
 
 Whichever is chosen, keep the receiver total: it runs on every save in the project.
+
+Fix
+===
+
+Option 1. ``autoconnect_photo_to_species`` now catches
+``Species.MultipleObjectsReturned`` alongside ``Species.DoesNotExist``, so an
+ambiguous name skips the auto-attach instead of failing the ``Photo`` save.
+Nothing is attached in that case, and nothing tells the user so -- the photo
+still has to be pointed at a species by hand, which is 042's and 037's
+territory rather than this issue's.
+
+The receiver is also connected for ``sender=Photo`` alone now, rather than for
+every model. Its own ``sender != Photo`` guard already made every other sender
+a no-op, so this changes no behaviour; it only stops the receiver being invoked
+on saves it has nothing to do with. The guard is kept, and
+``kasvimuseo/tests/test_signals.py`` pins it by calling the receiver directly.
+
+Option 3 stays available: a unique constraint on ``name_fi`` would remove the
+ambiguity at the source, but it needs a data migration and a look at the
+production data to know whether the existing rows allow it.
