@@ -41,6 +41,10 @@ Osoite: https://kasvit.ambitone.com/kasvimuseo/planting-labels/
 
 Ohjeita:
 
+- ruudun koko ei ole tulosteen koko: kyltit piirretään ruudulle puoleen
+  kokoon, jotta niitä mahtuu rinnakkain useampi, mutta tuloste tulee aina
+  lomakkeen mittojen mukaan (oletuksena 14 cm × 8 cm)
+
 - siirrä istutus omalle kyltille:
 
 - raahaa hiirellä numero ulos kyltistä
@@ -55,7 +59,8 @@ Ohjeita:
 
 - piilota kyltti tulosteesta:
 
-- poista tulostusrasti kyltin oikeassa alalaidassa
+- poista tulostusrasti kyltin oikeassa alalaidassa, tulostimen kuvan
+  vierestä; myös kuvan napsauttaminen poistaa ja palauttaa rastin
 
 - talleta muutokset:
 
