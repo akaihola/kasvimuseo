@@ -2,7 +2,7 @@
 Issue 046: The label editor opens at print size, not screen size
 ================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Low
 :Area: templates / labels UI
 :Reported: 2026-07-29
@@ -15,8 +15,13 @@ Issue 046: The label editor opens at print size, not screen size
     017 -- no browser test would notice either way
 :Decision: Ruled by the maintainer on 2026-07-29: scale the labels to 50 % on
     screen; the printed sheet is unaffected. Option 1 below, with the value
-    fixed rather than made adjustable.
-:Resolution: (none yet)
+    fixed rather than made adjustable. Implemented as
+    ``@media screen { #labels { zoom: var(--screen-scale) } }`` with
+    ``--screen-scale: 0.5`` on ``:root``; ``@media print`` untouched. The drag
+    preview's two hardcoded ``0.25``\ s read that same property, and its
+    pointer offsets are expressed in unscaled label pixels (380 x 120, was
+    ``-95`` / ``-30`` at 0.25) so they follow the scale.
+:Resolution: Fixed in 4e75b40.
 
 Problem
 =======
@@ -94,6 +99,38 @@ number, and say in the user guide that the on-screen size is not the printed
 size. A test that a print run still measures 14cm would need the browser suite
 of issue 017, which cannot run -- so until then, check it by printing to PDF
 once.
+
+Resolution
+==========
+
+Commit 4e75b40, together with issue 047. The stylesheet declares the scale once,
+on ``:root``::
+
+    --screen-scale: 0.5;
+
+    @media screen { #labels { zoom: var(--screen-scale); } }
+
+``#drag-wrapper`` takes ``transform: scale(var(--screen-scale))`` from the same
+property, and ``dragOverBackground`` reads it back through
+``getComputedStyle(document.documentElement)`` rather than repeating the number,
+so the inline transform it writes while the pointer moves cannot drift from the
+stylesheet. Its offsets are now the unscaled distance into the label where the
+external IDs sit -- ``380 * scale`` and ``120 * scale``, which are the old
+``-95`` / ``-30`` divided by the old 0.25 -- so the pointer keeps the same spot
+of the preview at any scale.
+
+Measured in Chromium 149 on Linux, on the page's real markup with the Django
+template constructs substituted and the data endpoint served from a file (the
+browser suite of issue 017 still does not exist):
+
+* 1440px viewport: five labels per row, then five, then two; each label 265 x
+  151 CSS px, ``getComputedStyle(#labels).zoom`` = 0.5.
+* 980px viewport, the iPad's fallback width: three labels per row.
+* ``@media print``: zoom back to 1, and the printed PDF measures 14.02 x 7.99 cm
+  per label on A4 -- unchanged.
+* Dragging an external ID out onto the background: the preview renders 265 x 151
+  px, the same as a label in the grid (it was a quarter-size 132 x 76 before),
+  and the drop splits the label as it did.
 
 See also
 ========
