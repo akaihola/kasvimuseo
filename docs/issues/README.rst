@@ -277,10 +277,12 @@ Reported by the maintainer
  045 Medium   templates / mobile      The label editor is unusable on an iPad
  046 Low      templates / labels UI   The label editor opens at print size
  047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
+ 048 Medium   dev environment / media Dev photos are loaded from the production host
 ==== ======== ======================= ==================================================
 
-Split out of ``incoming.rst``, where they were written down as they were
-noticed. Unlike the rest of this register they describe symptoms rather than
+043-047 were split out of ``incoming.rst``, where they were written down as
+they were noticed; 048 was reported straight into a task and never passed
+through it. Unlike the rest of this register they describe symptoms rather than
 causes, so each says how far the cause was traced, and each was taken back to
 the reporter once for the detail that could only come from the machine it
 happens on.
@@ -295,7 +297,10 @@ and printing, and its large half is a drag-and-drop rewrite that should wait
 for 017. 044 turned out not to be an admin issue at all: the pages it names are
 cut off mid-response before the submit row is reached, and the boundary is a
 size, not a model. It is filed under the dev environment and is the one item on
-this page that stops the maintainer working today.
+this page that stops the maintainer working today. 048 is from the same pair of
+machines and is the odd one out here: its cause is fully known and nothing in
+it is a defect -- the development settings name the production media host on
+purpose -- so what it asks for is a ruling on a design, not a repair.
 
 
 Already fixed

@@ -74,7 +74,10 @@ both change what the rest of the list means.
 2. Broken on real data
 -----------------------
 
-Each is reachable today, each has a fix that needs no product decision.
+Each is reachable today, each has a fix that needs no product decision -- with
+one exception, 048, which is last in the group: it is reachable today and it
+comes from the same machine pair as 044, but what it needs is a ruling on a
+deliberate design rather than a repair.
 
 .. issue-rank::
 
@@ -99,6 +102,13 @@ Each is reachable today, each has a fix that needs no product decision.
       new developer met and the first thing CI would have hit (018).
       **Fixed**: the route is overridden with ``allow_empty=True``, and it
       answered 404 rather than the 500 reported here.
+   048: The development server names the production media host in every photo
+      URL and serves no media of its own, so a photo added or replaced in
+      development 404s and the fetched local copies are never the ones shown.
+      Here because it is in the way of the photo work of 042 and 043 and of
+      any development away from the public internet; last in its group because
+      three shapes of fix are open and the current behaviour was chosen on
+      purpose.
 
 3. Visibly broken pages
 -----------------------
