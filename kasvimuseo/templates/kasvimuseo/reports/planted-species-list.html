@@ -14,9 +14,9 @@
 {% block title %}Istutetut kasvit{% endblock %}
 {% block content %}
     <ul data-role="listview"
-        Xdata-filter="true"
-        Xdata-filter-placeholder="Etsi kasvin nimellä..."
-        Xdata-filter-theme="b">
+        data-filter="true"
+        data-filter-placeholder="Etsi kasvin nimellä..."
+        data-filter-theme="b">
         {% for species in object_list %}
             <li>
                 <a href="{% url "planted-species-compact" species_external_ids=species.external_id %}"
