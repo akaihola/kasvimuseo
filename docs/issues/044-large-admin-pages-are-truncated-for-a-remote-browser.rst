@@ -2,7 +2,7 @@
 Issue 044: Large admin pages are truncated for a remote browser
 =================================================================
 
-:Status: Open
+:Status: Accepted
 :Severity: High
 :Area: dev environment / serving
 :Reported: 2026-07-29
@@ -13,7 +13,9 @@ Issue 044: Large admin pages are truncated for a remote browser
 :Related: 040 -- the same three buttons, one Finnish and two English
     013 -- another admin declaration that claims something untrue
     045 -- the other report that needed a browser to settle
-:Decision: undecided
+:Decision: Accepted for work on 2026-07-29 and taken up as its own task; which
+    of the three options below is taken is still open, and depends on what the
+    measurements from the affected machine say.
 :Resolution: (none yet)
 
 Problem
@@ -41,6 +43,33 @@ in the template is absent, and then every open element closes at once. That
 cascade is the HTML parser reaching end of stream, not markup the server wrote.
 Everything after that point -- the rest of the inline, the closing of the form,
 and the submit row -- never arrived.
+
+The setup it happens in
+=======================
+
+=================== ==========================================================
+ Client              Firefox 152.0.5, Linux, on an Atom laptop -- a different
+                     machine from the server
+ URL                 ``http://gogo.crane-boa.ts.net:8000/admin/kasvimuseo/species/6/``
+ Path                Tailscale (host ``gogo``, ``100.81.121.7``) to a port
+                     published by rootless podman with pasta,
+                     ``0.0.0.0:8000 -> 8000``
+ Server              ``python ylaneenkasvit/manage.py runserver 0.0.0.0:8000``
+                     in the dev container -- Django 1.5.1, ``wsgiref``,
+                     single-threaded
+ Checkout            ``/home/agent/prg/kasvimuseo`` on ``master``,
+                     bind-mounted at ``/src``
+ Settings            ``ylaneenkasvit/local_settings.py``, byte-identical to
+                     ``local_settings.development.py``: ``DEBUG`` on,
+                     ``STATIC_URL`` ``/static/``, ``ALLOWED_HOSTS`` ``['*']``
+ Data                The February 2025 production dump
+ Production          gunicorn behind a web server. Unaffected.
+=================== ==========================================================
+
+Note for whoever picks this up: at the time of writing, that container has been
+removed and the cluster under ``.dev/pgdata`` is stopped, so the first step is
+``dev/kasvimuseo app run`` again. The measurements below were taken against a
+second copy of the same dump in a task worktree, on port 9633.
 
 Where the stream stops
 ======================
@@ -78,12 +107,15 @@ smaller than 28 KB. The boundary falls exactly where the reporter's page was
 cut. Those three admin classes declare inlines, which is why their forms are the
 big ones -- the inline set is the size, not the cause.
 
-**One page contradicts this and needs checking:** ``location`` is by far the
-largest form in the application -- ``location/2`` is 360 KB and ``location/8``
-is 544 KB, because every observation inline repeats a 60-option select -- and it
-is reported as working. If a ``location`` change form really does render its
-submit row on the affected machine, the size explanation is wrong and this
-issue needs reopening on a different track. It is one page to open.
+**One page contradicts this and needs checking first:** ``location`` is by far
+the largest form in the application -- ``location/2`` is 360 KB and
+``location/8`` is 544 KB, because every observation inline repeats a 60-option
+select -- and it is reported as working. It may simply not have been opened; the
+report says "the other nine models", which is a count rather than a checklist.
+But if a ``location`` change form really does render its submit row on the
+affected machine, the size explanation is wrong and everything below it needs
+reopening on a different track. It is one page to open, and it should be the
+first thing the follow-up does.
 
 What it is not
 ==============
@@ -131,26 +163,45 @@ truncation" is the wrong fix: it would make a data-losing save easy to perform.
 How to confirm, from the laptop
 ===============================
 
-One command, on the machine that shows the problem::
+The measurement needs a logged-in session, and the login is a CSRF-protected
+POST, so it is two steps. This is the exact sequence used for the loopback
+figures above; run it on the machine that shows the problem, against the
+tailnet name::
 
-    curl -s -D- -o body.html -b <cookies> \
-         http://gogo.crane-boa.ts.net:8000/admin/kasvimuseo/species/6/
-    wc -c body.html
+    HOST=http://gogo.crane-boa.ts.net:8000
+    TOK=$(curl -s -c c.txt $HOST/admin/ \
+          | grep -o "name='csrfmiddlewaretoken' value='[^']*'" \
+          | head -1 | sed "s/.*value='//;s/'//")
+    curl -s -b c.txt -c c.txt -o /dev/null -e $HOST/admin/ \
+         -d "csrfmiddlewaretoken=$TOK&username=<user>&password=<pass>&this_is_the_login_form=1&next=/admin/" \
+         $HOST/admin/
 
-If ``wc -c`` is less than the ``Content-Length`` in the headers, the response is
-being cut before Firefox sees it and the browser is exonerated for good. Repeat
-against a page just under the boundary (``observation/1``, 27 KB) and one far
-over it (``location/2``, 360 KB) to find where the limit actually falls -- the
-exact byte count is the strongest clue to which of the three layers is
-responsible.
+    for p in observation/1 species/6 plot/2 planting/22 location/2; do
+        curl -s -D h.txt -b c.txt "$HOST/admin/kasvimuseo/$p/" -o body.html \
+             -w "$p downloaded=%{size_download} "
+        grep -i '^content-length' h.txt
+    done
 
-Then the same page through an SSH tunnel, which turns the remote request into a
+**If ``size_download`` is smaller than ``Content-Length``, the response is being
+cut before Firefox ever sees it**, and the browser is exonerated for good. The
+page just under the boundary (``observation/1``, 27 KB) should come through
+whole; where exactly the cut falls on the larger ones is the strongest clue to
+which of the three layers is responsible -- a constant byte count points at a
+buffer, a varying one at the network.
+
+Then the same loop through an SSH tunnel, which turns the remote request into a
 loopback one on the server side::
 
-    ssh -N -L 8000:127.0.0.1:8000 gogo
+    ssh -N -L 8000:127.0.0.1:8000 gogo    # then use HOST=http://127.0.0.1:8000
 
-If it is whole through the tunnel and cut without it, the application is
-finished as a suspect and this becomes a dev-environment issue only.
+Whole through the tunnel and cut without it finishes the application as a
+suspect and makes this a dev-environment issue only.
+
+For comparison, the loopback baseline on the server host, taken the same way
+against the same dump, was 52,119 bytes for ``species/6`` on all three of three
+attempts, with ``grp-fixed-footer`` present. Requests to the host's own tailnet
+address (``100.81.121.7``) were also complete -- but that traffic never leaves
+the machine, so it says nothing about the path from the laptop.
 
 Options
 =======
