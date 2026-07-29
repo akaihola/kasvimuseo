@@ -13,6 +13,7 @@ Issue 037: No in-UI instructions for managing plant photos
     042 -- the missing capability behind the missing instructions
 :Blocks: (none)
 :Related: 017 -- the label editor has no browser test either
+    047 -- the print toggle these instructions describe by its appearance
 :Decision: undecided
 :Resolution: (none yet)
 

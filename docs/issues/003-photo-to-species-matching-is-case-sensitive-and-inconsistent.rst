@@ -11,6 +11,7 @@ Issue 003: Photo-to-species matching is case-sensitive and inconsistent
 :Depends on: (none)
 :Blocks: 037 -- the filename convention documented there is this matching rule
 :Related: 002, 042 -- the same auto-attach receiver
+    043 -- the same file names, seen from the admin changelist
 :Decision: undecided
 :Resolution: (none yet)
 

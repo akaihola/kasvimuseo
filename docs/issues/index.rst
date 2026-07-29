@@ -59,14 +59,22 @@ both change what the rest of the list means.
               file the upgrade will edit repeatedly.
 ==== ======== =============================================================
 
-2. Crashes on real data
+2. Broken on real data
 -----------------------
 
-Each is a 500 reachable today, each has a fix that needs no product decision.
+Each is reachable today, each has a fix that needs no product decision.
 
 ==== ======== =============================================================
   ID Severity Why here
 ==== ======== =============================================================
+ 044 High     Six of the admin's change forms are cut off mid-response for
+              a browser on another machine, taking the submit row with
+              them, so those models cannot be edited at all. Everything
+              over roughly 43 KB is affected. The application renders them
+              correctly; the loss is in ``runserver``, the container's port
+              publication or the tailnet. First because it is what stops
+              the maintainer working today, and because a truncated form
+              must not be saved.
  002 High     A ``post_save`` receiver registered for every model can raise
               on any save. The largest blast radius on the list, and 042
               cannot be done until it is fixed.
@@ -99,6 +107,27 @@ Small, self-contained, each visible to a visitor or to the gardeners.
               application, on the page it opens on. One line per image
               definition -- but it changes how the application is built,
               which is why it is here rather than in group 2.
+ 043 Low      The one column the photo changelist is searched by is the one
+              that cannot be sorted. One attribute, cause known, and the
+              only one of the five reports that never needed a ruling: it
+              arrived as work rather than as a question.
+ 046 Low      The label editor opens at printed size, so on the iPad it
+              shows one label per row and will not zoom out. Ruled: 50 % on
+              screen, print unaffected. One rule in ``@media screen``, plus
+              the drag preview's matching constant.
+ 047 Medium   The same page's print toggle is drawn with a character no
+              Linux font carries, and its ``<label for>`` points at nothing,
+              so the symbol is both invisible and inert. Ruled: an inline
+              SVG, with the checkbox wrapped in the label so clicking the
+              icon toggles it. Take it before 045 drops the hover, which is
+              what currently keeps it off the paper.
+ 045 Medium   The rest of the tablet work, now that its scope is settled:
+              a viewport tag, a print button, and a toggle that does not
+              need a hover. Its large half -- replacing drag-and-drop with
+              pointer events so numbers can be moved by touch -- is
+              deliberately not here; it wants the browser suite of 017
+              first, since it rewrites the one part of the editor no test
+              can see.
 ==== ======== =============================================================
 
 4. The photo path

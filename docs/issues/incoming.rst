@@ -1,31 +1,18 @@
 Incoming issues to be split into individual files
 =================================================
 
-Can't sort photos admin by file name
-------------------------------------
+Nothing is waiting. Write new reports here in whatever shape they arrive -- a
+sentence is enough -- and they get split into numbered files under
+``docs/issues/`` with the causes traced as far as they go.
 
-On the `/admin/photologue/photo/` page,
-I can sort by date taken, date added, is public, tags, and view count.
-But I want to also be able to sort by file name.
-Create an issue for this, research whether it's possible to do that, write a plan,
-and implement it using red/green TDD, and document it.
-Do all of this in a worktree (remember to always use worktrees!).
-
-Admin save buttons missing for species
---------------------------------------
-
-In `/admin/kasvimuseo/species/<pk>/`, the `Save and continue editing`,
-`Save and add another`, and `Tallenna` buttons are missing.
-
-First bisect which change caused this (probably in July 2026).
-
-Ensure everything works on an iPad
-----------------------------------
-
-Labels UI default zoom too big
-------------------------------
-
-50% looks better.
-
-Printer icon on labels missing on Linux
----------------------------------------
+Last emptied on 2026-07-29: the five reports that were here became issues
+:doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
+:doc:`044 <044-large-admin-pages-are-truncated-for-a-remote-browser>`,
+:doc:`045 <045-the-label-editor-is-unusable-on-an-ipad>`,
+:doc:`046 <046-the-label-editor-opens-at-print-size>` and
+:doc:`047 <047-the-label-print-toggle-glyph-has-no-font-on-linux>`. The
+follow-up questions those raised were answered the same day, and the answers
+settled all five: 044 turned out to be a truncated response rather than an
+admin defect and is being worked as its own task, 045 has its scope, 046 and
+047 have their rulings, and 043 was asked for as work from the start. None is
+waiting on a decision.
