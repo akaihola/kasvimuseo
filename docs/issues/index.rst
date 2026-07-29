@@ -114,9 +114,10 @@ Small, self-contained, each visible to a visitor or to the gardeners.
    007: An unknown species id rendered a blank page instead of 404. **Fixed**:
       same family as 041, and it was done alongside it.
    040: Half the admin chrome is English on a Finnish-only application, on the
-      page it opens on. One line per image definition -- but it changes how
+      page it opens on. One step per image definition -- but it changes how
       the application is built, which is why it is here rather than in group
-      2.
+      2. **Fixed**: Django's stray ``data_files`` tree is moved back into the
+      package, and only the development image was ever affected.
    043: The one column the photo changelist is searched by is the one that
       cannot be sorted. One attribute, cause known, and the only one of the
       five reports that never needed a ruling: it arrived as work rather than

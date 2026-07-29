@@ -219,3 +219,42 @@ def test_admin_page_returns_200(admin_client, sample_data, model, page):
                                              page))
 
     assert admin_client.get(url).status_code == 200
+
+
+@pytest.mark.django_db
+def test_admin_chrome_is_finnish(admin_client):
+    """The strings Django itself provides are Finnish, not just ours.
+
+    Django 1.5.1 lists its locale catalogs in ``setup.py``'s ``data_files``,
+    and a wheel installs those beside the package rather than inside it, where
+    ``gettext`` never finds them -- so everything the project does not
+    translate itself used to render in English (issue 040). Both image
+    definitions move the tree back after ``pip install``; this is what notices
+    if that step is dropped, since every other assertion in the suite is about
+    a string this repository translates.
+    """
+    index = admin_client.get(reverse('admin:index')).content.decode('utf-8')
+
+    # The heading comes from django.contrib.admin's catalog, the Add/Change
+    # links on each model row from django/conf's.
+    assert '<h1>Sivuston ylläpito</h1>' in index
+    assert 'Site administration' not in index
+    assert '>Lisää</a>' in index
+    assert '>Muokkaa</a>' in index
+
+
+@pytest.mark.django_db
+def test_submit_row_is_finnish(admin_client):
+    """All three buttons, not only the ``Save`` the project translates itself.
+
+    The project catalog has a ``Save`` msgid of its own -- which is why that
+    one button was Finnish even while Django's catalogs were unreachable, and
+    why it still reads "Tallenna" rather than Django's "Tallenna ja poistu".
+    The other two need Django's catalog and get it from the same fix.
+    """
+    add = admin_client.get(
+        reverse('admin:kasvimuseo_species_add')).content.decode('utf-8')
+
+    assert 'value="Tallenna"' in add
+    assert 'value="Tallenna ja lisää toinen"' in add
+    assert 'value="Tallenna välillä ja jatka muokkaamista"' in add
