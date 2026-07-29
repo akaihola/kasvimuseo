@@ -8,6 +8,11 @@ Issue 038: The repository has no rendered docs
 :Reported: 2026-07-28
 :Source: Documentation request, branch ``sphinx-docs``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 018 -- the build moves into CI once one exists
+    036 -- each workaround has a stage at which it falls away
+    016 -- the ``ur''`` prefix that blocks the parser
 :Decision: undecided
 :Resolution: (none yet)
 

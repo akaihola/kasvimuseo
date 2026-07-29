@@ -8,6 +8,11 @@ Issue 018: No CI: the suite is only ever run by hand
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: dev/kasvimuseo app test
+:Depends on: (none)
+:Blocks: (none)
+:Related: 017 -- a browser suite needs somewhere to run
+    038 -- the documentation build moves into CI once one exists
+    008 -- the kind of empty-database failure CI would catch
 :Decision: undecided
 :Resolution: (none yet)
 

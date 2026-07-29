@@ -8,6 +8,10 @@ Issue 019: Settings define no MIDDLEWARE
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none -- no test; ``grep -rn MIDDLEWARE kasvimuseo ylaneenkasvit`` returns nothing)
+:Depends on: (none)
+:Blocks: 023 -- ``MessageMiddleware`` needs a middleware list to go in
+    036 -- silent loss of the middleware stack at Stage 11
+:Related: 023 -- the other missing-settings landmine, same file
 :Decision: undecided
 :Resolution: (none yet)
 

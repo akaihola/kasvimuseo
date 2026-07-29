@@ -8,6 +8,10 @@ Issue 034: The admin_list fork has to be re-synced at every Django version
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: kasvimuseo/tests/test_templatetags.py (pins the current output)
+:Depends on: (none)
+:Blocks: 014 -- dead code in the same file, moot if the fork is retired
+    036 -- the largest recurring cost; decide before Stage 6
+:Related: (none)
 :Decision: undecided
 :Resolution: (none yet)
 

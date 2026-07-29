@@ -8,6 +8,11 @@ Issue 037: No in-UI instructions for managing plant photos
 :Reported: 2026-07-28
 :Source: Review of the photo management design
 :Evidence: (none -- the missing text is documentation, not behaviour)
+:Depends on: 002, 003 -- what the auto-attach receiver does is what there is to document
+    039 -- option 3 cannot be written honestly until this is decided
+    042 -- the missing capability behind the missing instructions
+:Blocks: (none)
+:Related: 017 -- the label editor has no browser test either
 :Decision: undecided
 :Resolution: (none yet)
 

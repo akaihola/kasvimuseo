@@ -8,6 +8,10 @@ Issue 029: gunicorn <= 20.1.0 breaks on setuptools >= 82
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: (none)
+:Blocks: 027 -- a constraint the lock must carry
+    036 -- Stage 10 onwards
+:Related: 021 -- the unrelated cosmetic gunicorn problem
 :Decision: undecided
 :Resolution: (none yet)
 

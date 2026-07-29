@@ -8,6 +8,9 @@ Issue 026: ALLOWED_HOSTS is set nowhere in tracked settings
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none -- ``grep -rn ALLOWED_HOSTS`` over the whole repository returns nothing)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 025 -- the same file, and the same question of what the server carries that the repository does not
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,9 @@ Issue 013: Stale FIXME comments claim working admin features are broken
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_admin_changelist.py, kasvimuseo/tests/test_admin_forms.py
+:Depends on: (none)
+:Blocks: (none)
+:Related: 017 -- option 2 here wants the browser test that 017 is about
 :Decision: undecided
 :Resolution: (none yet)
 
