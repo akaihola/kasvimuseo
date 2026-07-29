@@ -276,6 +276,17 @@ def test_observation_page_shows_species_origin_and_beds(client):
 
 
 @pytest.mark.django_db
+def test_observation_page_has_no_placeholder_image(client):
+    """``<img src="dummy.jpg" />`` was hardcoded here; see issues/004."""
+    create_planted(name_fi='valkonarsissi', external_id=42)
+
+    content = page(client.get(reverse('planted-observation', args=[42])))
+
+    assert 'dummy.jpg' not in content
+    assert '<img' not in content
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize('history,stories,shown,hidden', [
     ('kasvatettu 1920', 'mummon muisto', ['kasvatettu 1920', 'mummon muisto'],
      []),
