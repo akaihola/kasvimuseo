@@ -3,6 +3,7 @@ Issue 007: Unknown species id renders an empty page instead of 404
 ==================================================================
 
 :Status: Open
+:Claimed: branch ``feature/fix-issues-041-and-0-o51``
 :Severity: Low
 :Area: views / public site
 :Reported: 2026-07-28

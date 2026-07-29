@@ -3,6 +3,7 @@ Issue 041: Duplicate observation numbers crash the observation page
 ===================================================================
 
 :Status: Open
+:Claimed: branch ``feature/fix-issues-041-and-0-o51``
 :Severity: Medium
 :Area: views / public site
 :Reported: 2026-07-28

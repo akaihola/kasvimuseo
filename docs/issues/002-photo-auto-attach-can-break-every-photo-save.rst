@@ -3,6 +3,7 @@ Issue 002: Photo auto-attach can break every Photo save
 =======================================================
 
 :Status: Open
+:Claimed: branch ``feature/fix-issue-002-photo-g9r``
 :Severity: High
 :Area: models / admin
 :Reported: 2026-07-28
