@@ -71,6 +71,17 @@ Every combination below renders the footer ``position: fixed``,
   inline rows (``species/97`` with 12 observations, ``plot/1`` with 10 beds,
   ``planting/22`` with 9 care events).
 * **Netbook-sized windows.** 1024x600, 1024x552, 800x480, 1366x768.
+* **Firefox page zoom.** 100 %, 150 % and 200 % on an emulated 1024x600 screen.
+  Worth testing because Firefox measures ``device-width`` in CSS pixels, so zoom
+  shrinks it and could in principle bring the rule below into range. It does not
+  -- the media query stays false and the bar stays on screen at every level.
+* **The two installations are the same.** The reporter's machine runs the same
+  bind-mounted checkout, the same container image, the same restored production
+  dump, and an ``ylaneenkasvit/local_settings.py`` byte-identical to
+  ``local_settings.development.py`` -- so ``STATIC_URL`` is ``/static/`` on
+  both and the admin CSS comes from the grappelli in the image, not from
+  production's static host. Nothing server-side distinguishes the instance that
+  shows the bug from the one that does not.
 * **No JavaScript errors** on any of the pages.
 * **The code.** Nothing between the February 2025 production release and
   ``b801d8e`` touches the change form: ``kasvimuseo/static/css/
@@ -124,6 +135,14 @@ Four things, on one of the broken pages, in the Firefox that shows it:
 Also worth one line: whether the account used is a superuser, and whether the
 nine working models were each opened on a *change* form rather than an *add*
 form.
+
+One thing would settle the "but it works on production" half without touching
+the browser: fetch ``grappelli/stylesheets/screen.css`` from production's static
+host and diff its ``.grp-fixed-footer`` rules against the copy in the dev image.
+If production serves an older or customised Grappelli whose footer is not
+``position: fixed``, then production is not a control -- it is a different
+stylesheet, and the local one is the only one exercising the fixed footer at
+all.
 
 Fix regardless of the cause
 ===========================
