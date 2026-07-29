@@ -8,6 +8,9 @@ Issue 023: django.contrib.messages is configured but not installed
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: 019 -- the middleware entry has nowhere to go until a middleware list exists
+:Blocks: 036 -- required from Stage 5 (Django 1.7)
+:Related: 019 -- the same class of problem, same file
 :Decision: undecided
 :Resolution: (none yet)
 

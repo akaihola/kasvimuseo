@@ -8,6 +8,9 @@ Issue 008: Photologue gallery index raises on an empty database
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_project_urls.py (proves the include another way)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 018 -- a CI job starting from a fresh database is what would catch this
 :Decision: undecided
 :Resolution: (none yet)
 

@@ -8,6 +8,12 @@ Issue 036: The runtime stack is end-of-life and unpatched
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
+:Depends on: 016, 019, 020, 021, 022, 023, 024, 027, 028, 029, 030, 031, 032, 033, 034 -- the individual obstacles, listed by stage under Progress below
+:Blocks: (none)
+:Related: 035 -- the ceiling that will make this recur
+    040 -- option 3 there is to wait for this
+    038 -- most of the documentation build's workarounds fall away at Stage 10
+    018 -- CI has to run the project's own container until Stage 10
 :Decision: undecided
 :Resolution: (none yet)
 

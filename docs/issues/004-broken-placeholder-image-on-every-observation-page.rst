@@ -8,6 +8,9 @@ Issue 004: Broken placeholder image on every observation page
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_templates.py
+:Depends on: (none)
+:Blocks: (none)
+:Related: 011 -- option 2 here renders the species photo, which is what 011 is about
 :Decision: undecided
 :Resolution: (none yet)
 

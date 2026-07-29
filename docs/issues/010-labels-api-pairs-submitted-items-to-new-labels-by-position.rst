@@ -8,6 +8,10 @@ Issue 010: Labels API pairs submitted items to new labels by position
 :Reported: 2026-07-28
 :Source: Test coverage work, branch ``test-coverage_g78``
 :Evidence: kasvimuseo/tests/test_views.py::test_labels_api_post_links_each_planting_to_its_own_species_label
+:Depends on: (none)
+:Blocks: (none)
+:Related: 039 -- the same ``post`` handler
+    017 -- neither is covered by a browser test
 :Decision: undecided
 :Resolution: (none yet)
 

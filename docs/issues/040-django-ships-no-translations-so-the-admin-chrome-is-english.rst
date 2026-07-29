@@ -8,6 +8,9 @@ Issue 040: Django ships no translations, so the admin chrome is English
 :Reported: 2026-07-28
 :Source: Dashboard walkthrough, branch ``dashboard-usability``
 :Evidence: (none -- the suite asserts on the project's own strings, which do translate)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 036 -- option 3 is to wait for the upgrade to retire Django 1.5
 :Decision: undecided
 :Resolution: (none yet)
 
