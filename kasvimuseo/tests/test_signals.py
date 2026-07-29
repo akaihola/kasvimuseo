@@ -35,14 +35,69 @@ def test_photo_attaches_itself_to_matching_species(photo_factory):
 
 
 @pytest.mark.django_db
-def test_photo_does_not_overwrite_an_existing_species_photo(photo_factory):
+def test_photo_replaces_an_existing_species_photo(photo_factory):
+    """Deliberately the opposite of what this test used to assert.
+
+    Until issue 042 the lookup carried ``photo__isnull=True``, so the first
+    photo uploaded for a species won permanently and every later one was
+    ignored -- and since this receiver is the only place ``Species.photo`` is
+    ever set, that made the picture unchangeable without a Django shell. The
+    photo saved last now wins.
+    """
     species = create_species(name_fi='valkonarsissi')
     first = photo_factory(title='valkonarsissi kukassa')
     assert models.Species.objects.get(pk=species.pk).photo == first
 
-    photo_factory(title='valkonarsissi lehdet')
+    second = photo_factory(title='valkonarsissi lehdet')
 
-    assert models.Species.objects.get(pk=species.pk).photo == first
+    assert models.Species.objects.get(pk=species.pk).photo == second
+
+
+@pytest.mark.django_db
+def test_a_better_photo_uploaded_later_replaces_the_first_one(photo_factory):
+    """The case as it was reported, with the names it was reported under.
+
+    ``Sammalleimu`` had the photograph taken at Airila; a new one taken at
+    Tottila was uploaded and titled after the species, and the species list
+    went on showing the Airila one. Nothing was ambiguous -- the species simply
+    already had a photo, so the lookup matched nothing at all.
+    """
+    species = create_species(name_fi='sammalleimu', genus='Lysimachia')
+    airila = photo_factory(title='Sammalleimu Airila 19',
+                           filename='Sammalleimu. Airila.19')
+    assert models.Species.objects.get(pk=species.pk).photo == airila
+
+    tottila = photo_factory(title='Sammalleimu Tottila 19',
+                            filename='Sammalleimu Tottila 19')
+
+    assert models.Species.objects.get(pk=species.pk).photo == tottila
+
+
+@pytest.mark.django_db
+def test_a_replacement_goes_to_the_right_one_of_two_namesakes(photo_factory):
+    """The one duplicate ``name_fi`` the production data actually has.
+
+    Two ``tarhakurjenmiekka``, and both already have a photo -- so once issue
+    042 stopped ``photo__isnull=True`` narrowing the candidates, every photo
+    titled after them is ambiguous and 002's disambiguation has to earn its
+    keep. Both of their existing photographs are named after the house they
+    were taken at, which is what tells them apart.
+    """
+    kurala = create_species(name_fi='tarhakurjenmiekka', genus='Iris')
+    peltomaki = create_species(name_fi='tarhakurjenmiekka', genus='Iris',
+                               species="'Cracchus'")
+    for species, house in ((kurala, 'Kurala'), (peltomaki, 'Peltomäki')):
+        create_observation(species=species,
+                           origin=create_location(name=house))
+        species.photo = photo_factory(title='vanha kuva {0}'.format(house),
+                                      filename='vanha-{0}'.format(house))
+        species.save()
+
+    photo = photo_factory(title='Tarhakurjenmiekka Kurala 02',
+                          filename='Tarhakurjenmiekka.Kurala.183')
+
+    assert models.Species.objects.get(pk=kurala.pk).photo == photo
+    assert models.Species.objects.get(pk=peltomaki.pk).photo != photo
 
 
 @pytest.mark.django_db

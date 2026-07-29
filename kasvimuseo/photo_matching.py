@@ -15,10 +15,11 @@ standing in the garden, applied as a cascade:
 4. of the survivors, the one whose living plantings were cared for most
    recently;
 5. of the survivors, the one whose own names -- and the names of the places its
-   observations come from -- best match the photo's file name.
+   observations come from -- best match the photo's file name;
+6. failing all that, the one that has no photo yet.
 
 Steps 1 to 3 are filters, and a filter that would leave nothing is skipped
-rather than applied: absent evidence is not evidence against. Steps 4 and 5
+rather than applied: absent evidence is not evidence against. Steps 4 to 6
 rank, and the first of them that separates the field decides.
 
 The last step attaches a photo on a resemblance, so it can be wrong where the
@@ -171,7 +172,8 @@ def disambiguate(candidates, filename):
     if len(survivors) == 1:
         return survivors[0]
     return (_most_recently_cared(candidates.model, survivors)
-            or _most_similar(survivors, filename_targets(filename)))
+            or _most_similar(survivors, filename_targets(filename))
+            or _the_one_still_without_a_photo(survivors))
 
 
 def _narrowed(queryset, lookup):
@@ -207,6 +209,19 @@ def _most_recently_cared(model, survivors):
     latest = max(date for date, _species in cared)
     winners = [species for date, species in cared if date == latest]
     return winners[0] if len(winners) == 1 else None
+
+
+def _the_one_still_without_a_photo(survivors):
+    """The last resort: the namesake that has no photo yet.
+
+    Since issue 042 a photo replaces the one a species already has, so having
+    one is no longer a reason to be passed over -- but when nothing else
+    separates two namesakes, the one with an empty slot is the better guess,
+    and it keeps the behaviour that was there before 042 for the case that used
+    to be the only one this receiver could reach.
+    """
+    photoless = [species for species in survivors if species.photo_id is None]
+    return photoless[0] if len(photoless) == 1 else None
 
 
 def _most_similar(survivors, targets):
