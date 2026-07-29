@@ -93,8 +93,9 @@ proposes wants a decision before it is made.
 **043-047** were reported by the maintainer rather than found by a piece of
 work, and were split out of ``incoming.rst``. They are the only ones written
 from somebody using the application, so they arrived as symptoms; the detail
-that placed them -- browser, device, which models -- came from asking. 044 is
-still not reproducible even with it.
+that placed them -- browser, device, which models, and finally a copy of the
+delivered page -- came from asking. 044's cause was only visible in that last
+one, and it is not in the application.
 
 From the test coverage work
 ---------------------------
@@ -220,7 +221,7 @@ Reported by the maintainer
   ID Severity Area                    Title
 ==== ======== ======================= ==================================================
  043 Low      admin / photos          The photo changelist cannot be sorted by name
- 044 High     admin / grappelli       Save buttons missing on three change forms
+ 044 High     dev environment         Large admin pages truncated for a remote browser
  045 Medium   templates / mobile      The label editor is unusable on an iPad
  046 Low      templates / labels UI   The label editor opens at print size
  047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
@@ -237,10 +238,10 @@ is the only one on this page with a ruling already recorded -- 50 % on screen,
 print unaffected -- and 047 needs one more, which printer glyph to draw. 045
 has its scope: the admin works on the tablet, so the work is the label editor
 and printing, and its large half is a drag-and-drop rewrite that should wait
-for 017. 044 is the one that is stuck: three models cannot be edited in the
-reporter's Firefox, Grappelli renders the bar unconditionally, and it does not
-reproduce in either engine on the production data -- so it lists four checks to
-run in the browser that shows it.
+for 017. 044 turned out not to be an admin issue at all: the pages it names are
+cut off mid-response before the submit row is reached, and the boundary is a
+size, not a model. It is filed under the dev environment and is the one item on
+this page that stops the maintainer working today.
 
 
 Already fixed
