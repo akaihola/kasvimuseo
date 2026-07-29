@@ -340,6 +340,35 @@ def test_planted_observation_404s_for_an_unknown_external_id(client):
 
 
 @pytest.mark.django_db
+def test_planted_observation_404s_when_no_observation_carries_the_number(client):
+    """An unknown number still 404s once other observations exist."""
+    create_planted(name_fi='valkonarsissi', external_id=42)
+
+    response = client.get(reverse('planted-observation', args=[43]))
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_planted_observation_renders_the_first_of_a_duplicated_number(client):
+    """A shared museum number is a page, not a 500; see docs/issues/041."""
+    first = create_planted(name_fi='valkonarsissi', external_id=147)
+    second = create_planted(name_fi='ahdekaunokki', external_id=147)
+    assert first.observation_id < second.observation_id
+
+    responses = [client.get(reverse('planted-observation', args=[147]))
+                 for _ in range(2)]
+
+    # Deterministically the lower primary key, on every request: the view
+    # orders explicitly rather than leaving it to the database.
+    assert [response.status_code for response in responses] == [200, 200]
+    assert [response.context['observation'].pk for response in responses] == [
+        first.observation_id, first.observation_id]
+    assert [response.context['species'].name_fi for response in responses] == [
+        'valkonarsissi', 'valkonarsissi']
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize('history,stories,expected', [
     ('', '', []),
     ('kasvatettu 1920', '', ['kasvatettu 1920']),
