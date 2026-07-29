@@ -277,6 +277,34 @@ def test_photologue_urls_are_wired(client, db):
     assert reverse('pl-gallery-archive').startswith('/photologue/')
 
 
+def test_photologue_gallery_index_renders_on_an_empty_database(client, db):
+    """Photologue's own gallery index is a date archive with ``allow_empty`` off.
+
+    Photologue's own route raises ``Http404`` while no gallery exists, so the
+    link the admin dashboard carries answered 404 on the database
+    ``dev/kasvimuseo db bootstrap`` builds. ``ylaneenkasvit.urls`` declares the
+    same path and the same URL name ahead of the include with
+    ``allow_empty=True``, so it renders an empty list instead.
+    """
+    with override_settings(DEBUG=False):
+        response = client.get(reverse('pl-gallery-archive'))
+
+    assert reverse('pl-gallery-archive') == '/photologue/gallery/'
+    assert response.status_code == 200
+    assert list(response.context['latest']) == []
+
+
+def test_photologue_gallery_index_lists_a_gallery(client, db):
+    """The override changes nothing but the empty case."""
+    gallery = Gallery.objects.create(title='Kesä 2012', title_slug='kesa-2012')
+
+    response = client.get(reverse('pl-gallery-archive'))
+
+    assert response.status_code == 200
+    assert list(response.context['latest']) == [gallery]
+    assert gallery.title in content(response)
+
+
 def test_grappelli_urls_are_wired(admin_client):
     plot = add_plot_through_the_admin(admin_client)
     url = reverse('grp_related_lookup')
