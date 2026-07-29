@@ -45,8 +45,9 @@ How this is ranked
   plainly not doing what it was written to do, and the repair does not need a
   product decision, it goes first regardless of severity label.
 * **A bug whose fix needs a ruling is ranked by whether a safe interim exists.**
-  Issue 041 crashes today and has an option that stops the crash without
-  settling the underlying question, so it is early. Issue 001 changes what the
+  Issue 041 crashed on live data and had an option that stops the crash without
+  settling the underlying question, so it was early, and that option is what it
+  got. Issue 001 changes what the
   public site lists either way, so it waits for the maintainer.
 * **Cheap deletions are cheap, but they buy nothing on their own.** They sit
   behind everything user-visible, and ahead of the upgrade, which is the work
@@ -90,9 +91,10 @@ Each is reachable today, each has a fix that needs no product decision.
    009: The ``Create Species Sheets`` action 500s on a species with no
       ``external_id``, which the production data has. **Fixed**: those species are
       skipped and named in an admin message.
-   041: Eight of 311 observation pages 500 on a link that this repository has
-      just made reachable. Option 1 stops the crash without waiting for the
-      ruling on what a duplicate number means.
+   041: Eight of 311 observation pages 500'd on a link that this repository had
+      just made reachable. **Fixed as far as the crash goes**: option 1, the
+      first match by primary key. The ruling on what a duplicate number means
+      is still owed.
    008: A 500 on a fresh database, so it is the first thing a new developer
       meets and the first thing CI would hit (018).
 
@@ -107,8 +109,8 @@ Small, self-contained, each visible to a visitor or to the gardeners.
    005: The species-list search box is switched off by an ``X`` prefix on four
       attributes. The feature was built and then disabled; turning it back on
       is a four-character edit.
-   007: An unknown species id renders a blank page instead of 404. Same family
-      as 041, and cheapest done alongside it.
+   007: An unknown species id rendered a blank page instead of 404. **Fixed**:
+      same family as 041, and it was done alongside it.
    040: Half the admin chrome is English on a Finnish-only application, on the
       page it opens on. One line per image definition -- but it changes how
       the application is built, which is why it is here rather than in group
