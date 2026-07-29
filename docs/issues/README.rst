@@ -336,6 +336,13 @@ every request
 ``media_root`` test fixture did not actually   1e3f7fb
 redirect file storage, so uploads leaked
 between tests
+``PhotoForm.clean()`` did not call             01db2fc
+``super()``, and ``BaseModelForm.clean()``
+is what switches ``validate_unique()`` on,
+so a photo whose title was already taken
+reached PostgreSQL: a 500 on the upload,
+with the image file already written and no
+row pointing at it
 ============================================= =========
 
 
