@@ -129,18 +129,25 @@ db_restore() {
 }
 
 # The printable and compact species views make Django open the image files to
-# read their dimensions, so a production MEDIA_URL is not enough for those. The
-# media host serves the photos publicly, so fetch exactly the ones the database
-# references. Python 2 code, so it runs in the app container, not on the host.
+# read their dimensions, which no URL can satisfy. The media host serves the
+# photos publicly, so fetch exactly the ones the database references. Python 2
+# code, so it runs in the app container, not on the host.
+#
+# The host to fetch from is MEDIA_FALLBACK_URL, not MEDIA_URL: since issue 048
+# the development MEDIA_URL is this server's own /media/, and fetching from
+# there would ask the dev server for the files it is being given.
 media_fetch() {
     with_db app_run_container "" python -c '
-import os, urllib, urllib2
+import os, sys, urllib, urllib2
 from django.conf import settings
 from photologue.models import Photo
 
-base = settings.MEDIA_URL
+base = settings.MEDIA_FALLBACK_URL or settings.MEDIA_URL
 if base.startswith("//"):
     base = "https:" + base
+if "://" not in base:
+    sys.exit("Neither MEDIA_FALLBACK_URL nor MEDIA_URL names a host to fetch "
+             "from; both are local to this installation.")
 fetched = failed = present = 0
 for name in Photo.objects.values_list("image", flat=True).order_by("image"):
     destination = os.path.join(settings.MEDIA_ROOT, name)
@@ -171,11 +178,23 @@ TEST_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
 # local_settings.py is untracked, so a fresh clone has none, and the app would
 # silently fall back to production's static URL and ignore the database
 # environment variables below.
+#
+# A copy made before a change to the template keeps its old contents forever,
+# since nothing here overwrites an existing one; MEDIA_FALLBACK_URL is the
+# newest setting the template gained, so say so rather than serve photos from
+# production and let it be rediscovered (issue 048).
 ensure_local_settings() {
     local settings=$REPO/ylaneenkasvit/local_settings.py
-    [ -f "$settings" ] && return
-    cp "$REPO/ylaneenkasvit/local_settings.development.py" "$settings"
-    echo "Created ylaneenkasvit/local_settings.py from local_settings.development.py" >&2
+    if [ ! -f "$settings" ]; then
+        cp "$REPO/ylaneenkasvit/local_settings.development.py" "$settings"
+        echo "Created ylaneenkasvit/local_settings.py from local_settings.development.py" >&2
+        return
+    fi
+    if ! grep -q MEDIA_FALLBACK_URL "$settings"; then
+        echo "Note: your ylaneenkasvit/local_settings.py predates MEDIA_FALLBACK_URL," >&2
+        echo "so photos are still loaded from the production media host. Copy the" >&2
+        echo "MEDIA_* lines from ylaneenkasvit/local_settings.development.py." >&2
+    fi
 }
 
 app_run_container() {

@@ -59,13 +59,18 @@ type removed in PostgreSQL 12. Both are reported as they are skipped.
 Local settings live in ``ylaneenkasvit/local_settings.py``. It is untracked, so
 ``dev/kasvimuseo`` copies it from ``local_settings.development.py`` the first
 time it runs the app; edit your copy freely. Without it the app falls back to
-production's static URL and ignores the database environment variables.
+production's static URL and ignores the database environment variables. A copy
+made earlier is never overwritten, so when the template gains a setting, add it
+by hand -- ``dev/kasvimuseo`` says so for the newest one, ``MEDIA_FALLBACK_URL``.
 
-Photos are loaded straight from ``media.kasvit.ambitone.com``, so the species
-list, the planting labels and the admin need no local media. The printable and
-compact species views do: Django opens the image files to read their
-dimensions, and raises ``IOError`` if they are missing. Download exactly the
-photos the database references -- no SSH needed, the media host is public::
+Photos are served by this server, under ``/media/``, and the ones this machine
+does not have are redirected to ``media.kasvit.ambitone.com``. So a fresh clone
+shows every photo the database references without downloading anything, and a
+photo uploaded here is served from here rather than 404ing on a host that never
+saw it. The printable and compact species views need the actual files, though:
+Django opens them to read their dimensions, and raises ``IOError`` if they are
+missing. Download exactly the photos the database references -- no SSH needed,
+the media host is public::
 
     $ dev/kasvimuseo media fetch
 

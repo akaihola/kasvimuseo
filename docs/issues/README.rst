@@ -101,20 +101,21 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 004, 005, 007, 008, 009, 040, 041 and 043 are open: each one either
+All but 004, 005, 007, 008, 009, 040, 041, 043 and 048 are open: each one either
 changes behaviour that is visible in production, deletes code, or commits to a
 piece of work, so each wants a decision first. Seven of the exceptions --
 restoring an action that crashes, two missing lookup guards, an archive view
 that refused to render an empty list, a missing sort link the maintainer asked
 to have done rather than ruled on, a placeholder image, and a search box
 switched off by a typo -- needed no ruling, and stay in the tables with
-``Status: Fixed``. 040 did need one, between its three options, and was ruled
-and fixed; its file carries the reasoning. 041 is fixed only as far as its crash
-goes: the product question inside it is still open, which is why its ``Status``
-says so. 004 and 005 arrived with options that looked like questions and were
-not: in both, ``git log`` showed the defect was left-behind scaffolding rather
-than a decision anybody had made, so the ``Decision`` on each records what the
-history settled rather than a ruling the maintainer still owed.
+``Status: Fixed``. 040 and 048 did need one -- 040 between its three options,
+048 between three shapes of a deliberate design change -- and both were ruled
+and fixed the same day; their files carry the reasoning. 041 is fixed only as
+far as its crash goes: the product question inside it is still open, which is
+why its ``Status`` says so. 004 and 005 arrived with options that looked like
+questions and were not: in both, ``git log`` showed the defect was left-behind
+scaffolding rather than a decision anybody had made, so the ``Decision`` on each
+records what the history settled rather than a ruling the maintainer still owed.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
@@ -277,10 +278,12 @@ Reported by the maintainer
  045 Medium   templates / mobile      The label editor is unusable on an iPad
  046 Low      templates / labels UI   The label editor opens at print size
  047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
+ 048 Medium   dev environment / media Dev photos were loaded from the production host
 ==== ======== ======================= ==================================================
 
-Split out of ``incoming.rst``, where they were written down as they were
-noticed. Unlike the rest of this register they describe symptoms rather than
+043-047 were split out of ``incoming.rst``, where they were written down as
+they were noticed; 048 was reported straight into a task and never passed
+through it. Unlike the rest of this register they describe symptoms rather than
 causes, so each says how far the cause was traced, and each was taken back to
 the reporter once for the detail that could only come from the machine it
 happens on.
@@ -295,7 +298,12 @@ and printing, and its large half is a drag-and-drop rewrite that should wait
 for 017. 044 turned out not to be an admin issue at all: the pages it names are
 cut off mid-response before the submit row is reached, and the boundary is a
 size, not a model. It is filed under the dev environment and is the one item on
-this page that stops the maintainer working today.
+this page that stops the maintainer working today. 048 is from the same pair of
+machines and was the odd one out here: its cause was fully known and nothing in
+it was a defect -- the development settings named the production media host on
+purpose -- so what it asked for was a ruling on a design, not a repair. It got
+one the day it was filed, and is **fixed**: the development server serves the
+photos it has and redirects the rest to that host.
 
 
 Already fixed
