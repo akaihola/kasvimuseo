@@ -101,11 +101,12 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 007, 008, 009, 040 and 041 are open: each one either changes behaviour
-that is visible in production, deletes code, or commits to a piece of work, so
-each wants a decision first. Four of the exceptions -- restoring an action that
-crashes, two missing lookup guards, and an archive view that refused to render
-an empty list -- needed no ruling, and stay in the tables with ``Status:
+All but 007, 008, 009, 040, 041 and 043 are open: each one either changes
+behaviour that is visible in production, deletes code, or commits to a piece of
+work, so each wants a decision first. Five of the exceptions -- restoring an
+action that crashes, two missing lookup guards, an archive view that refused to
+render an empty list, and a missing sort link the maintainer asked to have done
+rather than ruled on -- needed no ruling, and stay in the tables with ``Status:
 Fixed``. 040 did need one, between its three options, and was ruled and fixed;
 its file carries the reasoning. 041 is fixed only as far as its crash goes: the
 product question inside it is still open, which is why its ``Status`` says so.
@@ -279,7 +280,9 @@ causes, so each says how far the cause was traced, and each was taken back to
 the reporter once for the detail that could only come from the machine it
 happens on.
 
-043 is ready to be done: the cause is known and the fix is one attribute. 046
+043 is fixed: it was one attribute, ``admin_order_field``, and the work was the
+two sub-decisions around it -- which collation the databases sort under, and
+that the ordering assumes one photo directory. 046
 and 047 have their rulings recorded -- 50 % on screen with print unaffected,
 and an inline SVG printer whose label toggles the checkbox. 045
 has its scope: the admin works on the tablet, so the work is the label editor
