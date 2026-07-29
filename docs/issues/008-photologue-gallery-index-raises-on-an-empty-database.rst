@@ -3,6 +3,7 @@ Issue 008: Photologue gallery index raises on an empty database
 ===============================================================
 
 :Status: Open
+:Claimed: branch ``feature/fix-issue-008-photol-0ci``
 :Severity: Medium
 :Area: urls / third party
 :Reported: 2026-07-28

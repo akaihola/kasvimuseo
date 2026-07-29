@@ -3,6 +3,7 @@ Issue 044: Large admin pages are truncated for a remote browser
 =================================================================
 
 :Status: Accepted
+:Claimed: its own task, since 2026-07-29 (see ``incoming.rst``)
 :Severity: High
 :Area: dev environment / serving
 :Reported: 2026-07-29
