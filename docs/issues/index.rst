@@ -95,8 +95,10 @@ Each is reachable today, each has a fix that needs no product decision.
       just made reachable. **Fixed as far as the crash goes**: option 1, the
       first match by primary key. The ruling on what a duplicate number means
       is still owed.
-   008: A 500 on a fresh database, so it is the first thing a new developer
-      meets and the first thing CI would hit (018).
+   008: A dead gallery index on a fresh database, so it was the first thing a
+      new developer met and the first thing CI would have hit (018).
+      **Fixed**: the route is overridden with ``allow_empty=True``, and it
+      answered 404 rather than the 500 reported here.
 
 3. Visibly broken pages
 -----------------------
