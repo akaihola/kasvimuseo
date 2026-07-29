@@ -648,6 +648,15 @@ add_introspection_rules([], ["^photologue\.models\.TagField"])
 
 
 def autoconnect_photo_to_species(sender, instance, **kwargs):
+    """Attach a newly saved ``Photo`` to the species its title names.
+
+    The receiver must be total: it runs on every save of a ``Photo``, and it
+    used to run on every save of every model, so anything it cannot do it has
+    to skip rather than raise. ``Species.name_fi`` carries no unique
+    constraint, so the lookup can match more than one photoless species; an
+    ambiguous match is skipped, because guessing between them would silently
+    attach the photo to the wrong species.
+    """
     if sender != Photo:
         return
     title_parts = instance.title.split()
@@ -657,7 +666,7 @@ def autoconnect_photo_to_species(sender, instance, **kwargs):
     try:
         species = Species.objects.get(name_fi=species_name,
                                       photo__isnull=True)
-    except Species.DoesNotExist:
+    except (Species.DoesNotExist, Species.MultipleObjectsReturned):
         pass
     else:
         species.photo = instance
@@ -665,4 +674,9 @@ def autoconnect_photo_to_species(sender, instance, **kwargs):
     return instance
 
 
-models.signals.post_save.connect(autoconnect_photo_to_species)
+# Connected for ``Photo`` alone rather than for every model. The ``sender !=
+# Photo`` guard above already made every other sender a no-op, so this changes
+# no behaviour -- it only stops the receiver being called at all on saves it
+# has nothing to do with. The guard stays, so the function is still safe to
+# call directly and to reconnect more widely.
+models.signals.post_save.connect(autoconnect_photo_to_species, sender=Photo)
