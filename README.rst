@@ -87,7 +87,9 @@ API reference generated from the source. Build it into ``.dev/docs/html/``::
 
 The build treats warnings as errors, so a malformed page or a document nothing
 links to makes it exit non-zero -- while still writing the HTML, so the docs
-stay current either way. Two reasons to use ``--clean``: an incremental build
+stay current either way. It also generates ``docs/issues/next.rst``, the queue
+of what is ready to work on, from the issue files' own metadata, and fails on a
+field or a ranking that does not add up; see ``docs/issues/README.rst``. Two reasons to use ``--clean``: an incremental build
 re-reads only what changed, so it cannot report a problem in a file nobody
 touched, and Sphinx never deletes a page whose source has gone::
 

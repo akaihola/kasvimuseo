@@ -74,6 +74,11 @@ is the umbrella issue, :doc:`upgrade-plan` is the twenty-stage route out of it,
 and :doc:`issues/index` is everything else known to be wrong, one file per
 problem, each with a status.
 
+To pick up work rather than read about it, start at
+:doc:`issues/next`: the ranked queue of what is actionable today, generated
+from those statuses, with the few facts about branch, tests and documentation
+build that a fresh session needs.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents
