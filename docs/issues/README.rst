@@ -234,8 +234,8 @@ the reporter once for the detail that could only come from the machine it
 happens on.
 
 043 is ready to be done: the cause is known and the fix is one attribute. 046
-is the only one on this page with a ruling already recorded -- 50 % on screen,
-print unaffected -- and 047 needs one more, which printer glyph to draw. 045
+and 047 have their rulings recorded -- 50 % on screen with print unaffected,
+and an inline SVG printer whose label toggles the checkbox. 045
 has its scope: the admin works on the tablet, so the work is the label editor
 and printing, and its large half is a drag-and-drop rewrite that should wait
 for 017. 044 turned out not to be an admin issue at all: the pages it names are

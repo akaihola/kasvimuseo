@@ -102,8 +102,10 @@ The work, in two halves
 2. A print button on the label editor and on the species sheets, hidden in
    ``@media print``.
 3. Make the print toggle visible without a hover -- drop the ``opacity: 0``, or
-   reveal it on ``:focus-within`` as well. This overlaps issue 047, which is
-   already changing that markup.
+   reveal it on ``:focus-within`` as well. Take issue 047 first: it is already
+   changing that markup, and that hover is the only thing keeping the control
+   off the printed sheet, so 047 adds ``.remove`` to the ``@media print`` hide
+   list before this step removes the accident it relies on.
 4. Issue 046's screen zoom, which is what actually makes the sheet readable
    across the screen.
 
