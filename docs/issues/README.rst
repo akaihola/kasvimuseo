@@ -101,22 +101,25 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 004, 005, 007, 008, 009, 040, 041, 043 and 048 are open: each one
-either changes behaviour that is visible in production, deletes code, or commits
-to a piece of work, so each wants a decision first. Eight of the exceptions --
-restoring an action that crashes, two missing lookup guards, an archive view
-that refused to render an empty list, a missing sort link the maintainer asked
-to have done rather than ruled on, a placeholder image, a search box switched
-off by a typo, and a receiver that could raise on any save -- needed no ruling,
-and stay in the tables with ``Status: Fixed``. 040 and 048 did need one -- 040
-between its three options, 048 between three shapes of a deliberate design
-change -- and both were ruled and fixed the same day; their files carry the
-reasoning. 041 is fixed only as
-far as its crash goes: the product question inside it is still open, which is
-why its ``Status`` says so. 004 and 005 arrived with options that looked like
-questions and were not: in both, ``git log`` showed the defect was left-behind
-scaffolding rather than a decision anybody had made, so the ``Decision`` on each
-records what the history settled rather than a ruling the maintainer still owed.
+All but 002, 004, 005, 007, 008, 009, 040, 041, 042, 043 and 048 are open: each
+one either changes behaviour that is visible in production, deletes code, or
+commits to a piece of work, so each wants a decision first. Eight of the
+exceptions -- restoring an action that crashes, two missing lookup guards, an
+archive view that refused to render an empty list, a missing sort link the
+maintainer asked to have done rather than ruled on, a placeholder image, a
+search box switched off by a typo, and a receiver that could raise on any save
+-- needed no ruling, and stay in the tables with ``Status: Fixed``. 040 and 048
+did need one -- 040 between its three options, 048 between three shapes of a
+deliberate design change -- and both were ruled and fixed the same day; their
+files carry the reasoning. 042 needed one too, and got it when the defect it
+describes was reported from the garden a second time, as a species photo that
+would not change; it is the reason 002 had to be fixed first, and the two are
+``Fixed`` together. 041 is fixed only as far as its crash goes: the product
+question inside it is still open, which is why its ``Status`` says so. 004 and
+005 arrived with options that looked like questions and were not: in both, ``git
+log`` showed the defect was left-behind scaffolding rather than a decision
+anybody had made, so the ``Decision`` on each records what the history settled
+rather than a ruling the maintainer still owed.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
@@ -230,8 +233,9 @@ Read together with 002 and 003, which concern the same auto-attach signal: if
 that behaviour changes, the instructions asked for here change with it. 039 is
 the reason 037 has nothing honest to say about choosing a photo: the one control
 that looks like it chooses one writes a value the application never reads. 042
-is the capability behind 037's missing instructions, and it arrived as a plan
-for a one-line fix whose side effects are the part that wants deciding.
+is the capability behind 037's missing instructions; it is now ``Fixed``, which
+means 037 has something to describe and one new sentence it must not leave out
+-- every save re-attaches, so the workflow is "save the one you want last".
 
 
 From the documentation work
@@ -243,8 +247,9 @@ From the documentation work
  038 Low      documentation / tooling The repository has no rendered documentation
 ==== ======== ======================= ==================================================
 
-**038** is the only issue on this page being acted on rather than waiting for a
-decision: it carries the design of the Sphinx build in ``docs/``, including
+**038** is the one issue on this page that was being acted on rather than
+waiting for a decision when it was filed: it carries the design of the Sphinx
+build in ``docs/``, including
 which of its workarounds fall away at which stage of ``docs/upgrade-plan.rst``.
 
 
