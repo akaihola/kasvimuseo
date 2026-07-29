@@ -25,6 +25,20 @@ Metadata fields
     ``Rejected`` -- decided against; put the reasoning in ``Resolution``.
     ``Deferred`` -- real, but not now.
 
+``Claimed`` (optional)
+    Names the branch, worktree or task that has this issue in hand right now,
+    so nobody starts it twice. Written just after ``Status``, and **deleted by
+    the change that resolves the issue**, in the same commit that sets
+    ``Status: Fixed``. It is the only optional field; every other one is always
+    present.
+
+    ``Status: In progress`` is not a substitute, which is why this exists.
+    A branch is claimed the moment it is cut, while the issue is still
+    ``Accepted`` and the maintainer has not yet agreed it is being worked --
+    044 was in exactly that state -- and a status set on a branch is invisible
+    on ``master``, where the next person looks. ``In progress`` also cannot say
+    *where* the work is, which is the one thing that stops the duplicate.
+
 ``Severity``
     ``High`` / ``Medium`` / ``Low``. Judged by user-visible impact, not by how
     hard it is to fix.
@@ -61,6 +75,29 @@ Metadata fields
     Commit, or the reason for rejecting.
 
 
+What the build checks
+=====================
+
+These fields are read by machine as well as by people: :doc:`next` -- the queue
+of what is ready to work on -- is generated from them every time the
+documentation is built, and so is each ranking table in :doc:`index`. Nothing
+about a status is written down twice, so nothing about a status can drift.
+
+``dev/kasvimuseo docs`` fails, rather than rendering something stale, when
+
+* a field above is missing, empty, given twice, or spelled in a way this page
+  does not define,
+* ``Status`` or ``Severity`` carries a value that is not in the lists above,
+* an issue file is missing from :doc:`index`'s suggested order, or appears in
+  it twice -- the promise that "every issue appears exactly once" is enforced
+  rather than hoped for,
+* that order names an issue with no file.
+
+The parser is ``docs/_ext/issue_register.py`` and the directives are in
+``docs/_ext/sphinx_issue_register.py``; both are covered by
+``kasvimuseo/tests/test_issue_register.py``.
+
+
 Open issues
 ===========
 
@@ -71,7 +108,8 @@ no ruling -- and stays in the table with ``Status: Fixed``.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
-order of implementation" in :doc:`index`.
+order of implementation" in :doc:`index` -- or :doc:`next`, which is that order
+with the statuses folded in and everything unactionable taken out.
 
 They come from six pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current

@@ -7,6 +7,13 @@ container, and nothing here imports the application. See
 ``docs/upgrade-plan.rst`` at which each workaround can be dropped.
 """
 
+import os
+import sys
+
+# The issue-register extension lives beside this file rather than in a package:
+# nothing installs it, and docs/issues/next.rst is the only thing that uses it.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '_ext'))
+
 project = 'Kasvimuseo'
 copyright = 'Antti Kaihola'
 author = 'Antti Kaihola'
@@ -19,6 +26,10 @@ extensions = [
     # appear. Nothing warns about this.
     'sphinx.ext.viewcode',
     'autoapi.extension',
+    # Builds docs/issues/next.rst and the ranking tables in docs/issues/index.rst
+    # from the issue files' own docinfo fields, and fails the build when the
+    # ranking and the files disagree. See docs/_ext/issue_register.py.
+    'sphinx_issue_register',
 ]
 
 exclude_patterns = ['_build']
