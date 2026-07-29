@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.conf.urls.defaults import include, patterns, url
 from django.contrib import admin
 from django.http import HttpResponseRedirect
 from photologue.views import GalleryArchiveIndexView
 import grappelli
 import os
+import re
 
 admin.autodiscover()
 
@@ -34,3 +36,18 @@ urlpatterns = patterns(
 
     (r'^$', lambda request: HttpResponseRedirect('/admin/')),
 )
+
+# Uploaded photos, when this project is the one serving them: a single leading
+# slash means ``MEDIA_URL`` is a path here, as the development and test
+# settings have it. Production sets it to ``//media.kasvit.ambitone.com/``,
+# another host, and gets no route at all. ``ylaneenkasvit.media`` explains the
+# fallback the development case needs.
+if (settings.MEDIA_URL.startswith('/')
+        and not settings.MEDIA_URL.startswith('//')):
+    urlpatterns += patterns(
+        '',
+        url(r'^{0}(?P<path>.*)$'.format(
+                re.escape(settings.MEDIA_URL.lstrip('/'))),
+            'ylaneenkasvit.media.serve_media',
+            name='media'),
+    )
