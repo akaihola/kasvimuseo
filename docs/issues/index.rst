@@ -116,8 +116,10 @@ Small, self-contained, each visible to a visitor or to the gardeners.
               the drag preview's matching constant.
  047 Medium   The same page's print toggle is drawn with a character no
               Linux font carries, and its ``<label for>`` points at nothing,
-              so the symbol is both invisible and inert. Pick a printer and
-              fix the ``for`` in the same edit.
+              so the symbol is both invisible and inert. Ruled: an inline
+              SVG, with the checkbox wrapped in the label so clicking the
+              icon toggles it. Take it before 045 drops the hover, which is
+              what currently keeps it off the paper.
  045 Medium   The rest of the tablet work, now that its scope is settled:
               a viewport tag, a print button, and a toggle that does not
               need a hover. Its large half -- replacing drag-and-drop with

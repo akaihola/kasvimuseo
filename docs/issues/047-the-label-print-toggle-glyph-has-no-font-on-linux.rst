@@ -2,7 +2,7 @@
 Issue 047: The label print toggle uses a glyph no Linux font has
 ====================================================================
 
-:Status: Open
+:Status: Accepted
 :Severity: Medium
 :Area: templates / labels UI
 :Reported: 2026-07-29
@@ -14,7 +14,9 @@ Issue 047: The label print toggle uses a glyph no Linux font has
     045 -- the same control, hover-only, on a screen with no hover
     037 -- the instructions this control is missing from
     017 -- no browser test would notice either way
-:Decision: undecided
+:Decision: Ruled by the maintainer on 2026-07-29: an inline SVG printer, and
+    clicking it must toggle the checkbox. Option 2 below, with the ``<label>``
+    defect fixed in the same change rather than left as a follow-up.
 :Resolution: (none yet)
 
 Problem
@@ -63,19 +65,53 @@ Two further defects in the same three lines
   after a tap that was meant to do something else, because Safari fakes the
   hover on first touch.
 
-Options
+The fix
 =======
 
-1. Use ``&#x1f5a8;&#xfe0f;`` (``PRINTER`` with the emoji variation selector).
-   Covered by Noto Color Emoji on Linux, by Apple Color Emoji on macOS and iOS,
-   and by Segoe UI Emoji on Windows. It renders in colour, which is a visual
-   change but a legible one.
-2. Ship the icon rather than depend on the system: an inline SVG printer, which
-   is the only option that looks the same everywhere and the only one that can
-   be styled to match the rest of the page.
-3. Drop the symbol and use the Finnish word, which the user guide already uses.
+Ruled on 2026-07-29: **an inline SVG printer, and clicking it toggles the
+checkbox** -- option 2 below, with the ``<label>`` defect fixed in the same
+change.
 
-Whichever is chosen, fix the ``for`` attribute in the same change.
+Wrapping the checkbox in the ``<label>`` is what makes the click work, and it
+is also the only form of the fix that survives ``v-for``: an ``id`` would have
+to be made unique per label, while a wrapping label needs none::
+
+    '<div class="remove">' +
+    '    <label><svg viewBox="0 0 24 24" aria-hidden="true">…</svg>' +
+    '           <input type="checkbox" v-model="species.visible"></label>' +
+    '</div>'
+
+The Vue templates are single-quoted JavaScript strings, so an SVG's double
+quotes need no escaping. Draw the path with ``fill="currentColor"`` so it takes
+the colour of its surroundings, and set its size in CSS -- ``.remove svg { }``
+replacing the ``font-size: 30pt`` that sized the glyph.
+
+Two things to get right in the same change
+------------------------------------------
+
+**It must still not print.** Today the control is kept off the paper by
+accident: ``@media print`` hides ``form``, ``.hidden`` and ``button``, and the
+toggle is none of those -- it is invisible on paper only because
+``.remove { opacity: 0 }`` and there is no hover while printing. The moment
+that opacity goes, which is what issue 045 asks for so the control can be found
+on a touch screen, the printer icon starts appearing on every label. Add
+``.remove`` to the ``@media print`` hide list in this change, before the
+behaviour that depends on it changes.
+
+**Check it by printing.** No test can see this: the browser suite cannot run
+(issue 017), and the server-side tests assert the page's contract, not its
+glyphs. Verify by eye on Linux, and by printing one sheet to PDF to confirm the
+icon is absent from it.
+
+Rejected alternatives, recorded so they are not revisited
+---------------------------------------------------------
+
+1. ``&#x1f5a8;&#xfe0f;`` (``PRINTER`` with the emoji variation selector) --
+   covered by Noto Color Emoji on Linux, Apple Color Emoji on macOS and iOS,
+   Segoe UI Emoji on Windows. Would work, but renders in whatever colour the
+   system emoji font chooses, which cannot be styled to match the page.
+2. The Finnish word, which the user guide already uses. Cheapest, but it is a
+   wide piece of text in a corner that has room for a glyph.
 
 See also
 ========
