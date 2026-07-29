@@ -22,14 +22,19 @@ def modify(settings):
     settings['STATIC_ROOT'] = os.path.join(settings['PROJECT_ROOT'], 'static')
     settings['STATIC_URL'] = '/static/'
 
-    # Load media from production. Django still needs the image files locally to
-    # find out their dimensions, so get them with:
+    # Serve photos from this server, and fall back to the production media
+    # host for the ones this machine does not have -- so a fresh clone shows
+    # every photo without downloading 260 MB, while a photo uploaded here is
+    # the local file rather than a 404 from a host that never saw it.
+    #
+    # Two views still open the image files to read their dimensions, which no
+    # URL can satisfy, so for those:
     #
     #   $ dev/kasvimuseo media fetch
     #
     settings['MEDIA_ROOT'] = os.path.join(settings['PROJECT_ROOT'], 'media')
-    settings['MEDIA_URL'] = '//media.kasvit.ambitone.com/'
-    #MEDIA_URL = '/media/'
+    settings['MEDIA_URL'] = '/media/'
+    settings['MEDIA_FALLBACK_URL'] = 'https://media.kasvit.ambitone.com/'
 
     # The dev server is reached under whatever name the developer published it.
     settings['ALLOWED_HOSTS'] = ['*']

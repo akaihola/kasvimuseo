@@ -69,6 +69,14 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 #MEDIA_URL = 'http://MEDIA_URL/'
 #MEDIA_ROOT = os.path.join(SITE_ROOT, 'MEDIA_ROOT')
 
+# Where to send a request for a media file this installation does not have.
+# Only consulted when ``MEDIA_URL`` is a local path, which is what makes
+# ``ylaneenkasvit.media.serve_media`` a route at all; the development settings
+# point it at the production media host so a fresh clone shows photos it has
+# not downloaded. Empty means a missing file is a 404, which is what production
+# and the test suite want.
+MEDIA_FALLBACK_URL = ''
+
 GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
 DATE_FORMAT = 'Y-m-d'
 

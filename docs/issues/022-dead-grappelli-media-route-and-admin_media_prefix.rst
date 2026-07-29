@@ -10,7 +10,8 @@ Issue 022: Dead /media/grappelli/ route and ADMIN_MEDIA_PREFIX
 :Evidence: (none)
 :Depends on: (none)
 :Blocks: 036 -- Stage 0, and one of the three string-view routes Django 1.10 stops accepting
-:Related: (none)
+:Related: 048 -- since that fix, ``/media/`` is a live prefix in development,
+    and this dead route is declared ahead of the one serving it
 :Decision: undecided
 :Resolution: (none yet)
 

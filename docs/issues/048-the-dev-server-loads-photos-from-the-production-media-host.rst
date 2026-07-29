@@ -2,28 +2,35 @@
 Issue 048: The dev server loads photos from the production media host
 ======================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: Medium
 :Area: dev environment / media
 :Reported: 2026-07-29
 :Source: Maintainer report
-:Evidence: (none -- ``ylaneenkasvit/test_settings.py`` sets ``MEDIA_URL = '/media/'``, so no test sees the development value)
+:Evidence: ``kasvimuseo/tests/test_project_urls.py`` -- five tests over the route the fix adds, from ``test_media_serves_a_local_file`` onwards
 :Depends on: (none)
 :Blocks: (none)
 :Related: 044 -- the other dev-environment report, from the same machine pair
     011 -- the views that need the image files present locally, and the
     reason ``media fetch`` exists
-    028 -- the derived sizes, which are generated locally but addressed
+    028 -- the derived sizes, which are generated locally but were addressed
     remotely
     042 -- replacing a species photo, which is photo work done in development
-:Decision: undecided -- the current behaviour is deliberate (see "Why it is
-    like this"), so this is a request to change a design rather than a repair.
-    Which of the three options below is taken wants a ruling, and option 3
-    changes what ``dev/kasvimuseo media fetch`` has to be told.
-:Resolution: (none yet)
+    022 -- the dead ``/media/grappelli/`` route, now declared ahead of the one
+    that serves ``/media/``
+:Decision: Ruled on 2026-07-29: **option 3**, local first with the production
+    media host as the fallback. The current behaviour was deliberate (see "Why
+    it is like this"), so this was a design change rather than a repair.
+:Resolution: Fixed as ruled. ``MEDIA_URL`` is ``/media/`` in the development
+    settings, ``ylaneenkasvit.media.serve_media`` serves ``MEDIA_ROOT`` and
+    redirects what is not there to the new ``MEDIA_FALLBACK_URL``, and
+    ``media fetch`` fetches from that setting instead of from ``MEDIA_URL``.
+    See "How it was fixed" below.
 
 Problem
 =======
+
+As reported, and as the code was before "How it was fixed" below.
 
 ``dev/kasvimuseo app run`` on ``gogo``, browsed from another machine over the
 tailnet at ``http://gogo.crane-boa.ts.net:8000/photologue/photo/isoritarinkannus-123-tottila/``,
@@ -116,7 +123,7 @@ Options
    the fresh-clone experience alone -- but the developer has to know the switch
    exists, and a switch left in the wrong position is exactly the confusion
    reported here.
-3. **Local first, production as fallback.** Serve ``/media/`` from
+3. **Local first, production as fallback.** *(Chosen.)* Serve ``/media/`` from
    ``MEDIA_ROOT`` and, when the file is not there, redirect to
    ``https://media.kasvit.ambitone.com/`` + the same path. Everything the
    database already references keeps working with no download, uploads and
@@ -125,21 +132,73 @@ Options
    requiring ``media fetch`` first; it costs a small view, and it is one more
    thing that behaves differently from production.
 
-Traps for whoever takes it
-==========================
+How it was fixed
+================
 
-* **The commented-out line is dead.** ``#MEDIA_URL = '/media/'`` sits inside
-  ``def modify(settings)``. Uncommented, it assigns a local variable and
-  changes nothing -- every other line in that function writes into
-  ``settings[...]``. It reads like a one-character fix and is not one.
-* **``media fetch`` downloads from ``settings.MEDIA_URL``.** Options 1 and 3
-  take that away from it: it would start fetching from the dev server it is
-  meant to fill. The public host has to become its own constant in
-  ``dev/kasvimuseo`` first, in the same change.
-* **``README.rst`` states the current design** in the paragraph quoted above,
-  and ``local_settings.development.py`` states it in a comment. Both are part
-  of whichever option is taken.
-* **Production is untouched by all three.** ``ylaneenkasvit_settings.py`` keeps
-  ``MEDIA_URL = '//media.kasvit.ambitone.com/'``; only the development settings
-  and the URL configuration change, and the ``urls.py`` route must be inside a
-  ``if settings.DEBUG:`` guard so it cannot serve files on the real server.
+**The route exists when this installation is the one serving media**, which is
+what ``MEDIA_URL`` being a path rather than a host says. ``ylaneenkasvit/urls.py``
+appends it under exactly that condition::
+
+    if (settings.MEDIA_URL.startswith('/')
+            and not settings.MEDIA_URL.startswith('//')):
+
+Production keeps ``MEDIA_URL = '//media.kasvit.ambitone.com/'``, a host, so it
+gets no route and nothing about it changes. ``DEBUG`` was deliberately not used
+for this: the test settings run with ``DEBUG`` off, and tying the route to the
+setting that decides *who serves the files* is the more honest condition anyway.
+
+**The view is four lines**, in the new ``ylaneenkasvit/media.py``::
+
+    try:
+        return serve(request, path, document_root=settings.MEDIA_ROOT)
+    except Http404:
+        if not settings.MEDIA_FALLBACK_URL:
+            raise
+        return HttpResponseRedirect(
+            settings.MEDIA_FALLBACK_URL + urlquote(path))
+
+Leaning on ``django.views.static.serve`` rather than opening the file directly
+is what keeps the path sanitising -- it strips ``..`` before touching the disk
+-- and it is also what makes "not here" a single ``Http404`` to catch.
+
+**``MEDIA_FALLBACK_URL`` is a new setting**, defined empty in
+``common_settings.py`` and set to ``https://media.kasvit.ambitone.com/`` by
+``local_settings.development.py``. Empty means a missing file is a 404, which
+is what production and the test suite get. It is https, so the redirect is to
+the encrypted host even from a page served over plain http on the tailnet.
+
+**``media fetch`` reads ``MEDIA_FALLBACK_URL`` now.** It used to fetch from
+``MEDIA_URL``, which after this change is the dev server it is meant to be
+filling; it falls back to ``MEDIA_URL`` if the fallback is unset and exits with
+a message if neither names a host.
+
+**An existing ``local_settings.py`` is never overwritten**, so the developer
+who has one keeps the old ``MEDIA_URL`` and sees no change at all --
+``dev/kasvimuseo`` now says so when the file predates ``MEDIA_FALLBACK_URL``.
+That is the same trap as the one below, one level up.
+
+Confirmed against ``dev/kasvimuseo app run`` with the development settings: the
+photo detail page renders ``src="/media/photologue/photos/cache/..."``, that
+derived size and the original both answer 200 from the local files, and
+``/media/photologue/photos/IMG_2272_linkedin.jpeg`` -- the file from the report,
+which this machine does not have -- answers ``302`` to
+``https://media.kasvit.ambitone.com/photologue/photos/IMG_2272_linkedin.jpeg``.
+
+Traps found on the way
+======================
+
+* **The commented-out line was dead.** ``#MEDIA_URL = '/media/'`` sat inside
+  ``def modify(settings)``. Uncommented, it would have assigned a local
+  variable and changed nothing -- every other line in that function writes into
+  ``settings[...]``. It read like a one-character fix and was not one; it is
+  gone now.
+* **``README.rst`` stated the old design** in the paragraph quoted above, and
+  ``local_settings.development.py`` stated it in a comment. Both were rewritten
+  with the change.
+* **The 260 MB is still worth fetching** for the printable and compact species
+  reports, which open the files rather than linking them (issue 011). The
+  fallback cannot help those, which is why ``media fetch`` stays.
+* **``/media/grappelli/`` shadows the new route**, because issue 022's dead
+  route is declared first and matches that prefix. Nothing is lost -- no
+  ``grappelli/`` directory exists under ``MEDIA_ROOT`` either -- but it is one
+  more reason to delete it.

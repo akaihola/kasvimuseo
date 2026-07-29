@@ -8,6 +8,9 @@ are exercised through the test client rather than by calling the callables.
 
 from __future__ import unicode_literals
 
+import io
+import os
+
 import pytest
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission, User
@@ -15,6 +18,7 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from django.utils.translation import ugettext
 
+from kasvimuseo.tests.conftest import jpeg_bytes
 from kasvimuseo.models import Bed, Care, Contact, Location, Observation
 from kasvimuseo.models import Planting, Plot, Species
 from photologue.models import Gallery, Photo
@@ -324,3 +328,68 @@ def test_unknown_url_returns_404(client, db):
 
     assert response.status_code == 404
     assert '404 - Page not found' in content(response)
+
+
+# Issue 048: the development server serves its own uploaded media and asks the
+# production media host for what it does not have. The route only exists when
+# ``MEDIA_URL`` is a local path, which ``test_settings`` makes it, so these run
+# against the same wiring the development settings get.
+
+def test_media_serves_a_local_file(client, db, media_root):
+    with io.open(os.path.join(media_root, 'kukka.jpg'), 'wb') as image_file:
+        image_file.write(jpeg_bytes())
+
+    response = client.get('/media/kukka.jpg')
+
+    assert response.status_code == 200
+    assert response['Content-Type'] == 'image/jpeg'
+    assert b''.join(response.streaming_content) == jpeg_bytes()
+
+
+def test_media_serves_a_photologue_upload(client, db, photo_factory):
+    """The path a rendered page actually asks for, end to end."""
+    photo = photo_factory()
+
+    response = client.get(photo.image.url)
+
+    assert photo.image.url.startswith('/media/photologue/photos/')
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize('path, expected', [
+    ('photologue/photos/IMG_2272_linkedin.jpeg',
+     'https://media.example.com/photologue/photos/IMG_2272_linkedin.jpeg'),
+    # Photologue keeps the uploaded file name, spaces, umlauts and all.
+    ('photologue/photos/kevät kukassa.jpg',
+     'https://media.example.com/photologue/photos/'
+     'kev%C3%A4t%20kukassa.jpg'),
+])
+def test_media_redirects_a_missing_file_to_the_fallback_host(
+        client, db, media_root, path, expected):
+    with override_settings(MEDIA_FALLBACK_URL='https://media.example.com/'):
+        response = client.get('/media/' + path)
+
+    assert response.status_code == 302
+    assert response['Location'] == expected
+
+
+def test_media_404s_a_missing_file_without_a_fallback(client, db, media_root):
+    """``MEDIA_FALLBACK_URL`` is empty everywhere but the development settings."""
+    with override_settings(DEBUG=False, MEDIA_FALLBACK_URL=''):
+        response = client.get('/media/photologue/photos/ei-ole.jpeg')
+
+    assert response.status_code == 404
+
+
+def test_media_does_not_serve_outside_media_root(client, db, media_root):
+    """``django.views.static.serve`` strips ``..`` before it reaches the disk.
+
+    Without a fallback the escape attempt is a 404; with one it is a redirect
+    to the fallback host, which is the same public host the URL would have
+    named anyway. Either way nothing outside ``MEDIA_ROOT`` is served.
+    """
+    with override_settings(DEBUG=False, MEDIA_FALLBACK_URL=''):
+        response = client.get('/media/../ylaneenkasvit/local_settings.py')
+
+    assert response.status_code in (301, 302, 404)
+    assert not response.get('Content-Type', '').startswith('text/x-python')
