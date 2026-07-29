@@ -72,7 +72,7 @@ This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
 order of implementation" in :doc:`index`.
 
-They come from five pieces of work. **001-018** came out of the test coverage
+They come from six pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current
 behaviour, so fixing one means deliberately changing a test.
 **019-036** came out of the dependency and platform upgrade analysis on branch
@@ -90,6 +90,12 @@ while 041 is a defect the suite reaches only with unique test data.
 **042** was written as an implementation plan on branch
 ``species-photo-always-switch`` and filed here instead, since the change it
 proposes wants a decision before it is made.
+**043-047** were reported by the maintainer rather than found by a piece of
+work, and were split out of ``incoming.rst``. They are the only ones written
+from somebody using the application, so they arrived as symptoms; the detail
+that placed them -- browser, device, which models, and finally a copy of the
+delivered page -- came from asking. 044's cause was only visible in that last
+one, and it is not in the application.
 
 From the test coverage work
 ---------------------------
@@ -206,6 +212,36 @@ changes how the application is built. 041 was invisible while the view it
 concerns had no link; the link added by the same work is what exposed it, and
 it needs a ruling on what a duplicate museum number means before it can be
 fixed.
+
+
+Reported by the maintainer
+--------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 043 Low      admin / photos          The photo changelist cannot be sorted by name
+ 044 High     dev environment         Large admin pages truncated for a remote browser
+ 045 Medium   templates / mobile      The label editor is unusable on an iPad
+ 046 Low      templates / labels UI   The label editor opens at print size
+ 047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
+==== ======== ======================= ==================================================
+
+Split out of ``incoming.rst``, where they were written down as they were
+noticed. Unlike the rest of this register they describe symptoms rather than
+causes, so each says how far the cause was traced, and each was taken back to
+the reporter once for the detail that could only come from the machine it
+happens on.
+
+043 is ready to be done: the cause is known and the fix is one attribute. 046
+and 047 have their rulings recorded -- 50 % on screen with print unaffected,
+and an inline SVG printer whose label toggles the checkbox. 045
+has its scope: the admin works on the tablet, so the work is the label editor
+and printing, and its large half is a drag-and-drop rewrite that should wait
+for 017. 044 turned out not to be an admin issue at all: the pages it names are
+cut off mid-response before the submit row is reached, and the boundary is a
+size, not a model. It is filed under the dev environment and is the one item on
+this page that stops the maintainer working today.
 
 
 Already fixed

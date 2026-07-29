@@ -11,6 +11,7 @@ Issue 013: Stale FIXME comments claim working admin features are broken
 :Depends on: (none)
 :Blocks: (none)
 :Related: 017 -- option 2 here wants the browser test that 017 is about
+    044 -- ``save_on_top`` is the same fault as a setting rather than a comment
 :Decision: undecided
 :Resolution: (none yet)
 
