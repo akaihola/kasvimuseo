@@ -12,15 +12,19 @@ Issue 002: Photo auto-attach can break every Photo save
 :Blocks: 042 -- dropping ``photo__isnull=True`` widens this same fault
     037 -- the instructions asked for there describe this receiver
 :Related: 003, 042 -- the same auto-attach receiver
-:Decision: Option 1 -- catch ``MultipleObjectsReturned`` and skip the
-    auto-attach. It is the only option that cannot silently attach a photo to
-    the wrong species, and it needs no migration. Option 3 was not taken: a
-    unique constraint on ``name_fi`` wants a data migration and a look at the
-    production data, neither of which this change can do. The connection was
-    narrowed to ``sender=Photo`` in the same change; the existing ``sender !=
-    Photo`` guard already made that a no-op for every other model, so it
+:Decision: Option 1, then refined: catch ``MultipleObjectsReturned``, try to
+    narrow the namesakes down to one on the evidence in the garden records and
+    in the photo's file name, and skip the auto-attach only when nothing
+    separates them. Option 1 was chosen over option 2 because attaching to
+    whichever row came back first is a guess dressed as an answer; the
+    refinement is the maintainer's, and it buys the attach that option 2 would
+    have made blindly, at the price of having to be right. Option 3 was not
+    taken: a unique constraint on ``name_fi`` wants a data migration and a look
+    at the production data, neither of which this change can do. The connection
+    was narrowed to ``sender=Photo`` in the same change; the existing ``sender
+    != Photo`` guard already made that a no-op for every other model, so it
     changes no behaviour, and the guard was kept.
-:Resolution: 6089276
+:Resolution: 6089276, refined in 120e93b
 
 Problem
 =======
@@ -51,12 +55,9 @@ Whichever is chosen, keep the receiver total: it runs on every save in the proje
 Fix
 ===
 
-Option 1. ``autoconnect_photo_to_species`` now catches
-``Species.MultipleObjectsReturned`` alongside ``Species.DoesNotExist``, so an
-ambiguous name skips the auto-attach instead of failing the ``Photo`` save.
-Nothing is attached in that case, and nothing tells the user so -- the photo
-still has to be pointed at a species by hand, which is 042's and 037's
-territory rather than this issue's.
+Option 1. ``autoconnect_photo_to_species`` no longer lets an ambiguous name out
+of ``post_save``: ``Species.DoesNotExist`` and ``Species.MultipleObjectsReturned``
+are both handled, so the ``Photo`` save completes either way.
 
 The receiver is also connected for ``sender=Photo`` alone now, rather than for
 every model. Its own ``sender != Photo`` guard already made every other sender
@@ -64,6 +65,48 @@ a no-op, so this changes no behaviour; it only stops the receiver being invoked
 on saves it has nothing to do with. The guard is kept, and
 ``kasvimuseo/tests/test_signals.py`` pins it by calling the receiver directly.
 
-Option 3 stays available: a unique constraint on ``name_fi`` would remove the
-ambiguity at the source, but it needs a data migration and a look at the
+Telling the namesakes apart
+---------------------------
+
+Skipping the auto-attach was the first fix and is still what happens when
+nothing distinguishes the candidates. Before it gives up, the receiver now asks
+``kasvimuseo/photo_matching.py`` which of the namesakes the photo belongs to.
+
+Three filters, in order, each skipped rather than applied when it would leave
+nothing -- absent evidence is not evidence against:
+
+1. the species has been observed at all;
+2. one of those observations has a planting with no removal date;
+3. the species has labels.
+
+Then two rankings, the first that separates the field deciding:
+
+4. whose living plantings were cared for most recently;
+5. whose own names -- and the names of the places its observations came from,
+   and the nicknames they go by -- best match the photo's **file name**. The
+   title chooses the species, as it always has; the file name is what tells
+   namesakes apart, and the two are not always written the same way.
+
+Similarity is ``difflib`` on accent-stripped, case-folded words, scored by
+corroboration: a field counts only if it clears ``MATCH_THRESHOLD``, and a
+candidate's score is the *sum* of the fields that do, so a file name naming
+both the plant and the house it came from beats one that only repeats the
+Finnish name both candidates share. The winner must beat the runner-up by
+``WINNING_MARGIN``; anything less conclusive returns nothing and the photo
+stays unattached.
+
+Two things this deliberately does not do. It does not tell the user what
+happened, either way -- an unattached photo still has to be pointed at a
+species by hand, which is 042's and 037's territory rather than this issue's.
+And step 5 rests on photographs being named after what is in them; where they
+are named ``IMG_4021.jpg`` it can never fire, and the whole benefit is steps 1
+to 4.
+
+It is worth being plain about the trade: where the old code did nothing, this
+can now attach a photo to the wrong species. The two thresholds are what bound
+that, and they are module constants so they can be tuned without reading the
+algorithm.
+
+Option 3 stays available and would remove the ambiguity at the source rather
+than adjudicating it, but it needs a data migration and a look at the
 production data to know whether the existing rows allow it.
