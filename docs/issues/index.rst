@@ -41,23 +41,15 @@ How this is ranked
 * **The upgrade is last** because it is a programme rather than a fix, and
   because most of the list is a prerequisite for it.
 
-1. Find out what is actually true
-----------------------------------
+1. Find out what production actually runs
+-----------------------------------------
 
-Before anything else, and independent of all of it. None of these is a code
-change yet; each changes what the rest of the list means. The first is a look
-at a browser, the other two a look at the server.
+Before anything else, and independent of all of it. Neither is a code change;
+both change what the rest of the list means.
 
 ==== ======== =============================================================
   ID Severity Why first
 ==== ======== =============================================================
- 044 High     Three models cannot be edited at all in the reporter's
-              Firefox, which outranks everything below. The bar cannot be
-              missing from the HTML -- Grappelli renders it
-              unconditionally -- and it could not be reproduced in either
-              engine, at four window sizes, on the production data. So the
-              next step is four checks in the browser that shows it, not a
-              commit.
  026 Medium   The answer is either "the deployment is not reproducible" or
               "production is serving with ``DEBUG`` on", which is a live
               information-disclosure problem. One look at the server
@@ -67,14 +59,22 @@ at a browser, the other two a look at the server.
               file the upgrade will edit repeatedly.
 ==== ======== =============================================================
 
-2. Crashes on real data
+2. Broken on real data
 -----------------------
 
-Each is a 500 reachable today, each has a fix that needs no product decision.
+Each is reachable today, each has a fix that needs no product decision.
 
 ==== ======== =============================================================
   ID Severity Why here
 ==== ======== =============================================================
+ 044 High     Six of the admin's change forms are cut off mid-response for
+              a browser on another machine, taking the submit row with
+              them, so those models cannot be edited at all. Everything
+              over roughly 43 KB is affected. The application renders them
+              correctly; the loss is in ``runserver``, the container's port
+              publication or the tailnet. First because it is what stops
+              the maintainer working today, and because a truncated form
+              must not be saved.
  002 High     A ``post_save`` receiver registered for every model can raise
               on any save. The largest blast radius on the list, and 042
               cannot be done until it is fixed.

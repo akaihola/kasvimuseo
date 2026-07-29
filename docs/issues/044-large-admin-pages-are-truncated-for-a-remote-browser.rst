@@ -1,0 +1,190 @@
+=================================================================
+Issue 044: Large admin pages are truncated for a remote browser
+=================================================================
+
+:Status: Open
+:Severity: High
+:Area: dev environment / serving
+:Reported: 2026-07-29
+:Source: Maintainer report, ``docs/issues/incoming.rst``
+:Evidence: (none -- the suite uses the test client, which never crosses a socket)
+:Depends on: (none)
+:Blocks: (none)
+:Related: 040 -- the same three buttons, one Finnish and two English
+    013 -- another admin declaration that claims something untrue
+    045 -- the other report that needed a browser to settle
+:Decision: undecided
+:Resolution: (none yet)
+
+Problem
+=======
+
+Reported as missing save buttons: on ``species``, ``plot`` and ``planting``
+change forms the whole submit row -- ``Tallenna``, ``Save and add another``,
+``Save and continue editing`` -- does not appear, in Firefox 152 on Linux,
+against the development server. The other nine registered models are fine, and
+production is fine.
+
+The buttons are not the problem. **The page stops arriving before it gets to
+them.** The DOM of ``/admin/kasvimuseo/species/6/``, copied from the browser
+that shows it, ends like this::
+
+    <div class="grp-row grp-cells-1 notes ">
+      <div class="l-2c-fluid l-d-4">
+        <div class="c-1"><label for="id_observation_set-__prefix__-notes">Muistiinpanoja</label></div>
+        <div class="c-2"></div>
+      </div>
+    </div></fieldset></div></div></div></div></form></div></article></div>
+
+The ``notes`` row has no ``<textarea>``, the ``environment`` row that follows it
+in the template is absent, and then every open element closes at once. That
+cascade is the HTML parser reaching end of stream, not markup the server wrote.
+Everything after that point -- the rest of the inline, the closing of the form,
+and the submit row -- never arrived.
+
+Where the stream stops
+======================
+
+Requested over the loopback interface on the server host, the same page for the
+same object is **52,119 bytes, complete, three times out of three**, with the
+footer present. The two markers surrounding the reporter's cut sit at bytes
+42,435 (``id_observation_set-__prefix__-notes``) and 42,786
+(``...-environment``), so roughly 42 KB of 52 KB arrived and about 10 KB were
+lost. The browser had a ``Content-Length`` promising the rest.
+
+That single number explains the model list, which never made sense as a model
+list. Measured against the same database:
+
+============================ ========= =========================
+ Page                         Bytes     Reported
+============================ ========= =========================
+ ``species/97``                135,831  broken
+ ``planting/22``                92,652  broken
+ ``planting/1``                 70,584  broken
+ ``plot/1``                     60,065  broken
+ ``species/6``                  52,119  broken
+ ``plot/2``                     43,942  broken
+ ``observation/1``              27,548  works
+ ``auth/user/1``                27,010  works
+ ``care/1``                     26,261  works
+ ``auth/group/1``               22,105  works
+ ``contact/1``                  17,354  works
+ ``bed/2``                      15,518  works
+ ``photologue/photo/1``          1,672  works
+============================ ========= =========================
+
+Everything reported broken is larger than 43 KB; everything reported working is
+smaller than 28 KB. The boundary falls exactly where the reporter's page was
+cut. Those three admin classes declare inlines, which is why their forms are the
+big ones -- the inline set is the size, not the cause.
+
+**One page contradicts this and needs checking:** ``location`` is by far the
+largest form in the application -- ``location/2`` is 360 KB and ``location/8``
+is 544 KB, because every observation inline repeats a 60-option select -- and it
+is reported as working. If a ``location`` change form really does render its
+submit row on the affected machine, the size explanation is wrong and this
+issue needs reopening on a different track. It is one page to open.
+
+What it is not
+==============
+
+* **Not the application.** The response is complete and correct over loopback,
+  and complete when fetched over this host's own tailnet address (which never
+  leaves the machine). Nothing between the February 2025 production release and
+  ``b801d8e`` touches the change form.
+* **Not the browser.** A partial DOM with a parser-closed tail is what a browser
+  does with a short response; it is not something CSS, an extension or a zoom
+  level can produce. Earlier work on this issue chased all three and found
+  nothing, correctly.
+* **Not the data or the installation.** Same restored production dump, same
+  container image, same bind-mounted checkout, and an
+  ``ylaneenkasvit/local_settings.py`` byte-identical to the template.
+* **Not production**, which serves through gunicorn behind a real web server
+  rather than through ``manage.py runserver``.
+
+The remaining difference is the path between the two. The reporter reaches the
+site at ``http://gogo.crane-boa.ts.net:8000/`` -- from a laptop, over Tailscale,
+to a Django 1.5 ``runserver`` inside a rootless podman container published with
+pasta. Every one of those is a plausible place to lose the tail of a 52 KB
+response, and none of them can be exercised from the server host itself, which
+is why this reproduces for the reporter and for nobody else:
+
+1. **``manage.py runserver``** is ``wsgiref``: single-threaded, and explicitly
+   documented as not for anything but local development. Django 1.5's is the
+   oldest version of it in this project's history.
+2. **The pasta port publication**, which is the layer that differs between a
+   loopback request and one arriving on the host's external interface.
+3. **Tailscale's 1280-byte MTU**, if path MTU discovery is failing somewhere: a
+   large response stalls or resets partway while a small one completes.
+
+Do not save one of these forms
+==============================
+
+While this is open, a truncated change form must not be submitted. The fields
+after the cut are absent from the POST, and Django reads an absent field as an
+empty value, so saving would blank whatever did not arrive. On ``species/6``
+the cut lands inside the spare empty inline and would probably be harmless; on
+``species/97`` at 136 KB it lands in the middle of real observation data. This
+is also why "put a save button at the top of the form so it survives the
+truncation" is the wrong fix: it would make a data-losing save easy to perform.
+
+How to confirm, from the laptop
+===============================
+
+One command, on the machine that shows the problem::
+
+    curl -s -D- -o body.html -b <cookies> \
+         http://gogo.crane-boa.ts.net:8000/admin/kasvimuseo/species/6/
+    wc -c body.html
+
+If ``wc -c`` is less than the ``Content-Length`` in the headers, the response is
+being cut before Firefox sees it and the browser is exonerated for good. Repeat
+against a page just under the boundary (``observation/1``, 27 KB) and one far
+over it (``location/2``, 360 KB) to find where the limit actually falls -- the
+exact byte count is the strongest clue to which of the three layers is
+responsible.
+
+Then the same page through an SSH tunnel, which turns the remote request into a
+loopback one on the server side::
+
+    ssh -N -L 8000:127.0.0.1:8000 gogo
+
+If it is whole through the tunnel and cut without it, the application is
+finished as a suspect and this becomes a dev-environment issue only.
+
+Options
+=======
+
+1. **Serve the development site with gunicorn** rather than ``runserver``.
+   It is already a dependency (see issue 021, which wants it removed as an
+   installed *app* -- that is a different thing), it is what production uses, so
+   the dev environment stops differing from production in the one way that
+   matters here, and ``dev/kasvimuseo app run`` is the only place to change.
+   ``runserver`` stays available for a loopback-only session.
+2. **Reach the dev server over an SSH tunnel** and keep ``runserver``. No code
+   changes; it is a line in the README and a habit. It also removes the
+   ``ALLOWED_HOSTS = ['*']`` in ``local_settings.development.py``, which exists
+   only because the server is published under an arbitrary name (issue 026).
+3. **Chase the MTU** if the ``curl`` measurements point at the network rather
+   than the server. ``tailscale ping --verbose`` reports the negotiated path;
+   an MTU mismatch is a property of the tailnet, not of this repository.
+
+Independently of all of this
+============================
+
+``SpeciesAdmin``, ``PlotAdmin``, ``PlantingAdmin`` and five other admin classes
+set ``save_on_top = True``, and it has never done anything: Grappelli's
+``change_form.html`` renders ``{% submit_row %}`` once, in
+``{% block submit_buttons_bottom %}``, with no top block at all. That is worth
+either honouring with a small template override or deleting, so the setting
+stops claiming something untrue -- but **after** this issue is fixed, for the
+data-loss reason above.
+
+See also
+========
+
+Issue 013 (stale ``FIXME`` comments claiming admin features are broken -- the
+same admin module, the same kind of untrue declaration), issue 040 (half the
+admin chrome is English -- which is why one button says ``Tallenna`` and the two
+beside it do not), issue 045 (the other report that needed a browser to settle),
+issue 021 (gunicorn, which option 1 would give a real use).
