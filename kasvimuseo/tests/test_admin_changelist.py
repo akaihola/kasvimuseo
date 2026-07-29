@@ -300,11 +300,53 @@ def test_changelist_links_the_admin_stylesheet(admin_client, db, model):
 # 7. PhotoAdmin swaps title for image_filename
 # ---------------------------------------------------------------------------
 
+def get_photos(admin_client, query=''):
+    """The photo changelist: photologue's model, so ``get`` cannot name it."""
+    url = reverse('admin:photologue_photo_changelist')
+    response = admin_client.get(url + query)
+    assert response.status_code == 200
+    return response.content.decode('utf-8')
+
+
 def test_photo_changelist_shows_the_file_name(admin_client, photo_factory):
     photo = photo_factory(title='valkonarsissi kukassa')
-    url = reverse('admin:photologue_photo_changelist')
-    html = admin_client.get(url).content.decode('utf-8')
+    html = get_photos(admin_client)
 
     assert 'fieldname_title' not in html
     assert column_values(html, 'image_filename') == [
         photo.image.name.split('/')[-1]]
+
+
+def test_photo_changelist_file_name_header_is_a_sort_link(admin_client,
+                                                          photo_factory):
+    """``image_filename.admin_order_field`` -- issue 043."""
+    photo_factory(title='valkonarsissi kukassa')
+    index = sortable_column_index(admin.PhotoAdmin, 'image_filename')
+
+    header = search(
+        r'<th[^>]*class="([^"]*fieldname_image_filename[^"]*)"(.*?)</th>',
+        thead(get_photos(admin_client)))
+
+    assert 'sortable' in header.group(1).split()
+    assert 'o={0}'.format(index) in header.group(2)
+
+
+def test_photo_changelist_sorting_orders_the_rows(admin_client, photo_factory):
+    """``?o=`` on that column really orders by file name.
+
+    All lowercase on purpose: the sort is the database's, and the development
+    cluster's ``C`` collation and production's ``en_US.UTF-8`` one disagree
+    about where an upper-case initial goes. See the issue.
+    """
+    for title in ['kissankello', 'akileija', 'valkonarsissi']:
+        photo_factory(title=title)
+    index = sortable_column_index(admin.PhotoAdmin, 'image_filename')
+
+    ascending = column_values(
+        get_photos(admin_client, '?o={0}'.format(index)), 'image_filename')
+
+    assert ascending == ['akileija.jpg', 'kissankello.jpg',
+                         'valkonarsissi.jpg']
+    assert column_values(
+        get_photos(admin_client, '?o=-{0}'.format(index)),
+        'image_filename') == list(reversed(ascending))
