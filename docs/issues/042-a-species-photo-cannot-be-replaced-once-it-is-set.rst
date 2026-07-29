@@ -18,7 +18,7 @@ Issue 042: A species photo cannot be replaced once it is set
     wins. Ruled on when the defect was reported from the garden a second time,
     as a photo that would not change; the admin control is not excluded and can
     still follow.
-:Resolution: 38b904d
+:Resolution: 942532c
 
 Problem
 =======
@@ -125,6 +125,30 @@ constraint on ``name_fi`` is **not** applicable to this data as it stands. The
 two ``tarhakurjenmiekka`` are genuinely different plants -- ``Iris x`` and
 ``Iris 'Cracchus'`` -- so the constraint would need them renamed or merged
 first, which is a decision about the collection rather than about the code.
+
+A second cause, found by reproducing the report
+-----------------------------------------------
+
+Dropping the filter was not enough to make the reported upload work, and the
+reason had nothing to do with this issue. ``PhotoForm.clean()`` overrode
+``clean()`` without calling ``super()``, and ``BaseModelForm.clean()`` is the
+only thing that sets the flag making ``_post_clean()`` run
+``validate_unique()``. So the form checked no uniqueness at all, and
+``Photo.title`` and ``Photo.title_slug`` are both unique: **re-uploading a
+photo under a title already in use returned a 500** from PostgreSQL's
+constraint, with the image file already written to ``MEDIA_ROOT`` and no row
+pointing at it.
+
+That is why the report arrived twice. The first upload created the photo and
+did not attach it, which is this issue. Every later attempt with the same title
+failed before it got as far as attaching anything, which is not -- and left an
+orphan ``..._1.JPG`` next to the original as its fingerprint.
+
+Fixed in the same change, with tests in ``kasvimuseo/tests/test_forms.py``: a
+duplicate title is now an error on the form. It still does not let two photos
+share a title, because photologue does not allow that; the way to replace a
+photo whose title is already right is to re-save the existing one, which now
+attaches it.
 
 Not done here: the admin control. Adding ``photo`` to ``SpeciesAdmin.fieldsets``
 is still worth doing and is still not exclusive with this, but it does not help

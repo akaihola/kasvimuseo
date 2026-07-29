@@ -24,7 +24,7 @@ Issue 002: Photo auto-attach can break every Photo save
     was narrowed to ``sender=Photo`` in the same change; the existing ``sender
     != Photo`` guard already made that a no-op for every other model, so it
     changes no behaviour, and the guard was kept.
-:Resolution: 3b33d92, refined in 8d2f19d
+:Resolution: 6bbd199, refined in 96fe07d
 
 Problem
 =======
