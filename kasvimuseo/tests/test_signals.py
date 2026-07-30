@@ -101,6 +101,41 @@ def test_a_replacement_goes_to_the_right_one_of_two_namesakes(photo_factory):
 
 
 @pytest.mark.django_db
+def test_photo_attaches_to_a_species_whose_name_is_capitalised(photo_factory):
+    """The direction that could not work before issue 003.
+
+    The title word was lower-cased and then compared to ``name_fi`` exactly, so
+    a species entered with a capital initial -- which the admin does nothing to
+    prevent -- was unreachable however the photo was titled.
+    """
+    species = create_species(name_fi='Valkonarsissi')
+
+    photo = photo_factory(title='valkonarsissi kukassa')
+
+    assert models.Species.objects.get(pk=species.pk).photo == photo
+
+
+@pytest.mark.django_db
+def test_photo_attaches_when_neither_case_matches_the_other(photo_factory):
+    """Case decides nothing on either side, not just on the title's."""
+    species = create_species(name_fi='Valkonarsissi')
+
+    photo = photo_factory(title='VALKONARSISSI kukassa')
+
+    assert models.Species.objects.get(pk=species.pk).photo == photo
+
+
+@pytest.mark.django_db
+def test_a_species_with_a_blank_name_matches_nothing(photo_factory):
+    """A blank ``name_fi`` is "no name", not a name that matches everything."""
+    nameless = create_species(name_fi='')
+
+    photo_factory(title='valkonarsissi kukassa')
+
+    assert models.Species.objects.get(pk=nameless.pk).photo is None
+
+
+@pytest.mark.django_db
 def test_photo_with_no_matching_species_leaves_every_species_alone(
         photo_factory):
     create_species(name_fi='valkonarsissi')
