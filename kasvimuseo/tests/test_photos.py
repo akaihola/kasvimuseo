@@ -97,3 +97,26 @@ def test_get_species_photo_info(species, photo_pk, photo_title, expect):
 
 
     assert result == expect
+
+
+@pytest.mark.django_db
+def test_get_candidate_photo_pks_matches_on_the_first_word(photo_factory):
+    """The same key as the auto-attach receiver, case folded on both sides."""
+    from kasvimuseo.tests.factories import create_species
+
+    kukassa = photo_factory(title='Valkonarsissi kukassa')
+    lehdet = photo_factory(title='valkonarsissi lehdet')
+    photo_factory(title='keltanarsissi')
+
+    pks = photos.get_candidate_photo_pks(create_species(name_fi='VALKONARSISSI'))
+
+    assert sorted(pks) == sorted([kukassa.pk, lehdet.pk])
+
+
+@pytest.mark.django_db
+def test_get_candidate_photo_pks_of_a_nameless_species(photo_factory):
+    from kasvimuseo.tests.factories import create_species
+
+    photo_factory(title='valkonarsissi kukassa')
+
+    assert photos.get_candidate_photo_pks(create_species(name_fi='')) == []
