@@ -201,21 +201,34 @@ def test_reports_render_when_the_image_file_is_missing(client, media_root,
 
 @pytest.mark.django_db
 @pytest.mark.parametrize('url_name', ['planted-species',
-                                      'planted-species-compact'])
-def test_reports_open_no_image_file(client, full_species, image_opens,
+                                      'planted-species-compact',
+                                      'planted-species-list'])
+def test_reports_open_no_image_file(client, full_species,
+                                    mobile_thumbnail_size, image_opens,
                                     url_name):
     """The point of docs/issues/011: the header class costs no file access.
 
-    The first request to either report is still allowed to touch the original,
-    because ``get_display_url`` builds photologue's cached display copy on
-    demand -- once per photo, ever, and only because the shipped ``display``
-    ``PhotoSize`` has ``pre_cache`` off. Warm that, then assert the steady
-    state: rendering opens nothing.
+    All three reports that put a photo on the page, not just the two that
+    picked the header class: the list page asks for a thumbnail URL and the
+    other two for a display URL, and the header class was the only one of the
+    three that measured the image on every render.
+
+    The first request for a photo is still allowed to touch the original,
+    because ``get_<size>_url`` builds photologue's cached copy on demand --
+    once per photo and size, ever, and only because the shipped ``PhotoSize``
+    rows have ``pre_cache`` off. Warm that, then assert the steady state:
+    rendering opens nothing.
     """
-    client.get(species_url(url_name, 1))
+    url = (reverse(url_name) if url_name == 'planted-species-list'
+           else species_url(url_name, 1))
+    client.get(url)
+    # The warm-up has to have opened the original, or this page is not putting
+    # a photo on the screen at all and the assertion below would pass by
+    # testing nothing.
+    assert image_opens
     del image_opens[:]
 
-    page(client.get(species_url(url_name, 1)))
+    page(client.get(url))
 
     assert image_opens == []
 
