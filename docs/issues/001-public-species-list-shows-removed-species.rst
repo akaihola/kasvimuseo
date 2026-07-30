@@ -3,6 +3,8 @@ Issue 001: Public species list shows removed species
 ====================================================
 
 :Status: Open
+:Claimed: branch ``feature/fix-issue-001-specie-oap``, since 2026-07-30 --
+          waiting on the ruling below before anything is committed
 :Severity: High
 :Area: models / public site
 :Reported: 2026-07-28
