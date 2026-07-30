@@ -2,19 +2,33 @@
 Issue 039: The label photo is saved but never read back
 =================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: Medium
 :Area: views / labels API
 :Reported: 2026-07-28
 :Source: Walkthrough of how photo management is meant to be used
-:Evidence: (none -- no test round-trips a photo choice through the API)
+:Evidence: kasvimuseo/tests/test_views.py::test_labels_api_post_round_trips_the_photo_choice
+    -- the POST-then-GET round trip the issue asked for, written with the fix
 :Depends on: (none)
 :Blocks: 037 -- option 3 there depends on what this decides
 :Related: 010 -- the same ``post`` handler
     042 -- the control that looks like it should set the species photo
     017 -- the Vue editor has no browser test
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Option 1, read it back. It is what the code plainly meant to do, it
+    needs no migration, and option 2 would delete a capability the maintainer
+    has been using by hand before each print run. ``get_species_data`` now takes
+    the ``Label`` itself rather than its ``visible`` flag, and passes
+    ``label.photo`` to ``get_species_photo_info`` as a new ``photo`` argument
+    that wins over ``species.photo``; a species with no label passes ``None``
+    and keeps the species photo. The ``Label`` queryset adds ``photo`` to its
+    ``select_related``, so the choice arrives on the join: the GET costs 18
+    queries for the data in
+    ``test_labels_api_get_reads_the_label_photo_without_more_queries`` before
+    the change and 16 after, the two saved being the deferred ``species.photo``
+    lookups the labels with a photo of their own no longer need. Issue 037 can
+    now describe the chevrons as choosing the label's photo, which is its option
+    3.
+:Resolution: Fixed in c9cb3f5.
 
 Problem
 =======
@@ -77,3 +91,53 @@ returns it; there is none today, which is why this survived eight years.
 Related: issue 037 (nothing in the UI explains any of this), issue 010 (the same ``post``
 pairs submitted items to new labels by position), issue 017 (the Vue editor has no
 browser test, so only the JSON contract is covered).
+
+Resolution
+==========
+
+Commit c9cb3f5, together with issue 010 -- the same handler. The read path now
+hands the label down instead of one flag off it::
+
+    photo_pk, photo_alternatives = get_species_photo_info(
+        species, photo_pks_and_urls_by_title,
+        photo=label.photo if label else None)
+
+and ``get_species_photo_info`` prefers that photo over ``species.photo``
+(``selected_photo = photo or species.photo``), so the species photo is what a
+label without a choice of its own falls back to, and what a species with no
+``Label`` row still gets -- ``get_labels_data`` passes ``None`` on that branch,
+which also carries the ``visible=True`` it used to pass literally. The photo is
+still offered among ``all_photos`` either way, so the chevrons can walk back to
+the species photo.
+
+The label queryset gained ``photo``::
+
+    Label.objects.select_related('species', 'photo').order_by('species__name_fi')
+
+Query count for the GET, measured in
+``test_labels_api_get_reads_the_label_photo_without_more_queries`` -- three
+species, two of them labelled with a photo of their own:
+
+* before the change: 18
+* after the change: 16
+
+It cannot grow: ``select_related`` widens the ``Label`` query rather than adding
+one. It shrinks because a label with a photo of its own never touches
+``species.photo``, and the label queryset follows ``species`` but not
+``species__photo``, so reading that used to cost a query per label.
+
+Four tests were added, all of which fail against the old code except where noted:
+``test_labels_api_get_reads_back_the_label_photo`` (the label's photo wins over
+the species photo, both still offered),
+``test_labels_api_get_falls_back_to_the_species_photo`` (a species with no label
+and a label with no photo; passes before and after, as it must),
+``test_labels_api_post_round_trips_the_photo_choice`` (the round trip this issue
+asked for) and the query-count test above. In each, two photos match the species
+by title and the one the species points at is the one saved last, since
+``autoconnect_photo_to_species`` attaches on every save -- so the species photo
+is a real alternative to the label's, not an absence.
+
+The ``display_size`` fixture moved from ``test_photos_integration.py`` to
+``kasvimuseo/tests/conftest.py``: the view tests need photos whose
+``get_display_url()`` works too, and it is the ``PhotoSizeCache`` reset around it
+that makes that possible.

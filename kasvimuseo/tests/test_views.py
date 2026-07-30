@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import json
+from contextlib import contextmanager
 
 import pytest
 from django.core.urlresolvers import reverse
@@ -15,11 +16,41 @@ from kasvimuseo.tests.factories import (create_bed, create_location,
 from kasvimuseo.views import PlantedSpecies, PlantedSpeciesPrintable
 
 
-def label_item(species, external_ids, visible=True):
+def label_item(species, external_ids, visible=True, photo_pk=None):
     return {'id': species.pk,
-            'photo_pk': None,
+            'photo_pk': photo_pk,
             'visible': visible,
             'external_ids': list(external_ids)}
+
+
+class QueryCount(object):
+    """What :func:`counted_queries` fills in when its block is done."""
+    count = None
+
+
+@contextmanager
+def counted_queries():
+    """``assertNumQueries`` for a plain pytest function.
+
+    Django 1.5 offers the check on ``TestCase`` only, and has no
+    ``CaptureQueriesContext`` to borrow, so do what its
+    ``_AssertNumQueriesContext`` does: switch the debug cursor on, and stop the
+    test client's ``request_started`` signal from resetting the query log.
+    """
+    from django.core.signals import request_started
+    from django.db import connection, reset_queries
+
+    request_started.disconnect(reset_queries)
+    old_debug_cursor = connection.use_debug_cursor
+    connection.use_debug_cursor = True
+    counted = QueryCount()
+    start = len(connection.queries)
+    try:
+        yield counted
+    finally:
+        counted.count = len(connection.queries) - start
+        connection.use_debug_cursor = old_debug_cursor
+        request_started.connect(reset_queries)
 
 
 # PlantedSpeciesList
@@ -107,6 +138,86 @@ def test_labels_api_get_returns_full_species_shape(client):
 
 
 @pytest.mark.django_db
+def test_labels_api_get_reads_back_the_label_photo(client, display_size,
+                                                   photo_factory):
+    """Issue 039: the photo chosen for a label wins over the species photo.
+
+    The read path used to derive the photo from the species alone, so a saved
+    ``Label.photo`` was written and never looked at again.
+    """
+    planting = create_planted(name_fi='valkonarsissi', external_id=1)
+    chosen = photo_factory(title='valkonarsissi kukassa')
+    # Saved after ``chosen``, so ``autoconnect_photo_to_species`` leaves this
+    # one as the species photo: the value the read path handed back regardless
+    # of what the label said.
+    species_photo = photo_factory(title='valkonarsissi lehdet')
+    species = planting.observation.species
+    assert Species.objects.get(pk=species.pk).photo_id == species_photo.pk
+    label = Label.objects.create(species=species, photo=chosen)
+    planting.label = label
+    planting.save()
+
+    data = json.loads(
+        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+
+    entry, = data['object_list']
+    assert entry['photo_pk'] == chosen.pk
+    # Both are still offered as alternatives, so the chevrons can go back.
+    assert set(int(pk) for pk in entry['all_photos']) == {chosen.pk,
+                                                         species_photo.pk}
+
+
+@pytest.mark.django_db
+def test_labels_api_get_falls_back_to_the_species_photo(client, display_size,
+                                                        photo_factory):
+    """A species with no ``Label`` row, and a label with no photo of its own."""
+    unlabelled = create_planted(name_fi='tulppaani', external_id=1)
+    labelled = create_planted(name_fi='valkonarsissi', external_id=2)
+    tulppaani = photo_factory(title='tulppaani kukassa')
+    valkonarsissi = photo_factory(title='valkonarsissi kukassa')
+    labelled.label = Label.objects.create(species=labelled.observation.species)
+    labelled.save()
+
+    data = json.loads(
+        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+
+    by_name = dict((entry['name_fi'], entry) for entry in data['object_list'])
+    assert by_name['tulppaani']['photo_pk'] == tulppaani.pk
+    assert by_name['valkonarsissi']['photo_pk'] == valkonarsissi.pk
+    assert unlabelled.label is None
+
+
+@pytest.mark.django_db
+def test_labels_api_get_reads_the_label_photo_without_more_queries(
+        client, display_size, photo_factory):
+    """Reading the photo choice back costs nothing: it rides on the join.
+
+    18 queries for this data before the fix, 16 after it. Preferring
+    ``label.photo`` cannot add one -- ``select_related('photo')`` widens the
+    ``Label`` query rather than issuing another -- and it saves the deferred
+    lookup of ``species.photo`` for each of the two labels that has a photo of
+    its own, which is the whole of the difference.
+    """
+    first = create_planted(name_fi='valkonarsissi', external_id=1)
+    second = create_planted(name_fi='tulppaani', external_id=2)
+    for planting, title in [(first, 'valkonarsissi kukassa'),
+                            (second, 'tulppaani kukassa')]:
+        planting.label = Label.objects.create(
+            species=planting.observation.species,
+            photo=photo_factory(title=title))
+        planting.save()
+    create_planted(name_fi='ahdekaunokki', external_id=3)
+
+    with counted_queries() as queries:
+        response = client.get(reverse('planting-label-data'))
+
+    assert response.status_code == 200
+    assert len(json.loads(response.content.decode('utf-8'))
+               ['object_list']) == 3
+    assert queries.count == 16
+
+
+@pytest.mark.django_db
 def test_labels_api_get_omits_non_public_species(client):
     create_planted(name_fi='piilokasvi', external_id=1, public=False)
 
@@ -164,6 +275,29 @@ def test_labels_api_post_links_each_planting_to_its_own_species_label(client):
         remaining[1].observation.species_id: False,
         remaining[2].observation.species_id: True}
 
+    # Two items naming the same species. The two labels differ in nothing the
+    # submitted item can be matched against except the plantings it names, so
+    # this is the case a mapping keyed on the species collapses -- issue 010's
+    # option 2. Measured against the old handler, pairing by position survived
+    # it on PostgreSQL, so this pins the contract rather than reproducing a
+    # failure.
+    species = remaining[0].observation.species
+    twin = create_planting(observation=create_observation(species=species,
+                                                          external_id=9),
+                           bed=create_bed(name='2'))
+    items = [label_item(species, [remaining[0].observation.external_id]),
+             label_item(species, [9], visible=False)]
+    response = client.post(reverse('planting-label-data'),
+                           data=json.dumps(items),
+                           content_type='application/json')
+
+    assert response.status_code == 200
+    assert Label.objects.count() == 2
+    first_label = Planting.objects.get(pk=remaining[0].pk).label
+    second_label = Planting.objects.get(pk=twin.pk).label
+    assert first_label.pk != second_label.pk
+    assert (first_label.visible, second_label.visible) == (True, False)
+
 
 @pytest.mark.django_db
 def test_labels_api_post_survives_a_get_round_trip(client):
@@ -180,6 +314,64 @@ def test_labels_api_post_survives_a_get_round_trip(client):
     assert entry['id'] == species.pk
     assert entry['visible'] is False
     assert entry['external_ids'] == [3]
+
+
+@pytest.mark.django_db
+def test_labels_api_post_round_trips_the_photo_choice(client, display_size,
+                                                      photo_factory):
+    """Issue 039, end to end: POST a photo choice, GET it back.
+
+    This is the test the issue says was missing, and is why the defect survived
+    eight years: the ``visible`` flag beside the photo did round-trip, so saving
+    looked like it worked.
+    """
+    planting = create_planted(name_fi='valkonarsissi', external_id=3)
+    chosen = photo_factory(title='valkonarsissi kukassa')
+    # Saved last, so this is what the species points at.
+    species_photo = photo_factory(title='valkonarsissi lehdet')
+    species = planting.observation.species
+
+    client.post(reverse('planting-label-data'),
+                data=json.dumps([label_item(species, [3],
+                                            photo_pk=chosen.pk)]),
+                content_type='application/json')
+    data = json.loads(
+        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+
+    assert Label.objects.get().photo_id == chosen.pk
+    entry, = data['object_list']
+    assert entry['photo_pk'] == chosen.pk
+    assert entry['photo_pk'] != species_photo.pk
+
+
+@pytest.mark.django_db(transaction=True)
+def test_labels_api_post_keeps_the_old_labels_when_the_save_fails(client,
+                                                                 monkeypatch):
+    """Issue 010: the delete-and-recreate is one transaction.
+
+    The handler deletes every label before writing the replacements, so a
+    failure part way through used to leave the table empty.
+
+    ``transaction=True`` is what makes this observable: under the ordinary
+    ``django_db`` mark ``commit_on_success`` is inert, because Django 1.5's
+    ``TestCase`` replaces ``transaction.rollback`` with a no-op for the length
+    of the test.
+    """
+    planting = create_planted(name_fi='valkonarsissi', external_id=3)
+    species = planting.observation.species
+    kept = Label.objects.create(species=species, visible=False)
+
+    def fail(*args, **kwargs):
+        raise RuntimeError('the save failed half way through')
+
+    monkeypatch.setattr(Planting, 'save', fail)
+    with pytest.raises(RuntimeError):
+        client.post(reverse('planting-label-data'),
+                    data=json.dumps([label_item(species, [3])]),
+                    content_type='application/json')
+
+    label = Label.objects.get()
+    assert (label.pk, label.visible) == (kept.pk, False)
 
 
 @pytest.mark.django_db

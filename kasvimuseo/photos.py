@@ -48,7 +48,7 @@ def get_species_photos(species, photo_pks_and_urls_by_title):
             photo_pks_and_urls_by_title.get(match_key(species.name_fi), [])]
 
 
-def get_species_photo_info(species, photo_pks_and_urls_by_title):
+def get_species_photo_info(species, photo_pks_and_urls_by_title, photo=None):
     """Return possible photos and the selected photo for the species
 
     :param species: The species whose photo information to get
@@ -57,14 +57,19 @@ def get_species_photo_info(species, photo_pks_and_urls_by_title):
                                         objects, grouped by the first word of
                                         the photo title
     :type photo_pks_and_urls_by_title: dict[str, list[dict[str, int | str]]]
+    :param photo: The photo chosen for this particular label, if any. It wins
+                  over ``species.photo``, which is only the default for a
+                  species whose label has no choice of its own (issue 039).
+    :type photo: Photo | None
     :return:
     :rtype: tuple[int | None, dict[int, str]]
 
     """
     species_photos = get_species_photos(species, photo_pks_and_urls_by_title)
-    if species.photo:
-        photo_pk = species.photo.pk
-        active_photo = [(photo_pk, species.photo.get_display_url())]
+    selected_photo = photo or species.photo
+    if selected_photo:
+        photo_pk = selected_photo.pk
+        active_photo = [(photo_pk, selected_photo.get_display_url())]
     else:
         photo_pk = None
         active_photo = []
