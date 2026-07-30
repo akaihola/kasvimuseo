@@ -63,6 +63,20 @@ production's static URL and ignores the database environment variables. A copy
 made earlier is never overwritten, so when the template gains a setting, add it
 by hand -- ``dev/kasvimuseo`` says so for the newest one, ``MEDIA_FALLBACK_URL``.
 
+Secrets come from the environment and are in no tracked file (issue 025). The
+site settings read ``KASVIMUSEO_SECRET_KEY`` and ``KASVIMUSEO_DB_PASSWORD`` and
+raise ``ImproperlyConfigured`` naming the variable if either is unset -- there
+is no default, because a default would silently sign cookies with a value that
+is in the git history. ``dev/kasvimuseo`` passes development values for both
+into the container, so nothing needs setting to work locally; the test settings
+supply their own. In production the two live in the Ansible Vault file
+``ansible/host_vars/<host>`` as ``kasvimuseo_secret_key`` and
+``kasvimuseo_db_password``, and ``ansible/install.yaml`` writes them into
+``uwsgi.ini`` and refuses to run without them. The one thing that needs the
+real database password is ``db fetch``, which talks to production::
+
+    $ KASVIMUSEO_DB_PASSWORD=... dev/kasvimuseo db fetch
+
 Photos are served by this server, under ``/media/``, and the ones this machine
 does not have are redirected to ``media.kasvit.ambitone.com``. So a fresh clone
 shows every photo the database references without downloading anything, and a
