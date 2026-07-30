@@ -22,9 +22,10 @@ Issue 012: public_planted issues one COUNT query per planting
            that reach ``is_public_planted``), the four views that reach those
            managers, and a lone ``Planting.objects.get(...)`` outside any
            prefetch -- the last is one query cheaper, not dearer.
-:Resolution: commit c3a46b5, plus the ``SpeciesManager`` idiom change
-             (``ObservationManager`` prefetches ``planting_set__bed``;
-             ``is_public_planted`` reads ``last_care``)
+:Resolution: commits c3a46b5 (``ObservationManager`` prefetches
+             ``planting_set__bed``; ``is_public_planted`` reads ``last_care``)
+             and 426d855 (``SpeciesManager`` reads the prefetched rows with
+             ``len(...all())``; call paths audited)
 
 Problem
 =======
