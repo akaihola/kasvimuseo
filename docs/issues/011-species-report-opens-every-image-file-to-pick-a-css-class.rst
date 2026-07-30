@@ -12,7 +12,7 @@ Issue 011: Species report opens every image file to pick a CSS class
 :Blocks: (none)
 :Related: 004 -- option 2 there depends on how the species photo is rendered; 006 -- the dead template carried the same expression
 :Decision: Option 1, store the orientation. Option 2 does not exist in the pinned photologue: 2.6.1's ``ImageModel`` keeps no dimensions on the model at all, and its one size accessor, ``_get_SIZE_size``, is ``Image.open(self._get_SIZE_filename(size)).size`` after a ``create_size`` that opens the original when the cached copy is absent -- a file open either way. So ``Species.photo_is_horizontal`` plus a South migration and a backfill. Fallback when the file cannot be read is ``vertical``, because that is the branch the template already took for a species with no photo, so nothing that renders today changes shape.
-:Resolution: Fixed in the commit that added ``Species.photo_is_horizontal``, ``kasvimuseo/migrations/0020_auto__add_field_species_photo_is_horizontal.py`` and ``0021_backfill_species_photo_is_horizontal.py``.
+:Resolution: 93a191e -- ``Species.photo_is_horizontal`` and ``measure_photo_orientation()``, migrations 0020 (column) and 0021 (backfill), both report templates, and the tests that prove no image file is opened.
 
 Problem
 =======
