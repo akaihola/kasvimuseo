@@ -9,7 +9,7 @@
 #   db bootstrap                        empty database from the migrations
 #   media fetch                         download the photos the database uses
 #   app build                           build the Python 2.7 dev image
-#   app run [--runserver]               serve the site ($KASVIMUSEO_PORT:8000)
+#   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
 #   app manage <args...>                run a manage.py command
 #   app test [args]                     run the test suite
 #   app coverage [args]                 run the test suite and report coverage
@@ -245,21 +245,40 @@ app_run_container() {
 #     podman kill --signal HUP $(podman ps -qf name=kasvimuseo-dev-)
 #
 # Templates and static files are re-read per request either way. `--runserver`
-# brings the old server back for a loopback-only session that wants the
-# autoreloader; see README.rst.
+# brings the old server back for a session that wants the autoreloader; see
+# README.rst.
+#
+# The container shares the host's network namespace rather than publishing a
+# port, because publishing it is what truncated the responses in issue 044.
+# Rootless podman publishes with pasta, and pasta -- on this host, over a
+# connection with real latency -- forwards about 43 KB of a response and then
+# closes it cleanly, losing the rest. A packet capture on the receiving machine
+# shows the server's own FIN riding the segment that ends at byte 43,140, with
+# every segment before it acknowledged and nothing retransmitted. Responses
+# small enough to be forwarded before the application closes its socket survive,
+# and so do ones too large to be buffered at all, which is why the failure looked
+# like a size threshold with exceptions at both ends. `--publish` restores the
+# published port for anyone who wants to see that happen.
 app_serve() {
-    local port=-p\ ${KASVIMUSEO_PORT:-8000}:8000
-    if [ "${1:-}" = "--runserver" ]; then
-        with_db app_run_container "$port" \
-            python ylaneenkasvit/manage.py runserver 0.0.0.0:8000
+    local runserver=0 network=--network=host bind=${KASVIMUSEO_PORT:-8000}
+    while [ $# -gt 0 ]; do
+        case $1 in
+            --runserver) runserver=1 ;;
+            --publish)   network=-p\ ${KASVIMUSEO_PORT:-8000}:8000; bind=8000 ;;
+            *) die "usage: dev/kasvimuseo app run [--runserver] [--publish]" ;;
+        esac
+        shift
+    done
+    if [ "$runserver" = 1 ]; then
+        with_db app_run_container "$network" \
+            python ylaneenkasvit/manage.py runserver "0.0.0.0:$bind"
     else
-        [ $# -eq 0 ] || die "usage: dev/kasvimuseo app run [--runserver]"
         # One worker keeps the log readable and matches runserver's behaviour
         # under a single developer; --timeout is generous because the largest
         # change forms take a couple of seconds and a debugger pauses longer.
-        with_db app_run_container "$port" \
+        with_db app_run_container "$network" \
             gunicorn ylaneenkasvit.wsgi:application \
-                --bind 0.0.0.0:8000 --workers 1 --timeout 300 \
+                --bind "0.0.0.0:$bind" --workers 1 --timeout 300 \
                 --access-logfile - --error-logfile -
     fi
 }
