@@ -9,7 +9,14 @@
 
 - name: Create uWSGI config
   become_user: kasvimuseo
-  template: src=uwsgi.ini dest=/home/kasvimuseo/uwsgi.ini
+  # It carries the secrets now (issue 025): readable only by the user uWSGI
+  # runs as, and not echoed into the play's output or a --diff run.
+  template:
+    src: uwsgi.ini
+    dest: /home/kasvimuseo/uwsgi.ini
+    owner: kasvimuseo
+    mode: 0600
+  no_log: true
   register: wsgi_config
   notify:
     - "(Handler: All OSs) Reload NGINX"

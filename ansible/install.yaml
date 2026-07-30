@@ -6,6 +6,40 @@
     - vars/main.yml
 
   tasks:
+    # The application's secrets are not in this repository (issue 025). They
+    # live in the Ansible Vault file for the host, ansible/host_vars/<host>,
+    # which is decrypted with ansible/get-vault-password.sh:
+    #
+    #     kasvimuseo_secret_key: ...
+    #     kasvimuseo_db_password: ...
+    #
+    # Fail here, before anything is installed, rather than deploy an
+    # application that cannot start or a database user with an empty password.
+    - name: Check that the secrets are in the vault
+      # Every tag whose tasks need one of the two values: collectstatic imports
+      # the settings, the database user is created with the password, and
+      # uwsgi.ini carries both. `backup`, `restore` and `media` are left out on
+      # purpose -- taking a dump needs neither.
+      tags:
+        - code
+        - static
+        - database
+        - web
+        - uwsgi
+      assert:
+        that:
+          - kasvimuseo_secret_key is defined
+          - kasvimuseo_secret_key | length > 0
+          - kasvimuseo_db_password is defined
+          - kasvimuseo_db_password | length > 0
+        msg: >-
+          kasvimuseo_secret_key and kasvimuseo_db_password must be defined in
+          the vaulted host_vars file for this host. Add them with
+          `ansible-vault edit ansible/host_vars/{{ inventory_hostname }}`.
+          Neither value is in the repository, and the old committed ones should
+          not be reused -- see
+          docs/issues/025-production-secret-key-and-database-password-are-committed.rst.
+
     - name: Install Python 2.7
       tags:
         - python
@@ -78,6 +112,12 @@
         command: collectstatic
         app_path: "{{ django_dir }}"
         settings: ylaneenkasvit.ylaneenkasvit_settings
+      # Importing the settings needs both secrets, so any manage.py command run
+      # from here needs them in its environment too (issue 025).
+      environment:
+        KASVIMUSEO_SECRET_KEY: "{{ kasvimuseo_secret_key }}"
+        KASVIMUSEO_DB_PASSWORD: "{{ kasvimuseo_db_password }}"
+      no_log: true
 
     - name: Install PostgreSQL
       tags:

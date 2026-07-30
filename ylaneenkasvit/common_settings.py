@@ -2,8 +2,30 @@
 
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 PROJECT_ROOT = '/www/ylaneenkasvit'
 here = lambda *args: os.path.join(os.path.dirname(__file__), *args)
+
+
+def secret_from_env(name):
+    """Return environment variable ``name``, or refuse to start without it.
+
+    For a secret there is deliberately no default. A fallback would let a
+    deployment that forgot to set the variable come up signing cookies and
+    password-reset tokens with a value anybody who has ever cloned this
+    repository knows, and it would do so silently -- see
+    ``docs/issues/025-production-secret-key-and-database-password-are-committed.rst``.
+    The test settings supply their own literals instead of calling this.
+    """
+    try:
+        return os.environ[name]
+    except KeyError:
+        raise ImproperlyConfigured(
+            '{0} is not set. This deployment reads its secrets from the'
+            ' environment and has no default for them; set {0} in the'
+            ' process environment (in production, uwsgi.ini writes it from'
+            ' Ansible Vault) and start again.'.format(name))
 
 # specify SITE_ROOT in site specific settings
 

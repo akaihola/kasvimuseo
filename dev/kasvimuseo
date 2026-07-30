@@ -30,7 +30,15 @@ PGPORT=${KASVIMUSEO_PG_PORT:-5432}
 PGLOG=$DEV/pg.log
 DB_NAME=${KASVIMUSEO_DB_NAME:-ylaneenkasvit}
 DB_USER=${KASVIMUSEO_DB_USER:-ylaneenkasvit}
-DB_PASSWORD=${KASVIMUSEO_DB_PASSWORD:-5tsovi25}
+# Local-only credentials: the throwaway cluster trusts local connections, so
+# this password authenticates nothing. It used to be production's, which is why
+# it is not any more (issue 025). `db fetch`, the one command that talks to
+# production, insists on being given the real one.
+DB_PASSWORD=${KASVIMUSEO_DB_PASSWORD:-development}
+# Development key for a development server. The production key comes from
+# Ansible Vault and is never in this repository; the settings refuse to start
+# without KASVIMUSEO_SECRET_KEY, so something has to be passed here.
+SECRET_KEY=${KASVIMUSEO_SECRET_KEY:-development-only-not-a-production-key}
 IMAGE=${KASVIMUSEO_IMAGE:-kasvimuseo-dev}
 PROD_SSH=${KASVIMUSEO_PROD_SSH:-kasvimuseo@kasvit.ambitone.com}
 
@@ -70,6 +78,15 @@ db_stop() { pg_running && pg_ctl -D "$PGDATA" -w -m fast stop >/dev/null || true
 
 db_fetch() {
     local out=${1:-$DEV/backups/production.sql}
+    # The only command here that authenticates against production, and the
+    # production password is no longer in this repository (issue 025), so the
+    # local default cannot stand in for it.
+    [ -n "${KASVIMUSEO_DB_PASSWORD:-}" ] || die \
+        "db fetch needs the production database password:
+  KASVIMUSEO_DB_PASSWORD=... dev/kasvimuseo db fetch
+It is in Ansible Vault, under ansible/host_vars/, and nowhere in this
+repository in plain text. Without it, take the backup with Ansible instead:
+  ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml"
     mkdir -p "$(dirname "$out")"
     echo "Dumping $DB_NAME from $PROD_SSH ..." >&2
     ssh "$PROD_SSH" \
@@ -209,6 +226,7 @@ app_run_container() {
         -e "KASVIMUSEO_DB_NAME=$DB_NAME" \
         -e "KASVIMUSEO_DB_USER=$DB_USER" \
         -e "KASVIMUSEO_DB_PASSWORD=$DB_PASSWORD" \
+        -e "KASVIMUSEO_SECRET_KEY=$SECRET_KEY" \
         -e "KASVIMUSEO_TEST_SUFFIX=${KASVIMUSEO_TEST_SUFFIX:-}" \
         $extra "$IMAGE" "$@"
 }

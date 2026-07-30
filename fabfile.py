@@ -1,3 +1,5 @@
+import os
+
 from fabric.api import env, task
 # noinspection PyUnresolvedReferences
 from flax import (bootstrap,
@@ -56,7 +58,10 @@ def kajala():
     env.django_port = 11110
     env.db_name = 'kajalankasvit'
     env.db_user = 'kajalankasvit'
-    env.db_password = '6dofoso11'
+    # Not in this file: the password that used to stand here is in the history
+    # and is disclosed until it is rotated (issue 025). Deployment reads it
+    # from the environment, as the settings modules do.
+    env.db_password = os.environ['KASVIMUSEO_DB_PASSWORD']
     env.nginx_root_location_extra = 'client_max_body_size 10m;'
     env.gunicorn_timeout = 240
     env.django_settings_module = 'ylaneenkasvit.kajala_settings'
