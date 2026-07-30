@@ -58,11 +58,15 @@ How this is ranked
 1. Find out what production actually runs
 -----------------------------------------
 
-Before anything else, and independent of all of it. Neither is a code change;
-both change what the rest of the list means.
+Before anything else, and independent of all of it. None is a code change; each
+changes what the rest of the list means.
 
 .. issue-rank::
 
+   049: The rotated ``SECRET_KEY`` and database password are in the vault and
+      not in use, so the disclosure 025 describes is still live. One playbook
+      run ends it, and it is the only item on this page whose timing belongs to
+      somebody outside the project.
    026: The answer is either "the deployment is not reproducible" or
       "production is serving with ``DEBUG`` on", which is a live
       information-disclosure problem. One look at the server settles which,
