@@ -21,11 +21,15 @@ Issue 044: Large admin pages are truncated for a remote browser
     measurements, because it is right whatever they say -- see "Decision"
     below, which also records what it does not settle.
 :Resolution: ``1bced8d`` "dev: serve the development site with gunicorn" fixes
-    the development environment and makes the failure audible. It does not stop
-    it: measured from the laptop on 2026-07-30, the labels URL is still cut, at
-    42,974 bytes of 54,613, and now says so (``curl`` exit 18). The cause is
-    below HTTP -- pasta or the tailnet. See "What the laptop said" and "What
-    the maintainer must still confirm".
+    the development environment and makes the failure audible; ``4207d89`` makes
+    the label editor say what went wrong. **Neither fixes the report**:
+    ``species/6`` still loses its save buttons, and the labels URL is still cut
+    -- at 42,974 bytes of 54,613, ten times out of ten, and now saying so
+    (``curl`` exit 18). Three rounds of measurement from the laptop have
+    cleared the application, both WSGI servers, the container, the browser, the
+    MTU and size itself; what is left is a remote TCP connection to the
+    published port, which no test on the server host can reach. See "What the
+    laptop said" and "What the maintainer must still confirm".
 
 Problem
 =======
@@ -574,6 +578,38 @@ is one part in three hundred, and it is a third of the width of one 1,240-byte
 segment on a 1,280-byte-MTU path -- so "the connection dies after N whole
 packets" does not describe it either.
 
+The third round settles four things
+-----------------------------------
+
+Run from the laptop, same evening, against the same server.
+
+7. **The offset is fixed.** Ten fetches of the labels URL, ten times
+   ``exit=18 downloaded=42974``. Not approximately: identically, against a path
+   whose round-trip time varies between 28 and 373 ms. **Whatever stops this
+   transfer is counting bytes, not losing packets.**
+8. **The SSH tunnel delivers it whole**, ten times out of ten, 54,613 bytes,
+   ``exit=0``. Same server, same process, same response. (The ``ssh -L`` in the
+   instructions failed to bind -- port 8000 on the laptop was already forwarded
+   from an earlier session -- so the requests went through that existing
+   tunnel, which is the same measurement.) The application, Django, gunicorn
+   and the container are all finished as suspects.
+9. **Size is not the variable.** Every static file arrived complete and
+   byte-exact: 2,341, 6,662, 27,925, 94,840 and **167,158** bytes. The path
+   carries three times the failing response without trouble, over the same
+   tailnet, to the same client, from the same server and port.
+10. **The MTU suspect is dead.** ``tailscale ping`` reports the connection is
+    relayed (``via DERP(hel)``, "direct connection not established"), 28--373 ms.
+    Fifty 1,280-byte pings, 0% loss. A 1,400-byte probe with ``-M do`` is
+    refused locally with ``sendmsg: Message too long`` -- which is path MTU
+    discovery working exactly as it should, and the opposite of a black hole.
+
+And the fifth answer is the unwelcome one:
+
+11. **``species/6`` still has no ``Tallenna``.** The page this issue was filed
+    about is still truncated in Firefox. Serving through gunicorn did not fix
+    the report; it made the failure audible, which is how the ten measurements
+    above exist at all.
+
 It could not be reproduced on the server host
 ---------------------------------------------
 
@@ -603,15 +639,47 @@ cut at 42,871 by a different client against a different server, while a
 
 Those two cut points are 103 bytes apart in payload, 143 on the wire, and each
 is exactly reproducible on its own server -- ``curl`` and Firefox agree to the
-byte. **That combination is what makes this strange.** A buffer explains the
-determinism and not the 143-byte shift; a lossy path or an MTU black hole
-explains neither, since both would put the cut in a different place each time
-and would move it in whole segments of about 1,240 bytes. Whatever it is, it
-stops at very close to the same *wire* offset, near 43,000, on two servers and
-two clients, and it lets a 360 KB page through untouched.
+byte, ten times out of ten. A lossy path or an MTU black hole explains neither
+the determinism nor the fact that a 167 KB file crosses the same path
+untouched.
 
-The next round is designed to get more than two samples of it, because with two
-every explanation still fits.
+What is left, after three rounds
+--------------------------------
+
+Cleared: the application, Django, the WSGI server (both of them), the
+container, the browser, the data, size as such, and the MTU. Not cleared: a
+remote TCP connection to the published port, which is the one thing the SSH
+tunnel replaces and the one thing that cannot be exercised from ``gogo``.
+
+Sorted by size, every measurement so far says something odd -- it is a **band**,
+not a threshold:
+
+=========================================== ========== =====================
+ Response                                    Bytes      Over the tailnet
+=========================================== ========== =====================
+ ``planting-labels/`` (dynamic)               28,158    complete
+ ``static/.../grappelli.min.js``              27,925    complete
+ ``admin/.../species/6/``                     52,230    **cut**
+ ``planting-labels/data/``                    54,613    **cut at 42,974**
+ ``static/.../jquery-1.7.2.min.js``           94,840    complete
+ ``static/.../screen.css``                   167,158    complete
+ ``admin/.../location/2/``                   360,391    complete
+=========================================== ========== =====================
+
+A mechanism that fits all seven rows: **the sender writes the whole response
+into the socket and closes immediately, and the close is losing whatever has
+not left yet.** A response small enough to be fully delivered before that close
+survives. A response too large to fit in the send buffer cannot be written in
+one go, so the sender blocks until the client has taken it, and by the time it
+closes there is nothing left to lose -- which is why the biggest responses are
+the safe ones. In between sits a band where the whole body fits in the buffer,
+the sender finishes instantly, and delivery stops around 43 KB.
+
+It is a hypothesis, and it makes predictions that cost one command to check:
+a 53,979-byte public HTML page should be cut, and public pages of 257,244 and
+469,900 bytes should arrive whole. It also predicts **no error on the server
+side at all**, since from the server's point of view every write succeeded.
+Those are in the next round.
 
 It also means **suspect 1 is cleared as the thing that drops the bytes**.
 ``wsgiref`` is out of the path and the cut is not, so whatever does this lives
@@ -643,9 +711,11 @@ Options
 3. **Chase the MTU** if the ``curl`` measurements point at the network rather
    than the server. ``tailscale ping --verbose`` reports the negotiated path;
    an MTU mismatch is a property of the tailnet, not of this repository.
-   **This is where the first round of measurements points**, since the cut
-   survived the change of WSGI server. Commands under "What the maintainer must
-   still confirm", step 5.
+   **Tested and cleared** in the third round: path MTU discovery works, the
+   1,280-byte path is lossless over fifty pings, and an oversized probe is
+   refused locally rather than disappearing. What the same command did turn up
+   is that the path is *relayed* through DERP rather than direct, which is a
+   different thing and is still worth a measurement.
 
 Decision
 ========
@@ -703,69 +773,60 @@ test``: 357 passed.
 What the maintainer must still confirm
 ======================================
 
-This is why ``Status`` is not ``Fixed``: the labels URL is still cut, and the
-first round left three questions open. All of the following runs from the
-laptop, and **none of it needs a login** -- that is deliberate, after round
-one.
+Rounds one to three are answered above; this is what is left. ``Status`` is not
+``Fixed`` because ``species/6`` still loses its save buttons -- the reported
+defect is untouched, only audible. Everything here is public and needs no
+login.
 
-**1. Is the cut at a fixed offset?** Ten fetches of the public URL, printing
-where each one stopped::
+**1. Is it a band?** The one that tests the mechanism proposed above. Five
+public URLs, two of them far larger than anything that has failed::
 
-    for i in $(seq 10); do
-        curl -s -o /dev/null -w "exit=%{exitcode} downloaded=%{size_download}\n" \
-             http://gogo.crane-boa.ts.net:8000/kasvimuseo/planting-labels/data/
-    done
-
-Complete is 54,613. Ten identical short counts is a buffer and names its size;
-ten different ones is the network; a mixture of whole and cut is the stall
-this file now suspects, and the proportion is itself a measurement.
-
-**2. Does the same URL survive the tunnel?** The comparison round one owed::
-
-    ssh -N -L 8000:127.0.0.1:8000 gogo &
-    for i in $(seq 10); do
-        curl -s -o /dev/null -w "exit=%{exitcode} downloaded=%{size_download}\n" \
-             http://127.0.0.1:8000/kasvimuseo/planting-labels/data/
-    done
-
-Whole through the tunnel and cut without it puts this below HTTP for good, in
-pasta or the tailnet, and finishes both the application and the WSGI server as
-suspects.
-
-**3. Is it size, or is it this response?** Five public static files, each with
-a real ``Content-Length`` to check against, two of them larger than the JSON
-that fails::
-
-    B=http://gogo.crane-boa.ts.net:8000/static
-    for u in css/kasvimuseo.admin.css:2341 \
-             admin/js/core.js:6662 \
-             grappelli/js/grappelli.min.js:27925 \
-             grappelli/jquery/jquery-1.7.2.min.js:94840 \
-             grappelli/stylesheets/screen.css:167158; do
+    H=http://gogo.crane-boa.ts.net:8000
+    for u in /kasvimuseo/planting-labels/:28158 \
+             /kasvimuseo/planted-species/:53979 \
+             /kasvimuseo/planting-labels/data/:54613 \
+             /kasvimuseo/planted-species-printable/1,2,3/:257244 \
+             /kasvimuseo/planted-species-compact/1,2,3,4,5/:469900; do
         curl -s -o /dev/null -w "${u#*:} expected, %{size_download} got, exit=%{exitcode}\n" \
-             "$B/${u%%:*}"
+             "$H${u%%:*}"
     done
 
-If 94,840 and 167,158 arrive whole while 54,613 does not, size is not the rule
-and the difference is in how the response is written -- Django serves a static
-file through a file wrapper in many small writes, and a rendered page as one
-string.
+Every one of these is a rendered response, so none of them carries a
+``Content-Length``; the last two answer ``500`` on a checkout without media
+files, which does not matter -- they are being used as a quantity of bytes.
+The prediction is **complete, cut, cut, complete, complete**. If the two big
+ones arrive whole while the two in the middle do not, the failure is a band
+rather than a threshold and the send-buffer mechanism above is the one to
+chase. If the big ones are cut too, that mechanism is wrong and what is left
+is a plain size threshold that static files somehow escape.
 
-**4. Is the reported symptom actually gone?** Open
-``/admin/kasvimuseo/species/6/`` in Firefox -- the exact page this issue was
-filed about -- and look for ``Tallenna``. This is the one that says whether the
-change fixed the report or only made its failures audible, and it is the
-difference between ``Fixed`` and ``In progress``.
+**2. What does the server see?** Run the site in a terminal where its log is
+visible::
 
-**5. If 2 says the tailnet**, the MTU test is two commands::
+    dev/kasvimuseo app run
 
-    tailscale ping --verbose gogo
-    ping -M do -s 1252 100.81.121.7      # 1280-byte packets, no fragmentation
-    ping -M do -s 1372 100.81.121.7      # 1400 -- should fail on a 1280 path
+then fetch the labels URL from the laptop and read what gunicorn printed. The
+mechanism above predicts **nothing at all** -- an ordinary ``200`` access line,
+no traceback -- because every write succeeded as far as the server is
+concerned. A ``Broken pipe`` or ``Connection reset by peer`` traceback would
+mean the opposite: the client's side went away first, and the server knows it.
 
-A 1400-byte probe that neither succeeds nor reports "message too long" is a
-path-MTU black hole, which is option 3, and it is a property of the tailnet
-rather than of this repository.
+**3. Is the connection closed or reset?** This is the direct test of the
+mechanism, and it needs ``sudo`` on the laptop::
+
+    sudo tcpdump -ni tailscale0 -c 200 'host 100.81.121.7 and tcp port 8000'
+
+Run a failing fetch under it. An ``R`` flag from the server end -- a reset
+arriving while data is still outstanding -- is the abortive close the
+hypothesis names, and it would end this issue's diagnosis. An orderly ``F``
+after 42,974 bytes points somewhere else entirely.
+
+**4. Does it still happen on a direct connection?** ``tailscale ping`` says
+this path is relayed through DERP in Helsinki rather than direct, which is a
+third party in the middle of every one of these measurements. If a direct
+connection can be established -- same LAN, or ``tailscale ping`` until it says
+so -- repeating step 1 over it separates "the tailnet" from "the DERP relay",
+and those want different fixes.
 
 Independently of all of this
 ============================
