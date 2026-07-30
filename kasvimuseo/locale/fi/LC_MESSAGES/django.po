@@ -516,3 +516,104 @@ msgstr "Kaikki lajit"
 #: templates/kasvimuseo/reports/planted-species-base-compact.html:45
 msgid "Next"
 msgstr "Seuraava"
+
+# Issue 037: the in-UI instructions for managing plant photos.
+#: forms.py:19
+msgid ""
+"Name the file after the plant’s Finnish name, for example "
+"<code>valkonarsissi.jpg</code> or <code>valkonarsissi "
+"kukassa.jpg</code>. The photo is attached to the species whose "
+"Finnish name is the first word of the title; upper and lower case "
+"make no difference. If no species matches, the photo stays in the "
+"photo library and appears on no species."
+msgstr ""
+"Nimeä tiedosto kasvin suomenkielisen nimen mukaan, esimerkiksi "
+"<code>valkonarsissi.jpg</code> tai <code>valkonarsissi "
+"kukassa.jpg</code>. Kuva liitetään sille lajille, jonka "
+"suomenkielinen nimi on sama kuin otsikon ensimmäinen sana; isoilla "
+"ja pienillä kirjaimilla ei ole väliä. Jos yksikään laji ei täsmää, "
+"kuva jää kuvakirjastoon eikä näy millään lajilla."
+
+#: forms.py:27
+msgid ""
+"You can leave this empty, which is the usual way: the title then "
+"becomes the file name without the <code>jpg</code>, "
+"<code>jpeg</code> or <code>jpe</code> extension. If you write the "
+"title yourself, begin it with the plant’s Finnish name, because the "
+"first word of the title is what attaches the photo to a species."
+msgstr ""
+"Voit jättää tämän tyhjäksi, ja se on tavallisin tapa: otsikoksi "
+"tulee silloin tiedoston nimi ilman <code>jpg</code>-, "
+"<code>jpeg</code>- tai <code>jpe</code>-päätettä. Jos kirjoitat "
+"otsikon itse, aloita se kasvin suomenkielisellä nimellä, sillä "
+"otsikon ensimmäinen sana on se, jolla kuva liitetään lajiin."
+
+#: forms.py:35
+msgid ""
+"The photo of this species in the plant list and in the reports. The "
+"choices are the photos whose title begins with this plant’s Finnish "
+"name. Empty detaches the photo from the species without deleting "
+"the image file. Note that saving a photo in the photo library "
+"always attaches it to its species, so saving that photo again "
+"undoes this choice."
+msgstr ""
+"Tämän lajin kuva kasvilistassa ja raporteissa. Valittavina ovat "
+"kuvat, joiden otsikko alkaa tämän kasvin suomenkielisellä nimellä. "
+"Tyhjä irrottaa kuvan lajilta poistamatta itse kuvatiedostoa. "
+"Huomaa, että kuvakirjastossa tallennettu kuva liitetään aina "
+"lajiinsa, joten saman kuvan tallentaminen uudelleen kumoaa tämän "
+"valinnan."
+
+#: forms.py:107
+msgid "Photo"
+msgstr "Kuva"
+
+#: templates/admin/photologue/photo/change_form.html:8
+msgid ""
+"Plant photos are attached to species by name: the first word of the "
+"photo's title – or of the file name, if the title is left empty – "
+"has to be the plant's Finnish name."
+msgstr ""
+"Kasvikuvat liitetään lajeihin nimen perusteella: kuvan otsikon – "
+"tai tiedoston nimen, jos otsikko jätetään tyhjäksi – ensimmäisen "
+"sanan pitää olla kasvin suomenkielinen nimi."
+
+#: templates/admin/photologue/photo/change_form.html:9
+msgid ""
+"The most recently saved photo wins: if the species already has a "
+"photo, saving this one replaces it. A species' photo can also be "
+"changed or removed on the species page, in the Photo field."
+msgstr ""
+"Viimeksi tallennettu kuva voittaa: jos lajilla on jo kuva, tämän "
+"tallentaminen korvaa sen. Lajin kuvan voi vaihtaa tai poistaa myös "
+"lajin omalta sivulta Kuva-kentästä."
+
+#: templates/admin/photologue/photo/change_form.html:10
+msgid ""
+"If several species share the same Finnish name, the photo goes to "
+"the one the garden records and the file name point to; if nothing "
+"tells them apart, the photo is left unattached."
+msgstr ""
+"Jos samalla suomenkielisellä nimellä on useita lajeja, kuva "
+"liitetään siihen, jonka puutarhatiedot ja tiedoston nimi "
+"osoittavat; jos mikään ei erota niitä, kuva jää liittämättä."
+
+#: templates/kasvimuseo/reports/planting-labels.html:263
+msgid ""
+"The arrows over a photo change the photo of this label only, not "
+"the photo of the species. The choice is kept once you click “Save "
+"changes”; unsaved, it is lost when the page is reloaded. The photo "
+"of the species itself is chosen on the species page in the admin."
+msgstr ""
+"Kuvan yllä olevat nuolet vaihtavat vain tämän kyltin kuvan, eivät "
+"lajin kuvaa. Valinta säilyy, kun napsautat “Save changes”; "
+"tallentamatta se katoaa, kun sivu ladataan uudelleen. Lajin oman "
+"kuvan valitset ylläpidossa lajin sivulta."
+
+#: templates/kasvimuseo/reports/planting-labels.html:431 templates/kasvimuseo/reports/planting-labels.html:432
+msgid "Previous photo for this label"
+msgstr "Edellinen kuva tälle kyltille"
+
+#: templates/kasvimuseo/reports/planting-labels.html:436 templates/kasvimuseo/reports/planting-labels.html:437
+msgid "Next photo for this label"
+msgstr "Seuraava kuva tälle kyltille"

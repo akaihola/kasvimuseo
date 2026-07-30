@@ -1,0 +1,11 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{# Issue 037: the whole of how a photo finds its species, said on the page
+   where photos are added and changed. ``form_top`` is grappelli's block at the
+   very start of the form, before the first fieldset. #}
+{% block form_top %}
+    <p class="grp-help">{% trans "Plant photos are attached to species by name: the first word of the photo's title – or of the file name, if the title is left empty – has to be the plant's Finnish name." %}</p>
+    <p class="grp-help">{% trans "The most recently saved photo wins: if the species already has a photo, saving this one replaces it. A species' photo can also be changed or removed on the species page, in the Photo field." %}</p>
+    <p class="grp-help">{% trans "If several species share the same Finnish name, the photo goes to the one the garden records and the file name point to; if nothing tells them apart, the photo is left unattached." %}</p>
+{% endblock %}

@@ -258,3 +258,35 @@ def test_submit_row_is_finnish(admin_client):
     assert 'value="Tallenna"' in add
     assert 'value="Tallenna ja lisää toinen"' in add
     assert 'value="Tallenna välillä ja jatka muokkaamista"' in add
+
+
+# -- the instructions on the photo pages (issue 037) --------------------------
+
+def rendered(response):
+    assert response.status_code == 200
+    return response.content.decode('utf-8')
+
+
+@pytest.mark.django_db
+def test_add_photo_page_states_the_naming_rule(admin_client):
+    """The intro paragraphs and both help texts reach the rendered page."""
+    page = rendered(admin_client.get(reverse('admin:photologue_photo_add')))
+
+    assert 'Kasvikuvat liitetään lajeihin nimen perusteella' in page
+    assert 'Viimeksi tallennettu kuva voittaa' in page
+    assert 'Nimeä tiedosto kasvin suomenkielisen nimen mukaan' in page
+    assert 'Voit jättää tämän tyhjäksi' in page
+
+
+@pytest.mark.django_db
+def test_species_page_offers_the_photo_field(admin_client, photo_factory):
+    species = factories.create_species(name_fi='valkonarsissi')
+    photo = photo_factory(title='valkonarsissi kukassa')
+    photo_factory(title='keltanarsissi')
+
+    page = rendered(admin_client.get(
+        reverse('admin:kasvimuseo_species_change', args=(species.pk,))))
+
+    assert 'name="photo"' in page
+    assert 'value="{0}"'.format(photo.pk) in page
+    assert 'Tyhjä irrottaa kuvan lajilta' in page
