@@ -996,9 +996,9 @@ Two security questions, independent of the upgrade
 
 Both concern ``ylaneenkasvit_settings.py``, which the upgrade will touch
 repeatedly, so they were worth deciding first: the committed production
-``SECRET_KEY`` and database password (``docs/issues/025``) — fixed, so the file
-the upgrade edits no longer carries either, and both values have been rotated —
-and the fact that
+``SECRET_KEY`` and database password (``docs/issues/025``) — out of the file the
+upgrade edits, read from the environment, and rotated in the vault but not yet
+deployed, which is ``docs/issues/049`` — and the fact that
 ``ALLOWED_HOSTS`` is set nowhere in the repository at all
 (``docs/issues/026``) — which, given that Django 1.5 rejects every request when
 it is empty and ``DEBUG`` is off, means production is relying on something this

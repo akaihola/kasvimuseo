@@ -9,10 +9,20 @@ Issue 025: Production SECRET_KEY and database password are committed
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: ``kasvimuseo/tests/test_settings_secrets.py`` -- added with the fix; it pins that ``secret_from_env`` has no default and names the missing variable. Nothing pinned the old behaviour, since a committed constant is not something a test can catch.
 :Depends on: (none)
-:Blocks: (none)
+:Blocks: 049 -- deploying the rotated values needs settings that read them from the environment, which is what this issue did
 :Related: 026 -- the same file, and the same question of what the server carries that the repository does not
-:Decision: All three options, in the order they had to happen. The settings read both values from the environment (``KASVIMUSEO_SECRET_KEY``, ``KASVIMUSEO_DB_PASSWORD``) with no default, and Ansible supplies them from the vault the repository already had (option 2); the maintainer then rotated both and put the new values in that vault (option 1), which is the step that ended the disclosure; the history is left alone (option 3), since rotation makes what is in it worthless.
-:Resolution: Commit a58a697 moved both values out of every tracked file and into the environment, b8a380d recorded that half. The maintainer rotated the ``SECRET_KEY`` and the database password and updated the vault on 2026-07-30, reported here rather than measured -- it is a server action this repository cannot see. Both halves are done.
+:Decision: Option 2 in this repository, option 3 for the history, and option 1 handed on. The settings read both values from the environment (``KASVIMUSEO_SECRET_KEY``, ``KASVIMUSEO_DB_PASSWORD``) with no default, and Ansible supplies them from the vault the repository already had (option 2). The history is left alone (option 3): rewriting it un-discloses nothing, and rotation makes what is in it worthless. Rotation itself (option 1) is half done -- the maintainer has generated new values and put them in the vault -- and the deploy that makes them the ones in use is **issue 049**, which waits on agreeing the timing with the customer.
+:Resolution: Commit a58a697 moved both values out of every tracked file and into the environment, b8a380d recorded that half; no tracked file holds either value. That is all of this issue that the repository can do. It did not end the disclosure -- see 049, which is the step that does.
+
+.. warning::
+
+   **``Fixed`` here means the repository, not the disclosure.** No tracked file
+   holds either value any more, and the maintainer has rotated both into the
+   vault -- but the server has not been updated, so the running application is
+   still signing with the key that is in this repository's history. Anyone who
+   has ever had a clone can still forge an admin session. :doc:`049
+   <049-production-still-runs-the-old-secret-key-and-database-password>` is that
+   deploy, and it is open.
 
 Problem
 =======
@@ -118,33 +128,30 @@ set the site starts under ``ylaneenkasvit_settings`` and ``admin`` logs into
 unset the import fails with ``ImproperlyConfigured: KASVIMUSEO_SECRET_KEY is
 not set...`` rather than starting.
 
-Rotation
-========
+Rotation, which is not this issue
+=================================
 
-The repository change above did not remediate anything on its own: it stopped
-the repository from being where the secrets live, and it made a deployment that
-has not been handed them fail rather than start with a known key. Until the
-values themselves changed, everyone who had ever cloned this repository could
-still forge an admin session.
+The repository change above remediated nothing on its own: it stopped the
+repository from being where the secrets live, and it made a deployment that has
+not been handed them fail rather than start with a known key. Only changing the
+values ends the disclosure, and only a deploy makes a changed value the one in
+use.
 
-The maintainer rotated both on 2026-07-30 and put the new values in
+The maintainer generated new values on 2026-07-30 and put them in
 ``ansible/host_vars/<host>`` as ``kasvimuseo_secret_key`` and
-``kasvimuseo_db_password``. That is what closes this issue. It is recorded on
-their word: no test and nothing in this repository can observe the server's
-environment, which is the same reason the repository half could be verified here
-and this half could not.
+``kasvimuseo_db_password``. Recorded on their word: nothing in this repository
+can observe the vault or the server, which is the same reason the repository half
+could be verified here and this half cannot.
 
-Expected and harmless side effects of the new ``SECRET_KEY``: every session was
-invalidated, so everybody logged in at the time was logged out once, and any
-password-reset link issued before the rotation stopped working. Requesting a new
-one works normally.
+**The new values are not in use.** uWSGI keeps the environment it started with,
+so until the playbook runs, the application signs with the old key and connects
+with the old password, and the disclosure described under "Impact" above is
+exactly as it was when this issue was filed. That deploy is
+:doc:`049 <049-production-still-runs-the-old-secret-key-and-database-password>`:
+it is a separate issue because it is a separate act, on a machine this repository
+cannot reach, and because its timing has to be agreed with the customer -- a new
+``SECRET_KEY`` logs everybody out once and kills outstanding password-reset
+links, which is the entire cost but is not the maintainer's alone to spend.
 
-Option 3 stands: the history is left as it is. Rewriting it would not
-un-disclose anything, and now that both values are rotated, what is in it is
-worthless.
-
-If the site is unreachable or the admin cannot log in, the likely cause is that
-the playbook has not been run since the vault was updated -- the running uWSGI
-process keeps the environment it started with, and ``uwsgi.ini`` is rewritten
-only by ``ansible-playbook -t web ansible/install.yaml``, which restarts the
-service when the file changes.
+Option 3 stands either way: the history is left as it is. Rewriting it would not
+un-disclose anything, and once 049 lands, what is in it is worthless.

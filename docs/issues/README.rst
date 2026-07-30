@@ -124,13 +124,14 @@ question inside it is still open, which is why its ``Status`` says so. 004 and
 005 arrived with options that looked like questions and were not: in both, ``git
 log`` showed the defect was left-behind scaffolding rather than a decision
 anybody had made, so the ``Decision`` on each records what the history settled
-rather than a ruling the maintainer still owed. 025 is the one whose fix came in
-two halves with different owners: the repository stopped carrying the production
-``SECRET_KEY`` and database password and started reading them from the
-environment, which remediated nothing by itself, and then the maintainer rotated
-both -- the step that actually ended the disclosure, and the reason it is
-``Fixed`` rather than half-``Fixed``. Its file keeps both halves separate,
-including which of them this repository can verify and which it only records.
+rather than a ruling the maintainer still owed. 025 is the one whose work splits
+between two owners, and the split is why it is ``Fixed`` while the problem it
+describes is not solved: the repository stopped carrying the production
+``SECRET_KEY`` and database password and now reads them from the environment,
+which is everything this repository can do and which remediates nothing by
+itself. Deploying the rotated values -- the act that ends the disclosure -- is
+049, and it is open. 025's file says so at the top rather than reading as a
+completed remediation.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
@@ -223,8 +224,9 @@ From the dependency upgrade analysis
 ``docs/upgrade-plan.rst``. Read it first; it lists which of the others block it.
 
 Of the rest, 025 and 026 are security questions independent of the upgrade and
-could be decided immediately; 025 was, and is fixed, which leaves 026 -- the one
-that needs somebody to look at the running server. 019, 023 and 024 are one-line
+could be decided immediately; 025 was, and its repository half is fixed, leaving
+026 -- which needs somebody to look at the running server -- and 049, which needs
+somebody to deploy to it. 019, 023 and 024 are one-line
 defensive changes that
 are no-ops today and prevent silent breakage later -- the cheapest things on this
 list. 027 is the one with a real design decision in it. 034 wants deciding before
@@ -298,14 +300,16 @@ Reported by the maintainer
  046 Low      templates / labels UI   The label editor opens at print size
  047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
  048 Medium   dev environment / media Dev photos were loaded from the production host
+ 049 High     deployment / security   Production still runs the old SECRET_KEY and DB password
 ==== ======== ======================= ==================================================
 
 043-047 were split out of ``incoming.rst``, where they were written down as
-they were noticed; 048 was reported straight into a task and never passed
-through it. Unlike the rest of this register they describe symptoms rather than
-causes, so each says how far the cause was traced, and each was taken back to
-the reporter once for the detail that could only come from the machine it
-happens on.
+they were noticed; 048 and 049 were reported straight into a task and never
+passed through it. Unlike the rest of this register they describe symptoms rather
+than causes, so each says how far the cause was traced, and each was taken back
+to the reporter once for the detail that could only come from the machine it
+happens on. 049 is the exception to that as well as the newest: its cause is
+known exactly, and what it is waiting for is a decision about *when*.
 
 043 is fixed: it was one attribute, ``admin_order_field``, and the work was the
 two sub-decisions around it -- which collation the databases sort under, and
@@ -322,7 +326,14 @@ machines and was the odd one out here: its cause was fully known and nothing in
 it was a defect -- the development settings named the production media host on
 purpose -- so what it asked for was a ruling on a design, not a repair. It got
 one the day it was filed, and is **fixed**: the development server serves the
-photos it has and redirects the rest to that host.
+photos it has and redirects the rest to that host. 049 is the newest and the only
+one here that is not about this repository at all: 025 took the production
+secrets out of the tracked files and the maintainer rotated them into the vault,
+but the server still runs the old ones, so the disclosure is live until a
+playbook run makes the new values the ones in use. It sits here rather than
+inside 025 because it is a separate act on a machine nothing here can reach, and
+because the customer has to agree when to spend its cost -- one round of logouts
+and any outstanding password-reset links.
 
 
 Already fixed
