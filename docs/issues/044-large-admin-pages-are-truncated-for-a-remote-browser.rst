@@ -20,8 +20,8 @@ Issue 044: Large admin pages are truncated for a remote browser
     ``dev/kasvimuseo app run --runserver``. Taken without waiting for the
     measurements, because it is right whatever they say -- see "Decision"
     below, which also records what it does not settle.
-:Resolution: ``1bced8d`` "dev: serve the development site with gunicorn" fixes
-    the development environment and makes the failure audible; ``4207d89`` makes
+:Resolution: ``4fcef3c`` "dev: serve the development site with gunicorn" fixes
+    the development environment and makes the failure audible; ``312c0d1`` makes
     the label editor say what went wrong. **Neither fixes the report**:
     ``species/6`` still loses its save buttons, and the labels URL is still cut
     -- at 42,974 bytes of 54,613, ten times out of ten, and now saying so
