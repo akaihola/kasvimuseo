@@ -667,11 +667,10 @@ def autoconnect_photo_to_species(sender, instance, **kwargs):
     """
     if sender != Photo:
         return
-    title_parts = instance.title.split()
-    if not title_parts:
+    species_name = photo_matching.match_key(instance.title)
+    if species_name is None:
         return instance
-    species_name = title_parts[0].lower()
-    matches = Species.objects.filter(name_fi=species_name)
+    matches = Species.objects.filter(name_fi__iexact=species_name)
     try:
         species = matches.get()
     except Species.DoesNotExist:
