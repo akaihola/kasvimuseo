@@ -1,30 +1,51 @@
-from itertools import groupby
-
 from photologue.models import Photo
+
+from kasvimuseo.photo_matching import match_key
 
 
 def get_photo_titles_pks_and_urls():
+    """Every photo as its matching key, primary key and display URL.
+
+    The key is ``photo_matching.match_key`` of the title -- the same rule the
+    auto-attach receiver matches a title against ``Species.name_fi`` with, so
+    the two cannot disagree about case (issue 003). A photo whose title has no
+    word in it names no species and is left out rather than raising.
+    """
     photos = Photo.objects.only('title', 'image').order_by('title', 'pk')
-    # noinspection PyUnresolvedReferences
-    return [(photo.title.split()[0].lower(),
-             {'pk': photo.pk, 'url': photo.get_display_url()})
-            for photo in photos]
+    titles_pks_and_urls = []
+    for photo in photos:
+        title = match_key(photo.title)
+        if title is not None:
+            # noinspection PyUnresolvedReferences
+            titles_pks_and_urls.append(
+                (title, {'pk': photo.pk, 'url': photo.get_display_url()}))
+    return titles_pks_and_urls
 
 
 def get_photo_pks_and_urls_by_species():
-    """Get URLs of all photos, grouped by the first word of the photo title"""
-    # noinspection PyUnresolvedReferences
-    all_photos = get_photo_titles_pks_and_urls()
-    titles_pks_and_urls = groupby(all_photos,
-                                  lambda title_and_url: title_and_url[0])
-    return {title: [pk_and_url for _, pk_and_url in pks_and_urls]
-            for title, pks_and_urls in titles_pks_and_urls}
+    """Get URLs of all photos, grouped by the first word of the photo title
+
+    Accumulated into a dictionary rather than run through
+    ``itertools.groupby``: the key is case-folded but the photos arrive in
+    title order, so two photos sharing a key need not be adjacent --
+    ``Valkonarsissi kukassa`` and ``valkonarsissi lehdet`` are not -- and
+    groupby would emit two groups of which the dictionary kept only the last.
+    """
+    by_title = {}
+    for title, pk_and_url in get_photo_titles_pks_and_urls():
+        by_title.setdefault(title, []).append(pk_and_url)
+    return by_title
 
 
 def get_species_photos(species, photo_pks_and_urls_by_title):
+    """The photos whose title names ``species``, as ``(pk, url)`` pairs.
+
+    ``match_key`` of a blank ``name_fi`` is ``None``, which is in no dictionary
+    of photos, so such a species simply has none.
+    """
     return [(pk_and_url['pk'], pk_and_url['url'])
             for pk_and_url in
-            photo_pks_and_urls_by_title.get(species.name_fi.split()[0], [])]
+            photo_pks_and_urls_by_title.get(match_key(species.name_fi), [])]
 
 
 def get_species_photo_info(species, photo_pks_and_urls_by_title):

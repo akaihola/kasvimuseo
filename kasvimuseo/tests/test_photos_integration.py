@@ -80,6 +80,49 @@ def test_get_species_photos(display_size, photo_factory):
 
 
 @pytest.mark.django_db
+def test_get_species_photos_ignores_case(display_size, photo_factory):
+    """Issue 003: neither the title's case nor ``name_fi``'s decides a match.
+
+    Also that the two photos land in *one* group: their keys are equal only
+    after case-folding, and in title order they are not adjacent.
+    """
+    kukassa = photo_factory(title='Valkonarsissi kukassa')
+    lehdet = photo_factory(title='valkonarsissi lehdet')
+    by_species = photos.get_photo_pks_and_urls_by_species()
+    capitalised = create_species(name_fi='Valkonarsissi')
+    lower_case = create_species(name_fi='valkonarsissi',
+                                species='pseudonarcissus')
+
+    expected = [(kukassa.pk, kukassa.get_display_url()),
+                (lehdet.pk, lehdet.get_display_url())]
+    assert photos.get_species_photos(capitalised, by_species) == expected
+    assert photos.get_species_photos(lower_case, by_species) == expected
+
+
+@pytest.mark.django_db
+def test_get_species_photos_of_a_species_with_a_blank_name(display_size,
+                                                           photo_factory):
+    """``name_fi.split()[0]`` used to raise ``IndexError`` here."""
+    photo_factory(title='valkonarsissi kukassa')
+    by_species = photos.get_photo_pks_and_urls_by_species()
+    nameless = create_species(name_fi='')
+
+    assert photos.get_species_photos(nameless, by_species) == []
+
+
+@pytest.mark.django_db
+def test_get_photo_titles_pks_and_urls_skips_an_untitled_photo(display_size,
+                                                               photo_factory):
+    """A photo with no word in its title names nothing, and does not raise."""
+    photo_factory(title='valkonarsissi kukassa')
+    photo_factory(title='', filename='untitled')
+
+    result = photos.get_photo_titles_pks_and_urls()
+
+    assert [title for title, _ in result] == ['valkonarsissi']
+
+
+@pytest.mark.django_db
 def test_get_species_photo_info_with_a_photo_set(display_size, photo_factory):
     kukassa = photo_factory(title='valkonarsissi kukassa')
     tulppaani = photo_factory(title='tulppaani kukassa')
