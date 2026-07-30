@@ -22,8 +22,8 @@ Issue 044: Large admin pages are truncated for a remote browser
     is the layer four rounds of measurement identified as the one dropping the
     bytes. ``--runserver`` and ``--publish`` both stay, the second of them
     because reproducing the failure is now useful. See "Decision" below.
-:Resolution: ``4fcef3c`` (gunicorn), ``312c0d1`` (the label editor says what
-    went wrong) and ``c149113`` "dev: give the app container the host's network
+:Resolution: ``b1260ce`` (gunicorn), ``e91df60`` (the label editor says what
+    went wrong) and ``76f5b9c`` "dev: give the app container the host's network
     namespace". The first two did not fix the report and did not claim
     to; the third addresses the cause the packet capture named -- a clean
     ``FIN`` from ``gogo`` at byte 43,140, with every earlier segment
