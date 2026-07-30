@@ -658,6 +658,14 @@ except the ``IOError`` for the missing photo files behind the two ``500``\ s
 that were being used as bulk. As far as the server is concerned it wrote every
 byte.
 
+Those last two numbers cannot be reproduced now, and the reason is worth a
+line: they were Django debug pages for an ``IOError`` raised while measuring a
+photo, and issue 011 has since stopped that measurement happening per render.
+``planted-species-printable/1,2,3/`` and ``planted-species-compact/1,2,3,4,5/``
+now answer ``200`` at 15,321 and 29,674 bytes, both below the band. The two
+large results stand as measurements; the URLs are no longer a way to ask for a
+quarter of a megabyte.
+
 And a packet capture on the receiving machine says where those bytes stopped::
 
     23:26:07.357220 IP gogo.8000 > laptop: Flags [.],   seq 40685:41913, length 1228
