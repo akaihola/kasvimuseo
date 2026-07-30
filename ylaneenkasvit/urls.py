@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls.defaults import include, patterns, url
 from django.contrib import admin
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.http import HttpResponseRedirect
 from photologue.views import GalleryArchiveIndexView
 import grappelli
@@ -36,6 +37,15 @@ urlpatterns = patterns(
 
     (r'^$', lambda request: HttpResponseRedirect('/admin/')),
 )
+
+# ``manage.py runserver`` serves ``STATIC_URL`` out of the staticfiles finders
+# by itself, and nothing else does -- so under the gunicorn that
+# ``dev/kasvimuseo app run`` now starts (issue 044) the admin would come up
+# unstyled. Wire the same view up explicitly instead. This adds nothing unless
+# ``DEBUG``: ``staticfiles_urlpatterns`` goes through
+# ``django.conf.urls.static.static``, which returns an empty list otherwise, so
+# production still serves ``/static/`` from its web server.
+urlpatterns += staticfiles_urlpatterns()
 
 # Uploaded photos, when this project is the one serving them: a single leading
 # slash means ``MEDIA_URL`` is a path here, as the development and test
