@@ -101,10 +101,10 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 003, 004, 005, 007, 008, 009, 010, 012, 025, 039, 040, 041, 042,
-043, 046, 047 and 048 are open: each one either changes behaviour that is visible in
-production, deletes code, or commits to a piece of work, so each wants a
-decision first. Eight of the
+All but 002, 003, 004, 005, 007, 008, 009, 010, 012, 025, 037, 039, 040, 041,
+042, 043, 046, 047 and 048 are open: each one either changes behaviour that is
+visible in production, deletes code, or commits to a piece of work, so each
+wants a decision first. Eight of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
 archive view that refused to render an empty list, a missing sort link the
 maintainer asked to have done rather than ruled on, a placeholder image, a
@@ -112,7 +112,9 @@ search box switched off by a typo, and a receiver that could raise on any save
 -- needed no ruling, and stay in the tables with ``Status: Fixed``. 040 and 048
 did need one -- 040 between its three options, 048 between three shapes of a
 deliberate design change -- and both were ruled and fixed the same day; their
-files carry the reasoning. 042 needed one too, and got it when the defect it
+files carry the reasoning. 037 needed one between four options and got it once
+the four issues its content depends on were all fixed: three were taken and the
+fourth, a separate page repeating them, was not. 042 needed one too, and got it when the defect it
 describes was reported from the garden a second time, as a species photo that
 would not change; it is the reason 002 had to be fixed first, and the two are
 ``Fixed`` together. 003 needed one as well -- where the normalisation its two
@@ -250,12 +252,14 @@ From the photo management walkthrough
 ==== ======== ======================= ==================================================
 
 Read together with 002 and 003, which concern the same auto-attach signal: if
-that behaviour changes, the instructions asked for here change with it. 039 is
-the reason 037 has nothing honest to say about choosing a photo: the one control
-that looks like it chooses one writes a value the application never reads. 042
-is the capability behind 037's missing instructions; it is now ``Fixed``, which
-means 037 has something to describe and one new sentence it must not leave out
--- every save re-attaches, so the workflow is "save the one you want last".
+that behaviour changes, the instructions asked for here change with it. All
+three are now ``Fixed``. 039 was the reason 037 had nothing honest to say about
+choosing a photo, and having been fixed it is why the label editor can now say
+the chevrons choose the photo for *that label*. 042 is the capability behind
+037's missing instructions, and its sentence -- every save re-attaches, so the
+workflow is "save the one you want last" -- is in the text 037 added. 037 also
+took the half of the capability 042 left: a species' photo could be replaced
+but not removed, so its own fix puts ``photo`` on the species form.
 
 
 From the documentation work
