@@ -413,7 +413,35 @@ this issue: nothing anywhere is told that bytes went missing. It is also
 version-dependent -- the unpinned CDN URL means another machine can load an
 axios that does throw, which is presumably what put the ``SyntaxError`` in the
 reporter's console. Under gunicorn the truncation becomes a transport error
-instead of a parse one, and *that* does reach the ``.catch``.
+instead of a parse one, and *that* does reach the ``.catch`` -- confirmed from
+the laptop, which now gets a pop-up where it used to get nothing.
+
+The message it carries
+----------------------
+
+That pop-up said ``error``, and the maintainer asked it to say what went
+wrong, so it now does::
+
+    The labels could not be loaded from
+    /kasvimuseo/planting-labels/data/
+
+    the response was not valid JSON; 42871 characters arrived
+
+    No labels are shown and nothing can be saved. Reload the page to try
+    again. If it keeps happening the response is arriving incomplete --
+    see issue 044.
+
+Two changes, and neither makes the fetch more forgiving:
+
+* The ``.catch`` names the URL, repeats the error, and says what state the page
+  is in -- empty and unsaveable -- so the alert is a diagnosis rather than a
+  noise. Where the body was parseable-but-truncated it also prints how many
+  characters arrived, which is the number this whole issue is measured in.
+* The silent case above is now caught. A ``response.data`` that is not an
+  object with an ``object_list`` array is rejected instead of assigned, which
+  is what turns axios's silent parse into that same message. It is a *stricter*
+  fetch: a partial list still never reaches the editor, and the reason for that
+  is the delete-and-recreate POST described above.
 
 How to confirm, from the laptop
 ===============================
@@ -517,6 +545,53 @@ The first round, run by the maintainer against the site as it now runs -- the
    byte counts, so it too fetched five login pages. The tunnel comparison is
    still owed.
 
+The second round, later the same day, sharpens two of those:
+
+5. **Firefox stops at exactly the byte ``curl`` stopped at.**
+   ``SyntaxError: JSON.parse: unterminated string at line 1 column 42975``, so
+   42,974 characters arrived -- the same 42,974 ``curl`` reported, from a
+   different client, on a different request. The offset is not drifting: on
+   one server it is a constant.
+6. **The editor now says something.** The alert fires, which is what the
+   framing change was expected to produce: under ``runserver`` the truncation
+   was not an error at all (see "Confirmed in a browser"), and under gunicorn
+   it is. It said only ``error``, which is fixed below.
+
+An offset that is byte-exact across two clients is not what a lossy path looks
+like. Between the two servers it moves, and only slightly:
+
+=========== ============= ============== =================== ===============
+ Server      Header bytes  Payload cut    Payload starts at   Wire offset
+=========== ============= ============== =================== ===============
+ runserver   126           42,871         126                 42,997
+ gunicorn    160 (+6)      42,974         166                 43,140
+=========== ============= ============== =================== ===============
+
+Measured on ``gogo``, same URL, same 54,613-byte body; gunicorn's ``+6`` is the
+chunk-size line that precedes the body. So both cuts land within 143 bytes of
+43,000 **on the wire**, from two servers whose headers differ by 40 bytes. That
+is one part in three hundred, and it is a third of the width of one 1,240-byte
+segment on a 1,280-byte-MTU path -- so "the connection dies after N whole
+packets" does not describe it either.
+
+It could not be reproduced on the server host
+---------------------------------------------
+
+Three attempts, all against the published port, all complete (54,786 wire bytes
+under gunicorn, 54,739 under ``runserver``):
+
+* a normal fast read;
+* a slow reader taking 1 KB every 50 ms, so the transfer lasts 3.5 seconds
+  rather than 0.1 -- the timing a laptop imposes;
+* a reader with ``SO_RCVBUF`` set to 4 KB and 8 KB, reading 512 bytes at a
+  time, which is the closest a loopback client can come to a window that
+  cannot absorb the response: the forwarder has to hold the data and wait.
+
+None of them truncates. Whatever does this is not "pasta blocks and gives up":
+on loopback it blocks and waits, correctly, for as long as it is asked to.
+What is left in the path is the tailnet itself and the host's external
+interface, neither of which can be exercised from ``gogo``.
+
 Where that leaves the diagnosis
 -------------------------------
 
@@ -526,20 +601,30 @@ narrower and stranger: a 54,613-byte response is cut at 42,974 bytes, and was
 cut at 42,871 by a different client against a different server, while a
 360,391-byte one is not cut at all.
 
-Those two cut points are 103 bytes apart, which is what makes this hard to file
-under either heading offered above. A buffer would be expected to cut at the
-same offset twice; the network reading predicts no particular offset at all.
-Something that stalls after roughly 42--43 KB *in flight* -- a window that
-stops being refilled rather than a boundary in the data -- fits both numbers,
-and fits a large page surviving whenever the client happens to drain fast
-enough. That is a hypothesis, not a finding: it rests on two samples, and the
-next round is designed to get more.
+Those two cut points are 103 bytes apart in payload, 143 on the wire, and each
+is exactly reproducible on its own server -- ``curl`` and Firefox agree to the
+byte. **That combination is what makes this strange.** A buffer explains the
+determinism and not the 143-byte shift; a lossy path or an MTU black hole
+explains neither, since both would put the cut in a different place each time
+and would move it in whole segments of about 1,240 bytes. Whatever it is, it
+stops at very close to the same *wire* offset, near 43,000, on two servers and
+two clients, and it lets a 360 KB page through untouched.
 
-It also means **suspect 1 is closer to being cleared than the numbers above
-suggested**. ``wsgiref`` is gone from the path and the cut is not: whatever
-does this lives below the WSGI server, in pasta or in the tailnet. Suspect 3
-(the MTU) is no longer the outsider it was ranked as, and there is a cheap test
-for it in the next round.
+The next round is designed to get more than two samples of it, because with two
+every explanation still fits.
+
+It also means **suspect 1 is cleared as the thing that drops the bytes**.
+``wsgiref`` is out of the path and the cut is not, so whatever does this lives
+below the WSGI server -- in the port publication, in the tailnet, or on the
+laptop's own side of it. What ``runserver`` was responsible for is the
+*silence*, and that is fixed.
+
+Suspect 3 (the MTU) reads worse after the second round rather than better: a
+path-MTU black hole loses whole segments and would not stop two clients at the
+identical byte. It stays on the list because it is two commands to test and
+because nothing here explains the 143-byte shift either. Suspect 2, the port
+publication, survives everything so far and cannot be reproduced from this
+side of it.
 
 Options
 =======
