@@ -81,6 +81,25 @@ def normalize(text):
     return [word for word in _SEPARATORS.split(unaccented.lower()) if word]
 
 
+def match_key(text):
+    """The word a photo title and a species' Finnish name are matched on.
+
+    The first whitespace-separated word of ``text``, lower-cased. ``None`` when
+    there is no word at all -- a photo with an empty title, or a species whose
+    ``name_fi`` was left blank, matches nothing rather than raising
+    ``IndexError`` (issue 003).
+
+    Both call sites go through this: the auto-attach receiver in
+    ``kasvimuseo.models`` for the photo's title, and ``kasvimuseo.photos`` for
+    both the title and the species name. It is the whole matching rule, so the
+    two cannot fold case differently again.
+    """
+    if not text:
+        return None
+    words = text.split()
+    return words[0].lower() if words else None
+
+
 def filename_targets(filename):
     """Return the strings a candidate's fields are compared against.
 

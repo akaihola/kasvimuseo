@@ -105,7 +105,8 @@ forced. The tests order lower-case file names only, so they pass under either
 collation, and the divergence is written down here rather than fixed silently
 in one of the two places.
 
-This is consistent with issue 003, which normalises case in Python, and the
+This is consistent with issue 003, which normalises case in Python and, for the
+one comparison that has to be a query, asks for it with ``iexact``, and the
 reason the answers take different shapes is the operation, not the data. 003
 compares for **equality**, and no PostgreSQL collation folds case for
 equality -- ``'Kuva' = 'kuva'`` is false under ``en_US.UTF-8`` as much as under

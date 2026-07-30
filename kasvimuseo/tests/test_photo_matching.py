@@ -62,6 +62,18 @@ def test_normalize_folds_case_accents_and_separators(text, expected):
     assert photo_matching.normalize(text) == expected
 
 
+@pytest.mark.parametrize('text,expected', [
+    ('Valkonarsissi kukassa', 'valkonarsissi'),
+    ('VALKONARSISSI', 'valkonarsissi'),
+    ('  valkonarsissi  lehdet ', 'valkonarsissi'),
+    ('', None),
+    ('   ', None),
+    (None, None),
+])
+def test_match_key_is_the_lower_cased_first_word(text, expected):
+    assert photo_matching.match_key(text) == expected
+
+
 def test_normalize_accepts_bytes():
     assert photo_matching.normalize('Yläne'.encode('utf-8')) == ['ylane']
 
