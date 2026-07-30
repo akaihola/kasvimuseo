@@ -91,23 +91,54 @@ def test_public_planted_query_count_does_not_grow_with_the_plantings():
     ``is_public_planted`` reads ``bed.public``, and only ``PlantingManager``
     had the matching ``select_related``. The prefetched ``care_set.count()``
     the issue blamed is free: Django 1.5 answers it from ``_result_cache``.
+
+    Before the fix ``Observation`` cost 6 queries for 2 plantings and 10 for 6
+    -- one bed each. After it, every manager costs the same for both.
     """
     def counts():
-        totals = []
-        for manager in (models.Species.objects, models.Observation.objects,
-                        models.Planting.objects):
+        totals = {}
+        for name, manager in [('species', models.Species.objects),
+                              ('observation', models.Observation.objects),
+                              ('planting', models.Planting.objects)]:
             with counted_queries() as queries:
                 list(manager.public_planted())
-            totals.append(queries.count)
+            totals[name] = queries.count
         return totals
 
     for index in range(2):
         create_planted(name_fi='laji%d' % index, external_id=index + 1)
-    two = counts()
+    two_plantings = counts()
     for index in range(2, 6):
         create_planted(name_fi='laji%d' % index, external_id=index + 1)
+    six_plantings = counts()
 
-    assert counts() == two
+    assert two_plantings == {'species': 5, 'observation': 5, 'planting': 3}
+    assert six_plantings == two_plantings
+
+
+@pytest.mark.django_db
+def test_is_public_planted_unprefetched_is_correct_and_no_more_expensive():
+    """A lone ``Planting`` -- no manager, no prefetch -- is the other path.
+
+    Issue 012 warns that consuming a prefetch cache can pessimise this one.
+    It does not: ``last_care`` replaces a ``COUNT`` that was followed by the
+    same row fetch anyway, so a planting with care records costs one query
+    fewer than before, and ``removal_date`` still short circuits ahead of it.
+    """
+    cases = [('no cares', dict(cares=()), True, 2),
+             ('last care above zero', dict(cares=(3, 5)), True, 2),
+             ('last care zero', dict(cares=(3, 0)), False, 2),
+             # Short circuit: the bed is read, the care records are not.
+             ('removed', dict(cares=(3,), removed=True), False, 1)]
+    for index, (label, kwargs, expected, queries) in enumerate(cases):
+        pk = create_planted(name_fi='laji%d' % index, external_id=index + 1,
+                            **kwargs).pk
+        planting = models.Planting.objects.get(pk=pk)
+        assert not hasattr(planting, '_prefetched_objects_cache')
+        with counted_queries() as counted:
+            result = planting.is_public_planted()
+        assert result is expected, label
+        assert counted.count == queries, label
 
 
 @pytest.mark.django_db
