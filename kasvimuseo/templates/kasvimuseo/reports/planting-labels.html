@@ -1,4 +1,4 @@
-{% load kasvimuseo_model_tags kasvimuseo_photo_tags %}
+{% load i18n kasvimuseo_model_tags kasvimuseo_photo_tags %}
 <!DOCTYPE html>
 <!--suppress HtmlUnknownAttribute, HtmlUnknownTag -->
 <html lang="en">
@@ -11,7 +11,7 @@
     <!--suppress CssUnusedSymbol -->
     <style>
         @media print {
-            form, .hidden, button, .remove { display: none; }
+            form, .hidden, button, .remove, #photo-help { display: none; }
         }
         :root {
             /* How much smaller than the printed sheet the labels are drawn on
@@ -45,6 +45,16 @@
         input[type="reset"]:disabled,
         input[type="submit"]:disabled {
             color: #aaa;
+        }
+
+        /* One line of instructions above the sheet (issue 037). The rule for
+           ``p`` further down sizes the text on a label, which is drawn at
+           print size, so this has to say what a paragraph of screen chrome
+           looks like. */
+        #photo-help {
+            font-size: 1rem;
+            margin: 0.5em 1em;
+            color: #444;
         }
 
         /* settings form */
@@ -249,6 +259,8 @@
                 v-on:click="save"
                 v-bind:class="{ progress: isSaving }"
                 v-bind:disabled="disableSave">Save changes</button>
+        {# What the chevrons choose: the label's own photo, read back since 039 (issue 037) #}
+        <p id="photo-help">{% trans "The arrows over a photo change the photo of this label only, not the photo of the species. The choice is kept once you click “Save changes”; unsaved, it is lost when the page is reloaded. The photo of the species itself is chosen on the species page in the admin." %}</p>
         <ul id="labels"
             @dragenter="dragEnterBackground"
             @dragover="dragOverBackground"
@@ -414,10 +426,15 @@
                 template:
                 '<div class="photo">' +
                 '    <div class="photo-wrapper">' +
+                {# The glyphs are the whole button, so these are its name (037) #}
                 '    <button class="photo-chooser previous"' +
+                '            title="{% trans "Previous photo for this label" %}"' +
+                '            aria-label="{% trans "Previous photo for this label" %}"' +
                 '            v-if="numAlternatives > 1"' +
                 '            v-on:click="previous">&#x2329;</button>' +
                 '    <button class="photo-chooser next"' +
+                '            title="{% trans "Next photo for this label" %}"' +
+                '            aria-label="{% trans "Next photo for this label" %}"' +
                 '            v-if="numAlternatives > 1"' +
                 '            v-on:click="next">&#x232a;</button>' +
                 '    <img :src="url"' +
@@ -510,6 +527,14 @@
                     },
                     watch: {
                         'species.visible': function(newVal, oldVal) {
+                            bus.$emit('enable-save');
+                        },
+                        // Without this the Save button stays disabled after a
+                        // photo is chosen, so the choice cannot be saved
+                        // unless the print tick is toggled as well -- and the
+                        // line above the sheet could not honestly say the
+                        // choice is kept (issue 037).
+                        'species.photo_pk': function(newVal, oldVal) {
                             bus.$emit('enable-save');
                         }
                     }
