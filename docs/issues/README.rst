@@ -101,8 +101,8 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 004, 005, 007, 008, 009, 040, 041, 042, 043 and 048 are open: each
-one either changes behaviour that is visible in production, deletes code, or
+All but 002, 003, 004, 005, 007, 008, 009, 040, 041, 042, 043 and 048 are open:
+each one either changes behaviour that is visible in production, deletes code, or
 commits to a piece of work, so each wants a decision first. Eight of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
 archive view that refused to render an empty list, a missing sort link the
@@ -114,7 +114,11 @@ deliberate design change -- and both were ruled and fixed the same day; their
 files carry the reasoning. 042 needed one too, and got it when the defect it
 describes was reported from the garden a second time, as a species photo that
 would not change; it is the reason 002 had to be fixed first, and the two are
-``Fixed`` together. 041 is fixed only as far as its crash goes: the product
+``Fixed`` together. 003 needed one as well -- where the normalisation its two
+matching sites have to share lives, and whether Python or PostgreSQL folds the
+case -- and its file carries both, including why the second answer takes a
+different shape from 043's on the same data. 041 is fixed only as far as its
+crash goes: the product
 question inside it is still open, which is why its ``Status`` says so. 004 and
 005 arrived with options that looked like questions and were not: in both, ``git
 log`` showed the defect was left-behind scaffolding rather than a decision
