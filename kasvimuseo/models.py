@@ -52,6 +52,26 @@ INT_TO_ROMAN = dict((index + 1, roman)
                      for index, roman in enumerate(ROMAN_NUMERALS[1:]))
 
 
+def measure_photo_orientation(photo):
+    """Whether ``photo`` is wider than it is tall, or ``None`` if unknowable.
+
+    This opens the image file, which is exactly what the reports must not do
+    (issue 011), so it belongs on the write path and nowhere else. ``None``
+    means "do not know": no photo, no file behind the photo, or a file that
+    could not be read. Every caller treats it the way the templates do -- as
+    not horizontal -- so an unreadable photo costs a portrait layout rather
+    than an ``IOError``.
+    """
+    if photo is None:
+        return None
+    try:
+        return photo.image.width > photo.image.height
+    except (IOError, OSError, ValueError):
+        # No file behind the field (ValueError), or it is missing, unreadable
+        # or not an image (IOError/OSError, which PIL raises for all three).
+        return None
+
+
 class SpeciesManager(models.Manager):
     def public_planted(self):
         """Returns public currently planted species
@@ -160,8 +180,32 @@ class Species(models.Model):
     photo = models.ForeignKey(
         'photologue.Photo',
         null=True, blank=True)
+    photo_is_horizontal = models.NullBooleanField(
+        verbose_name=_(u'photo is wider than it is tall'),
+        default=None,
+        editable=False)
 
     objects = SpeciesManager()
+
+    def save(self, *args, **kwargs):
+        """Keep ``photo_is_horizontal`` in step with ``photo``.
+
+        This is the one place the image file is opened to measure it, so that
+        the reports never have to (issue 011). Every route that changes
+        ``Species.photo`` -- the admin, and ``autoconnect_photo_to_species``,
+        which also fires when the *file* behind an already attached photo is
+        replaced -- ends here, so measuring on every save is both simple and
+        exhaustive. Saves are rare; renders are not.
+
+        A file that cannot be read leaves whatever was stored before alone
+        rather than overwriting it with ``None``: a database restored without
+        media (``dev/kasvimuseo media fetch``) would otherwise erase the
+        orientations the production rows already carry.
+        """
+        measured = measure_photo_orientation(self.photo)
+        if measured is not None or self.photo_id is None:
+            self.photo_is_horizontal = measured
+        super(Species, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return self.name_fi

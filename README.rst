@@ -81,10 +81,16 @@ Photos are served by this server, under ``/media/``, and the ones this machine
 does not have are redirected to ``media.kasvit.ambitone.com``. So a fresh clone
 shows every photo the database references without downloading anything, and a
 photo uploaded here is served from here rather than 404ing on a host that never
-saw it. The printable and compact species views need the actual files, though:
-Django opens them to read their dimensions, and raises ``IOError`` if they are
-missing. Download exactly the photos the database references -- no SSH needed,
-the media host is public::
+saw it. The printable and compact species views no longer need the actual files
+-- they used to open every one to decide a header class, and raised ``IOError``
+when one was missing (issue 011); the orientation is measured once on save and
+stored, so browsing the reports against a fresh dump and no local media now
+works. Downloading them is worth it anyway if you want to *see* the photos
+rather than the redirect, and if you are going to run the migrations over a dump
+taken before this change: ``0021_backfill_species_photo_is_horizontal``
+measures whatever is on disk when it runs, and leaves the rest portrait until
+it is run again with the files there. No SSH needed, the media host is
+public::
 
     $ dev/kasvimuseo media fetch
 

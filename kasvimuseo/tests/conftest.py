@@ -12,9 +12,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 def jpeg_bytes(width=8, height=8, color=(0, 128, 0)):
     """A real, decodable JPEG.
 
-    The printable and compact report templates make Django open the image to
-    read its dimensions, so those tests need actual image data rather than a
-    placeholder file.
+    Photologue measures and resizes what is uploaded, and ``Species.save()``
+    measures it again to store the orientation the reports render from, so
+    these tests need actual image data rather than a placeholder file.
     """
     from PIL import Image
     buffer = io.BytesIO()
@@ -56,6 +56,35 @@ def display_size(db):
                                     defaults={'width': 100, 'height': 100})
     yield
     PhotoSizeCache().reset()
+
+
+@pytest.fixture
+def image_opens(monkeypatch):
+    """Record every image file a piece of code opens, and return the list.
+
+    Issue 011 is about a template that opened one; asserting it no longer does
+    means watching the two doors an image can come through. Django reads
+    ``ImageFieldFile.width`` by calling ``FieldFile.open()``, which goes to the
+    storage, and photologue builds its cached sizes with ``PIL.Image.open`` on
+    the path, which does not. Patching one alone would prove nothing.
+    """
+    from PIL import Image
+    from django.core.files.storage import FileSystemStorage
+
+    opened = []
+    image_open, storage_open = Image.open, FileSystemStorage._open
+
+    def record_image_open(fp, *args, **kwargs):
+        opened.append(getattr(fp, 'name', fp))
+        return image_open(fp, *args, **kwargs)
+
+    def record_storage_open(self, name, mode='rb'):
+        opened.append(name)
+        return storage_open(self, name, mode)
+
+    monkeypatch.setattr(Image, str('open'), record_image_open)
+    monkeypatch.setattr(FileSystemStorage, str('_open'), record_storage_open)
+    return opened
 
 
 @pytest.fixture

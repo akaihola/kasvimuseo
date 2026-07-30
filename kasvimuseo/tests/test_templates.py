@@ -10,6 +10,8 @@ map.
 
 from __future__ import unicode_literals
 
+import os
+
 import pytest
 from django.core.urlresolvers import reverse
 
@@ -133,6 +135,89 @@ def test_printable_sheet_shows_the_names_and_the_photo(client, full_species):
     assert full_species.photo.get_display_url() in content
     # 12x8: the wider-than-tall branch of the header class
     assert 'class="header horizontal"' in content
+
+
+@pytest.mark.django_db
+def test_printable_sheet_uses_the_vertical_header_for_a_portrait_photo(
+        client, photo_factory):
+    """The other branch of the header class; see docs/issues/011.
+
+    ``full_species`` is 12x8, so it only ever exercises ``horizontal``.
+    """
+    species = create_species(name_fi='valkonarsissi', external_id=1,
+                             photo=photo_factory(title='valkonarsissi seisoo',
+                                                 width=8, height=12))
+    create_planted(species=species, external_id=1)
+
+    content = page(client.get(species_url('planted-species', 1)))
+
+    assert 'class="header vertical"' in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('width,height,expected', [
+    (12, 8, 'horizontal'),
+    (8, 12, 'vertical'),
+    # A square photo is not wider than it is tall, so it takes the same branch
+    # a missing one does.
+    (8, 8, 'vertical'),
+])
+def test_compact_sheet_header_class_follows_the_photo_shape(
+        client, photo_factory, width, height, expected):
+    species = create_species(name_fi='valkonarsissi', external_id=1,
+                             photo=photo_factory(title='valkonarsissi kukassa',
+                                                 width=width, height=height))
+    create_planted(species=species, external_id=1)
+
+    content = page(client.get(species_url('planted-species-compact', 1)))
+
+    assert 'class="header {0}"'.format(expected) in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name', ['planted-species',
+                                      'planted-species-compact'])
+def test_reports_render_when_the_image_file_is_missing(client, media_root,
+                                                       photo_factory,
+                                                       url_name):
+    """Was an ``IOError``; see docs/issues/011.
+
+    This is the state of a database restored without ``dev/kasvimuseo media
+    fetch``: rows pointing at files that are not there. The stored orientation
+    is what makes it renderable -- and a photo measured before its file went
+    missing keeps the orientation it was measured with.
+    """
+    species = create_species(name_fi='valkonarsissi', external_id=1,
+                             photo=photo_factory(title='valkonarsissi kukassa',
+                                                 width=12, height=8))
+    create_planted(species=species, external_id=1)
+    os.remove(species.photo.image.path)
+
+    content = page(client.get(species_url(url_name, 1)))
+
+    assert 'valkonarsissi' in content
+    assert 'class="header horizontal"' in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name', ['planted-species',
+                                      'planted-species-compact'])
+def test_reports_open_no_image_file(client, full_species, image_opens,
+                                    url_name):
+    """The point of docs/issues/011: the header class costs no file access.
+
+    The first request to either report is still allowed to touch the original,
+    because ``get_display_url`` builds photologue's cached display copy on
+    demand -- once per photo, ever, and only because the shipped ``display``
+    ``PhotoSize`` has ``pre_cache`` off. Warm that, then assert the steady
+    state: rendering opens nothing.
+    """
+    client.get(species_url(url_name, 1))
+    del image_opens[:]
+
+    page(client.get(species_url(url_name, 1)))
+
+    assert image_opens == []
 
 
 @pytest.mark.django_db
