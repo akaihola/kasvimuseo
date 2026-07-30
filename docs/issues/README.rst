@@ -101,9 +101,9 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 003, 004, 005, 007, 008, 009, 010, 012, 025, 037, 039, 040, 041,
-042, 043, 046, 047 and 048 are open: each one either changes behaviour that is
-visible in production, deletes code, or commits to a piece of work, so each
+All but 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 025, 037, 039, 040,
+041, 042, 043, 046, 047 and 048 are open: each one either changes behaviour that
+is visible in production, deletes code, or commits to a piece of work, so each
 wants a decision first. Eight of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
 archive view that refused to render an empty list, a missing sort link the
@@ -114,7 +114,11 @@ did need one -- 040 between its three options, 048 between three shapes of a
 deliberate design change -- and both were ruled and fixed the same day; their
 files carry the reasoning. 037 needed one between four options and got it once
 the four issues its content depends on were all fixed: three were taken and the
-fourth, a separate page repeating them, was not. 042 needed one too, and got it when the defect it
+fourth, a separate page repeating them, was not. 011's three options settled
+themselves once the pinned photologue was read rather than argued about: the
+cheap one was not there, so the expensive one was the only one, and the file
+records what was looked at as well as what was chosen.
+042 needed one too, and got it when the defect it
 describes was reported from the garden a second time, as a species photo that
 would not change; it is the reason 002 had to be fixed first, and the two are
 ``Fixed`` together. 003 needed one as well -- where the normalisation its two
