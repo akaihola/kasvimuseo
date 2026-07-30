@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-from .forms import PhotoForm
+from .forms import PhotoForm, SpeciesForm
 from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
 from kasvimuseo.views import PlantedSpecies
@@ -85,6 +85,7 @@ planted_species_report.short_description = _(u'Create Species Sheets')
 
 class SpeciesAdmin(admin.ModelAdmin):
     inlines = [ObservationInline]
+    form = SpeciesForm
     save_on_top = True
     list_display = (
         edit,
@@ -132,6 +133,10 @@ class SpeciesAdmin(admin.ModelAdmin):
                     "lighting",
                     "substrate",
                     "additional_info",
+                    # Last, because it is the one field here the auto-attach
+                    # receiver also writes; ``SpeciesForm`` limits the choices
+                    # to this species' photos and says so (issue 037).
+                    "photo",
                 )
             },
         ),

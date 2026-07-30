@@ -382,3 +382,63 @@ def test_photo_admin_upload_derives_title_and_connects_species(admin_client,
     assert photo.title == 'valkonarsissi kukassa'
     assert photo.title_slug == 'valkonarsissi-kukassa'
     assert Species.objects.get(pk=species.pk).photo == photo
+
+
+# -- the species photo (issue 037) -------------------------------------------
+
+@pytest.mark.django_db
+def test_admin_change_species_detaches_the_photo(admin_client, photo_factory):
+    """Blank means "no photo", and the file survives it.
+
+    Before the ``photo`` field was on the form, the only way to take a photo
+    off a species was to delete the ``Photo`` row, which deletes the image for
+    every other use of it.
+    """
+    species = factories.create_species(name_fi='valkonarsissi')
+    species.photo = photo_factory(title='valkonarsissi kukassa')
+    species.save()
+
+    response = admin_client.post(
+        admin_url(Species, 'change', species.pk),
+        payload(Species, {'name_fi': 'valkonarsissi', 'genus': 'Narcissus',
+                          'species': 'poeticus', 'type': '2', 'photo': ''}))
+
+    assert response.status_code == 302, form_errors(response)
+    assert Species.objects.get(pk=species.pk).photo is None
+    assert Photo.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_admin_change_species_selects_another_photo(admin_client,
+                                                    photo_factory):
+    species = factories.create_species(name_fi='valkonarsissi')
+    species.photo = photo_factory(title='valkonarsissi kukassa')
+    species.save()
+    other = photo_factory(title='valkonarsissi lehdet')
+
+    response = admin_client.post(
+        admin_url(Species, 'change', species.pk),
+        payload(Species, {'name_fi': 'valkonarsissi', 'genus': 'Narcissus',
+                          'species': 'poeticus', 'type': '2',
+                          'photo': '{0}'.format(other.pk)}))
+
+    assert response.status_code == 302, form_errors(response)
+    assert Species.objects.get(pk=species.pk).photo == other
+
+
+@pytest.mark.django_db
+def test_admin_change_species_refuses_another_species_photo(admin_client,
+                                                            photo_factory):
+    """The choices are this species' photos, and the form enforces it."""
+    species = factories.create_species(name_fi='valkonarsissi')
+    stranger = photo_factory(title='keltanarsissi')
+
+    response = admin_client.post(
+        admin_url(Species, 'change', species.pk),
+        payload(Species, {'name_fi': 'valkonarsissi', 'genus': 'Narcissus',
+                          'species': 'poeticus', 'type': '2',
+                          'photo': '{0}'.format(stranger.pk)}))
+
+    assert response.status_code == 200
+    assert 'photo' in form_errors(response)
+    assert Species.objects.get(pk=species.pk).photo is None

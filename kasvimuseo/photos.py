@@ -48,6 +48,27 @@ def get_species_photos(species, photo_pks_and_urls_by_title):
             photo_pks_and_urls_by_title.get(match_key(species.name_fi), [])]
 
 
+def get_candidate_photo_pks(species):
+    """The primary keys of the photos whose title names ``species``.
+
+    The same rule as everywhere else -- ``match_key`` of the title against
+    ``match_key`` of ``name_fi`` -- applied in Python rather than in SQL,
+    because that rule is "the first whitespace-separated word, lower-cased"
+    and no ``LIKE`` says exactly that. It is what the admin offers as the
+    choices for ``Species.photo`` (issue 037), so the species page and the
+    auto-attach receiver cannot disagree about which photos belong to a
+    species.
+
+    A species whose ``name_fi`` is blank has no key and so no candidates.
+    """
+    key = match_key(species.name_fi)
+    if key is None:
+        return []
+    return [pk for pk, title
+            in Photo.objects.values_list('pk', 'title').order_by('title', 'pk')
+            if match_key(title) == key]
+
+
 def get_species_photo_info(species, photo_pks_and_urls_by_title, photo=None):
     """Return possible photos and the selected photo for the species
 

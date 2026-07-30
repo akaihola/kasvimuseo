@@ -373,6 +373,29 @@ def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(client):
     assert 'vue.min.js' in content
 
 
+@pytest.mark.django_db
+def test_label_editor_names_the_photo_buttons(client):
+    """The chevrons are glyphs, so the attributes are their only name (037)."""
+    content = page(client.get(reverse('planting-label')))
+
+    for direction in ['Edellinen', 'Seuraava']:
+        name = '{0} kuva t\xe4lle kyltille'.format(direction)
+        assert 'title="{0}"'.format(name) in content
+        assert 'aria-label="{0}"'.format(name) in content
+
+
+@pytest.mark.django_db
+def test_label_editor_says_what_the_photo_choice_applies_to(client):
+    """The label's own photo, kept once saved -- what issue 039 implemented."""
+    content = page(client.get(reverse('planting-label')))
+
+    assert 'vain t\xe4m\xe4n kyltin kuvan, eiv\xe4t lajin kuvaa' in content
+    assert 'Valinta s\xe4ilyy, kun napsautat \u201cSave changes\u201d' in content
+    # A photo choice enables the save button; without this the sentence above
+    # would not be reachable.
+    assert "'species.photo_pk': function" in content
+
+
 # A species external id that does not exist
 
 

@@ -5,7 +5,8 @@ from __future__ import unicode_literals
 
 import pytest
 
-from kasvimuseo.forms import PhotoForm, remove_diacritics
+from kasvimuseo.forms import PhotoForm, SpeciesForm, remove_diacritics
+from kasvimuseo.tests.factories import create_species
 
 
 class FakeImage(object):
@@ -147,3 +148,63 @@ def test_remove_diacritics_returns_a_text_string():
     assert isinstance(result, type('')), \
         'remove_diacritics returned {0!r}, not a text string'.format(result)
     assert result == 'Kevatesikko ahkyssa'
+
+
+# -- the instructions on the upload form (issue 037) --------------------------
+
+@pytest.mark.django_db
+def test_photo_form_says_what_to_name_the_file():
+    """The rule the receiver matches on, stated where the file is chosen."""
+    help_text = '{0}'.format(PhotoForm().fields['image'].help_text)
+
+    assert 'suomenkielisen nimen' in help_text
+    assert 'otsikon ensimmäinen sana' in help_text
+    # And what happens when no species matches, which is silent otherwise.
+    assert 'eikä näy millään lajilla' in help_text
+
+
+@pytest.mark.django_db
+def test_photo_form_says_that_a_blank_title_is_normal():
+    help_text = '{0}'.format(PhotoForm().fields['title'].help_text)
+
+    assert 'Voit jättää tämän tyhjäksi' in help_text
+    # The file names are marked up, since the admin renders help_text
+    # through ``|safe``.
+    assert ('tiedoston nimi ilman <code>jpg</code>-, <code>jpeg</code>- '
+            'tai <code>jpe</code>-päätettä') in help_text
+
+
+@pytest.mark.django_db
+def test_species_form_offers_only_this_species_photos(photo_factory):
+    species = create_species(name_fi='Valkonarsissi')
+    photo_factory(title='valkonarsissi kukassa')
+    photo_factory(title='keltanarsissi')
+
+    photos = SpeciesForm(instance=species).fields['photo'].queryset
+
+    assert [photo.title for photo in photos] == ['valkonarsissi kukassa']
+
+
+@pytest.mark.django_db
+def test_species_form_keeps_the_photo_the_species_already_has(photo_factory):
+    """A photo renamed away from the species is still on the list.
+
+    Otherwise opening the form and saving it would drop the photo without
+    anybody choosing to.
+    """
+    species = create_species(name_fi='valkonarsissi')
+    species.photo = photo_factory(title='mummon narsissi')
+    species.save()
+
+    photos = SpeciesForm(instance=species).fields['photo'].queryset
+
+    assert [photo.title for photo in photos] == ['mummon narsissi']
+
+
+@pytest.mark.django_db
+def test_species_form_says_what_the_photo_field_does():
+    help_text = '{0}'.format(SpeciesForm().fields['photo'].help_text)
+
+    assert 'Tyhjä irrottaa kuvan lajilta' in help_text
+    # The one thing the field cannot promise: the receiver still wins.
+    assert 'kuvan tallentaminen uudelleen kumoaa tämän valinnan' in help_text
