@@ -15,21 +15,21 @@ Issue 044: Large admin pages are truncated for a remote browser
     045 -- the other report that needed a browser to settle
     010 -- the labels API, whose POST deletes every label before recreating
     it, which is what makes a truncated load worth checking on that page
-:Decision: Option 1, taken 2026-07-30: the development site is served by
-    gunicorn, and ``manage.py runserver`` stays available behind
-    ``dev/kasvimuseo app run --runserver``. Taken without waiting for the
-    measurements, because it is right whatever they say -- see "Decision"
-    below, which also records what it does not settle.
-:Resolution: ``4fcef3c`` "dev: serve the development site with gunicorn" fixes
-    the development environment and makes the failure audible; ``312c0d1`` makes
-    the label editor say what went wrong. **Neither fixes the report**:
-    ``species/6`` still loses its save buttons, and the labels URL is still cut
-    -- at 42,974 bytes of 54,613, ten times out of ten, and now saying so
-    (``curl`` exit 18). Three rounds of measurement from the laptop have
-    cleared the application, both WSGI servers, the container, the browser, the
-    MTU and size itself; what is left is a remote TCP connection to the
-    published port, which no test on the server host can reach. See "What the
-    laptop said" and "What the maintainer must still confirm".
+:Decision: Option 1 on 2026-07-30 and option 4 on 2026-07-31. The development
+    site is served by gunicorn rather than ``runserver``, which made the
+    truncation visible instead of silent; and the container now shares the
+    host's network namespace rather than publishing a port through pasta, which
+    is the layer four rounds of measurement identified as the one dropping the
+    bytes. ``--runserver`` and ``--publish`` both stay, the second of them
+    because reproducing the failure is now useful. See "Decision" below.
+:Resolution: ``4fcef3c`` (gunicorn), ``312c0d1`` (the label editor says what
+    went wrong) and ``c149113`` "dev: give the app container the host's network
+    namespace". The first two did not fix the report and did not claim
+    to; the third addresses the cause the packet capture named -- a clean
+    ``FIN`` from ``gogo`` at byte 43,140, with every earlier segment
+    acknowledged, which means the missing bytes were never sent rather than
+    lost. **Not confirmed fixed**: only the laptop can show that, in the A/B
+    under "What the maintainer must still confirm".
 
 Problem
 =======
@@ -643,16 +643,67 @@ byte, ten times out of ten. A lossy path or an MTU black hole explains neither
 the determinism nor the fact that a 167 KB file crosses the same path
 untouched.
 
-What is left, after three rounds
+The fourth round names it: pasta
 --------------------------------
 
-Cleared: the application, Django, the WSGI server (both of them), the
-container, the browser, the data, size as such, and the MTU. Not cleared: a
-remote TCP connection to the published port, which is the one thing the SSH
-tunnel replaces and the one thing that cannot be exercised from ``gogo``.
+The band was predicted before it was measured, and it came back exactly as
+predicted -- 28,158 complete, 53,979 **cut at 42,974**, 54,613 **cut at
+42,974**, 257,743 complete, 470,749 complete. Two responses larger than
+anything that has ever failed arrive whole; two in the middle stop at the same
+byte as always.
 
-Sorted by size, every measurement so far says something odd -- it is a **band**,
-not a threshold:
+The server's own log, for the same requests, contains **no error of any kind**:
+ordinary ``200`` access lines for the two that were truncated, and no traceback
+except the ``IOError`` for the missing photo files behind the two ``500``\ s
+that were being used as bulk. As far as the server is concerned it wrote every
+byte.
+
+And a packet capture on the receiving machine says where those bytes stopped::
+
+    23:26:07.357220 IP gogo.8000 > laptop: Flags [.],   seq 40685:41913, length 1228
+    23:26:07.357264 IP laptop > gogo.8000: Flags [.],   ack 41913, win 612
+    23:26:07.358045 IP gogo.8000 > laptop: Flags [FP.], seq 41913:43141, length 1228
+    23:26:07.358088 IP laptop > gogo.8000: Flags [.],   ack 43142, win 631
+    23:26:07.358187 IP laptop > gogo.8000: Flags [F.],  seq 123, ack 43142
+
+**The FIN rides the last data segment.** Every segment before it is
+acknowledged, nothing is retransmitted, there is no reset and no loss, and the
+sequence numbers are the server's own. The connection ends at byte 43,140 --
+the exact wire offset computed two rounds earlier from the payload cut -- and
+it ends *cleanly*, because the sending end had nothing more to send. Nothing on
+the path dropped these bytes. **They were never sent.**
+
+TCP sequence numbers are not rewritten by a relay, so the endpoint that closed
+early is on ``gogo``: the host-side socket of the rootless port publication.
+That is pasta. gunicorn wrote the whole response into the container's socket
+and exited the request; pasta forwarded what it had managed to write and
+followed the application's close, dropping the remainder.
+
+That also explains the band, and the earlier failures to reproduce it here:
+
+* a response small enough to be forwarded before the application closes loses
+  nothing;
+* a response too large to buffer blocks the application until pasta has
+  forwarded it, so by the time it closes there is nothing left to lose;
+* in between, the whole body fits in the buffers, the application finishes
+  instantly, and whatever pasta has not written yet dies with the close;
+* on loopback there is no such window -- the client acknowledges at memory
+  speed -- so a fast read, a slow read, a 4 KB receive buffer, an eight-second
+  stall and a request to this host's own tailnet address all deliver 54,786
+  bytes. It needs a real round trip, which is precisely what this machine
+  cannot give itself.
+
+The elimination, in order
+-------------------------
+
+Cleared: the application, Django, the WSGI server (both of them), the browser,
+the data, size as such, and the MTU. **Not cleared, and now positively
+identified: the rootless port publication** -- the one thing the SSH tunnel
+replaces, the one thing that cannot be exercised from ``gogo``, and the one
+thing the packet capture points at.
+
+Sorted by size, the measurements are a **band**, not a threshold, which is what
+the mechanism above predicts:
 
 =========================================== ========== =====================
  Response                                    Bytes      Over the tailnet
@@ -675,24 +726,17 @@ closes there is nothing left to lose -- which is why the biggest responses are
 the safe ones. In between sits a band where the whole body fits in the buffer,
 the sender finishes instantly, and delivery stops around 43 KB.
 
-It is a hypothesis, and it makes predictions that cost one command to check:
-a 53,979-byte public HTML page should be cut, and public pages of 257,244 and
-469,900 bytes should arrive whole. It also predicts **no error on the server
-side at all**, since from the server's point of view every write succeeded.
-Those are in the next round.
+The four rows added in round four confirm it: 28,158 complete, 53,979 cut,
+54,613 cut, 257,743 complete, 470,749 complete. The prediction was written down
+before the measurement, and every one of the five came back as written.
 
 It also means **suspect 1 is cleared as the thing that drops the bytes**.
-``wsgiref`` is out of the path and the cut is not, so whatever does this lives
-below the WSGI server -- in the port publication, in the tailnet, or on the
-laptop's own side of it. What ``runserver`` was responsible for is the
-*silence*, and that is fixed.
+``wsgiref`` is out of the path and the cut is not, so what ``runserver`` was
+responsible for is the *silence*, and that is fixed.
 
-Suspect 3 (the MTU) reads worse after the second round rather than better: a
-path-MTU black hole loses whole segments and would not stop two clients at the
-identical byte. It stays on the list because it is two commands to test and
-because nothing here explains the 143-byte shift either. Suspect 2, the port
-publication, survives everything so far and cannot be reproduced from this
-side of it.
+Suspect 3 (the MTU) is dead: path MTU discovery works, the 1,280-byte path is
+lossless, and a black hole does not stop two clients at the identical byte.
+**Suspect 2 is the answer**, and the packet capture is why.
 
 Options
 =======
@@ -716,6 +760,12 @@ Options
    refused locally rather than disappearing. What the same command did turn up
    is that the path is *relayed* through DERP rather than direct, which is a
    different thing and is still worth a measurement.
+4. **Take the port publication out of the path**, added on 2026-07-31 once the
+   packet capture had named it. ``dev/kasvimuseo app run`` gives the container
+   the host's network namespace rather than publishing a port with pasta, so
+   gunicorn listens on the host's port itself and nothing forwards anything.
+   One line in ``dev/kasvimuseo``, no application change, and the old behaviour
+   stays one flag away for anyone who wants to watch it happen.
 
 Decision
 ========
@@ -768,65 +818,65 @@ counts as under ``runserver``. ``/kasvimuseo/planting-labels/data/`` is 54,613
 bytes and parses. Static files carry a ``Content-Length`` and match it exactly
 (``grappelli/stylesheets/screen.css`` 167,158, ``css/kasvimuseo.admin.css``
 2,341); ``/media/`` still redirects to the fallback host. ``dev/kasvimuseo app
-test``: 357 passed.
+test``: 357 passed, 358 after the rebase onto ``master``.
+
+And option 4, on 2026-07-31
+---------------------------
+
+The packet capture in round four ended the diagnosis, so the second half of the
+fix addresses what it named. ``dev/kasvimuseo app run`` now runs the container
+with ``--network=host`` and lets gunicorn bind ``$KASVIMUSEO_PORT`` itself,
+instead of publishing ``8000`` through pasta. There is no forwarder left to
+close a connection early.
+
+``dev/kasvimuseo app run --publish`` restores the published port, deliberately:
+it is how the failure is reproduced, and an A/B between the two from the laptop
+is what turns this diagnosis into a confirmed fix.
+
+Verified on ``gogo``, 2026-07-31, under host networking: gunicorn listens on
+``0.0.0.0:8000`` in the host's namespace (``ss`` shows the socket, ``podman
+ps`` shows no port mapping), and both loopback and this host's tailnet address
+answer complete -- ``planting-labels/data/`` 54,613, ``planted-species/``
+53,979, ``screen.css`` 167,158, ``species/6`` 52,230, ``species/97`` 135,997.
+``--publish`` still serves the same bytes over loopback, as it always did.
+
+What it does not claim: **that the truncation is gone**. Nothing on this host
+can show that, for the same reason nothing on this host could show the
+truncation. The A/B below is the whole of the remaining question, and it is two
+commands.
 
 What the maintainer must still confirm
 ======================================
 
-Rounds one to three are answered above; this is what is left. ``Status`` is not
-``Fixed`` because ``species/6`` still loses its save buttons -- the reported
-defect is untouched, only audible. Everything here is public and needs no
-login.
+One thing, from the laptop, and it is an A/B. ``Status`` stays ``In progress``
+until it comes back.
 
-**1. Is it a band?** The one that tests the mechanism proposed above. Five
-public URLs, two of them far larger than anything that has failed::
+**A. With the fix** -- the site started the way ``dev/kasvimuseo app run`` now
+starts it::
 
-    H=http://gogo.crane-boa.ts.net:8000
-    for u in /kasvimuseo/planting-labels/:28158 \
-             /kasvimuseo/planted-species/:53979 \
-             /kasvimuseo/planting-labels/data/:54613 \
-             /kasvimuseo/planted-species-printable/1,2,3/:257244 \
-             /kasvimuseo/planted-species-compact/1,2,3,4,5/:469900; do
-        curl -s -o /dev/null -w "${u#*:} expected, %{size_download} got, exit=%{exitcode}\n" \
-             "$H${u%%:*}"
+    for i in $(seq 10); do
+        curl -s -o /dev/null -w "exit=%{exitcode} downloaded=%{size_download}\n" \
+             http://gogo.crane-boa.ts.net:8000/kasvimuseo/planting-labels/data/
     done
 
-Every one of these is a rendered response, so none of them carries a
-``Content-Length``; the last two answer ``500`` on a checkout without media
-files, which does not matter -- they are being used as a quantity of bytes.
-The prediction is **complete, cut, cut, complete, complete**. If the two big
-ones arrive whole while the two in the middle do not, the failure is a band
-rather than a threshold and the send-buffer mechanism above is the one to
-chase. If the big ones are cut too, that mechanism is wrong and what is left
-is a plain size threshold that static files somehow escape.
+Ten times ``exit=0 downloaded=54613`` is the fix. Anything else is not, and the
+byte count says where it stopped this time.
 
-**2. What does the server see?** Run the site in a terminal where its log is
-visible::
+**B. Without it** -- the same ten against ``dev/kasvimuseo app run --publish``,
+which is the old published port. Ten times ``exit=18 downloaded=42974`` is the
+control that makes A mean something rather than being a good day on the
+tailnet.
 
-    dev/kasvimuseo app run
+Then the page this issue was filed about: ``/admin/kasvimuseo/species/6/`` in
+Firefox, with ``Tallenna`` at the bottom of it. That is what closes the issue,
+and ``Status`` should go to ``Fixed`` when it is there.
 
-then fetch the labels URL from the laptop and read what gunicorn printed. The
-mechanism above predicts **nothing at all** -- an ordinary ``200`` access line,
-no traceback -- because every write succeeded as far as the server is
-concerned. A ``Broken pipe`` or ``Connection reset by peer`` traceback would
-mean the opposite: the client's side went away first, and the server knows it.
-
-**3. Is the connection closed or reset?** This is the direct test of the
-mechanism, and it needs ``sudo`` on the laptop::
-
-    sudo tcpdump -ni tailscale0 -c 200 'host 100.81.121.7 and tcp port 8000'
-
-Run a failing fetch under it. An ``R`` flag from the server end -- a reset
-arriving while data is still outstanding -- is the abortive close the
-hypothesis names, and it would end this issue's diagnosis. An orderly ``F``
-after 42,974 bytes points somewhere else entirely.
-
-**4. Does it still happen on a direct connection?** ``tailscale ping`` says
-this path is relayed through DERP in Helsinki rather than direct, which is a
-third party in the middle of every one of these measurements. If a direct
-connection can be established -- same LAN, or ``tailscale ping`` until it says
-so -- repeating step 1 over it separates "the tailnet" from "the DERP relay",
-and those want different fixes.
+If A is still cut, the mechanism named above is right about *where* and wrong
+about *what*, since host networking removes the forwarder entirely -- and the
+next suspect is tailscaled's own userspace TCP, which is a property of the
+tailnet rather than of this repository. In that case option 2 -- the SSH tunnel
+-- is what makes the dev environment usable from the laptop today, and it is
+already in ``README.rst``.
 
 Independently of all of this
 ============================
