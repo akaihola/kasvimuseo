@@ -2,7 +2,7 @@
 Issue 025: Production SECRET_KEY and database password are committed
 ====================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: High
 :Area: security / settings
 :Reported: 2026-07-28
@@ -11,22 +11,8 @@ Issue 025: Production SECRET_KEY and database password are committed
 :Depends on: (none)
 :Blocks: (none)
 :Related: 026 -- the same file, and the same question of what the server carries that the repository does not
-:Decision: Option 2 and option 3, not yet option 1. The settings read both values from the environment (``KASVIMUSEO_SECRET_KEY``, ``KASVIMUSEO_DB_PASSWORD``) with no default, and Ansible supplies them from the existing vault; the history is left alone. Rotation -- option 1, and the only thing that ends the disclosure -- is the maintainer's to perform on the server and is *not* done. ``Status`` therefore stays ``Accepted`` rather than ``Fixed``, so this issue stays in the queue for that half.
-:Resolution: Repository half only, in commit f097898: no tracked file holds either value any more. The disclosure itself is unresolved.
-
-.. warning::
-
-   **This issue is half fixed, and the half that is still open is the one that
-   matters.** The repository no longer carries the two values, but the values
-   are unchanged and remain in the git history, so anyone who has ever had a
-   clone can still forge an admin session and still knows the database
-   password. Nothing here rotated anything. Until the maintainer generates a
-   new ``SECRET_KEY`` and a new database password and puts them in the vault,
-   this issue's *impact* is exactly what it was when it was filed.
-
-   The change also means the deployment **fails until those two variables are
-   set on the server** -- deliberately, in preference to starting with a known
-   key. See `What is left to do`_.
+:Decision: All three options, in the order they had to happen. The settings read both values from the environment (``KASVIMUSEO_SECRET_KEY``, ``KASVIMUSEO_DB_PASSWORD``) with no default, and Ansible supplies them from the vault the repository already had (option 2); the maintainer then rotated both and put the new values in that vault (option 1), which is the step that ended the disclosure; the history is left alone (option 3), since rotation makes what is in it worthless.
+:Resolution: Commit a58a697 moved both values out of every tracked file and into the environment, b8a380d recorded that half. The maintainer rotated the ``SECRET_KEY`` and the database password and updated the vault on 2026-07-30, reported here rather than measured -- it is a server action this repository cannot see. Both halves are done.
 
 Problem
 =======
@@ -125,31 +111,40 @@ history. Where it was plumbed:
     superseded by Ansible (issue 032) but is still tracked, so it could not
     keep the value.
 
-Measured, in the container: the suite passes (340 tests, three of them the new
+Measured, in the container: the suite passes (357 tests, three of them the new
 ones for ``secret_from_env``); with both variables
 set the site starts under ``ylaneenkasvit_settings`` and ``admin`` logs into
 ``/admin/`` and gets a signed session cookie; with ``KASVIMUSEO_SECRET_KEY``
 unset the import fails with ``ImproperlyConfigured: KASVIMUSEO_SECRET_KEY is
 not set...`` rather than starting.
 
-What is left to do
-==================
+Rotation
+========
 
-Two things, both on the server and neither doable from the repository:
+The repository change above did not remediate anything on its own: it stopped
+the repository from being where the secrets live, and it made a deployment that
+has not been handed them fail rather than start with a known key. Until the
+values themselves changed, everyone who had ever cloned this repository could
+still forge an admin session.
 
-1. **Set the variables.** Add ``kasvimuseo_secret_key`` and
-   ``kasvimuseo_db_password`` to ``ansible/host_vars/<host>`` with
-   ``ansible-vault edit`` and run ``ansible-playbook ansible/install.yaml``.
-   Until then the deployment fails -- the playbook stops at the assertion, and
-   an application started by hand raises ``ImproperlyConfigured``. That is the
-   intended failure mode, but it does mean the next deploy needs this done
-   first.
+The maintainer rotated both on 2026-07-30 and put the new values in
+``ansible/host_vars/<host>`` as ``kasvimuseo_secret_key`` and
+``kasvimuseo_db_password``. That is what closes this issue. It is recorded on
+their word: no test and nothing in this repository can observe the server's
+environment, which is the same reason the repository half could be verified here
+and this half could not.
 
-2. **Rotate both** (option 1), which is the only step that actually ends the
-   disclosure. Generate a new ``SECRET_KEY``, change the PostgreSQL user's
-   password, put both in the vault. The cost is one round of logouts and any
-   outstanding password-reset links going dead; that is the entire cost. Nobody
-   needs to touch the code for it, which is the reason to do option 2 first.
+Expected and harmless side effects of the new ``SECRET_KEY``: every session was
+invalidated, so everybody logged in at the time was logged out once, and any
+password-reset link issued before the rotation stopped working. Requesting a new
+one works normally.
 
 Option 3 stands: the history is left as it is. Rewriting it would not
-un-disclose anything, and rotation makes what is in it worthless.
+un-disclose anything, and now that both values are rotated, what is in it is
+worthless.
+
+If the site is unreachable or the admin cannot log in, the likely cause is that
+the playbook has not been run since the vault was updated -- the running uWSGI
+process keeps the environment it started with, and ``uwsgi.ini`` is rewritten
+only by ``ansible-playbook -t web ansible/install.yaml``, which restarts the
+service when the file changes.

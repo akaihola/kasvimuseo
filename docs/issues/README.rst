@@ -101,9 +101,10 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 003, 004, 005, 007, 008, 009, 040, 041, 042, 043 and 048 are open:
-each one either changes behaviour that is visible in production, deletes code, or
-commits to a piece of work, so each wants a decision first. Eight of the
+All but 002, 003, 004, 005, 007, 008, 009, 010, 025, 039, 040, 041, 042, 043,
+046, 047 and 048 are open: each one either changes behaviour that is visible in
+production, deletes code, or commits to a piece of work, so each wants a
+decision first. Eight of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
 archive view that refused to render an empty list, a missing sort link the
 maintainer asked to have done rather than ruled on, a placeholder image, a
@@ -123,7 +124,13 @@ question inside it is still open, which is why its ``Status`` says so. 004 and
 005 arrived with options that looked like questions and were not: in both, ``git
 log`` showed the defect was left-behind scaffolding rather than a decision
 anybody had made, so the ``Decision`` on each records what the history settled
-rather than a ruling the maintainer still owed.
+rather than a ruling the maintainer still owed. 025 is the one whose fix came in
+two halves with different owners: the repository stopped carrying the production
+``SECRET_KEY`` and database password and started reading them from the
+environment, which remediated nothing by itself, and then the maintainer rotated
+both -- the step that actually ended the disclosure, and the reason it is
+``Fixed`` rather than half-``Fixed``. Its file keeps both halves separate,
+including which of them this repository can verify and which it only records.
 
 This page groups them by **where they came from**, which is how to read them.
 For the order to *do* them in, which cuts across those groups, see "Suggested
@@ -216,7 +223,9 @@ From the dependency upgrade analysis
 ``docs/upgrade-plan.rst``. Read it first; it lists which of the others block it.
 
 Of the rest, 025 and 026 are security questions independent of the upgrade and
-can be decided immediately. 019, 023 and 024 are one-line defensive changes that
+could be decided immediately; 025 was, and is fixed, which leaves 026 -- the one
+that needs somebody to look at the running server. 019, 023 and 024 are one-line
+defensive changes that
 are no-ops today and prevent silent breakage later -- the cheapest things on this
 list. 027 is the one with a real design decision in it. 034 wants deciding before
 the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions.
