@@ -13,6 +13,7 @@ from kasvimuseo import models
 from kasvimuseo.tests.factories import (create_care, create_location,
                                         create_observation, create_planted,
                                         create_planting, create_species)
+from kasvimuseo.tests.test_views import counted_queries
 
 
 DATE = datetime.date(2020, 6, 1)
@@ -80,6 +81,33 @@ def test_public_planted_uses_date_order_not_pk_order():
     assert planting.last_care == newest
     assert planting.is_public_planted() is True
     assert list(models.Planting.objects.public_planted()) == [planting]
+
+
+@pytest.mark.django_db
+def test_public_planted_query_count_does_not_grow_with_the_plantings():
+    """Issue 012: the three managers must not query per planting.
+
+    ``ObservationManager`` used to fetch ``planting.bed`` one row at a time --
+    ``is_public_planted`` reads ``bed.public``, and only ``PlantingManager``
+    had the matching ``select_related``. The prefetched ``care_set.count()``
+    the issue blamed is free: Django 1.5 answers it from ``_result_cache``.
+    """
+    def counts():
+        totals = []
+        for manager in (models.Species.objects, models.Observation.objects,
+                        models.Planting.objects):
+            with counted_queries() as queries:
+                list(manager.public_planted())
+            totals.append(queries.count)
+        return totals
+
+    for index in range(2):
+        create_planted(name_fi='laji%d' % index, external_id=index + 1)
+    two = counts()
+    for index in range(2, 6):
+        create_planted(name_fi='laji%d' % index, external_id=index + 1)
+
+    assert counts() == two
 
 
 @pytest.mark.django_db
