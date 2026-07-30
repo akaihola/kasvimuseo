@@ -212,8 +212,8 @@ depends on it.
    019: Write ``MIDDLEWARE_CLASSES`` out explicitly. Today a no-op; at Django
       2.0 its absence silently removes sessions, auth and CSRF. Also the
       prerequisite for 023.
-   023: Add ``django.contrib.messages`` to ``INSTALLED_APPS``, and its
-      middleware to the list 019 just created.
+   023: Add ``django.contrib.messages`` to ``INSTALLED_APPS``. Its middleware
+      is already in the list 019 wrote out, being part of the 1.5 default.
    024: Delete the ``python2.7`` site-packages path from ``TEMPLATE_DIRS``. It
       is unnecessary today and a silent blocker at the Python 3 flip.
    016: ``remove_diacritics`` returns an iterator on Python 3, which would

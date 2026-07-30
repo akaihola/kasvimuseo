@@ -73,13 +73,15 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-Nothing started. This issue tracks the programme; the individual obstacles have
-their own issues:
+No stage started. One obstacle is out of the way: 019 is ``Fixed``, so
+``MIDDLEWARE_CLASSES`` is now written out in ``common_settings`` and Stage 11
+has a list to rename rather than an absence to notice. This issue tracks the
+programme; the individual obstacles have their own issues:
 
 ============ ===========================================================
 Issue        Blocks or complicates
 ============ ===========================================================
-019          MIDDLEWARE -- silent breakage at Stage 11
+019          MIDDLEWARE -- fixed; Stage 8 renames an explicit list
 023          contrib.messages -- required from Stage 5
 024          ``TEMPLATE_DIRS`` python2.7 path -- blocks Stage 10
 016          ``remove_diacritics`` -- silent corruption at Stage 10
