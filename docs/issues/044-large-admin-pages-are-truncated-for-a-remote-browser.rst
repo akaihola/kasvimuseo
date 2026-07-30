@@ -21,9 +21,11 @@ Issue 044: Large admin pages are truncated for a remote browser
     measurements, because it is right whatever they say -- see "Decision"
     below, which also records what it does not settle.
 :Resolution: ``1bced8d`` "dev: serve the development site with gunicorn" fixes
-    the development environment; the report itself is not
-    confirmed fixed, because the only machine that reproduces it is the
-    maintainer's laptop. See "What the maintainer must still confirm".
+    the development environment and makes the failure audible. It does not stop
+    it: measured from the laptop on 2026-07-30, the labels URL is still cut, at
+    42,974 bytes of 54,613, and now says so (``curl`` exit 18). The cause is
+    below HTTP -- pasta or the tailnet. See "What the laptop said" and "What
+    the maintainer must still confirm".
 
 Problem
 =======
@@ -117,7 +119,9 @@ list. Measured against the same database:
 
 Everything reported broken is larger than 43 KB; everything reported working is
 smaller than 28 KB. The boundary falls exactly where the reporter's page was
-cut. Those three admin classes declare inlines, which is why their forms are the
+cut. (**As a rule this did not survive** -- a 360 KB page has since been seen
+to arrive whole. The table is still the measurement it was; it is the sentence
+above that was too strong. See "The ``location`` contradiction".) Those three admin classes declare inlines, which is why their forms are the
 big ones -- the inline set is the size, not the cause.
 
 **One page contradicts this and needed checking first:** ``location`` is by far
@@ -129,9 +133,20 @@ be done from the server; the next section is its answer.
 The ``location`` contradiction
 ==============================
 
-**Not settled, and it cannot be settled from ``gogo``** -- but nothing about it
-is left to guess at either, and the one thing that would settle it is a single
-page opened on the laptop, first in the list under "How to confirm" below.
+**Settled from the laptop on 2026-07-30, and it goes against the size
+explanation.** ``/admin/kasvimuseo/location/2/`` -- 360,391 bytes, seven times
+the page that started this issue -- loads over the tailnet with its related
+objects appearing gradually and **the footer with the save buttons at the end
+of it**. The whole response arrives. Read what follows knowing that: the
+paragraphs below were written to say what the answer would mean, and the answer
+is the one that reopens the question. See "What the laptop said" for the rest
+of that round and for what is now suspected.
+
+One caveat on the caveat: that page was opened after the change below, so what
+it proves outright is that a 360 KB response *can* cross this path today. It
+does not distinguish "``location`` always worked, and the size rule was never
+right" from "gunicorn fixed the admin pages, ``location`` among them". The one
+page that separates those two is ``species/6``, which is in the next round.
 
 What the server says, measured 2026-07-30 against the same dump:
 
@@ -476,6 +491,56 @@ attempts, with ``grp-fixed-footer`` present. Requests to the host's own tailnet
 address (``100.81.121.7``) were also complete -- but that traffic never leaves
 the machine, so it says nothing about the path from the laptop.
 
+What the laptop said, 2026-07-30
+================================
+
+The first round, run by the maintainer against the site as it now runs -- the
+``exit=18`` below is gunicorn's chunked framing, so this is the new server.
+
+1. **``location/2`` renders whole**, footer and save buttons present, as above.
+2. **The labels URL is still cut**, and now says so::
+
+       curl: (18) transfer closed with outstanding read data remaining
+       exit=18 downloaded=42974
+
+   Complete is 54,613. So the bytes still go missing; what changed is that
+   nothing pretends otherwise any more. This is the change doing exactly the
+   job it was taken for, and no more.
+3. **The admin loop measured nothing.** Every line came back at about 7,130
+   bytes -- ``observation/1`` 7,138, ``species/6`` 7,130, ``plot/2`` 7,124,
+   ``planting/22`` 7,134, ``location/2`` 7,132 -- which is the admin **login
+   page**, not a change form. The ``<user>`` and ``<pass>`` placeholders were
+   posted literally, so the session was never established and every request
+   redirected. The sizes differ only by the length of the ``next=`` parameter
+   in each form.
+4. **The tunnel run measured the same nothing**, for the same reason: identical
+   byte counts, so it too fetched five login pages. The tunnel comparison is
+   still owed.
+
+Where that leaves the diagnosis
+-------------------------------
+
+**The size rule, as this file stated it, is refuted.** "Everything larger than
+43 KB is cut" cannot survive a 360 KB page arriving whole. What is left is
+narrower and stranger: a 54,613-byte response is cut at 42,974 bytes, and was
+cut at 42,871 by a different client against a different server, while a
+360,391-byte one is not cut at all.
+
+Those two cut points are 103 bytes apart, which is what makes this hard to file
+under either heading offered above. A buffer would be expected to cut at the
+same offset twice; the network reading predicts no particular offset at all.
+Something that stalls after roughly 42--43 KB *in flight* -- a window that
+stops being refilled rather than a boundary in the data -- fits both numbers,
+and fits a large page surviving whenever the client happens to drain fast
+enough. That is a hypothesis, not a finding: it rests on two samples, and the
+next round is designed to get more.
+
+It also means **suspect 1 is closer to being cleared than the numbers above
+suggested**. ``wsgiref`` is gone from the path and the cut is not: whatever
+does this lives below the WSGI server, in pasta or in the tailnet. Suspect 3
+(the MTU) is no longer the outsider it was ranked as, and there is a cheap test
+for it in the next round.
+
 Options
 =======
 
@@ -493,6 +558,9 @@ Options
 3. **Chase the MTU** if the ``curl`` measurements point at the network rather
    than the server. ``tailscale ping --verbose`` reports the negotiated path;
    an MTU mismatch is a property of the tailnet, not of this repository.
+   **This is where the first round of measurements points**, since the cut
+   survived the change of WSGI server. Commands under "What the maintainer must
+   still confirm", step 5.
 
 Decision
 ========
@@ -529,10 +597,10 @@ What it does **not** claim:
   tail, this fixes the report outright; if pasta or the tailnet MTU is, the
   bytes still go missing and the change converts a silently half-rendered page
   into a visible error. Both are improvements and only the laptop can say which
-  one happened.
-* **It does not settle the ``location`` contradiction**, which is still the
-  first thing to check, and which could yet overturn the size explanation
-  entirely.
+  one happened. *It said the second one*: the labels URL is still cut under
+  gunicorn, loudly. See "What the laptop said".
+* **It does not settle the ``location`` contradiction.** That was settled from
+  the laptop instead, against the size explanation.
 * **It changes nothing in production**, which does not run ``runserver`` and
   does not serve ``/static/`` from Django.
 
@@ -550,24 +618,69 @@ test``: 357 passed.
 What the maintainer must still confirm
 ======================================
 
-This is why ``Status`` is not ``Fixed``. Everything above was measured on the
-server host, and the failure has never been seen there. From the laptop, in
-this order:
+This is why ``Status`` is not ``Fixed``: the labels URL is still cut, and the
+first round left three questions open. All of the following runs from the
+laptop, and **none of it needs a login** -- that is deliberate, after round
+one.
 
-1. Open ``/admin/kasvimuseo/location/2/`` and look for ``Tallenna``. This one
-   answers a question the whole diagnosis rests on, and it is worth doing
-   before the site is restarted under gunicorn, since the old server is the
-   one the report was made against.
-2. Run the two ``curl`` sequences in "How to confirm, from the laptop" against
-   the site as it now runs. Complete is ``exit=0`` and the byte counts listed
-   there; a truncation is now a non-zero exit rather than a plausible-looking
-   number.
-3. If it is still cut, the remaining suspects are pasta and the tailnet MTU,
-   and option 3 is the next step -- ``tailscale ping --verbose``, and whether
-   the cut lands at the same offset every time.
+**1. Is the cut at a fixed offset?** Ten fetches of the public URL, printing
+where each one stopped::
 
-If ``species/6`` and the labels URL come through whole and the submit row is
-back, this issue is fixed and ``Status`` should say so.
+    for i in $(seq 10); do
+        curl -s -o /dev/null -w "exit=%{exitcode} downloaded=%{size_download}\n" \
+             http://gogo.crane-boa.ts.net:8000/kasvimuseo/planting-labels/data/
+    done
+
+Complete is 54,613. Ten identical short counts is a buffer and names its size;
+ten different ones is the network; a mixture of whole and cut is the stall
+this file now suspects, and the proportion is itself a measurement.
+
+**2. Does the same URL survive the tunnel?** The comparison round one owed::
+
+    ssh -N -L 8000:127.0.0.1:8000 gogo &
+    for i in $(seq 10); do
+        curl -s -o /dev/null -w "exit=%{exitcode} downloaded=%{size_download}\n" \
+             http://127.0.0.1:8000/kasvimuseo/planting-labels/data/
+    done
+
+Whole through the tunnel and cut without it puts this below HTTP for good, in
+pasta or the tailnet, and finishes both the application and the WSGI server as
+suspects.
+
+**3. Is it size, or is it this response?** Five public static files, each with
+a real ``Content-Length`` to check against, two of them larger than the JSON
+that fails::
+
+    B=http://gogo.crane-boa.ts.net:8000/static
+    for u in css/kasvimuseo.admin.css:2341 \
+             admin/js/core.js:6662 \
+             grappelli/js/grappelli.min.js:27925 \
+             grappelli/jquery/jquery-1.7.2.min.js:94840 \
+             grappelli/stylesheets/screen.css:167158; do
+        curl -s -o /dev/null -w "${u#*:} expected, %{size_download} got, exit=%{exitcode}\n" \
+             "$B/${u%%:*}"
+    done
+
+If 94,840 and 167,158 arrive whole while 54,613 does not, size is not the rule
+and the difference is in how the response is written -- Django serves a static
+file through a file wrapper in many small writes, and a rendered page as one
+string.
+
+**4. Is the reported symptom actually gone?** Open
+``/admin/kasvimuseo/species/6/`` in Firefox -- the exact page this issue was
+filed about -- and look for ``Tallenna``. This is the one that says whether the
+change fixed the report or only made its failures audible, and it is the
+difference between ``Fixed`` and ``In progress``.
+
+**5. If 2 says the tailnet**, the MTU test is two commands::
+
+    tailscale ping --verbose gogo
+    ping -M do -s 1252 100.81.121.7      # 1280-byte packets, no fragmentation
+    ping -M do -s 1372 100.81.121.7      # 1400 -- should fail on a 1280 path
+
+A 1400-byte probe that neither succeeds nor reports "message too long" is a
+path-MTU black hole, which is option 3, and it is a property of the tailnet
+rather than of this repository.
 
 Independently of all of this
 ============================
