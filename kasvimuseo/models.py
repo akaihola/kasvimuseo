@@ -73,7 +73,12 @@ class SpeciesManager(models.Manager):
                        .order_by())
         species_pks = set()
         for species in all_species:
-            if any(planting.care_set.count() == 0
+            # ``len(...all())`` rather than ``.count()``: it reads the rows
+            # this method's own ``prefetch_related`` already loaded. The
+            # ``_prefetched_objects_cache`` guard ``last_care`` carries is not
+            # needed here, because the prefetch is two lines up -- there is no
+            # unprefetched way into this loop.
+            if any(len(planting.care_set.all()) == 0
                    or planting.last_care_count() > 0
                    # or sorted(planting.care_set.all(),
                    #           key=operator.attrgetter('date'),
