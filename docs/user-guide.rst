@@ -55,7 +55,11 @@ Ohjeita:
 
 - vaihda kuvaa:
 
-- käytä kuvan vasemmassa ja oikeassa yläkulmassa olevia nuolia
+- käytä kuvan vasemmassa ja oikeassa yläkulmassa olevia nuolia; ne
+  näkyvät vain, jos lajilla on useampi kuin yksi kuva
+
+- nuolet vaihtavat kuvan **vain tälle kyltille**, eivät lajin kuvaa, ja
+  valinta säilyy vasta kun napsautat “Save changes”
 
 - piilota kyltti tulosteesta:
 
@@ -65,6 +69,40 @@ Ohjeita:
 - talleta muutokset:
 
 - napsauta “Save changes” -painiketta sivun ylälaidassa
+
+Kasvikuvat
+----------
+
+Samat ohjeet lukevat ylläpidossa kuvan lisäyssivulla ja lajin sivulla; tässä
+ne ovat yhdessä.
+
+- lisää kuva: ylläpidossa *Photologue → Photos → Add photo*
+
+- nimeä tiedosto kasvin suomenkielisen nimen mukaan, esimerkiksi
+  ``valkonarsissi.jpg`` tai ``valkonarsissi kukassa.jpg``
+
+- jätä *Title* tyhjäksi: otsikoksi tulee tiedoston nimi ilman ``jpg``-,
+  ``jpeg``- tai ``jpe``-päätettä
+
+- kuva liitetään sille lajille, jonka suomenkielinen nimi on sama kuin
+  otsikon ensimmäinen sana; isoilla ja pienillä kirjaimilla ei ole väliä
+
+- jos yksikään laji ei täsmää, kuva jää kuvakirjastoon eikä näy millään
+  lajilla – mitään virhettä ei tule
+
+- vaihda lajin kuva:
+
+- tallenna haluamasi kuva viimeisenä: viimeksi tallennettu kuva voittaa,
+  myös silloin kun lajilla on jo kuva
+
+- tai valitse se lajin omalta sivulta kohdasta *Kuva*, jossa valittavina
+  ovat tämän lajin kuvat
+
+- poista kuva lajilta: tyhjennä lajin sivulla *Kuva*-valinta; kuvatiedosto
+  jää kuvakirjastoon muuta käyttöä varten
+
+- **huom:** kuvan tallentaminen kuvakirjastossa liittää sen aina lajiinsa,
+  joten se kumoaa lajin sivulla tehdyn valinnan
 
 Kasvien luokittelun kentät
 --------------------------
