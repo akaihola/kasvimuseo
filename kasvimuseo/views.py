@@ -7,6 +7,7 @@ from collections import OrderedDict
 from itertools import groupby
 from operator import attrgetter
 
+from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -58,10 +59,19 @@ class PlantedSpeciesLabelsApi(View):
                 .order_by('species__name_fi'))
 
     @staticmethod
-    def get_species_data(species, observation_set, visible,
+    def get_species_data(species, observation_set, label,
                          photo_pks_and_urls_by_title):
+        """Build the JSON entry for one label.
+
+        ``label`` is the saved :class:`~kasvimuseo.models.Label` for this
+        species, or ``None`` for a species that has none yet. The label is what
+        carries the photo choice and the visibility, so both are read from it
+        and only fall back to the species defaults when there is no label
+        (issue 039).
+        """
         photo_pk, photo_alternatives = get_species_photo_info(
-            species, photo_pks_and_urls_by_title)
+            species, photo_pks_and_urls_by_title,
+            photo=label.photo if label else None)
         return {
             'id': species.pk,
             'name_fi': species.name_fi,
@@ -75,7 +85,7 @@ class PlantedSpeciesLabelsApi(View):
             'subspecies': species.subspecies,
             'nicknames': [observation.nickname
                           for observation in observation_set],
-            'visible': visible}
+            'visible': label.visible if label else True}
 
     def get_labels_data(self):
         # optimize the observations query
@@ -93,14 +103,14 @@ class PlantedSpeciesLabelsApi(View):
             for species, observation_set
             in groupby(queryset, attrgetter('species'))])
         labels = (Label.objects
-                  .select_related('species')
+                  .select_related('species', 'photo')
                   .order_by('species__name_fi'))
         labels_by_species = groupby(labels, attrgetter('species'))
         label_infos = [
             self.get_species_data(species,
                                   [planting.observation
                                    for planting in label.planting_set.all()],
-                                  label.visible,
+                                  label,
                                   all_photos)
             for species, labels in labels_by_species
             for label in labels]
@@ -110,7 +120,7 @@ class PlantedSpeciesLabelsApi(View):
                 label_infos.append(
                     self.get_species_data(species,
                                           observation_set,
-                                          True,
+                                          None,
                                           all_photos))
         vue_data = {'object_list': label_infos}
         return vue_data
@@ -123,22 +133,38 @@ class PlantedSpeciesLabelsApi(View):
                             **kwargs)
 
     # noinspection PyUnusedLocal
+    @transaction.commit_on_success
     def post(self, request, *args, **kwargs):
+        """Replace every label with the submitted set and re-link the plantings.
+
+        The whole replacement is one transaction: the old labels are deleted
+        first, so a failure part way through used to leave the table empty
+        (issue 010).
+
+        The labels are created one at a time and mapped to the item that asked
+        for each as they are created. Pairing the items to the new rows by
+        position afterwards -- ``zip(items, Label.objects.order_by('pk'))`` --
+        assumed ``bulk_create`` inserted in input order and that the new primary
+        keys sorted the same way, which the database API does not promise; when
+        it fails, every planting label points at the wrong species and nothing
+        raises (issue 010).
+        """
         items = json.loads(request.body)
         Label.objects.all().delete()
-        Label.objects.bulk_create([Label(species_id=item['id'],
+        labels_by_external_id = {}
+        for item in items:
+            label = Label.objects.create(species_id=item['id'],
                                          photo_id=item['photo_pk'],
                                          visible=item['visible'])
-                                   for item in items])
-        labels = Label.objects.order_by('pk')
-        external_ids = {external_id: label
-                        for item, label in zip(items, labels)
-                        for external_id in item['external_ids']}
+            for external_id in item['external_ids']:
+                labels_by_external_id[external_id] = label
         plantings = (Planting.objects
                      .public_planted()
-                     .filter(observation__external_id__in=external_ids))
+                     .filter(observation__external_id__in=
+                             labels_by_external_id))
         for planting in plantings:
-            planting.label = external_ids[planting.observation.external_id]
+            planting.label = labels_by_external_id[
+                planting.observation.external_id]
             planting.save()
         return HttpResponse('OK', content_type='text/plain')
 

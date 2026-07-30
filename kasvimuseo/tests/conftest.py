@@ -41,6 +41,24 @@ def media_root(tmpdir):
 
 
 @pytest.fixture
+def display_size(db):
+    """The ``display`` photo size ``get_display_url()`` is named after.
+
+    Photologue ships one in its initial data, but the accessor methods are
+    attached at ``post_init`` from ``PhotoSizeCache``, a Borg whose state
+    outlives the test transaction. Reset it on both sides: before, so the size
+    is loaded, and after, so nothing rolled back leaks into later tests.
+    """
+    from photologue.models import PhotoSize, PhotoSizeCache
+
+    PhotoSizeCache().reset()
+    PhotoSize.objects.get_or_create(name='display',
+                                    defaults={'width': 100, 'height': 100})
+    yield
+    PhotoSizeCache().reset()
+
+
+@pytest.fixture
 def photo_factory(media_root):
     """Return a builder for photologue ``Photo`` objects backed by real files."""
     from photologue.models import Photo
