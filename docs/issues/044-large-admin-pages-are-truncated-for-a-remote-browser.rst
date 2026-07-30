@@ -14,6 +14,8 @@ Issue 044: Large admin pages are truncated for a remote browser
 :Related: 040 -- the same three buttons, one Finnish and two English
     013 -- another admin declaration that claims something untrue
     045 -- the other report that needed a browser to settle
+    010 -- the labels API, whose POST deletes every label before recreating
+    it, which is what makes a truncated load worth checking on that page
 :Decision: Accepted for work on 2026-07-29 and taken up as its own task; which
     of the three options below is taken is still open, and depends on what the
     measurements from the affected machine say.
@@ -118,6 +120,69 @@ affected machine, the size explanation is wrong and everything below it needs
 reopening on a different track. It is one page to open, and it should be the
 first thing the follow-up does.
 
+A second URL, with no admin and no login, is cut in the same band
+=================================================================
+
+Reported 2026-07-30, from the browser, against the same host::
+
+    http://gogo.crane-boa.ts.net:8000/kasvimuseo/planting-labels/data/
+    SyntaxError: JSON.parse: unterminated string at line 1 column 42872 of the JSON data
+
+The body the browser got ends mid-string::
+
+    , {"nicknames": [""], "all_photos": {"134": "/media/photologue/photos/cache/S%C3%A4rkynytsyd%C3%A4n.
+
+That is the same failure as above, one layer down. The page is
+``/kasvimuseo/planting-labels/``, whose Vue editor fetches its data from
+``PlantedSpeciesLabelsApi`` at the URL shown; the response stops part way
+through and the parser reports the first token it cannot finish. A truncated
+HTML page closes its own tags, so it merely looks wrong -- truncated JSON has
+no such tolerance, which is why this one announces itself.
+
+Requested on ``gogo`` itself, that URL answers ``200``,
+``content-type: application/json``, **54,613 bytes, four times out of four**,
+parsing cleanly and ending ``..."genus": "Ribes"}]}``; the same with
+``--compressed`` and with a Firefox ``User-Agent``. The body is pure ASCII
+(54,613 characters in 54,613 bytes), so no encoding is implicated -- the
+``%C3%A4`` in the fragment above is already percent-encoded in the payload.
+That measurement carries the same caveat as the loopback figures above: it
+never left the machine, so it says nothing about the path from the laptop.
+
+The quoted fragment locates the cut exactly. It occurs once in the complete
+body, at zero-based offset 42,771, and is 100 bytes long, so **the browser received
+42,871 bytes of 54,613 and lost 11,742.** Against ``species/6``, whose cut was
+bracketed between markers at 42,435 and 42,786 bytes:
+
+=========================== ================ ================ ==============
+ Response                    Complete         Received         Lost
+=========================== ================ ================ ==============
+ ``admin/.../species/6/``    52,119 bytes     42,435..42,786   ~10 KB
+ ``planting-labels/data/``   54,613 bytes     42,871 (exact)   11,742
+=========================== ================ ================ ==============
+
+Two different views, two different content types, two different total sizes,
+and the two cuts land within 440 bytes of each other -- less if the admin cut
+was nearer the upper marker, as little as 85 -- which is one part in a hundred
+of either response. By the test set out under "How to confirm" below, **that is a
+constant byte count, which points at a buffer rather than at the network**: an
+MTU or path problem would not stop at the same offset in two responses that
+have nothing else in common. Suspects 1 and 2 (``wsgiref`` and the pasta port
+publication) move ahead of suspect 3. It is two data points rather than a
+series, so it is not proof; the ``curl`` loop below is still what settles it,
+and a third cut in the same band would close the question.
+
+Three other things follow from this URL:
+
+* **The save hazard has to be checked here too**, because this page's POST
+  replaces every label rather than one form's fields. It turns out not to be
+  reachable; see "The label editor cannot save from a failed load" below.
+* **The title of this issue is now too narrow.** Nothing about the admin,
+  Grappelli, inlines, change forms or ``save_on_top`` is involved here. The
+  size table above still holds, but as a property of responses, not of admin
+  pages. The file is not renamed, because :doc:`index` refers to it by name.
+* **The confirmation gets much easier.** This URL is public: it needs no
+  session, so the CSRF login dance below is not required to measure it.
+
 What it is not
 ==============
 
@@ -161,10 +226,56 @@ the cut lands inside the spare empty inline and would probably be harmless; on
 is also why "put a save button at the top of the form so it survives the
 truncation" is the wrong fix: it would make a data-losing save easy to perform.
 
+The label editor cannot save from a failed load
+===============================================
+
+The page from the second observation would carry the same risk in a sharper
+form, and it is worth checking that it does not. ``PlantedSpeciesLabelsApi.post``
+does ``Label.objects.all().delete()`` and then recreates a label from every item
+in the submitted list, so what is posted is the whole of the new state: a
+species missing from a partial load would have its label deleted rather than
+left alone, and the plantings that pointed at it re-linked or dropped (issue 010
+is the other hazard on that same POST).
+
+Read as written, the page is safe today, and it is worth saying exactly why,
+because the margin is thin. In
+``kasvimuseo/templates/kasvimuseo/reports/planting-labels.html``:
+
+* ``object_list`` starts as ``[]``, and the ``axios.get`` that fills it has a
+  ``.catch`` that does nothing but ``alert('error')``. A body that will not
+  parse therefore leaves the list empty -- which is also the symptom to expect
+  on the affected machine: an alert reading ``error`` and no labels.
+* The ``Save changes`` button is bound to ``disableSave``, which starts
+  ``true`` and is cleared only by the ``enable-save`` event. That event has one
+  origin, a ``watch`` on ``species.visible`` inside the per-label component,
+  and an empty list renders none of those components. So nothing can enable the
+  button and nothing can be posted.
+
+The hazard is latent rather than live: it needs the editor to hold *some* of
+the labels, and ``JSON.parse`` is all or nothing. But it is one edit away --
+anything that recovers partial data, or enables the button on another event,
+turns a truncated load into a silent deletion of every label that did not
+arrive. Confirm the empty-and-disabled behaviour in the browser before touching
+this page, and keep the delete-and-recreate in mind if the fetch is ever made
+more forgiving.
+
 How to confirm, from the laptop
 ===============================
 
-The measurement needs a logged-in session, and the login is a CSRF-protected
+**Start with the one that needs no login.** The labels data URL from the second
+observation is public, so a single command decides the question::
+
+    curl -s -D h.txt -o body.json -w 'downloaded=%{size_download}\n' \
+         http://gogo.crane-boa.ts.net:8000/kasvimuseo/planting-labels/data/
+    grep -i '^content-length' h.txt      # and compare; complete is 54,613 bytes
+
+Short from the laptop and whole from ``gogo`` is the whole of this issue in two
+commands. Repeat it a few times and note **where** it stops each time: the same
+offset twice more makes the buffer reading above hard to argue with, a
+different one each time sends this back to the network.
+
+The admin measurement is the fuller one, since it varies the response size.
+It needs a logged-in session, and the login is a CSRF-protected
 POST, so it is two steps. This is the exact sequence used for the loopback
 figures above; run it on the machine that shows the problem, against the
 tailnet name::
