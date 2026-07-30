@@ -59,8 +59,17 @@ either a restart of ``app run`` or a reload of the workers in place::
 
     $ podman kill --signal HUP $(podman ps -qf name=kasvimuseo-dev-)
 
-Do not reach a ``runserver`` from another machine -- an SSH tunnel makes it a
-loopback request on this side::
+The container shares the host's network namespace instead of publishing a port,
+which is the other half of issue 044. Rootless podman publishes a port with
+pasta, and pasta -- over a connection with real latency -- forwards about 43 KB
+of a response and then closes it, losing the rest. Sharing the namespace takes
+that layer out: gunicorn listens on the host's port itself. To watch the old
+behaviour, or if host networking is unwanted::
+
+    $ dev/kasvimuseo app run --publish
+
+An SSH tunnel also avoids it, by making the remote request a loopback one on
+this side, and is the right answer for a ``--runserver`` session::
 
     $ ssh -N -L 8000:127.0.0.1:8000 <this host>
 
@@ -72,6 +81,7 @@ same staticfiles view up explicitly for every other server. Production serves
 Other commands::
 
     $ dev/kasvimuseo app run --runserver      # the old wsgiref server instead
+    $ dev/kasvimuseo app run --publish        # a published port instead of the host's
     $ dev/kasvimuseo db start|stop|status     # PostgreSQL by hand
     $ dev/kasvimuseo db psql                  # psql on the local database
     $ dev/kasvimuseo media fetch              # photos the database references
