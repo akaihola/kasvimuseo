@@ -12,7 +12,7 @@ Issue 011: Species report opens every image file to pick a CSS class
 :Blocks: (none)
 :Related: 004 -- option 2 there depends on how the species photo is rendered; 006 -- the dead template carried the same expression
 :Decision: Option 1, store the orientation. Option 2 does not exist in the pinned photologue: 2.6.1's ``ImageModel`` keeps no dimensions on the model at all, and its one size accessor, ``_get_SIZE_size``, is ``Image.open(self._get_SIZE_filename(size)).size`` after a ``create_size`` that opens the original when the cached copy is absent -- a file open either way. So ``Species.photo_is_horizontal`` plus a South migration and a backfill. Fallback when the file cannot be read is ``vertical``, because that is the branch the template already took for a species with no photo, so nothing that renders today changes shape.
-:Resolution: 93a191e -- ``Species.photo_is_horizontal`` and ``measure_photo_orientation()``, migrations 0020 (column) and 0021 (backfill), both report templates, and the tests that prove no image file is opened.
+:Resolution: 93a191e -- ``Species.photo_is_horizontal`` and ``measure_photo_orientation()``, migrations 0020 (column) and 0021 (backfill), both report templates, and the tests that prove no image file is opened. a235a9c adds the species list to those tests and records what the migration did to the production dump.
 
 Problem
 =======
@@ -82,12 +82,15 @@ What was done
   cannot go stale.
 * ``0020_auto__add_field_species_photo_is_horizontal`` adds the column and
   ``0021_backfill_species_photo_is_horizontal`` measures the existing rows.
-  Both were applied to a database built by ``dev/kasvimuseo db bootstrap``,
-  which runs the same migration chain a restored dump is brought up to date
-  with, and the backfill was exercised by rewinding to 0019 and re-applying it
-  over landscape, portrait and file-missing rows. A dump from production was
-  not available here, so what was verified is the shape, not that particular
-  copy of the data.
+  Both were applied to the production dump itself, restored with
+  ``dev/kasvimuseo db restore`` and standing at 0019 with no such column: 156
+  species, 113 of them with a photo. The backfill measured **93 horizontal and
+  20 vertical**, leaving ``NULL`` on exactly the 43 that have no photo, and
+  re-reading all 113 files afterwards and comparing found **113 matches and no
+  mismatches**. Run once with the media directory absent it filled nothing and
+  failed nothing, which is the other half of the promise. Both reports were
+  then rendered from that database, one species from each branch, and each came
+  back 200 with the right class.
 * The two templates render ``{% if ...photo_is_horizontal %}``, and the debug
   comment is gone. ``planted-species-compact.html`` carried the same
   expression and was fixed with them; it is the dead template of issue 006, so
@@ -106,23 +109,33 @@ saved or the backfill is run.
 Evidence that the file access is gone
 =====================================
 
-``test_reports_open_no_image_file`` renders both reports with ``PIL.Image.open``
-and ``FileSystemStorage._open`` instrumented -- the two doors an image can come
-through, since Django reads ``ImageFieldFile.width`` via the storage and
-photologue builds its cached sizes via PIL on the path -- and asserts nothing
-was opened. It fails on the old template, with the original JPEG named in the
-list. ``test_compact_sheet_header_class_follows_the_photo_shape`` and
+``test_reports_open_no_image_file`` renders all three reports that put a photo
+on the page -- the printable sheet, the compact sheet and the species list --
+with ``PIL.Image.open`` and ``FileSystemStorage._open`` instrumented. Those are
+the two doors an image can come through, since Django reads
+``ImageFieldFile.width`` via the storage and photologue builds its cached sizes
+via PIL on the path, and patching one alone would prove nothing. It fails on the
+old template, with the original JPEG named in the list.
+``test_compact_sheet_header_class_follows_the_photo_shape`` and
 ``test_printable_sheet_uses_the_vertical_header_for_a_portrait_photo`` cover
 both orientations, and ``test_reports_render_when_the_image_file_is_missing``
 covers the ``IOError``.
 
-One open survives, and it is not this issue: the first request for a photo the
-cached ``display`` copy has never been made for still opens the original, in
-photologue's ``create_size``, because the shipped ``display`` ``PhotoSize`` has
-``pre_cache`` off. That is once per photo ever rather than once per render, and
-the test warms it before it measures. Turning ``pre_cache`` on for ``display``
-would move even that to upload time; it is a data change, not a code one, and
-was left alone.
+One open survives, and it is not this issue: the first request for a photo whose
+cached copy at that size has never been built still opens the original, in
+photologue's ``create_size``, because every shipped ``PhotoSize`` has
+``pre_cache`` off. That is once per photo and size, ever, rather than once per
+render, and the test warms it before it measures -- then asserts the warm-up
+*did* open something, so the test cannot quietly become vacuous if a page stops
+rendering its photo. Turning ``pre_cache`` on would move even that to upload
+time; it is a data change, not a code one, and was left alone.
+
+Covering the list page turned up something that is not this issue either and is
+in :doc:`incoming`: it renders ``get_mobilethumbnail_url``, and no
+``mobilethumbnail`` ``PhotoSize`` is in ``initial_data.json``, so on any
+database built from that fixture the accessor does not exist and the page shows
+a broken image. The test creates the size rather than working around its
+absence, which is why it is a test of file access rather than a test of nothing.
 
 
 Consequences elsewhere
