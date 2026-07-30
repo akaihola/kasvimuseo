@@ -8,7 +8,10 @@ postgresql_databases:
     owner: ylaneenkasvit
 postgresql_users:
   - name: ylaneenkasvit
-    password: 5tsovi25
+    # From the vault, never from this file: it used to hold the live password in
+    # plain text (issue 025). Define kasvimuseo_db_password in the encrypted
+    # host_vars file for the host -- see the assertion in install.yaml.
+    password: "{{ kasvimuseo_db_password }}"
 postgresql_hba_entries:
   - type: local
     database: ylaneenkasvit

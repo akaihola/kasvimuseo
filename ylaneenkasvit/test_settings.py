@@ -11,6 +11,9 @@ import os
 
 from .common_settings import *  # noqa
 
+# The site settings read the key from ``KASVIMUSEO_SECRET_KEY`` and refuse to
+# start without it (issue 025). The suite signs nothing that outlives it, so it
+# supplies its own literal instead and needs no variable set.
 SECRET_KEY = 'test'
 
 # South migrates apps alphabetically, so ``kasvimuseo`` runs before
@@ -22,7 +25,10 @@ SOUTH_TESTS_MIGRATE = False
 DATABASES['default'].update({  # noqa: F405
     'NAME': os.environ.get('KASVIMUSEO_DB_NAME', 'ylaneenkasvit'),
     'USER': os.environ.get('KASVIMUSEO_DB_USER', 'ylaneenkasvit'),
-    'PASSWORD': os.environ.get('KASVIMUSEO_DB_PASSWORD', '5tsovi25'),
+    # Empty rather than any real password: the local development cluster
+    # trusts local connections, and a default here is exactly how the
+    # production password used to reach a tracked file (issue 025).
+    'PASSWORD': os.environ.get('KASVIMUSEO_DB_PASSWORD', ''),
     'PORT': os.environ.get('KASVIMUSEO_DB_PORT', ''),
     # Lets concurrent test runs against one cluster use separate databases.
     'TEST_NAME': 'test_{0}{1}'.format(

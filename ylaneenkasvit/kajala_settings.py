@@ -7,10 +7,13 @@ SITE_ROOT = '/www/kajalankasvit'
 ADMINS = (('Antti Kaihola', 'akaihol+kajalankasvit@ambitone.com'),)
 MANAGERS = ADMINS
 
+# From the environment, not from this file, and with no default: the password
+# that used to stand here is in the history and is disclosed until it is
+# rotated (issue 025).
 DATABASES['default'].update({
     'NAME': 'kajalankasvit',
     'USER': 'kajalankasvit',
-    'PASSWORD': '6dofoso11'})
+    'PASSWORD': secret_from_env('KASVIMUSEO_DB_PASSWORD')})
 
 STATIC_URL = '//static.kajalankasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
