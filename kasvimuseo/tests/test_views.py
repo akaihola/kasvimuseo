@@ -197,6 +197,9 @@ def test_labels_api_get_reads_the_label_photo_without_more_queries(
     ``Label`` query rather than issuing another -- and it saves the deferred
     lookup of ``species.photo`` for each of the two labels that has a photo of
     its own, which is the whole of the difference.
+
+    Issue 012 then took it to 14: ``ObservationManager`` prefetches the beds it
+    used to fetch one planting at a time.
     """
     first = create_planted(name_fi='valkonarsissi', external_id=1)
     second = create_planted(name_fi='tulppaani', external_id=2)
@@ -214,7 +217,7 @@ def test_labels_api_get_reads_the_label_photo_without_more_queries(
     assert response.status_code == 200
     assert len(json.loads(response.content.decode('utf-8'))
                ['object_list']) == 3
-    assert queries.count == 16
+    assert queries.count == 14
 
 
 @pytest.mark.django_db

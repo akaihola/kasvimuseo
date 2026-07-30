@@ -191,7 +191,10 @@ semantic change lands on code that is already correct about queries.
 
    012: One ``COUNT`` per planting, from a ``prefetch_related`` that is
       defeated by ``.count()``. Behaviour-preserving, so it is the safe half
-      of the work.
+      of the work. **Fixed**, though not as reported: the prefetched
+      ``.count()`` costs nothing, and the per-planting query was
+      ``is_public_planted`` reading an unfetched ``bed``.
+      ``ObservationManager`` now prefetches it.
    001: ``SpeciesManager`` ignores ``removal_date`` while the other two
       managers do not, so removed species stay on the public list. High
       severity, but it is a decision about what the public site means, not a

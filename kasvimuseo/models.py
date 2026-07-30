@@ -332,7 +332,8 @@ class ObservationManager(models.Manager):
         all_observations = (base_qs
                             .filter(planting__isnull=False,
                                     planting__bed__public=True)
-                            .prefetch_related('planting_set__care_set')
+                            .prefetch_related('planting_set__care_set',
+                                              'planting_set__bed')
                             .order_by())
         observation_pks = set()
         for observation in all_observations:
@@ -586,12 +587,12 @@ class Planting(models.Model):
 
     def is_public_planted(self):
         """Returns True if the planting is public and not removed"""
-        if not self.bed.public:
+        if not self.bed.public or self.removal_date:
             return False
-        if self.removal_date or (self.care_set.count()
-                                 and self.last_care_count() == 0):
-            return False
-        return True
+        # No care operations at all means the planting is still there; other-
+        # wise the count after the last care operation decides.
+        last_care = self.last_care
+        return last_care is None or last_care.count != 0
 
     class Meta:
         verbose_name = _(u'planting')
