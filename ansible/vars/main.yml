@@ -22,6 +22,22 @@ postgresql_hba_entries:
   - {type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5}
   - {type: host, database: all, user: all, address: '::1/128', auth_method: md5}
 
+# The host names the application answers to (issue 026). Tracked, not vaulted: a
+# host name is not a secret, and having it here is what makes the deployment
+# reproducible -- ALLOWED_HOSTS used to be set in no tracked file at all, so the
+# site depended on an untracked local_settings.py on the server. uwsgi.ini writes
+# this into the process environment as KASVIMUSEO_ALLOWED_HOSTS, and the settings
+# refuse to start without it.
+#
+# kasvit.ambitone.com is the only name nginx proxies to uWSGI (see the app_path
+# server below); the other two are listed because the maintainer reports they
+# reach this site, and a name that arrives with no redirect would otherwise be a
+# 400 rather than a page.
+kasvimuseo_allowed_hosts:
+  - kasvit.ambitone.com
+  - www.kasvit.ambitone.com
+  - vps763955.ovh.net
+
 nginx_main_template_enable: true
 nginx_main_template:
   user: nginx www-data

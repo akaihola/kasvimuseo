@@ -15,6 +15,9 @@ DATABASES['default'].update({
     'USER': 'kajalankasvit',
     'PASSWORD': secret_from_env('KASVIMUSEO_DB_PASSWORD')})
 
+# As in ylaneenkasvit_settings: from the environment, no default (issue 026).
+ALLOWED_HOSTS = hosts_from_env('KASVIMUSEO_ALLOWED_HOSTS')
+
 STATIC_URL = '//static.kajalankasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 

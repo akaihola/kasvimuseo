@@ -8,6 +8,22 @@ PROJECT_ROOT = '/www/ylaneenkasvit'
 here = lambda *args: os.path.join(os.path.dirname(__file__), *args)
 
 
+def _from_env(name, source):
+    """Return environment variable ``name``, or refuse to start without it.
+
+    ``source`` says where the value comes from in production, so the message
+    tells whoever hit it what to go and look at.
+    """
+    try:
+        return os.environ[name]
+    except KeyError:
+        raise ImproperlyConfigured(
+            '{0} is not set. This deployment reads its configuration from the'
+            ' environment and has no default for it; set {0} in the process'
+            ' environment (in production, uwsgi.ini writes it from {1}) and'
+            ' start again.'.format(name, source))
+
+
 def secret_from_env(name):
     """Return environment variable ``name``, or refuse to start without it.
 
@@ -18,14 +34,30 @@ def secret_from_env(name):
     ``docs/issues/025-production-secret-key-and-database-password-are-committed.rst``.
     The test settings supply their own literals instead of calling this.
     """
-    try:
-        return os.environ[name]
-    except KeyError:
-        raise ImproperlyConfigured(
-            '{0} is not set. This deployment reads its secrets from the'
-            ' environment and has no default for them; set {0} in the'
-            ' process environment (in production, uwsgi.ini writes it from'
-            ' Ansible Vault) and start again.'.format(name))
+    return _from_env(name, 'Ansible Vault')
+
+
+def hosts_from_env(name):
+    """Return the comma-separated host names in ``name``, or refuse to start.
+
+    ``ALLOWED_HOSTS`` is the whole of Django's defence against a forged
+    ``Host`` header once ``DEBUG`` is off, and it used to be set in no tracked
+    file at all (issue 026). It is read the way the secrets are, and for the
+    same reason: neither possible default is safe to have. An empty list makes
+    every request a ``SuspiciousOperation``, so the site would be down without
+    saying why, and ``['*']`` would switch the check off in exactly the
+    deployment that forgot to configure it. A deployment that has not been told
+    its host names therefore stops, naming the variable.
+
+    The value is a comma-separated list, because a process environment holds
+    strings: ``KASVIMUSEO_ALLOWED_HOSTS=kasvit.example.com,www.kasvit.example.com``.
+    The test settings name their hosts literally instead of calling this.
+    """
+    # Not from the vault: host names are not secret, and keeping them in
+    # ``ansible/vars/main.yml`` is what makes the deployment reproducible from
+    # the tracked files.
+    hosts = _from_env(name, 'ansible/vars/main.yml')
+    return [host.strip() for host in hosts.split(',') if host.strip()]
 
 # specify SITE_ROOT in site specific settings
 
