@@ -42,11 +42,13 @@ SPECIES_PHOTO_HELP_TEXT = _(
 
 
 def remove_diacritics(text):
-    # Still ``filter()`` over a text string, which is what issue 016 is about:
-    # on Python 3 this returns an iterator rather than a string. Spelled as a
+    # ``u''.join(...)`` rather than ``filter()`` (issue 016): on Python 3
+    # ``filter`` returns an iterator, and ``slugify`` would have stringified it
+    # into ``<filter object at 0x...>`` -- a silently mangled slug rather than a
+    # crash. Joining returns a text string on both versions. Spelled as a
     # ``def`` only because the lint forbids naming a lambda.
-    return filter(lambda character: not combining(character),
-                  normalize('NFKD', text))
+    return u''.join(character for character in normalize('NFKD', text)
+                    if not combining(character))
 
 
 class PhotoForm(forms.ModelForm):
