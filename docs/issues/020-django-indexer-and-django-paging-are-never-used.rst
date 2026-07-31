@@ -136,6 +136,17 @@ gunicorn, so a short response is an error rather than a silent truncation
   ``/admin/kasvimuseo/planting/``, ``/admin/kasvimuseo/observation/``,
   ``/admin/photologue/photo/``, ``/admin/auth/user/``
 
+"Logged in as a superuser" is the part of that worth pinning down, because a
+``200`` from the admin does not by itself mean the page rendered: Django 1.5
+answers an unauthenticated admin URL by rendering the login form *at the
+requested URL* rather than redirecting to it, so a check for ``200`` alone
+passes on the login form (``docs/issues/README.rst`` records this under
+"Observations, not actionable"). The session here was established by posting
+the form with its CSRF token and following the ``302`` back to ``/admin/``, and
+the sizes are what distinguish the two: ``/admin/`` is **18,319 bytes** with
+that session and **7,088** without it. The change lists are larger still --
+``/admin/kasvimuseo/observation/`` is 140,264 -- so those are the real pages.
+
 The three ``500``\ s seen on the first pass were the restored dump being older
 than the code -- ``column kasvimuseo_species.photo_is_horizontal does not
 exist``, added by issue 011's migration -- and went away when ``manage.py
