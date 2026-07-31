@@ -913,6 +913,7 @@ Issue 013 (stale ``FIXME`` comments claiming admin features are broken -- the
 same admin module, the same kind of untrue declaration), issue 040 (half the
 admin chrome is English -- which is why one button says ``Tallenna`` and the two
 beside it do not), issue 045 (the other report that needed a browser to settle),
-issue 021 (gunicorn, which option 1 has now given a real use -- it is installed
-as an *app* for no reason, which is a separate thing from being run as a
-server).
+issue 021 (gunicorn, which option 1 has now given a real use -- it was also
+installed as an *app* for no reason, which is a separate thing from being run
+as a server; that entry is gone and the dependency stayed, partly because of
+what was decided here).

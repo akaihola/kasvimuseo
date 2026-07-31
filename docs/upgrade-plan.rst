@@ -145,10 +145,9 @@ Package                      Pinned    Notes
 ``django-photologue``        2.6.1     Owns database schema. The hard pacer.
 ``django-grappelli``         2.4.5     Admin skin. The other hard pacer.
 ``django-extensions``        1.5.9     In ``INSTALLED_APPS``; nothing imports it
-``django-indexer``           0.3.0     **Zero references anywhere**
-``django-paging``            0.2.4     **Zero references anywhere**
 ``django-jqm``               1.1.0.2   ``akaihola`` fork, installed from GitHub
-``gunicorn``                 0.17.4    Also (pointlessly) in ``INSTALLED_APPS``
+``gunicorn``                 0.17.4    Production and, since issue 044,
+                                       development server
 ``psycopg2-binary``          2.8.4     ``2.8.6`` is the last 2.8 patch
 ``six``                      1.11.0    Nothing in this repo imports it
 ``south``                    0.8.1     Pre-1.7 migrations. Dies at Django 1.7.
@@ -161,6 +160,10 @@ Plus, installed by ``dev/Containerfile`` with ``--no-deps`` and therefore
   Python 2.7)
 * ``django-sortedm2m==1.5.0`` — not actually needed by photologue 2.6.1; it
   becomes a real dependency at photologue 2.8.
+
+``django-indexer==0.3.0`` and ``django-paging==0.2.4`` were in this list when it
+was written, referenced by nothing; Stage 0 has since removed them (issue 020),
+which is why the container no longer installs them.
 
 None of the pinned production releases declare ``install_requires`` on PyPI, so
 the *declared* dependency tree is completely flat. The real tree is implicit —
@@ -177,7 +180,8 @@ Test and development
 
 ``requirements/dev.txt``
     ``django-extensions==1.5.9``, ``flax`` (``akaihola`` fork, GitHub),
-    ``django-pserver``, ``Fabric==1.6.0``, ``Werkzeug==0.8.3``.
+    ``Fabric==1.6.0``, ``Werkzeug==0.8.3``. ``django-pserver`` was here too,
+    and Stage 0 removed it (issue 033).
 
 ``requirements/integration-tests.txt``
     ``pytest==4.6.9``, ``selenium==3.141.0``, ``pytest-selenium==1.17.0``,
@@ -685,15 +689,27 @@ imports.
 Stage 0 — Dead weight and defensive settings (no version changes)
 -----------------------------------------------------------------
 
-Cheap, zero-risk, and it shortens every later stage.
+Cheap, zero-risk, and it shortens every later stage. Five of its eight items
+are done; what is left is the dead grappelli route (022), vendoring
+``django-jqm`` (031) and taking ``django-extensions`` out of production.
 
 #. Remove ``django-indexer`` and ``django-paging`` from ``production.txt`` and
    ``INSTALLED_APPS``. Nothing in the repo references ``indexer`` or ``paging``
    in any ``.py``, ``.html`` or template. They are vestigial Sentry
-   dependencies.
+   dependencies. **Done** -- issue 020. One correction to "no database
+   consequence": ``indexer`` does ship a model and a South migration, and the
+   production database has the ``indexer_index`` table it created. It has zero
+   rows and nothing reads it, so it is left in place, next to the four
+   ``sentry_*`` tables from the same integration. ``paging`` has nothing in the
+   database at all.
 #. Remove ``'gunicorn'`` from ``INSTALLED_APPS``. It was only ever there for the
    ``run_gunicorn`` management command, which gunicorn deleted in 19.7.1.
-   Gunicorn itself stays as the WSGI server.
+   Gunicorn itself stays as the WSGI server. **Done** -- issue 021. It is now
+   the development server as well (issue 044), so the pin is more load-bearing
+   than when this was written; only the app entry went.
+#. Remove ``django-pserver`` from ``dev.txt``, with the commented-out line in
+   ``local_settings.development.py`` that was its only other mention. **Done**
+   -- issue 033. ``django-extensions``' ``runserver_plus`` covers it.
 #. Add ``'django.contrib.messages'`` to ``INSTALLED_APPS``. **Done** -- issue
    023.
 #. Add an explicit ``MIDDLEWARE_CLASSES`` equal to today's effective default.
@@ -992,10 +1008,12 @@ Part 5 — Packages that stop being needed
 =================================== ========= ==================================================
 Package                             Dies at   Because
 =================================== ========= ==================================================
-``django-indexer``                  Stage 0   Never referenced
-``django-paging``                   Stage 0   Never referenced
-``django-pserver``                  Stage 0   Only ever in a commented-out line
-``gunicorn`` as an *app*            Stage 0   ``run_gunicorn`` removed in gunicorn 19.7.1
+``django-indexer``                  Stage 0   Never referenced. **Gone** -- issue 020
+``django-paging``                   Stage 0   Never referenced. **Gone** -- issue 020
+``django-pserver``                  Stage 0   Only ever in a commented-out line.
+                                              **Gone** -- issue 033
+``gunicorn`` as an *app*            Stage 0   ``run_gunicorn`` removed in gunicorn 19.7.1.
+                                              **Gone** -- issue 021; the package stays
 ``django-jqm`` as a *dependency*    Stage 0   Vendored into the repo
 ``south``                           Stage 5   Django 1.7 ships migrations
 ``django-model-utils``              Stage 6   Photologue 3.2: "Django can now natively chain
