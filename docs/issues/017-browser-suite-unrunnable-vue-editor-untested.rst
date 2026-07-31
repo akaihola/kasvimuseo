@@ -26,7 +26,7 @@ Issue 017: Browser test suite is unrunnable, so the Vue label editor is untested
     the engine 045 is waiting for. Option 2 was rejected because the drag
     rewrite 045 owes is exactly the change that needs a test. See "The
     decision" below for what was measured.
-:Resolution: Fixed in 71c59da. The old suite and
+:Resolution: Fixed in b378bbf. The old suite and
     ``requirements/integration-tests.txt`` are gone, and with them the
     committed production password -- which turned out to be live, and is issue
     :doc:`050 <050-the-production-admin-password-is-committed-and-in-use>`.
