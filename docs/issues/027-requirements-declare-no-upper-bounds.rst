@@ -144,11 +144,13 @@ the whole set.
 That is not only a hypothetical installer. ``ansible/install.yaml`` deploys by
 ``pip install git+ssh://...kasvimuseo.git`` -- the package, not the
 requirements file -- so ``install_requires`` is what the production server
-resolves from, with ``--no-deps`` set in ``fabfile.py``'s environment for the
-older path. Pillow reached that server either by photologue's unbounded
-``Pillow>=2.0.0`` or not at all; it is a pin now. The comment in ``fabfile.py``
-that called ``--no-deps`` the fix for "the photologue/Pillow problem" says what
-it now is instead, until issue 032 deletes the file.
+resolves from; the older Fabric path set ``--no-deps`` in its environment too.
+Pillow reached that server either by photologue's unbounded ``Pillow>=2.0.0``
+or not at all; it is a pin now. The comment in ``fabfile.py`` that called
+``--no-deps`` the fix for "the photologue/Pillow problem" was corrected here to
+say what the flag now is instead, and issue 032 has since deleted the file, so
+``dev/Containerfile``'s comment -- quoted above -- is the only copy of that
+explanation and the only place the flag is still set.
 
 What 030's record cost
 ======================
