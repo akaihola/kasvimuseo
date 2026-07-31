@@ -24,7 +24,7 @@ Issue 018: No CI: the suite is only ever run by hand
     asked for and skipped, and cheap to change. See "Decision" below for what
     was asked, what each platform costs, and what has to happen for the first
     run to be green.
-:Resolution: Fixed in 3a40a3a.
+:Resolution: Fixed in ff8be30.
 
 Problem
 =======
