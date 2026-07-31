@@ -977,9 +977,12 @@ ceiling versions:
   nothing and costs a ``setuptools<82`` constraint for the next eight stages,
   so no stage carries one. This is the stage where gunicorn moves at all: it
   stays on 0.17.4 through Stage 9, where Python 2.7 makes the question moot.
-* ``selenium`` 3.141.0 → 4.x — and ``Fabric`` is no longer a question here: it
-  was deleted rather than ported (issue 032, see Part 5), which is also what
-  happened to ``selenium``, with the browser suite in issue 017
+* ``selenium`` and ``Fabric`` are both moot here, and neither is a requirement
+  any more: ``selenium`` went with ``requirements/integration-tests.txt`` in
+  issue 017, and ``Fabric`` was deleted rather than ported (issue 032, Part 5).
+  This bullet used to read "``selenium`` 3.141.0 → 4.x, ``Fabric`` 1.6 → 3.x
+  *or* delete both" — both were deleted, and by the two issues rather than by
+  this stage.
 
 The full resolved lock for this stage — and every stage after it — is in
 `Appendix A — Resolved lock set per stage`_.

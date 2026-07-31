@@ -22,7 +22,12 @@ Issue 032: fabfile.py duplicates the Ansible deployment, in Python 2
     transcribed into "What the second site's entry recorded", below, in the
     same change that removed the file. Whether that site still exists is a
     separate question, and it is in :doc:`incoming` rather than answered here.
-:Resolution: 51ae5fc -- deletes ``fabfile.py`` and the two ``requirements/dev.txt``
+    Recorded rather than ruled: the question was put to the maintainer and no
+    answer came back, so this is what the evidence below supports, and the two
+    things a ruling could still change are cheap to change -- restoring the
+    file is one revert, and the second site's values are transcribed either
+    way.
+:Resolution: edd59db -- deletes ``fabfile.py`` and the two ``requirements/dev.txt``
     lines that existed for it.
 
 Problem
@@ -129,15 +134,33 @@ only copy:
 The rest of the tree
 --------------------
 
-Nothing outside the documentation referred to the file. In particular
-``README.rst`` never described the Fabric route at all -- it documents
-``dev/kasvimuseo`` and Ansible and nothing else -- so it needed no change, and
-neither did ``setup.py``, ``dev/`` or ``.github/``. What was left was prose:
-``docs/dependency-inventory.rst``, ``docs/upgrade-plan.rst`` Part 5 and its
-Stage 10 table, issues 025, 027 and 031, and this register. All are past tense
-now. ``fabric``'s version table stays in the inventory, since that document
-records what was surveyed rather than what is installed, with a line saying the
-package is gone.
+Nothing outside the documentation referred to the file. ``setup.py``, ``dev/``
+and ``.github/`` needed no change, and ``README.rst`` never described the
+Fabric route at all -- it documents ``dev/kasvimuseo`` and Ansible and nothing
+else. ``README.rst`` did need one change, found by reading this change back
+rather than by grepping for the word: its list of ways a CI job goes red said
+"two dependencies install from URLs rather than from PyPI (issue 031)", and
+taking ``flax`` out leaves one. Correcting the count turned up a second thing
+that entry had wrong from the start -- ``flax`` was in ``dev.txt``, and
+``dev/Containerfile`` installs ``production.txt`` alone, so ``flax`` was never
+in the image and could never have reddened that build. One URL could, and still
+can: ``django-jqm``. What was left after that was prose:
+``docs/dependency-inventory.rst``; four places in ``docs/upgrade-plan.rst`` --
+Part 5's table, the Part 2 ladder, its listing of ``dev.txt``, and the Stage 9
+bullet -- plus the Stage 0 preamble, which now says the deletion happened ahead
+of the Stage 10 Part 5 had scheduled it for; issues 025, 027 and 031; and this
+register. All are past tense now. ``fabric``'s version table stays in the
+inventory, since that document records what was surveyed rather than what is
+installed, with a line saying the package is gone.
+
+Two things turned up in that sweep that were untrue before this change rather
+than because of it, and are corrected with it. Stage 0's preamble still counted
+the dead grappelli route among its unfinished items, which issue 022 had
+finished. And the Stage 9 bullet still offered "``selenium`` 3.141.0 → 4.x,
+``Fabric`` 1.6 → 3.x *or* delete both" as an open choice, when ``selenium`` had
+already gone with ``requirements/integration-tests.txt`` in issue 017; both
+halves of that bullet are now deletions that happened, and neither package is a
+requirement any more.
 
 What the second site's entry recorded
 =====================================

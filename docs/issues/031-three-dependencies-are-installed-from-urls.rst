@@ -63,8 +63,10 @@ longer true, because that environment is gone (issue 017).
 ``django-jqm`` is the one that matters, because it is a production dependency,
 and with ``flax`` gone as well it is the only one left. ``README.rst`` names
 this issue as the reason the image build "goes red without anybody changing
-anything, when one of those URLs stops answering" -- with one URL rather than
-two, there is now exactly one way for that to happen.
+anything" -- and that entry, which counted two, is now corrected to one, since
+``flax`` was in ``dev.txt`` and ``dev/Containerfile`` installs
+``production.txt`` alone. So the image never had more than the one URL that
+could fail it.
 
 Options
 =======

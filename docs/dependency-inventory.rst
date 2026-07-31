@@ -1790,7 +1790,7 @@ wanted it; ``django-jqm`` is the one that is left (issue 031):
     ``git+https://github.com/akaihola/django-flax`` at a pinned commit. It was
     used only by ``fabfile.py`` and superseded by ``ansible/install.yaml``, and
     issue 032 deleted the file and this requirement with it, along with the
-    ``Fabric==1.6.0`` pin below.
+    ``Fabric==1.6.0`` pin whose survey is above.
 
 ``podman-compose``
     ``https://github.com/containers/podman-compose/archive/devel.zip`` — pinned
