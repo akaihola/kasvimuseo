@@ -58,7 +58,7 @@ def counted_queries():
 
 @pytest.mark.django_db
 def test_planted_species_list_shows_only_public_planted(client):
-    """Pins current behaviour; see docs/issues/001."""
+    """A private bed, a removal and a count of zero each hide a species."""
     create_planted(name_fi='ahdekaunokki', external_id=1)
     create_planted(name_fi='valkonarsissi', external_id=2)
     create_planted(name_fi='piilokasvi', external_id=3, public=False)
@@ -68,13 +68,11 @@ def test_planted_species_list_shows_only_public_planted(client):
     response = client.get(reverse('planted-species-list'))
 
     assert response.status_code == 200
-    # Pinned as-is, and 'poistettu' is a defect: unlike
-    # ``Planting.is_public_planted``, ``SpeciesManager.public_planted`` never
-    # looks at ``removal_date``, so a species whose only planting has been
-    # removed is still listed. Only a private bed or a last care operation
-    # counting down to zero hides a species here.
+    # 'poistettu' used to be listed here: ``SpeciesManager.public_planted``
+    # never looked at ``removal_date``, unlike ``Planting.is_public_planted``,
+    # which it now uses (issue 001). The page lists what the garden holds now.
     assert [species.name_fi for species in response.context['object_list']] == [
-        'ahdekaunokki', 'poistettu', 'valkonarsissi']
+        'ahdekaunokki', 'valkonarsissi']
 
 
 @pytest.mark.django_db

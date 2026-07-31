@@ -48,6 +48,7 @@ def test_public_planted_removed_is_hidden():
     planting = create_planted(removed=True)
     assert list(models.Planting.objects.public_planted()) == []
     assert list(models.Observation.objects.public_planted()) == []
+    assert list(models.Species.objects.public_planted()) == []
     assert planting.is_public_planted() is False
 
 
@@ -94,6 +95,11 @@ def test_public_planted_query_count_does_not_grow_with_the_plantings():
 
     Before the fix ``Observation`` cost 6 queries for 2 plantings and 10 for 6
     -- one bed each. After it, every manager costs the same for both.
+
+    ``Species`` costs one query more than it did under issue 012 -- 6 rather
+    than 5 -- because issue 001 made it read the bed too, and its prefetch is
+    what keeps that one query instead of one per planting. Flat is the
+    property being pinned here; the constant moved once, deliberately.
     """
     def counts():
         totals = {}
@@ -112,7 +118,7 @@ def test_public_planted_query_count_does_not_grow_with_the_plantings():
         create_planted(name_fi='laji%d' % index, external_id=index + 1)
     six_plantings = counts()
 
-    assert two_plantings == {'species': 5, 'observation': 5, 'planting': 3}
+    assert two_plantings == {'species': 6, 'observation': 5, 'planting': 3}
     assert six_plantings == two_plantings
 
 
@@ -148,10 +154,11 @@ def test_public_planted_picks_only_the_visible_rows():
     create_planted(name_fi='sinivuokko', public=False)
     create_planted(name_fi='kielo', removed=True)
     assert list(models.Planting.objects.public_planted()) == [visible]
-    # 'kielo' is only there because SpeciesManager ignores removal_date; see
-    # test_species_manager_ignores_removal_date.
+    # 'kielo' is removed, so it is out of the species list too; the three
+    # managers agree row for row (issue 001). See
+    # test_species_manager_honours_removal_date_and_the_bed.
     assert [s.name_fi for s in models.Species.objects.public_planted()] == [
-        'kielo', 'valkonarsissi']
+        'valkonarsissi']
 
 
 @pytest.mark.django_db
@@ -164,15 +171,25 @@ def test_species_visible_when_only_one_of_its_plantings_is():
 
 
 @pytest.mark.django_db
-def test_species_manager_ignores_removal_date():
-    """Pins a known inconsistency: ``SpeciesManager`` never looks at
-    ``removal_date``, so a removed planting still makes its species public
-    while the planting and observation managers hide it.
+def test_species_manager_honours_removal_date_and_the_bed():
+    """Issue 001: the species list says "holds it now", like the other two.
 
-    See docs/issues/001."""
-    planting = create_planted(removed=True, cares=[4])
-    assert list(models.Species.objects.public_planted()) == [
-        planting.observation.species]
+    ``SpeciesManager`` used to skip ``removal_date`` entirely, and its inner
+    loop asked about every planting of the species -- including the ones in
+    private beds -- so a species whose public plantings had all been removed
+    stayed on the public list, kept there by a planting nobody may see. All
+    three managers now apply ``Planting.is_public_planted``.
+    """
+    removed = create_planted(removed=True, cares=[4])
+    assert list(models.Species.objects.public_planted()) == []
+    assert list(models.Planting.objects.public_planted()) == []
+    assert list(models.Observation.objects.public_planted()) == []
+
+    # The same species, still growing where the public cannot see it. The
+    # species reaches the loop on its removed *public* planting, so this is
+    # the private planting that used to keep it listed.
+    create_planted(species=removed.observation.species, public=False)
+    assert list(models.Species.objects.public_planted()) == []
     assert list(models.Planting.objects.public_planted()) == []
     assert list(models.Observation.objects.public_planted()) == []
 
