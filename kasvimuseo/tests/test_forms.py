@@ -137,17 +137,52 @@ def test_a_duplicate_title_is_a_form_error_not_a_database_error(photo_factory,
     assert sorted(form.errors) == ['title', 'title_slug'], form.errors
 
 
-def test_remove_diacritics_returns_a_text_string():
-    """Pin the Python 2 behaviour of ``filter()`` over a unicode string.
+@pytest.mark.parametrize('text,expected', [
+    ('Kevätesikko ähkyssä', 'Kevatesikko ahkyssa'),
+    # Nothing to strip: the text has to come back unchanged, not merely be of
+    # the right type.
+    ('valkonarsissi kukassa', 'valkonarsissi kukassa'),
+    ('', ''),
+])
+def test_remove_diacritics_returns_a_text_string(text, expected):
+    """A text string by construction, on both Python versions.
 
-    On Python 3 ``filter()`` returns an iterator, so ``slugify`` would receive
-    a ``<filter object ...>`` repr and silently mangle every slug. This test
-    fails loudly at migration time instead. See docs/issues/016.
+    ``u''.join(...)`` returns one whatever the interpreter; the ``filter()``
+    this replaced returned a string only on Python 2, and on Python 3 an
+    iterator whose ``<filter object ...>`` repr ``slugify`` would have silently
+    baked into every derived slug. See docs/issues/016.
     """
-    result = remove_diacritics('Kevätesikko ähkyssä')
+    result = remove_diacritics(text)
     assert isinstance(result, type('')), \
         'remove_diacritics returned {0!r}, not a text string'.format(result)
-    assert result == 'Kevatesikko ahkyssa'
+    assert result == expected
+
+
+@pytest.mark.django_db
+def test_a_saved_photo_gets_an_accent_free_slug(media_root):
+    """The whole path issue 016 was about, end to end.
+
+    ``remove_diacritics`` is only ever reached through ``clean()``, so this
+    goes through the form the admin uses: an accented title in, a saved
+    ``Photo`` out, and the slug PostgreSQL stores read back off it.
+    """
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from kasvimuseo.tests.conftest import jpeg_bytes
+
+    form = PhotoForm(
+        data={'title': 'Kevätesikko ähkyssä',
+              'title_slug': '',
+              'caption': '',
+              'crop_from': 'center',
+              'date_added': '2026-07-29 12:00:00',
+              'tags': ''},
+        files={'image': SimpleUploadedFile('kevatesikko.jpg', jpeg_bytes(),
+                                           content_type=str('image/jpeg'))})
+
+    assert form.is_valid(), form.errors
+    photo = form.save()
+
+    assert photo.title_slug == 'kevatesikko-ahkyssa'
 
 
 # -- the instructions on the upload form (issue 037) --------------------------
