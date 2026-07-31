@@ -145,6 +145,66 @@ directory, including material no row points at, still needs SSH::
 
 
 
+Continuous integration
+======================
+
+Every push runs the suite on GitHub Actions, from
+``.github/workflows/tests.yml`` (issue 018). The workflow is deliberately thin:
+it calls ``dev/kasvimuseo app build`` and ``dev/kasvimuseo app test``, the two
+commands above, so what CI runs cannot drift from what you run. It adds only
+what a hosted runner does not give the script for free -- Ubuntu keeps
+``initdb`` and ``pg_ctl`` off ``PATH``, and a non-login shell leaves ``$USER``
+unset.
+
+There is no PostgreSQL *service container*, which is the usual CI shape,
+because ``common_settings.py`` names the database host as
+``/var/run/postgresql`` -- a unix socket directory, not something reachable
+over TCP. The script's throwaway cluster, whose socket directory it
+bind-mounts into the container, is the arrangement the settings already
+describe. No production dump and no ``media fetch`` are involved: the tests
+build their own data, and the test settings point ``MEDIA_ROOT`` at a
+throwaway directory, so nothing reads a photo.
+
+A full run is about two minutes: 80 seconds to build the Python 2.7 image from
+scratch and 25 for the tests. A second job builds the documentation, which is
+how a malformed issue field is caught on push rather than by whoever next
+builds the docs.
+
+**The workflow only sees pushes to the GitHub remote**, ``origin``, which has
+been the mirror rather than the one ``master`` tracks. Until it is pushed to,
+nothing runs there::
+
+    $ git push origin master
+
+When a run goes red
+-------------------
+
+Both jobs reproduce here, and both fail for the same reasons they would fail
+locally:
+
+* **pytest** -- run ``dev/kasvimuseo app test`` in this checkout. Same image,
+  same settings; the one thing CI has that you do not is whatever PostgreSQL
+  version the runner ships, so a failure that will not reproduce is worth
+  reading as a version difference before anything else.
+* **sphinx** -- run ``dev/kasvimuseo docs --clean`` and read the ``WARNING``
+  lines. ``--clean`` matters: an incremental build cannot report a problem in a
+  file nobody touched, and CI always builds from scratch.
+* **the image build** -- three dependencies install from URLs rather than from
+  PyPI (issue 031), so this is the job that goes red without anybody changing
+  anything, when one of those URLs stops answering.
+
+Before the push
+---------------
+
+``dev/pre-push`` runs the same suite locally before anything leaves the
+machine. ``.git/hooks`` is not tracked, so install it once per clone::
+
+    $ ln -sf "$PWD/dev/pre-push" "$(git rev-parse --git-path hooks)/pre-push"
+
+It skips a push that only deletes branches, and ``git push --no-verify`` skips
+it entirely.
+
+
 Documentation
 =============
 
