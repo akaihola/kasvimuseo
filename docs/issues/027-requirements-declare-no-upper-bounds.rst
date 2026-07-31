@@ -25,7 +25,7 @@ Issue 027: Requirements declare no upper bounds; --no-deps is load-bearing
     hand-maintained), in ``dev/Containerfile`` and the production
     ``Dockerfile``, and in ``docs/upgrade-plan.rst`` Part 3b, Stage 2 and
     Appendix A
-:Resolution: PENDING-COMMIT -- completes the file, deletes the second install
+:Resolution: 5e98596 -- completes the file, deletes the second install
     and the sortedm2m pin, and records the ruling in the upgrade plan
 
 Problem
