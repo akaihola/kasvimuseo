@@ -91,9 +91,16 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.messages.context_processors.messages',
 )
 
-TEMPLATE_DIRS = (here('templates'),
-                 here('..', 'lib', 'python2.7', 'site-packages',
-                      'photologue', 'templates'))
+# Only this project's own templates. Photologue's are found by the app
+# template loader, which is in Django's default ``TEMPLATE_LOADERS`` and which
+# this project does not override, so an installed application's ``templates/``
+# directory needs no entry here. There used to be a second entry naming
+# photologue's templates inside the virtualenv's ``site-packages`` by literal
+# path: it wrote the interpreter version into a settings file, and it had
+# already stopped resolving anywhere -- the container installs the dependencies
+# into the image and mounts the working copy at ``/src``, which has no ``lib/``
+# (issue 024).
+TEMPLATE_DIRS = (here('templates'),)
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
