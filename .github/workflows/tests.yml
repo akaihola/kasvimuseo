@@ -1,0 +1,68 @@
+# Continuous integration for kasvimuseo -- issue 018.
+#
+# This deliberately calls dev/kasvimuseo rather than re-expressing what it does.
+# The suite runs inside the project's own Python 2.7 image (no public runtime has
+# Django 1.5 and the pinned dependencies), and ylaneenkasvit/common_settings.py
+# hardcodes HOST: /var/run/postgresql -- a unix socket directory, not a TCP host.
+# A PostgreSQL service container would therefore need a settings change to be
+# reachable at all, while the script already starts a throwaway cluster and
+# bind-mounts its socket directory into the container. So CI does what a
+# developer does, and the two cannot drift apart.
+#
+# The tests build their own data: no production dump and no `media fetch`.
+# test_settings points MEDIA_ROOT at a throwaway path, so nothing reads a photo.
+
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  suite:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Two things the runner does not give dev/kasvimuseo for free. Ubuntu ships
+      # PostgreSQL's server binaries -- initdb and pg_ctl, which `db start` calls
+      # -- outside PATH, and a non-login shell leaves $USER unset, which the
+      # script reads under `set -u`. Both are properties of the runner, not of
+      # the project, which is why they are fixed here and not in the script.
+      - name: Prepare the runner for dev/kasvimuseo
+        run: |
+          echo "/usr/lib/postgresql/$(ls /usr/lib/postgresql | sort -V | tail -1)/bin" \
+              >> "$GITHUB_PATH"
+          echo "USER=$(id -un)" >> "$GITHUB_ENV"
+
+      # About 80 seconds from scratch, most of it compiling Pillow and psycopg2
+      # against musl. Not cached: a cache keyed on the build inputs would save
+      # roughly a minute per run and is worth adding if that ever matters, but it
+      # is machinery to maintain for a two-minute pipeline.
+      - name: Build the Python 2.7 image
+        run: dev/kasvimuseo app build
+
+      # Starts the cluster, runs pytest against it, stops it again. About 25
+      # seconds for the whole suite.
+      - name: Run the suite
+        run: dev/kasvimuseo app test
+
+  # Warnings are errors and docs/issues/next.rst is generated from the issue
+  # files' metadata, so this fails on a malformed :Status:, an issue missing from
+  # the ranking, or a broken cross-reference -- the class of mistake that is
+  # otherwise found by whoever next builds the docs. It shares nothing with the
+  # job above: the host's Python 3 through uv, no container and no database, so
+  # it costs about 20 seconds and runs in parallel.
+  #
+  # Issue 038 owns the design of this build and is still in progress; this job
+  # only puts the existing command on a runner, and 038 remains free to change
+  # what it does.
+  docs:
+    name: sphinx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - name: Build the documentation
+        run: dev/kasvimuseo docs
