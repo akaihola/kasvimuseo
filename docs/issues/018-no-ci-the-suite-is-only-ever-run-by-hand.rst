@@ -2,7 +2,7 @@
 Issue 018: No CI: the suite is only ever run by hand
 ====================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: Medium
 :Area: process
 :Reported: 2026-07-28
@@ -10,11 +10,21 @@ Issue 018: No CI: the suite is only ever run by hand
 :Evidence: dev/kasvimuseo app test
 :Depends on: (none)
 :Blocks: (none)
-:Related: 017 -- a browser suite needs somewhere to run
-    038 -- the documentation build moves into CI once one exists
+:Related: 017 -- a browser suite needs somewhere to run, and now has one: the
+    workflow this issue adds is where a headless browser job would be a third
+    job, on the same image and the same cluster. 017's own status is unchanged;
+    what it inherits is the runner, not the suite.
+    038 -- the documentation build moves into CI once one exists, and has: the
+    ``sphinx`` job runs ``dev/kasvimuseo docs``. 038 is still in progress and
+    still owns the design of that build; this issue only put the existing
+    command on a runner.
     008 -- the kind of empty-database failure CI would catch
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: **GitHub Actions**, in ``.github/workflows/tests.yml``, plus the
+    tracked ``dev/pre-push`` hook -- taken as the default when the ruling was
+    asked for and skipped, and cheap to change. See "Decision" below for what
+    was asked, what each platform costs, and what has to happen for the first
+    run to be green.
+:Resolution: Fixed in 3a40a3a.
 
 Problem
 =======
@@ -41,3 +51,146 @@ Options
 
 Note the app is Python 2.7, so the CI image has to be the project's own container rather
 than a current language runtime.
+
+Decision
+========
+
+Option 1 **and** option 2: a service pipeline plus the local hook.
+
+The platform, which is the part option 1 left open
+--------------------------------------------------
+
+The sentence above -- "the repository is on Bitbucket, so
+``bitbucket-pipelines.yml`` is the native choice" -- was true when it was
+written and is no longer the whole picture. The checkout has two remotes:
+
+======================= ============================================ ===========
+Remote                  URL                                          State
+======================= ============================================ ===========
+``bitbucket``           ``bitbucket.org/akaihola/kasvimuseo``        what ``master`` tracks
+``origin``              ``github.com/akaihola/kasvimuseo``           behind
+======================= ============================================ ===========
+
+So the choice was a real one, and not the agent's to make: nothing in the
+repository says whether Bitbucket Pipelines is switched on for that account,
+whether it has build minutes left, or whether the GitHub mirror is meant to
+become primary. It was put to the maintainer -- Bitbucket Pipelines, GitHub
+Actions, both, or the hook alone -- and skipped rather than answered, so what
+is committed is the recommendation, and this section is what it rests on so it
+can be overturned cheaply.
+
+**GitHub Actions**, because a ``bitbucket-pipelines.yml`` is only worth having
+if Pipelines is enabled and funded, and a committed pipeline that never runs is
+worse than none: it reads, in a diff and to the next person, as coverage that
+does not exist. GitHub Actions has no enabling step -- the file's presence is
+the enablement -- and ``ubuntu-latest`` already ships podman and a PostgreSQL
+server, so the workflow calls ``dev/kasvimuseo`` rather than paraphrasing it.
+
+The cost of that choice is stated plainly rather than hidden: **the mirror is
+behind, so nothing runs until it is pushed to.** ``git push origin master`` is
+the whole of what the maintainer has to do for the first run to happen. If the
+answer is really Bitbucket, the same two commands go into a
+``bitbucket-pipelines.yml`` with a ``docker`` service and the same two runner
+fixups; the work in this issue is the shape, not the YAML dialect.
+
+The hook is the half that depends on none of that. It needs no account, no
+build minutes and no network, and it is the only protection that exists while
+the mirror is behind -- which is precisely the situation this issue is being
+fixed in.
+
+A cluster on the runner, not a service container
+------------------------------------------------
+
+The usual CI shape is a PostgreSQL service container reached over TCP. That
+does not fit here without changing settings: ``common_settings.py`` gives the
+database ``'HOST': '/var/run/postgresql'``, a unix socket *directory*, and
+``test_settings`` does not override it. A service container would therefore
+have needed a new ``KASVIMUSEO_DB_HOST`` override in the settings -- a change
+in a file that issues 016, 023 and 024 are in flight in, made only to suit CI.
+
+The arrangement ``dev/kasvimuseo`` already uses needs no such change: it
+initialises a throwaway cluster under ``.dev/``, listens on a unix socket
+inside the working copy, and bind-mounts that directory to
+``/var/run/postgresql`` in the container. So the workflow starts nothing
+itself; it runs the two commands a developer runs, and the settings are the
+settings that already exist.
+
+Two runner fixups, and why they are in the workflow
+---------------------------------------------------
+
+``dev/kasvimuseo`` assumes a developer machine in two small ways that a hosted
+runner does not satisfy. Ubuntu installs PostgreSQL's server binaries under
+``/usr/lib/postgresql/<version>/bin`` and puts only the client on ``PATH``, so
+``initdb`` and ``pg_ctl`` are not found; and a non-login shell leaves ``$USER``
+unset, which the script reads under ``set -u``. Both are properties of the
+runner rather than defects in the script, so the workflow fixes them in a
+``Prepare the runner`` step instead of the script growing fallbacks for a
+machine it will never otherwise meet.
+
+The documentation build, which is 038's and is here anyway
+-----------------------------------------------------------
+
+038's ``:Related:`` says the docs build moves into CI once one exists. 038 is
+in progress under another workstream, so nothing of its was touched -- not its
+file, not ``dev/docs-build``, not ``docs/``. What was added is one job that
+runs the command 038 already provides.
+
+It earns its place rather than merely being available: warnings are errors, and
+``docs/issues/next.rst`` is generated from these files' own metadata, so the
+job fails on a malformed ``:Status:``, an issue missing from the ranking, or a
+broken reference -- the one class of mistake in this register that is otherwise
+found by whoever next builds the docs, which may be days later. It shares
+nothing with the test job (host Python 3 through ``uv``, no container, no
+database), so it runs in parallel and adds no wall-clock time.
+
+What it costs
+=============
+
+Measured in a checkout of this branch, on a four-core machine:
+
+=========================================== ===================
+Step                                        Wall clock
+=========================================== ===================
+``app build``, no cache, base image pulled  1 min 20 s
+``app test``, 384 tests                     25 s
+``docs``, clean, in the parallel job        20 s
+**A full run**                              **about 2 minutes**
+=========================================== ===================
+
+The tests themselves are 19 to 22 seconds of that 25; the rest is initialising,
+starting and stopping the cluster. Most of the build is compiling Pillow and
+psycopg2 against musl. A hosted
+two-core runner is slower than the machine above, and adds checkout and job
+startup, so expect several minutes rather than two; it is still a suite whose
+cost is the image rather than the tests. Caching the image on its build inputs
+would take roughly a minute off each run, and was left out deliberately: it is
+machinery to maintain, and it is not worth it until the build is the thing
+anybody is waiting for.
+
+The suite needs no production dump and no ``media fetch``. That was checked
+rather than assumed: ``test_settings`` sets ``MEDIA_ROOT`` to a throwaway
+directory, and the full 384 tests pass in a container with no ``media/``
+mounted. No test turned out to need media, and no test was changed, skipped or
+weakened for CI.
+
+The 245 in "Problem" above is the count when this was filed; it is 384 now.
+
+What the maintainer has to do
+=============================
+
+The first real run cannot be triggered from here -- it needs a push to a remote
+this checkout cannot reach. Everything the workflow runs was run locally
+instead, in the workflow's own order, and passed.
+
+1. ``git push origin master``. The workflow triggers on ``push`` and
+   ``pull_request``; the Actions tab shows two jobs, ``pytest`` and ``sphinx``.
+2. Green looks like ``384 passed`` from the first and
+   ``docs: .../html/index.html`` from the second.
+3. If ``pytest`` fails on the runner and not here, read it as a PostgreSQL
+   version difference before anything else: the runner's server version is the
+   one thing CI has that a developer machine does not.
+4. Install the hook in each clone -- it is one line, and it is in ``README.rst``
+   under "Continuous integration".
+
+If Bitbucket is the right answer after all, say so and the same two commands
+move; nothing else in this fix depends on which service runs them.
