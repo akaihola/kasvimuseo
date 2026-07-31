@@ -192,6 +192,28 @@
             font-weight: bold;
             padding-top: 30px;
         }
+        /* On iPad Safari CSS zoom scales the label boxes but not their text.
+           Compensate on screen only; print keeps the physical 30pt / 24pt
+           sizes above. ``-webkit-touch-callout`` distinguishes iOS Safari
+           from desktop browsers that implement zoom correctly. */
+        @supports (-webkit-touch-callout: none) {
+            @media screen {
+                #labels h1 {
+                    font-size: var(--fit-screen-size, 15pt);
+                }
+                #labels p {
+                    font-size: var(--fit-screen-size, 12pt);
+                }
+            }
+            @media print {
+                #labels h1 {
+                    font-size: var(--fit-print-size, 30pt) !important;
+                }
+                #labels p {
+                    font-size: var(--fit-print-size, 24pt) !important;
+                }
+            }
+        }
         .observation-id {
             margin-bottom: 7px;
             box-shadow: 0.8px 0.8px 1.5px 0.5px rgba(0, 0, 0, 1);
@@ -374,13 +396,64 @@
         };
 
         const fitMixin = {
+            mounted: function() {
+                // Fit even when the photo is unavailable: the photo load is
+                // not a reliable signal that the label itself is ready.
+                this.$nextTick(() => this.fitTextToSpace());
+            },
+            beforeDestroy: function() {
+                if (this.fit) {
+                    this.fit.unsubscribe();
+                    this.fit = null;
+                }
+            },
             methods: {
                 fitTextToSpace: function() {
                     const el = this.$el.firstChild;
+                    if (this.fit) {
+                        this.fit.unsubscribe();
+                        this.fit = null;
+                    }
                     el.style.fontSize = '';
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+                        scale = isIOS ? screenScale() : 1;
                     const style = window.getComputedStyle(el, null),
-                        fontSize = parseFloat(style.getPropertyValue('font-size'));
-                    fitty(el, {maxSize: fontSize});
+                        // Safari reports values inside CSS zoom divided by the
+                        // zoom factor; fitty would otherwise double its max on
+                        // the iPad after every reset to the stylesheet value.
+                        fontSize = parseFloat(style.getPropertyValue('font-size')) * scale;
+                    // Desktop browsers need fitty's resize observer when the
+                    // viewport changes. iPad Safari sends layout notifications
+                    // while applying CSS zoom, though, and fitty then
+                    // repeatedly grows the same label.
+                    if (isIOS) {
+                        // Safari reports scrollWidth in another coordinate
+                        // system inside CSS zoom. Measure an identical element
+                        // outside that subtree, at print scale instead.
+                        const availableWidth = el.parentNode.clientWidth,
+                            printMaxSize = fontSize / scale,
+                            measureWrapper = document.createElement('div'),
+                            measure = el.cloneNode(true);
+                        measureWrapper.style.cssText =
+                            `position:fixed;left:-10000px;top:0;` +
+                            `visibility:hidden;width:${availableWidth}px;` +
+                            `-webkit-text-size-adjust:none;`;
+                        measure.style.cssText =
+                            `display:inline-block;white-space:nowrap;` +
+                            `font-size:${printMaxSize}px;width:100%;`;
+                        measureWrapper.appendChild(measure);
+                        document.body.appendChild(measureWrapper);
+                        const printSize = Math.min(
+                            printMaxSize,
+                            printMaxSize * availableWidth / measure.scrollWidth);
+                        measureWrapper.remove();
+                        el.style.setProperty(
+                            '--fit-screen-size', `${printSize * scale}px`);
+                        el.style.setProperty('--fit-print-size', `${printSize}px`);
+                    } else {
+                        this.fit = fitty(el, {maxSize: fontSize});
+                    }
                 }
             }
         };
@@ -452,7 +525,7 @@
                 mixins: [fitMixin],
                 watch: {
                     verticalPhotoWidth: function() {
-                        this.fitTextToSpace();
+                        this.$nextTick(() => this.fitTextToSpace());
                     }
                 }
             },
@@ -472,7 +545,7 @@
                 mixins: [fitMixin],
                 watch: {
                     verticalPhotoWidth: function() {
-                        this.fitTextToSpace();
+                        this.$nextTick(() => this.fitTextToSpace());
                     }
                 }
             },
