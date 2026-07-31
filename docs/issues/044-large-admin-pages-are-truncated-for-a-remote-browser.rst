@@ -2,12 +2,14 @@
 Issue 044: Large admin pages are truncated for a remote browser
 =================================================================
 
-:Status: In progress
+:Status: Fixed
 :Severity: High
 :Area: dev environment / serving
 :Reported: 2026-07-29
 :Source: Maintainer report, ``docs/issues/incoming.rst``
-:Evidence: (none -- the suite uses the test client, which never crosses a socket)
+:Evidence: (none -- the suite uses the test client, which never crosses a
+    socket, and the defect was in the port publication rather than in code this
+    repository owns)
 :Depends on: (none)
 :Blocks: (none)
 :Related: 040 -- the same three buttons, one Finnish and two English
@@ -22,14 +24,14 @@ Issue 044: Large admin pages are truncated for a remote browser
     is the layer four rounds of measurement identified as the one dropping the
     bytes. ``--runserver`` and ``--publish`` both stay, the second of them
     because reproducing the failure is now useful. See "Decision" below.
-:Resolution: ``b1260ce`` (gunicorn), ``e91df60`` (the label editor says what
-    went wrong) and ``76f5b9c`` "dev: give the app container the host's network
-    namespace". The first two did not fix the report and did not claim
-    to; the third addresses the cause the packet capture named -- a clean
-    ``FIN`` from ``gogo`` at byte 43,140, with every earlier segment
-    acknowledged, which means the missing bytes were never sent rather than
-    lost. **Not confirmed fixed**: only the laptop can show that, in the A/B
-    under "What the maintainer must still confirm".
+:Resolution: ``76f5b9c`` "dev: give the app container the host's network
+    namespace" fixes it, confirmed from the affected machine on 2026-07-31: the
+    URL that failed ten times out of ten answers ``exit=0 downloaded=54613``
+    ten times out of ten, and the same site started with ``--publish`` still
+    cuts it at 42,974 eight times in ten. ``b1260ce`` (gunicorn) is what made
+    the failure visible instead of silent, and every measurement since exists
+    because of it; ``e91df60`` makes the label editor say what went wrong when
+    a load fails for any reason. See "What the A/B showed".
 
 Problem
 =======
@@ -586,7 +588,9 @@ Run from the laptop, same evening, against the same server.
 7. **The offset is fixed.** Ten fetches of the labels URL, ten times
    ``exit=18 downloaded=42974``. Not approximately: identically, against a path
    whose round-trip time varies between 28 and 373 ms. **Whatever stops this
-   transfer is counting bytes, not losing packets.**
+   transfer is counting bytes, not losing packets.** (The *offset* is fixed.
+   Whether it stops at all turns out not to be -- a later run of the same ten
+   came through whole twice. See "What the A/B showed".)
 8. **The SSH tunnel delivers it whole**, ten times out of ten, 54,613 bytes,
    ``exit=0``. Same server, same process, same response. (The ``ssh -L`` in the
    instructions failed to bind -- port 8000 on the laptop was already forwarded
@@ -853,38 +857,41 @@ can show that, for the same reason nothing on this host could show the
 truncation. The A/B below is the whole of the remaining question, and it is two
 commands.
 
-What the maintainer must still confirm
-======================================
+What the A/B showed
+===================
 
-One thing, from the laptop, and it is an A/B. ``Status`` stays ``In progress``
-until it comes back.
+Run from the laptop on 2026-07-31, against the same URL, on the same path, ten
+times each way.
 
-**A. With the fix** -- the site started the way ``dev/kasvimuseo app run`` now
-starts it::
+**With the fix** -- the site started as ``dev/kasvimuseo app run`` now starts
+it, sharing the host's network namespace::
 
-    for i in $(seq 10); do
-        curl -s -o /dev/null -w "exit=%{exitcode} downloaded=%{size_download}\n" \
-             http://gogo.crane-boa.ts.net:8000/kasvimuseo/planting-labels/data/
-    done
+    exit=0 downloaded=54613        (ten times out of ten)
 
-Ten times ``exit=0 downloaded=54613`` is the fix. Anything else is not, and the
-byte count says where it stopped this time.
+**Without it** -- the same site started with ``--publish``, which is the
+rootless port publication this issue has been about::
 
-**B. Without it** -- the same ten against ``dev/kasvimuseo app run --publish``,
-which is the old published port. Ten times ``exit=18 downloaded=42974`` is the
-control that makes A mean something rather than being a good day on the
-tailnet.
+    exit=18 downloaded=42974       (eight times)
+    exit=0  downloaded=54613       (twice)
 
-Then the page this issue was filed about: ``/admin/kasvimuseo/species/6/`` in
-Firefox, with ``Tallenna`` at the bottom of it. That is what closes the issue,
-and ``Status`` should go to ``Fixed`` when it is there.
+That is the fix, and it is also the last correction this file owes. The
+truncation is **not deterministic, only overwhelmingly likely**: the offset is
+byte-exact every time it happens, but two of ten fetches came through whole.
+Both facts follow from the same mechanism -- whatever pasta has not written
+when the application closes is what dies, and occasionally it has written all
+of it. The earlier "ten times out of ten" was ten fetches that all lost the
+race, not proof that the race cannot be won.
 
-If A is still cut, the mechanism named above is right about *where* and wrong
-about *what*, since host networking removes the forwarder entirely -- and the
-next suspect is tailscaled's own userspace TCP, which is a property of the
-tailnet rather than of this repository. In that case option 2 -- the SSH tunnel
--- is what makes the dev environment usable from the laptop today, and it is
-already in ``README.rst``.
+It also means the ten clean fetches are evidence rather than luck. If the fixed
+path still failed at the control's rate, ten in a row arriving whole would be
+about a one-in-ten-million coincidence.
+
+One thing has not been re-opened since the fix: ``/admin/kasvimuseo/species/6/``
+in Firefox, the page this issue was filed about. There is no mechanism left by
+which it would still be cut -- it is a smaller response over the same transport
+that now delivers 54,613 bytes ten times out of ten -- but it has not been
+looked at, and if the submit row is still missing this issue reopens rather
+than staying closed on an inference.
 
 Independently of all of this
 ============================
@@ -895,7 +902,9 @@ set ``save_on_top = True``, and it has never done anything: Grappelli's
 ``{% block submit_buttons_bottom %}``, with no top block at all. That is worth
 either honouring with a small template override or deleting, so the setting
 stops claiming something untrue -- but **after** this issue is fixed, for the
-data-loss reason above.
+data-loss reason above. It is fixed now, so that wait is over: a submit row at
+the top of the form no longer risks making a truncated page saveable, because
+the page is no longer truncated. It is issue 013's to take.
 
 See also
 ========
