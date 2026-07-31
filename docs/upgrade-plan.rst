@@ -85,7 +85,8 @@ Issue               Analysed in
 027, 028, 029, 030  Part 3b, and Appendix A for the resulting locks
 020, 021, 022,      Part 5, packages and configuration that stop being needed
 031, 032, 033
-034                 Part 6, "The admin-list fork is the real cost"
+034                 Part 6, "The admin-list fork is deleted in Stage 5",
+                    and Stage 5 itself
 035                 Parts 2.2 and 2.3, the grappelli and photologue ladders
 036                 Part 4, the whole staged sequence
 =================== ===========================================================
@@ -410,8 +411,8 @@ Django API                                           Gone in  Used by
 ==================================================== ======== =====================================================
 ``django.conf.urls.defaults``                        **1.6**  ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py``
 ``DATABASES[...]['TEST_NAME']``                      1.8      ``ylaneenkasvit/test_settings.py``
-``django.contrib.admin.util``                        1.9      ``kasvimuseo/templatetags/kasvimuseo_admin_list.py``
-``EMPTY_CHANGELIST_VALUE``                           1.9      ``kasvimuseo_admin_list.py``
+``django.contrib.admin.util``                        1.9      — (the fork that used it goes in Stage 5)
+``EMPTY_CHANGELIST_VALUE``                           1.9      — (same)
 ``django.db.models.get_model``                       1.9      —
 ``SubfieldBase``                                     1.10     —
 ``django.core.context_processors``                   1.10     ``ylaneenkasvit/common_settings.py`` (5 entries)
@@ -419,7 +420,7 @@ Django API                                           Gone in  Used by
 string view names in ``url()``                       1.10     ``ylaneenkasvit/urls.py`` (3)
 ``patterns()``                                       **2.0**  ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py``
 ``django.core.urlresolvers``                         2.0      ``kasvimuseo/admin.py``, ``ylaneenkasvit/dashboard.py``
-``force_unicode``                                    2.0      ``kasvimuseo_admin_list.py``
+``force_unicode``                                    2.0      — (same)
 ``MIDDLEWARE_CLASSES`` (and its default)             2.0      **nothing — see below**
 ``ForeignKey`` without ``on_delete``                 2.0      ``kasvimuseo/models.py`` (13 sites)
 ``django.contrib.auth.views.login`` / ``logout``     2.1      ``ylaneenkasvit/urls.py``
@@ -427,10 +428,19 @@ string view names in ``url()``                       1.10     ``ylaneenkasvit/ur
 ``render_to_response``                               3.0      ``kasvimuseo/views.py``
 ``postgresql_psycopg2`` ENGINE alias                 3.0      ``common_settings.py``
 ``ugettext`` / ``ugettext_lazy``                     **4.0**  ``models.py``, ``admin.py``, ``dashboard.py``
-``force_text`` / ``smart_text``                      4.0      ``kasvimuseo_admin_list.py``
+``force_text`` / ``smart_text``                      4.0      ``ylaneenkasvit/dashboard.py``
 ``DEFAULT_FILE_STORAGE`` / ``STATICFILES_STORAGE``   5.1      — (set ``STORAGES`` from 4.2)
 ``index_together``                                   5.1      —
 ==================================================== ======== =====================================================
+
+Three more removals hit ``kasvimuseo_admin_list.py`` and are not in that table,
+because they were found later, while deciding issue 034: ``_meta.module_name``
+(gone in **1.8**), ``_meta.get_field_by_name`` (gone in **1.10**) and
+``django.db.models.FieldDoesNotExist`` (deprecated at 1.8 in favour of
+``django.core.exceptions.FieldDoesNotExist``). All three are inside
+``identifier_for_field``, the one function in that file Django has no equivalent
+of. Deleting the file in Stage 5 pre-empts all three, along with the four rows
+above that now read "—".
 
 Two settings landmines that a grep does not show, because the settings are
 *missing*:
@@ -796,6 +806,31 @@ Stage 5 — Django 1.6.11 → 1.7.11: the South cut
   in 1.8).
 * ``django-grappelli`` → 2.6.5.
 * ``pytest-django`` 2.9.1 still works — do not touch the test stack yet.
+* **Delete the ``admin_list`` fork.** Django 1.7 closes ticket #11195 — the very
+  ticket the fork carries — so this stage is where
+  ``kasvimuseo/templatetags/kasvimuseo_admin_list.py`` stops being needed. Issue
+  034 ruled it retired here rather than carried; see Part 6. Four steps:
+
+  - Delete the module and the ``{% load kasvimuseo_admin_list %}`` in
+    ``kasvimuseo/templates/admin/change_list.html``, and put back
+    ``{% result_list cl %}`` — Django's own tag, already loaded on the line
+    above.
+  - Make ``edit`` a ``ModelAdmin`` method named by the string ``'edit'`` in
+    ``list_display``, instead of the module-level callable it is today. Django
+    1.7 interpolates the callable itself into ``'field-%s' % field_name``, so a
+    callable entry renders ``field-<function edit at 0x…>``; a string renders
+    ``field-edit``. ``_coerce_field_name`` makes this unnecessary from 1.10, but
+    doing it here keeps the printed changelist correct for three stages.
+  - In ``kasvimuseo/static/css/kasvimuseo.admin.css``: ``.fieldname_edit`` →
+    ``.field-edit, .column-edit``; ``.fieldname_action_checkbox`` →
+    ``.action-checkbox, .action-checkbox-column``, which also fixes the header
+    cell that stays visible when a changelist is printed today; and delete the
+    ``#changelist-form td.fieldname_admin_thumbnail`` rule, whose
+    ``#changelist-form`` has never matched grappelli's ``#grp-changelist-form``.
+  - In ``kasvimuseo/tests/test_admin_changelist.py``: ``fieldname_X`` →
+    ``field-X`` in the body and ``column-X`` in the header; delete
+    ``test_identifier_for_field_branches`` with the function it tests; assert
+    Django's two class names in ``test_action_checkbox_column``.
 
 This was attempted once before. A branch ``py36`` on the Bitbucket remote held
 three commits from 10 January 2020 — "Only use South on Django <1.8. Add Sites
@@ -816,8 +851,8 @@ Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
   this stage, so ``APP_DIRS = True`` restates what the 1.5 default loaders were
   already doing.
 * ``django.core.context_processors`` → ``django.template.context_processors``.
-* ``django.contrib.admin.util`` → ``django.contrib.admin.utils`` in
-  ``kasvimuseo_admin_list.py``.
+* ``django.contrib.admin.util`` → ``django.contrib.admin.utils``: **nothing to
+  do.** The one importer was ``kasvimuseo_admin_list.py``, deleted in Stage 5.
 * ``django-grappelli`` → 2.7.3.
 * ``django-photologue`` → 3.4.1. This removes tagging (3.2) and drops
   ``django-model-utils`` (3.2). ``ExifRead`` becomes a dependency (3.4).
@@ -826,9 +861,9 @@ Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 Stage 7 — Django 1.8.19 → 1.9.13
 --------------------------------
 
-* ``EMPTY_CHANGELIST_VALUE`` is gone → ``cl.model_admin.get_empty_value_display()``
-  in ``kasvimuseo_admin_list.py``.
-* ``django.contrib.admin.util`` is gone (already handled in Stage 6).
+* ``EMPTY_CHANGELIST_VALUE`` is gone, and ``django.contrib.admin.util`` with it:
+  **nothing to do.** Both were used only by ``kasvimuseo_admin_list.py``, deleted
+  in Stage 5.
 * ``ForeignKey(on_delete=...)`` starts warning. Add it now — it becomes
   mandatory at 2.0 and adding it early costs one no-op migration.
 * **Test stack moves for the first time:** ``pytest-django`` 2.9.1 → 3.1.2
@@ -875,7 +910,8 @@ Django 1.11):
 * ``unicode(...)`` → ``str(...)`` (3 sites)
 * the ``filter()`` bug in ``kasvimuseo/forms.py`` -- already done, issue 016
   (see Part 3)
-* ``force_unicode``/``smart_str`` → ``force_text``/``smart_text``
+* ``force_unicode``/``smart_str`` → ``force_text``/``smart_text``: **nothing to
+  do.** Both appeared only in ``kasvimuseo_admin_list.py``, deleted in Stage 5.
 
 Then flip the base image ``python:2.7-alpine`` → ``python:3.7-alpine`` and the
 ceiling versions:
@@ -967,8 +1003,9 @@ Stage 17 — Django 3.2 → 4.0.10 → 4.1.13 → 4.2.30 (LTS)
 
 * **4.0 removes** ``ugettext_lazy`` → ``gettext_lazy`` and
   ``force_text``/``smart_text`` → ``force_str``/``smart_str``. Eight sites
-  across ``models.py``, ``admin.py``, ``dashboard.py``,
-  ``kasvimuseo_admin_list.py``.
+  across ``models.py``, ``forms.py``, ``admin.py`` and ``dashboard.py``.
+  ``kasvimuseo_admin_list.py`` was a ninth until Stage 5 deleted it, and
+  ``forms.py`` was missed when this was first counted.
 * ``pytz`` leaves the tree (Django 4.0 switched to ``zoneinfo``).
 * Python ≥ 3.8; at 4.2 the window is 3.8–3.12.
 * ``django-grappelli`` → 3.0.x (one series covers 4.0 → 4.2);
@@ -1039,22 +1076,54 @@ Python 2 backports [1]_             Stage 10  Pinned only to keep pytest 4.6.9 o
 Part 6 — Other things to take into account
 ==========================================
 
-The admin-list fork is the real cost
-------------------------------------
+The admin-list fork is deleted in Stage 5
+-----------------------------------------
 
 ``kasvimuseo/templatetags/kasvimuseo_admin_list.py`` (235 lines) is a
 copy-and-modify fork of Django's own
 ``django/contrib/admin/templatetags/admin_list.py``. It imports six private
 admin symbols and reimplements ``result_headers``, ``items_for_result`` and
-``results``. Django's originals change in almost every release, so this file
-must be **re-synced at every single Django stage** — nineteen times. That is
-plausibly more work than all the other code changes combined.
+``results``. This section used to say the file must be re-synced at every single
+Django stage — nineteen times — and that this was plausibly more work than all
+the other code changes combined. **Issue 034 ruled otherwise, and the file goes
+in Stage 5.** The four steps are listed there; this is why.
 
-Its only actual purpose is to put the field name into each ``<td class="...">``.
-Strongly consider retiring it: either re-derive it once from Django 6.0's
-source at the end, or replace it entirely with ``list_display`` callables that
-return ``format_html``-wrapped markup, which needs no private API at all.
-Decide this before Stage 6, not after.
+Its only purpose is to put the field name into each ``<td class="...">``, and
+Django does that itself from **1.7**, which is the version Stage 5 installs.
+Ticket #11195 — the ticket this fork's own docstring cites — was closed in 1.7:
+"The admin changelist cells now have a ``field-<field_name>`` class in the HTML
+to enable style customizations". Stock ``items_for_result`` emits
+``field-<name>`` on cells and ``result_headers`` emits ``column-<name>`` on
+headers; from 1.10 ``_coerce_field_name`` also names callables in
+``list_display`` exactly as the fork's ``identifier_for_field`` does. So the
+fork stops being a customisation at Stage 5 and becomes a duplicate.
+
+Measured while deciding this, rather than estimated:
+
+* A mechanical diff of the three forked functions against the installed Django
+  1.5.1 copy is six hunks, ``-9 / +22`` lines; ``results`` is byte-identical.
+  Every difference is a CSS class. The rest of the file is Django's.
+* Three selectors in the whole repository consume those classes, all in
+  ``kasvimuseo/static/css/kasvimuseo.admin.css``, and only one of them —
+  ``.fieldname_edit``, in ``@media print`` — is fully live. The
+  ``#changelist-form td.fieldname_admin_thumbnail`` rule has never matched
+  anything, because this project's ``change_list.html`` renders grappelli's
+  ``#grp-changelist-form``; and ``.fieldname_action_checkbox`` reaches the body
+  cells but not the header, so printing a changelist today leaves the header row
+  one cell wider than the body. Both are repaired by the Stage 5 CSS step.
+* Carrying the fork would cost 343 changed lines across 15 of the 19 stage
+  transitions (largest: 3.2 → 4.0 at 96 lines, 1.6 → 1.7 at 80), plus seven
+  import repairs — the four in `Django API removals`_ and the three named under
+  that table.
+
+The option of re-deriving the fork once from Django 6.0's source at the end was
+considered and rejected as circular: 6.0's source already emits these classes,
+so the re-fork would be Django's own file with one string changed, and the
+import repairs would still have to be paid on the way there.
+
+**Until Stage 5 the file is frozen.** No stage before 5 edits it; nothing after
+5 refers to it. A changelist markup change needed before then belongs in the CSS
+or in ``kasvimuseo/admin.py``.
 
 Schema work needs production data
 ---------------------------------
@@ -1108,8 +1177,11 @@ An honest estimate of where the effort is concentrated:
 #. Stage 5 (South → Django migrations, on real data)
 #. Stage 10 (Python 2 → 3)
 #. Stage 2 (photologue ``title_slug`` → ``slug`` + sites framework)
-#. The recurring ``kasvimuseo_admin_list.py`` re-sync across all nineteen stages
 #. Everything else, which is largely mechanical import rewrites
+
+The recurring ``kasvimuseo_admin_list.py`` re-sync used to rank fourth on that
+list. It is not on it any more: issue 034 retired the file rather than carrying
+it, so what was nineteen re-syncs is now one deletion, in Stage 5.
 
 
 Appendix A — Resolved lock set per stage

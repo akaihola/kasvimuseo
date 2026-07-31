@@ -102,8 +102,8 @@ Open issues
 ===========
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 019, 020,
-021, 023, 024, 025, 033, 037, 039, 040, 041, 042, 043, 046, 047 and 048 are
-open: each one
+021, 023, 024, 025, 033, 034, 037, 039, 040, 041, 042, 043, 046, 047 and 048
+are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -260,8 +260,16 @@ done as well, and was cheaper still: the ``site-packages`` path it names had
 already stopped resolving in the container, so deleting it changed nothing
 anybody could see, and photologue's templates go on coming from the app
 template loader. All three of them are now off the list.
-027 is the one with a real design decision in it. 034 wants deciding before
-the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions, and
+027 is the one with a real design decision in it. 034 wanted deciding before
+the upgrade reached Stage 6 and has been: it is ``Fixed`` with no code change,
+because what it asked for was a ruling. The ruling retires the ``admin_list``
+fork rather than carrying it, and schedules the deletion for Stage 5 -- the
+stage that installs the Django version, 1.7, in which Django closed the very
+ticket the fork carries. Its file keeps the measurements that produced that
+answer, including two things nobody had noticed: one of the three CSS rules the
+fork exists to serve has never matched anything, and three more Django API
+removals hide inside it. It is also why 014, the dead code in the same file,
+is settled without being touched. 020, 021, 022, 032 and 033 are deletions, and
 three of them -- 020, 021 and 033 -- are done, in one change that took six
 lines out of two requirements files and one settings module. They went together
 because two of them edit the same ``INSTALLED_APPS`` tuple and all three share
