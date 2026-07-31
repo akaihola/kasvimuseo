@@ -4,6 +4,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    {% comment %}Lay out at the device's own width instead of Safari's 980px
+    fallback, so text is legible at 1:1 on a tablet. The labels get larger, not
+    smaller; what fits three of them across the screen is the 50 %
+    --screen-scale below. See docs/issues/045.
+    {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{{ STATIC_URL }}img/favicon.ico">
     <title>{{ object.observation.species.name_fi }}</title>
     <link rel="stylesheet"
@@ -88,11 +94,18 @@
             page-break-inside: avoid;
             overflow: hidden;
         }
-        li.hidden {
+        li.hidden > *:not(.remove) {
+            /* A label left out of the print run is dimmed by its *contents*,
+               not as a box: ``opacity`` on the ``li`` makes a compositing
+               group, and everything inside it -- the print toggle included --
+               is then drawn against that 0.3, however opaque its own rule
+               says it is. That is what made the toggle paler on an unchecked
+               label than on a checked one, in both its states. The toggle is
+               excluded here, so it renders identically either way. */
             opacity: 0.3;
         }
-        li.hidden:hover .remove {
-            opacity: 1;
+        li.hidden {
+            border-color: #d9d9d9;
         }
 
         /* photo in label */
@@ -205,7 +218,12 @@
             position: absolute;
             right: 5px;
             bottom: 0;
-            opacity: 0;
+            /* A touch screen has no hover, so the toggle is simply always
+               drawn there; the @media (hover: hover) block below takes it away
+               again for a mouse. It stays off the paper through the
+               @media print hide list above, not through being invisible
+               (issues 045, 047). */
+            opacity: 0.5;
             transition: all 0.5s ease-in-out;
         }
         .remove label {
@@ -220,12 +238,28 @@
             cursor: pointer;
         }
         li:hover .remove {
-            opacity: 0.5;
+            opacity: 1;
             cursor: pointer;
         }
         li .remove:hover {
             opacity: 1;
             transition: all 0s;
+        }
+        @media (hover: hover) {
+            /* A mouse can reveal the toggle, so the sheet stays clean until it
+               is used: hidden at rest, dimmed while the pointer is moving or
+               the page is scrolling (``pointer-active``, set by the script
+               below), full over the label it belongs to. */
+            .remove {
+                opacity: 0;
+            }
+            body.pointer-active .remove {
+                opacity: 0.5;
+            }
+            body.pointer-active li:hover .remove,
+            li:hover .remove {
+                opacity: 1;
+            }
         }
         #drag-wrapper {
             transform: scale(var(--screen-scale));
@@ -259,6 +293,10 @@
                 v-on:click="save"
                 v-bind:class="{ progress: isSaving }"
                 v-bind:disabled="disableSave">Save changes</button>
+        {% comment %}iPadOS Safari hides its print command in the Share menu.
+        @media print already hides every button. See docs/issues/045.
+        {% endcomment %}
+        <button onclick="window.print()">Print</button>
         {# What the chevrons choose: the label's own photo, read back since 039 (issue 037) #}
         <p id="photo-help">{% trans "The arrows over a photo change the photo of this label only, not the photo of the species. The choice is kept once you click “Save changes”; unsaved, it is lost when the page is reloaded. The photo of the species itself is chosen on the species page in the admin." %}</p>
         <ul id="labels"
@@ -276,6 +314,23 @@
 
     <!--suppress StatementWithEmptyBodyJS, JSUnusedGlobalSymbols, JSUnresolvedFunction, JSUnusedLocalSymbols, JSUnresolvedVariable -->
     <script type="text/javascript">
+        // Mouse only: moving the pointer or scrolling dims the print toggles
+        // in, and two seconds of stillness puts them away again. A touch
+        // screen never gets here -- there the stylesheet draws them always,
+        // because there is no hover to reveal them with (issue 045).
+        if (window.matchMedia('(hover: hover)').matches) {
+            let sleep = null;
+            const wake = function() {
+                document.body.classList.add('pointer-active');
+                clearTimeout(sleep);
+                sleep = setTimeout(function() {
+                    document.body.classList.remove('pointer-active');
+                }, 2000);
+            };
+            window.addEventListener('mousemove', wake, {passive: true});
+            window.addEventListener('scroll', wake, {passive: true});
+        }
+
         function screenScale() {
             // The --screen-scale of the stylesheet, so that the drag preview
             // is drawn at the same scale as the label grid (issue 046).

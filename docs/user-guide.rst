@@ -66,6 +66,18 @@ Ohjeita:
 - poista tulostusrasti kyltin oikeassa alalaidassa, tulostimen kuvan
   vierestä; myös kuvan napsauttaminen poistaa ja palauttaa rastin
 
+- tabletilla rasti näkyy koko ajan, koska kosketusnäytöllä ei ole mitään
+  millä sen saisi esiin. Hiirellä se pysyy piilossa, himmenee näkyviin
+  heti kun hiirtä liikuttaa tai sivua vierittää, ja kirkastuu sen kyltin
+  kohdalla jonka päällä hiiri on; parin sekunnin liikkumattomuus piilottaa
+  rastit taas, jotta arkki pysyy siistinä
+
+- tulosta kyltit:
+
+- napsauta “Print”-painiketta sivun ylälaidassa. Sama painike (“Tulosta”)
+  on myös kasvikorteissa. iPadin Safarissa tulostus löytyy muuten vain
+  Jaa-valikosta
+
 - talleta muutokset:
 
 - napsauta “Save changes” -painiketta sivun ylälaidassa

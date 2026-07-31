@@ -2,7 +2,12 @@
 {% load i18n %}
 
 {% block sitestyle %}
-    <link rel="stylesheet" 
+    {% comment %}``sitestyle`` is the only block django-jqm leaves inside
+    <head>. Lay out at the device's own width instead of Safari's 980px
+    fallback, so text is legible at 1:1 on a tablet. See docs/issues/045.
+    {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
           href="{{STATIC_URL}}css/planted-species-printable.css" />
 {% endblock %}
 
@@ -56,5 +61,13 @@
 
 {% block title %}Tietoa kasvista{% endblock %}
 {% block content %}
+    {% comment %}iPadOS Safari hides its print command in the Share menu, so
+    the sheet offers one of its own, hidden in @media print. The class is on
+    the wrapper rather than the button, because jQuery Mobile wraps the button
+    in a container of its own and both have to go.
+    {% endcomment %}
+    <div class="print-sheet">
+        <button onclick="window.print()">Tulosta</button>
+    </div>
     {% block species-items %}{% endblock %}
 {% endblock %}
