@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Git pre-push hook: run the suite before anything leaves this machine.
+#
+# .git/hooks is not tracked, so this lives here and is installed once per clone:
+#
+#     ln -sf "$PWD/dev/pre-push" "$(git rev-parse --git-path hooks)/pre-push"
+#
+# A symlink rather than a copy, so it stays current when this file changes.
+# `git push --no-verify` skips it. The suite takes about 25 seconds including
+# starting and stopping PostgreSQL.
+#
+# This is the half of issue 018 that needs no account, no build minutes and no
+# network -- the CI workflow in .github/workflows/tests.yml is the other half,
+# and it only sees a push that reaches the mirror it watches.
+
+set -euo pipefail
+
+repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+
+# git feeds the hook one line per ref being pushed. A deletion has the all-zero
+# local sha and no commit to test, so a push that only deletes branches should
+# not spend half a minute proving the current checkout still works.
+zero=0000000000000000000000000000000000000000
+testing=no
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+    [ "$local_sha" = "$zero" ] || testing=yes
+done
+[ "$testing" = yes ] || exit 0
+
+echo "pre-push: running the test suite (skip with --no-verify)" >&2
+"$repo/dev/kasvimuseo" app test -q
