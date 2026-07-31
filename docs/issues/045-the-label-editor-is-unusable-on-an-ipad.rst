@@ -14,14 +14,15 @@ Issue 045: The label editor is unusable on an iPad
     ``test_the_label_print_toggle_needs_no_hover`` assert the markup of the
     cheap half, and cannot see what any of it *does*. What the large half does
     is in ``browser_tests/test_label_editor.py``, which 017 made runnable:
-    ``test_a_number_moves_between_labels_by_touch`` and the four tests around
-    it drive a real touch screen, and the two mouse drag tests that were there
-    before now go through the same pointer handlers
+    ``test_a_number_moves_between_labels_by_touch`` and the five tests around
+    it drive an emulated touch screen, and the two mouse drag tests that were
+    there before now go through the same pointer handlers
 :Depends on: (none -- 044 briefly blocked *verifying* this on the device, since
     it truncated the label editor's data endpoint too and the page then drew
     nothing at all in a browser; it is fixed, and this is rebased onto it)
 :Blocks: (none)
 :Related: 017 -- the browser suite that had to exist before this rewrite could
+    be made
     046 -- the zoom, which is what makes the labels fit across the screen
     047 -- the print toggle, the control that needs the tap it never expected
     006 -- ``mobile-base.html``, the abandoned start of a mobile front end
@@ -29,8 +30,8 @@ Issue 045: The label editor is unusable on an iPad
 :Decision: Scope confirmed by the maintainer on 2026-07-29: the admin, the
     label editor and the printable sheets. The admin already works there, so
     the work is the label editor and printing. The cheap half of "The work, in
-    two halves" is done; the large half -- pointer events instead of HTML5 drag
-    and drop -- is not, and wants issue 017 first. The viewport tag went into
+    two halves" was taken first; the large half -- pointer events instead of
+    HTML5 drag and drop -- waited for issue 017. The viewport tag went into
     five templates rather than three; the print button is a wrapped
     ``<button>`` with one rule in the sheets' own print stylesheet; and the
     toggle's ``opacity: 0`` was dropped rather than ``:focus-within`` added,
@@ -49,7 +50,7 @@ Issue 045: The label editor is unusable on an iPad
 :Resolution: The cheap half is fixed in bffb370, with the print toggle's
     pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c.
     The large half -- pointer events, and the touch tests that hold them up --
-    is fixed in COMMIT, which is what makes this ``Fixed``.
+    is fixed in b8159fb, which is what makes this ``Fixed``.
 
 Problem
 =======
@@ -286,8 +287,9 @@ a museum number and ``pointermove`` / ``pointerup`` / ``pointercancel`` on
 **Replaced, not added beside.** A mouse produces pointer events too, so there
 is one interaction rather than a touch one and a mouse one that can drift
 apart. The two mouse drag tests that were already in
-``browser_tests/test_label_editor.py`` did not change and now exercise the new
-code, which is the assurance that nothing was lost; the reverse -- keeping drag
+``browser_tests/test_label_editor.py`` assert exactly what they asserted
+before and now exercise the new code, which is the assurance that the mouse
+lost nothing; the reverse -- keeping drag
 and drop for the mouse and adding pointer events for touch -- would have meant
 two code paths and a browser deciding which one to fire.
 
