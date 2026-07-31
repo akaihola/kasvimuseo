@@ -229,8 +229,10 @@ def test_a_number_moves_between_labels_by_touch(touch_editor):
 def test_a_tap_on_a_number_moves_nothing(touch_editor):
     """A finger is never quite still, so a tap has to be told from a drag.
 
-    Without the threshold in the editor's ``dragMove`` every tap on the sheet
-    would rearrange it, which is worse than the defect this fixes.
+    A press that wobbles a pixel is a tap, and the editor's ``dragMove``
+    threshold is what says so; without it a tap could take the number with it
+    and put it down somewhere else, which is worse than the defect this fixes.
+    The other thing on a label to tap is the print toggle, right beside it.
     """
     before = [(label['name'], label['ids']) for label in labels(touch_editor)]
 
