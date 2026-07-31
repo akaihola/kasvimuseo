@@ -73,7 +73,15 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-No stage started. Three obstacles are out of the way: 019 is ``Fixed``, so
+No stage started, but Stage 0 is mostly done: with 020, 021 and 033 ``Fixed``
+in one change, the dead weight it lists is gone -- ``django-indexer``,
+``django-paging`` and ``django-pserver`` are uninstalled and ``gunicorn`` is no
+longer an app -- leaving the grappelli route (022), vendoring ``django-jqm``
+(031) and moving ``django-extensions`` out of production. That change is also
+the first evidence against this issue's own caveat below: the container was
+built, the suite run and the pages rendered.
+
+Three further obstacles are out of the way: 019 is ``Fixed``, so
 ``MIDDLEWARE_CLASSES`` is now written out in ``common_settings`` and Stage 11
 has a list to rename rather than an absence to notice; 023 is ``Fixed`` with it,
 so ``django.contrib.messages`` is installed and Stage 5 will not meet an admin
@@ -84,6 +92,7 @@ This issue tracks the programme; the individual obstacles have their own issues:
 ============ ===========================================================
 Issue        Blocks or complicates
 ============ ===========================================================
+020/021/033  Dead apps and pins -- fixed; Stage 0 has three items less
 019          MIDDLEWARE -- fixed; Stage 8 renames an explicit list
 023          contrib.messages -- fixed; the app is installed for Stage 5
 024          ``TEMPLATE_DIRS`` path -- fixed; Stage 10 has one item less
@@ -104,6 +113,14 @@ Django 6.0.7 with grappelli 5.0.0 and photologue 3.20 starts, passes
 equivalent.
 
 **Not** verified: any of it against this project's own code or database.
-``podman`` was unavailable, so the container was never built, no migration was
-run and no page was rendered. Stage 0 should be treated as a test of the
-reasoning, not as a foregone conclusion.
+``podman`` was unavailable when this was written, so the container was never
+built, no migration was run and no page was rendered. Stage 0 should be treated
+as a test of the reasoning, not as a foregone conclusion.
+
+Its first three items have now had that test, and it was worth running: the
+container was rebuilt without the removed packages, the suite passed, the
+production dump was restored and migrated forward and the pages were rendered
+over HTTP -- and the reasoning turned out to be wrong in one place. 020 claimed
+the two apps carried no models and no migrations; ``django-indexer`` carries
+both, and the table it created is in the production database. Harmless, and
+recorded in 020 rather than discovered later.
