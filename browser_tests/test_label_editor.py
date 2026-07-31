@@ -18,7 +18,10 @@ because ``h1`` is ``text-transform: uppercase``; nothing in the document is.
 
 import re
 
-from conftest import DATA_URL, LABELS_URL, drag, labels, save
+import pytest
+
+from conftest import (DATA_URL, LABELS_URL, centre, drag, labels, save,
+                      touch_drag)
 
 NARSISSI = 'valkonarsissi'
 ESIKKO = 'kevätesikko'
@@ -158,8 +161,9 @@ def test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed(
 def test_dragging_a_number_onto_the_background_splits_the_label(editor):
     """The editor's reason to exist: two plantings, two labels to print.
 
-    Issue 045's large half rewrites this interaction for touch, and this is the
-    assertion that would catch the rewrite breaking it for a mouse.
+    Since issue 045's large half this runs on pointer events rather than HTML5
+    drag and drop, so it is the assertion that catches the rewrite breaking the
+    interaction for a mouse -- which is the half of it a mouse can still see.
     """
     drag(editor, number(editor, 11), *empty_space(editor))
 
@@ -180,6 +184,138 @@ def test_dragging_a_number_onto_a_label_of_the_same_species_merges_them(
 
     assert [(label['name'], label['ids']) for label in labels(editor)] == [
         (ESIKKO, ['21']), (NARSISSI, ['11', '12'])]
+
+
+def test_a_number_dragged_off_the_sheet_and_released_stays_where_it_was(
+        editor):
+    """The mouse half of "nothing happens unless it lands somewhere".
+
+    The Save button is over the page, not over the ``<ul>``, so a release there
+    is a gesture that ended nowhere: no label takes the number, no label is
+    created, and there is nothing to save either.
+    """
+    before = [(label['name'], label['ids']) for label in labels(editor)]
+
+    drag(editor, number(editor, 11), *centre(editor.locator('#save')))
+
+    assert [(label['name'], label['ids']) for label in labels(editor)] == before
+    assert editor.locator('#save').is_disabled()
+
+
+def test_a_number_moves_between_labels_by_touch(touch_editor):
+    """The reported symptom, and the point of the rewrite (issue 045).
+
+    Not one drag but two, because moving a number *between* labels needs a
+    second label of the same species first, and splitting one off is how the
+    editor makes it. Both are fingers on a touch screen with no mouse anywhere
+    near: before the rewrite neither did anything at all, since iOS Safari
+    generates no ``dragstart`` from touch and Chromium's touch emulation
+    generates none either.
+    """
+    touch_drag(touch_editor, number(touch_editor, 11),
+               *empty_space(touch_editor))
+
+    assert [(label['name'], label['ids']) for label in labels(touch_editor)] \
+        == [(ESIKKO, ['21']), (NARSISSI, ['12']), (NARSISSI, ['11'])]
+
+    target = touch_editor.locator('#labels li').nth(1).bounding_box()
+    touch_drag(touch_editor, number(touch_editor, 11),
+               target['x'] + target['width'] / 2, target['y'] + 20)
+
+    assert [(label['name'], label['ids']) for label in labels(touch_editor)] \
+        == [(ESIKKO, ['21']), (NARSISSI, ['11', '12'])]
+
+
+def test_a_tap_on_a_number_moves_nothing(touch_editor):
+    """A finger is never quite still, so a tap has to be told from a drag.
+
+    Without the threshold in the editor's ``dragMove`` every tap on the sheet
+    would rearrange it, which is worse than the defect this fixes.
+    """
+    before = [(label['name'], label['ids']) for label in labels(touch_editor)]
+
+    touch_editor.touchscreen.tap(*centre(number(touch_editor, 11)))
+
+    assert [(label['name'], label['ids'])
+            for label in labels(touch_editor)] == before
+    assert touch_editor.locator('#save').is_disabled()
+
+
+def test_a_touch_gesture_the_system_takes_away_changes_nothing(touch_editor):
+    """``pointercancel``: a call arrives, or the finger leaves the digitiser.
+
+    The number has not been taken out of its label at any point during the
+    drag -- the sheet is only rearranged on release -- so a cancelled gesture
+    has nothing to undo, and this is the assertion that keeps it that way.
+    """
+    before = [(label['name'], label['ids']) for label in labels(touch_editor)]
+
+    touch_drag(touch_editor, number(touch_editor, 11),
+               *empty_space(touch_editor), release='touchCancel')
+
+    assert [(label['name'], label['ids'])
+            for label in labels(touch_editor)] == before
+    assert touch_editor.locator('#save').is_disabled()
+    assert touch_editor.locator('#drag-wrapper').is_hidden()
+
+
+def test_the_drag_preview_follows_the_finger_at_the_screen_zoom(touch_editor):
+    """Issue 046's 50 % zoom, read by the preview so it matches the grid.
+
+    The finger covers the number it is moving, so the preview is the only
+    feedback there is about where the number will land; drawn at any other
+    scale it would be a label that does not fit the sheet under it. The
+    computed ``transform`` is a matrix, which carries both the scale the
+    stylesheet's ``--screen-scale`` asked for and where the preview was put.
+    """
+    x, y = empty_space(touch_editor)
+    end = touch_drag(touch_editor, number(touch_editor, 11), x, y,
+                     release=None)
+
+    assert touch_editor.locator('#drag-wrapper').is_visible()
+    assert [text.strip() for text in
+            touch_editor.locator('#drag-wrapper .observation-id')
+                        .all_text_contents()] == ['11']
+    matrix = touch_editor.evaluate(
+        """() => getComputedStyle(document.querySelector('#drag-wrapper'))
+                     .transform""")
+    scale_x, _, _, scale_y, left, top = [
+        float(part) for part in matrix[len('matrix('):-1].split(',')]
+    assert (scale_x, scale_y) == (0.5, 0.5)
+    # 380 x 120 unscaled pixels into the label is where its numbers sit, so
+    # that is the offset the preview is drawn at, at the same 50 %.
+    assert (left, top) == pytest.approx((x - 380 * 0.5, y - 120 * 0.5),
+                                        abs=0.01)
+
+    end('touchEnd')
+    assert len(labels(touch_editor)) == 3
+    assert touch_editor.locator('#drag-wrapper').is_hidden()
+
+
+def test_saving_after_a_touch_drag_persists_the_new_arrangement(touch_editor):
+    """The dangerous cycle (issues 010, 044) reached the way the iPad reaches
+    it.
+
+    ``PlantedSpeciesLabelsApi.post`` deletes every label and recreates it from
+    what is submitted, so a save is only ever as good as what the page holds:
+    the button has to be enabled by the drag, send the whole sheet, and the
+    reload has to agree with it.
+    """
+    assert touch_editor.locator('#save').is_disabled()
+
+    touch_drag(touch_editor, number(touch_editor, 11),
+               *empty_space(touch_editor))
+
+    assert touch_editor.locator('#save').is_enabled()
+    posted = save(touch_editor)
+
+    assert [item['external_ids'] for item in posted
+            if item['name_fi'] == NARSISSI] == [[12], [11]]
+    touch_editor.reload()
+    touch_editor.wait_for_selector('#labels li')
+    assert sorted((label['name'], tuple(label['ids']))
+                  for label in labels(touch_editor)) == [
+        (ESIKKO, ('21',)), (NARSISSI, ('11',)), (NARSISSI, ('12',))]
 
 
 def test_saving_posts_the_sheet_and_the_reload_shows_it_back(editor):

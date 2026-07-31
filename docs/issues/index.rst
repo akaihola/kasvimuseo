@@ -180,7 +180,8 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       half -- replacing drag-and-drop with pointer events so numbers can be
       moved by touch -- is deliberately not here; it wants the browser suite
       of 017 first, since it rewrites the one part of the editor no test can
-      see.
+      see. **Fixed**, both halves: 017 landed, so the large half was taken
+      after it and is covered by the suite 017 built.
    054: The mobile species list asks for a ``mobilethumbnail`` photo size that
       ``initial_data.json`` did not define, so every row of it is a broken
       image on any database built from the fixtures. Same shape as 004 and

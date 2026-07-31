@@ -42,6 +42,19 @@ DATA_URL = '/kasvimuseo/planting-labels/data/'
 # repository: ``dev/kasvimuseo`` makes one per run (issues 050 and 052).
 STAFF_USERNAME = 'puutarhuri'
 
+# The desktop the mouse tests use. At issue 046's 50 % screen zoom it is five
+# labels across, so the two this data has sit side by side with the empty part
+# of the ``<ul>`` beside them -- which is where a number has to be dropped to
+# make a new label.
+DESKTOP = {'width': 1280, 'height': 900}
+
+# The device issue 045 was reported from, laid out at the width its viewport
+# tag now asks for: an iPad (7th generation) is 810 x 1080 CSS pixels, and
+# landscape is the orientation a sheet is arranged in -- at issue 046's 50 %
+# screen zoom it puts three labels across, so there is empty sheet beside the
+# two this data has to drop a number onto.
+IPAD_LANDSCAPE = {'width': 1080, 'height': 810}
+
 
 def pytest_addoption(parser):
     parser.addoption('--headed', action='store_true',
@@ -90,16 +103,13 @@ def browser(request):
         instance.close()
 
 
-@pytest.fixture
-def anonymous_page(browser, base_url):
+def offline_page(browser, **options):
     """A page with the CDN scripts served locally and console errors collected.
 
-    The viewport is 1280x900: at issue 046's 50 % screen zoom that is five
-    labels across, so the two this data has sit side by side with the empty
-    part of the ``<ul>`` beside them -- which is where a number has to be
-    dropped to make a new label.
+    A generator, so the two fixtures below are one-liners that differ only in
+    the context they ask for.
     """
-    context = browser.new_context(viewport={'width': 1280, 'height': 900})
+    context = browser.new_context(**options)
 
     def serve_locally(route):
         name = route.request.url.rsplit('/', 1)[-1]
@@ -123,8 +133,30 @@ def anonymous_page(browser, base_url):
 
 
 @pytest.fixture
-def page(anonymous_page, base_url):
-    """The same page, logged in as the gardener ``seed.py`` creates.
+def anonymous_page(browser):
+    """A mouse, at a desktop size, arriving with no session."""
+    for page in offline_page(browser, viewport=DESKTOP):
+        yield page
+
+
+@pytest.fixture
+def anonymous_touch_page(browser):
+    """The iPad of issue 045, as far as Chromium can be one.
+
+    ``has_touch`` is what makes the browser deliver ``pointerdown`` with
+    ``pointerType: 'touch'`` and honour ``touch-action``; ``is_mobile`` is what
+    makes it obey the page's viewport tag the way a tablet does. It is
+    emulation, not the device: the engine is still Chromium, so this can show
+    that the editor works without a mouse, and cannot show that iOS Safari
+    agrees.
+    """
+    for page in offline_page(browser, viewport=IPAD_LANDSCAPE,
+                             has_touch=True, is_mobile=True):
+        yield page
+
+
+def log_in(page, base_url):
+    """Through the admin's login form, as the gardener ``seed.py`` creates.
 
     The editor and its data endpoint are staff-only (issue 052), so this is
     what every test but the one about the gate itself needs. The password is
@@ -135,16 +167,26 @@ def page(anonymous_page, base_url):
     if not password:
         pytest.fail('KASVIMUSEO_BROWSER_TEST_PASSWORD is unset -- run these'
                     ' through `dev/kasvimuseo app browser-test`.')
-    anonymous_page.goto(base_url + '/admin/')
-    anonymous_page.fill('#id_username', STAFF_USERNAME)
-    anonymous_page.fill('#id_password', password)
-    anonymous_page.click('input[type="submit"]')
-    anonymous_page.wait_for_selector('#id_username', state='detached')
-    return anonymous_page
+    page.goto(base_url + '/admin/')
+    page.fill('#id_username', STAFF_USERNAME)
+    page.fill('#id_password', password)
+    page.click('input[type="submit"]')
+    page.wait_for_selector('#id_username', state='detached')
+    return page
 
 
 @pytest.fixture
-def editor(page, base_url):
+def page(anonymous_page, base_url):
+    return log_in(anonymous_page, base_url)
+
+
+@pytest.fixture
+def touch_page(anonymous_touch_page, base_url):
+    """The tablet, logged in: the gardener carrying it is staff too."""
+    return log_in(anonymous_touch_page, base_url)
+
+
+def open_editor(page, base_url):
     """The label editor, loaded, with its labels drawn.
 
     ``page`` has been through the admin's login form, which is what the editor
@@ -155,6 +197,16 @@ def editor(page, base_url):
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
     return page
+
+
+@pytest.fixture
+def editor(page, base_url):
+    return open_editor(page, base_url)
+
+
+@pytest.fixture
+def touch_editor(touch_page, base_url):
+    return open_editor(touch_page, base_url)
 
 
 def labels(page):
@@ -170,20 +222,60 @@ def labels(page):
         }))""")
 
 
-def drag(page, source, target_x, target_y):
-    """Drag ``source`` to a point, as HTML5 drag and drop.
-
-    Playwright synthesises ``dragstart`` / ``dragenter`` / ``dragover`` /
-    ``drop`` from these mouse movements the way a mouse does. Two moves rather
-    than one: the first is what starts the drag, and the editor's handlers run
-    on entering, so a single jump can land without ever having entered.
-    """
+def centre(source):
     box = source.bounding_box()
-    page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+    return box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
+
+
+def drag(page, source, target_x, target_y, release=True):
+    """Drag ``source`` to a point with the mouse.
+
+    Since issue 045 the editor listens for ``pointerdown`` / ``pointermove`` /
+    ``pointerup`` rather than the HTML5 drag events, and a mouse produces those
+    too -- so this drives the same code path as ``touch_drag`` below, which is
+    the point of the rewrite. It moves in steps because the gesture is not a
+    drag until the pointer has travelled, and because the preview follows every
+    move.
+
+    ``release=False`` leaves the button down, for a test that wants to look at
+    the page mid-drag; it is then on the caller to finish or abandon it.
+    """
+    page.mouse.move(*centre(source))
     page.mouse.down()
     page.mouse.move(target_x, target_y, steps=8)
-    page.mouse.move(target_x, target_y, steps=2)
-    page.mouse.up()
+    if release:
+        page.mouse.up()
+
+
+def touch_drag(page, source, target_x, target_y, release='touchEnd'):
+    """The same drag by finger, and the reason this rewrite happened.
+
+    Playwright's ``page.touchscreen`` can only tap, so the sequence is
+    dispatched over CDP: ``Input.dispatchTouchEvent`` is what a real touch on
+    an emulated touch screen goes through, so the browser does its own
+    hit-testing, applies ``touch-action`` and decides for itself what the
+    pointer events look like. Nothing here calls a handler directly.
+
+    ``release`` is the event that ends it: ``'touchEnd'`` for a finger lifted,
+    ``'touchCancel'`` for a gesture the system took away, or ``None`` to leave
+    the finger down. Returns the function that ends it either way.
+    """
+    session = page.context.new_cdp_session(page)
+    x, y = centre(source)
+
+    def dispatch(kind, point=None):
+        session.send('Input.dispatchTouchEvent',
+                     {'type': kind,
+                      'touchPoints': [] if point is None else [point]})
+
+    dispatch('touchStart', {'x': x, 'y': y, 'id': 1})
+    for step in range(1, 9):
+        dispatch('touchMove', {'x': x + (target_x - x) * step / 8,
+                               'y': y + (target_y - y) * step / 8,
+                               'id': 1})
+    if release:
+        dispatch(release)
+    return dispatch
 
 
 def save(page):
