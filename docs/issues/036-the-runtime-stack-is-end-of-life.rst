@@ -85,7 +85,7 @@ Issue        Blocks or complicates
 ============ ===========================================================
 019          MIDDLEWARE -- fixed; Stage 8 renames an explicit list
 023          contrib.messages -- required from Stage 5
-024          ``TEMPLATE_DIRS`` python2.7 path -- blocks Stage 10
+024          ``TEMPLATE_DIRS`` path -- fixed; Stage 10 has one item less
 016          ``remove_diacritics`` -- fixed; Stage 10 has nothing to do here
 027          No upper bounds -- every stage needs a real lock
 028, 029     Pillow and setuptools ceilings on specific stages
