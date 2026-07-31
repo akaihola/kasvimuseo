@@ -261,6 +261,23 @@ def test_a_touch_gesture_the_system_takes_away_changes_nothing(touch_editor):
     assert touch_editor.locator('#drag-wrapper').is_hidden()
 
 
+def test_the_drag_preview_is_drawn_only_over_the_empty_sheet(touch_editor):
+    """It is the "this becomes a new label" indicator, not a cursor.
+
+    A whole label following the finger across the sheet is what the rewrite
+    briefly did and what it must not do: over a label, moving a number changes
+    nothing about the label it lands on except that number.
+    """
+    target = touch_editor.locator('#labels li').nth(1).bounding_box()
+    end = touch_drag(touch_editor, number(touch_editor, 11),
+                     target['x'] + target['width'] / 2, target['y'] + 20,
+                     release=None)
+
+    assert touch_editor.locator('#drag-wrapper').is_hidden()
+
+    end('touchEnd')
+
+
 def test_the_drag_preview_follows_the_finger_at_the_screen_zoom(touch_editor):
     """Issue 046's 50 % zoom, read by the preview so it matches the grid.
 
@@ -273,6 +290,11 @@ def test_the_drag_preview_follows_the_finger_at_the_screen_zoom(touch_editor):
     x, y = empty_space(touch_editor)
     end = touch_drag(touch_editor, number(touch_editor, 11), x, y,
                      release=None)
+
+    # The transform is a Vue style binding, so it reaches the element on the
+    # next tick rather than in the handler that sets it: read it too soon and
+    # it is still one pointermove behind.
+    touch_editor.wait_for_timeout(100)
 
     assert touch_editor.locator('#drag-wrapper').is_visible()
     assert [text.strip() for text in
