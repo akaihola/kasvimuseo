@@ -148,8 +148,12 @@ directory, including material no row points at, still needs SSH::
 Continuous integration
 ======================
 
-Every push runs the suite on GitHub Actions, from
-``.github/workflows/tests.yml`` (issue 018). The workflow is deliberately thin:
+The suite runs on GitHub Actions, from
+``.github/workflows/tests.yml`` (issue 018), on every pull request and on every
+push to ``master``. Those two triggers rather than a bare ``push:``: a branch
+with a pull request open matches both events, and would run everything twice.
+A branch pushed with no pull request open therefore runs nothing, which is what
+the hook below is for. The workflow is deliberately thin:
 it calls ``dev/kasvimuseo app build`` and ``dev/kasvimuseo app test``, the two
 commands above, so what CI runs cannot drift from what you run. It adds only
 what a hosted runner does not give the script for free -- Ubuntu keeps
@@ -165,14 +169,14 @@ describe. No production dump and no ``media fetch`` are involved: the tests
 build their own data, and the test settings point ``MEDIA_ROOT`` at a
 throwaway directory, so nothing reads a photo.
 
-A full run is about two minutes: 80 seconds to build the Python 2.7 image from
-scratch and 25 for the tests. A second job builds the documentation, which is
-how a malformed issue field is caught on push rather than by whoever next
-builds the docs.
+A full run is about a minute on a hosted runner, the two jobs in parallel:
+``pytest`` builds the Python 2.7 image from scratch and runs the suite, and
+``sphinx`` builds the documentation, which is how a malformed issue field is
+caught on push rather than by whoever next builds the docs.
 
-**The workflow only sees pushes to the GitHub remote**, ``origin``, which has
-been the mirror rather than the one ``master`` tracks. Until it is pushed to,
-nothing runs there::
+**The workflow only sees the GitHub remote**, ``origin``, which has been the
+mirror rather than the one ``master`` tracks. Work that is only ever pushed to
+``bitbucket`` is not tested by anything except the hook below::
 
     $ git push origin master
 
