@@ -2,7 +2,7 @@
 Issue 045: The label editor is unusable on an iPad
 =========================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Medium
 :Area: templates / mobile
 :Reported: 2026-07-29
@@ -12,13 +12,16 @@ Issue 045: The label editor is unusable on an iPad
     ``test_the_public_base_template_lays_out_at_the_device_width``,
     ``test_printable_pages_offer_a_print_button`` and
     ``test_the_label_print_toggle_needs_no_hover`` assert the markup of the
-    cheap half. They cannot see what any of it *does*: no test runs a page in a
-    browser, mobile or otherwise (issue 017)
+    cheap half, and cannot see what any of it *does*. What the large half does
+    is in ``browser_tests/test_label_editor.py``, which 017 made runnable:
+    ``test_a_number_moves_between_labels_by_touch`` and the four tests around
+    it drive a real touch screen, and the two mouse drag tests that were there
+    before now go through the same pointer handlers
 :Depends on: (none -- 044 briefly blocked *verifying* this on the device, since
     it truncated the label editor's data endpoint too and the page then drew
     nothing at all in a browser; it is fixed, and this is rebased onto it)
 :Blocks: (none)
-:Related: 017 -- nothing runs any page in a browser, let alone a tablet one
+:Related: 017 -- the browser suite that had to exist before this rewrite could
     046 -- the zoom, which is what makes the labels fit across the screen
     047 -- the print toggle, the control that needs the tap it never expected
     006 -- ``mobile-base.html``, the abandoned start of a mobile front end
@@ -33,11 +36,20 @@ Issue 045: The label editor is unusable on an iPad
     toggle's ``opacity: 0`` was dropped rather than ``:focus-within`` added,
     because nothing focuses that checkbox until it is tapped and the complaint
     is that there is nothing visible to tap. The three are argued in "What the
-    cheap half decided" below.
+    cheap half decided" below. The large half was taken once 017 was fixed, and
+    it decided three things: pointer events replace the HTML5 drag layer
+    outright rather than being added beside it, so a mouse and a finger take
+    the same path and there is one interaction to keep working; the sheet is
+    rearranged **on release** rather than while the pointer passes over labels,
+    because a pointer drag belongs to the element it started on and the old
+    live preview worked by deleting that element mid-gesture; and the label a
+    number lands on is found by hit-testing the release point, since a pointer
+    drag is not delivered to what it passes over. Argued in "What the large
+    half decided" below.
 :Resolution: The cheap half is fixed in bffb370, with the print toggle's
-    pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c;
-    the large half is open, so ``Status`` stays ``Accepted``. See "What is
-    left" below.
+    pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c.
+    The large half -- pointer events, and the touch tests that hold them up --
+    is fixed in COMMIT, which is what makes this ``Fixed``.
 
 Problem
 =======
@@ -261,16 +273,136 @@ the page loads and the maintainer can now look at it on the iPad. The numbers
 above come from a dump taken through the Django test client, which never crossed
 a socket and was therefore always complete.
 
+What the large half decided
+===========================
+
+Issue 017 is fixed, so the interaction with no coverage now has some, and the
+rewrite was taken. The drag-and-drop layer is gone: ``draggable``,
+``dragstart``, ``dragend`` and the ``dragenter`` / ``dragover`` / ``drop``
+handlers on the ``<ul>`` and on every label are replaced by ``pointerdown`` on
+a museum number and ``pointermove`` / ``pointerup`` / ``pointercancel`` on
+``window`` while one is being moved.
+
+**Replaced, not added beside.** A mouse produces pointer events too, so there
+is one interaction rather than a touch one and a mouse one that can drift
+apart. The two mouse drag tests that were already in
+``browser_tests/test_label_editor.py`` did not change and now exercise the new
+code, which is the assurance that nothing was lost; the reverse -- keeping drag
+and drop for the mouse and adding pointer events for touch -- would have meant
+two code paths and a browser deciding which one to fire.
+
+**The sheet is rearranged on release, not on the way.** This is the change with
+consequences. The old code moved the number into whichever label the drag
+entered, took it out again on leaving, and put it back on ``dragend`` if the
+drop was refused, so the dragged ``<p>`` was deleted and recreated repeatedly
+during a gesture. A pointer drag cannot survive that: the events belong to the
+element the gesture started on -- on touch the browser captures to it
+implicitly -- so deleting that element mid-gesture is exactly what must not
+happen. Committing on release also makes a cancelled gesture free: there is
+nothing to undo, which is what
+``test_a_touch_gesture_the_system_takes_away_changes_nothing`` pins.
+
+**The target is hit-tested, not entered.** Nothing receives a pointer drag as
+it passes over, so ``dropTarget`` asks ``document.elementFromPoint`` what is
+under the release point and takes the ``li`` it is in, the ``<ul>`` background,
+or nothing at all. That made ``#drag-wrapper``, the preview, the one thing that
+would always be under the pointer, so it is now ``pointer-events: none``; its
+``z-index: -1``, which the old code used for the same purpose, is not enough
+when the point is over the empty part of the sheet.
+
+**A tap is not a drag.** A finger is never still, so a press moves nothing
+until it has travelled five pixels. Without it every tap on a number would
+rearrange the sheet -- worse than the defect being fixed -- and the print
+toggle, which is the other thing on a label to tap, sits next to it.
+
+**The gesture is taken from the browser explicitly.** ``touch-action: none`` on
+``.observation-id`` stops a touch that starts on a number becoming a scroll or
+a double-tap zoom, and ``user-select: none`` there stops a mouse drag selecting
+the digits instead of moving them; ``preventDefault()`` on ``pointerdown`` does
+the rest. All three belong on the number, not on the document.
+
+**Nothing new listens on the page at rest.** ``pointerdown`` is bound on the
+numbers by Vue, and the three window listeners are added when a drag starts and
+removed when it ends. The six lines that dim the print toggles in on a mouse
+listen for ``mousemove`` and ``scroll``, passively, and were not touched: the
+toggle behaviour this issue's cheap half and issue 047 settled is exactly as it
+was, and ``.remove`` is still in the ``@media print`` hide list.
+
+**The preview follows the pointer for the whole drag** rather than only over
+the background, because on a touch screen the finger covers the number and the
+preview is the only feedback there is. It still reads ``--screen-scale`` and
+still offsets by 380 x 120 unscaled pixels, so it matches the grid at issue
+046's 50 %;
+``test_the_drag_preview_follows_the_finger_at_the_screen_zoom`` reads the
+computed matrix and would fail if either constant moved without the other.
+
+**Enabling Save is now deliberate.** It used to be a side effect: showing the
+preview set ``dragSpecies.visible``, and the label component's watcher reported
+that as an edit. So what enabled the button after a drag was passing over the
+gap between two labels, not moving anything. A completed move now emits
+``enable-save`` itself, and the preview is marked ``:preview`` so its watchers
+say nothing -- otherwise a gesture that landed nowhere would offer to save a
+sheet nobody had changed.
+
+What it was tested with, and what it was not
+============================================
+
+``browser_tests/test_label_editor.py`` grew six tests and a second browser
+context. The touch ones drive an emulated iPad: ``has_touch``, ``is_mobile``
+and 1080 x 810, which is the device landscape, and at 50 % zoom is three labels
+across with empty sheet beside them. The gesture is dispatched over the Chrome
+DevTools Protocol -- ``Input.dispatchTouchEvent`` -- rather than by calling a
+handler or constructing a ``PointerEvent`` in the page, so the browser does its
+own hit-testing, applies ``touch-action`` and decides for itself what pointer
+events to generate.
+
+=========================================== ================================
+ What it asserts                             How
+=========================================== ================================
+ A number moves to another label by touch    Two touch drags: one splits the
+                                             label, one merges it back
+ The same by mouse                           The two drag tests that were
+                                             there before, unchanged
+ A tap moves nothing                         ``touchscreen.tap`` on a number
+ A cancelled gesture changes nothing         ``touchCancel`` mid-drag
+ A release off the sheet changes nothing     Mouse, released on the Save
+                                             button
+ The preview tracks at 50 %                  The computed transform matrix,
+                                             mid-drag
+ The save cycle keeps the arrangement        Touch drag, save, reload
+=========================================== ================================
+
+Four of the six fail against the previous template, which is the point of
+writing them: the two that pass are the ones asserting that nothing happens,
+and before the rewrite nothing was what touch did anyway.
+
+**What this is not.** It is Chromium with touch emulation, not an iPad, and the
+engine that matters is iOS Safari's. The suite runs Chromium only:
+``Input.dispatchTouchEvent`` is a Chrome DevTools Protocol call and WebKit has
+no such thing, while Playwright's synchronous ``touchscreen`` can only tap, so
+the touch drag cannot be expressed against WebKit at all without giving up the
+browser's own event generation -- which is the half worth testing. Left for the
+maintainer, who has the device:
+
+* that iOS Safari raises ``pointerdown`` / ``pointermove`` / ``pointerup`` from
+  a finger on this page at all, and that ``touch-action: none`` is what keeps
+  Safari from taking the gesture as a scroll or a page zoom;
+* whether Safari's own gestures interrupt a drag -- the selection loupe, the
+  tap-and-hold callout, an edge swipe -- and whether the ``pointercancel``
+  handling is enough when one does;
+* that a 285-pixel preview under a finger is usable feedback on a 10-inch
+  screen, which is a judgement no assertion makes;
+* the cheap half's own measurements, which were headless WebKit and Chromium
+  at the device's metrics and have not been confirmed on the device either.
+
 What is left
 ============
 
-The large half, untouched: numbers still cannot be dragged between labels by
-touch, because ``dragstart`` / ``dragenter`` / ``dragover`` / ``drop`` are not
-generated from touch and never have been. That is the reported symptom this
-change does *not* fix. It wants **issue 017 first**: the rewrite is of the one
-part of the Vue application with no test coverage, and until 017's browser
-suite runs there is nothing that would catch a regression in it. ``Status``
-stays ``Accepted`` for that reason.
+Nothing in this issue. The reported symptom -- numbers cannot be dragged
+between labels -- is fixed, and the four bullets above are confirmations to
+make on the device rather than work this repository can do. Printing from
+Safari's Share menu remains as the cheap half left it: the button is there and
+does not print itself.
 
 See also
 ========

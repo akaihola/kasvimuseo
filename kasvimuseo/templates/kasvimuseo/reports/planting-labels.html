@@ -220,6 +220,15 @@
             transform: rotate(-3deg);
             cursor: move;
             transition: all 0.5s ease-in-out;
+            /* The number is dragged with pointer events (issue 045), so the
+               browser must not take the gesture for itself: ``touch-action:
+               none`` stops a touch that starts here from becoming a scroll or
+               a double-tap zoom, and ``user-select`` stops a mouse drag from
+               selecting the digits instead of moving them. Both belong on the
+               element the gesture starts on. */
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         li:hover .observation-id {
             transform: rotate(5deg);
@@ -289,7 +298,12 @@
             border: solid black 4px;
             padding: 0;
             position: absolute;
-            z-index: -1; /* prevent drag enter and flickering */
+            z-index: -1;
+            /* The preview follows the pointer, so it sits under it: without
+               this, ``elementFromPoint`` would answer "the preview" for every
+               position of the drag and no label could ever be the target
+               (issue 045). */
+            pointer-events: none;
             background: white;
         }
     </style>
@@ -300,9 +314,9 @@
 <body>
     <div id="app">
         <div id="drag-wrapper"
-             v-show="dragSpecies.visible"
+             v-show="dragPreview"
              :style="mouse">
-            <species-label :species="dragSpecies"></species-label>
+            <species-label :species="dragSpecies" :preview="true"></species-label>
         </div>
         <form method="GET" action=".">
             <label for="width">Box width:</label>
@@ -328,15 +342,13 @@
         <button onclick="window.print()">Print</button>
         {# What the chevrons choose: the label's own photo, read back since 039 (issue 037) #}
         <p id="photo-help">{% trans "The arrows over a photo change the photo of this label only, not the photo of the species. The choice is kept once you click “Save changes”; unsaved, it is lost when the page is reloaded. The photo of the species itself is chosen on the species page in the admin." %}</p>
-        <ul id="labels"
-            @dragenter="dragEnterBackground"
-            @dragover="dragOverBackground"
-            @drop.prevent="dropNewLabel">
+        {% comment %}No drop handlers here: a pointer drag is not delivered to
+        whatever it passes over, so the label under it is found by hit-testing
+        the release point instead. See dragRelease below (issue 045).
+        {% endcomment %}
+        <ul id="labels">
             <template v-for="species in object_list">
-                <species-label :species="species"
-                               @dragenter.stop.native="dragEnterLabel"
-                               @dragover.stop.native="allowDropOnLabel"
-                               @drop.stop.native="dragDropOnLabel"></species-label>
+                <species-label :species="species"></species-label>
             </template>
         </ul>
     </div>
@@ -368,27 +380,19 @@
             return parseFloat(value) || 1;
         }
 
+        // How far the pointer has to travel before the gesture counts as a
+        // drag rather than a tap. A finger never holds still, so without this
+        // every tap on a number would start one (issue 045).
+        const DRAG_THRESHOLD = 5;
+
         const dragMixin = {
             methods: {
-                setDragInfo: function(event, data) {
-                    window.dragData = data;
-                    return window.dragData;
-                },
-                getDragInfo: function() {
-                    return window.dragData;
-                },
                 getLabelData: function(node) {
                     const el = (node.nodeType === 1 ? node : node.parentElement),
                         label = el.closest('li');
                     return {
                         index: this.getElIndex(label),
                         speciesId: parseInt(label.dataset.speciesId)};
-                },
-                canDropToLabel: function(event) {
-                    const drag = this.getDragInfo(),
-                        target = this.getLabelData(event.target);
-                    return target.speciesId === drag.speciesId &&
-                        target.index !== drag.index;
                 },
                 getElIndex: function(el) {
                     for (var i = 0; el = el.previousElementSibling; i++);
@@ -480,42 +484,31 @@
                 '<div class="observation-ids">' +
                 '    <p v-for="(id, index) in ids"' +
                 '       class="observation-id"' +
-                '       draggable="true"' +
-                '       @dragstart="dragStart"' +
-                '       @dragend="dragEnd">' +
+                '       @pointerdown="dragStart">' +
                 '        [[ id ]]' +
                 '    </p>' +
                 '</div>',
                 methods: {
                     dragStart: function(event) {
-                        const label = this.getLabelData(event.target),
-                            externalId = parseInt(event.target.innerHTML);
-                        this.setDragInfo(
-                            event,
-                            {
-                                index: label.index,
-                                externalId: externalId,
-                                speciesId: label.speciesId,
-                                state: 'dragging',
-                                lastLabelIndex: label.index
-                            });
-                        event.dataTransfer.setData('text/plain', 'drag');
-                        event.dataTransfer.effectAllowed = "move";
-                        bus.$emit('set-drag-label', label.index, externalId);
-                    },
-                    dragEnd: function(event) {
-                        // event.target is null when dragging to another label!
-                        const drag = this.getDragInfo();
-                        if (drag.state === 'dragging' && drag.index !== drag.lastLabelIndex) {
-                            // Drop to another label was not authorized,
-                            // restore external ID on the original label.
-                            this.insort(this.ids, drag.externalId);
-                        } else if (drag.state === 'dropped' && this.ids.length === 0) {
-                            // The last remaining external ID was moved out of
-                            // a label to another label of the same species.
-                            // Remove the label.
-                            bus.$emit('remove-label-at-index', drag.index);
+                        // The whole gesture belongs to the root component --
+                        // it is the one holding the labels the number can land
+                        // on -- so this only says which number was taken, from
+                        // which label, and stops the browser doing anything of
+                        // its own with the press (issue 045).
+                        if (!event.isPrimary
+                            || (event.pointerType === 'mouse' && event.button !== 0)) {
+                            return;
                         }
+                        const label = this.getLabelData(event.target);
+                        event.preventDefault();
+                        bus.$emit('drag-start', {
+                            index: label.index,
+                            speciesId: label.speciesId,
+                            externalId: parseInt(event.target.textContent),
+                            pointerId: event.pointerId,
+                            startX: event.clientX,
+                            startY: event.clientY
+                        });
                     }
                 }
             },
@@ -615,7 +608,11 @@
             el: '#app',
             components: {
                 'species-label': {
-                    'props': ['species'],
+                    // ``preview`` marks the copy drawn under the pointer
+                    // rather than a label on the sheet: it is handed a new
+                    // species object every time a drag starts, and its
+                    // watchers would report that as an edit worth saving.
+                    'props': ['species', 'preview'],
                     delimiters: ['[[', ']]'],
                     mixins: [dragMixin],
                     components: labelComponents,
@@ -662,7 +659,9 @@
                     },
                     watch: {
                         'species.visible': function(newVal, oldVal) {
-                            bus.$emit('enable-save');
+                            if (!this.preview) {
+                                bus.$emit('enable-save');
+                            }
                         },
                         // Without this the Save button stays disabled after a
                         // photo is chosen, so the choice cannot be saved
@@ -670,102 +669,135 @@
                         // line above the sheet could not honestly say the
                         // choice is kept (issue 037).
                         'species.photo_pk': function(newVal, oldVal) {
-                            bus.$emit('enable-save');
+                            if (!this.preview) {
+                                bus.$emit('enable-save');
+                            }
                         }
                     }
                 }
             },
             methods: {
-                dragEnterBackground: function(event) {
-                    // when an external ID being dragged enters the background
-                    // area, show a "new label" indicator
-                    if (event.target.id === 'labels') {
-                        const drag = this.getDragInfo();
-                        if (drag.lastLabelIndex >= 0) {
-                            // Dragging from a label. For good browser
-                            // compatibility, don't rely on drag exit events.
-                            // Instead, trigger exit when entering elsewhere.
-                            this.dragExitLabel();
+                dragStart: function(start) {
+                    // A number has been pressed. Nothing moves yet -- a press
+                    // is a tap until it has travelled DRAG_THRESHOLD -- and
+                    // nothing is listening on the page until now either, so
+                    // the six lines that dim the print toggles in on a mouse
+                    // never see any of this.
+                    if (this.drag) {
+                        return;
+                    }
+                    this.drag = Object.assign({moved: false}, start);
+                    window.addEventListener('pointermove', this.dragMove);
+                    window.addEventListener('pointerup', this.dragRelease);
+                    window.addEventListener('pointercancel', this.dragCancel);
+                },
+                dragMove: function(event) {
+                    const drag = this.drag;
+                    if (!drag || event.pointerId !== drag.pointerId) {
+                        return;
+                    }
+                    if (!drag.moved) {
+                        if (Math.abs(event.clientX - drag.startX)
+                            + Math.abs(event.clientY - drag.startY)
+                            < DRAG_THRESHOLD) {
+                            return;
                         }
-                        event.preventDefault();
-                        event.dropEffect = 'move';
-                        this.dragSpecies.visible = true;
-                        drag.lastLabelIndex = -1;  // background = -1
+                        drag.moved = true;
+                        // The preview is a copy of the label the number came
+                        // from, carrying that number alone.
+                        this.dragSpecies = JSON.parse(JSON.stringify(
+                            this.object_list[drag.index]));
+                        this.dragSpecies.external_ids = [drag.externalId];
+                        this.dragPreview = true;
+                    }
+                    // Keep the pointer on the same spot of the preview
+                    // whatever the screen scale is: 380 x 120 unscaled
+                    // pixels into the label is where its external IDs sit.
+                    const scale = screenScale(),
+                        x = event.pageX - 380 * scale,
+                        y = event.pageY - 120 * scale;
+                    this.mouse = `transform: translate(${x}px, ${y}px) scale(${scale});`;
+                },
+                dropTarget: function(event) {
+                    // What is under the pointer: a label, the empty part of
+                    // the sheet ('background'), or nothing that takes a drop.
+                    // Hit-testing the release point is what replaces the
+                    // dragenter/dragover trail -- a pointer drag is delivered
+                    // to whoever the gesture started on, not to what it passes
+                    // over, and the preview is pointer-events: none so it is
+                    // never the answer.
+                    const el = document.elementFromPoint(event.clientX,
+                                                         event.clientY);
+                    if (!el) {
+                        return null;
+                    }
+                    const label = el.closest('#labels li');
+                    if (label) {
+                        return {index: this.getElIndex(label),
+                                speciesId: parseInt(label.dataset.speciesId)};
+                    }
+                    return el.closest('#labels') ? 'background' : null;
+                },
+                dragRelease: function(event) {
+                    const drag = this.drag;
+                    if (!drag || event.pointerId !== drag.pointerId) {
+                        return;
+                    }
+                    const target = drag.moved ? this.dropTarget(event) : null,
+                        label = this.object_list[drag.index];
+                    if (target === 'background') {
+                        this.splitToNewLabel(label, drag.externalId);
+                    } else if (target && target.index !== drag.index
+                               && target.speciesId === drag.speciesId) {
+                        this.moveToLabel(label,
+                                         this.object_list[target.index],
+                                         drag.externalId);
+                    }
+                    // Anything else -- a tap, a release over another species,
+                    // a release off the sheet -- leaves the labels alone.
+                    this.dragStop();
+                },
+                dragCancel: function(event) {
+                    // The browser took the gesture back: a phone call, a
+                    // system edge swipe, the finger leaving the digitiser.
+                    // Nothing has been moved yet, so there is nothing to undo.
+                    if (this.drag && event.pointerId === this.drag.pointerId) {
+                        this.dragStop();
                     }
                 },
-                dragExitBackground: function(event) {
-                    // When an external ID being dragged exits the background
-                    // area, hide the "new label" indicator. This is also
-                    // called whenever another element inside the <ul> is
-                    // entered (but not on Chrome).
-                    if (event.target.nodeType === 1) {
-                        this.dragSpecies.visible = false;
-                    }
+                dragStop: function() {
+                    window.removeEventListener('pointermove', this.dragMove);
+                    window.removeEventListener('pointerup', this.dragRelease);
+                    window.removeEventListener('pointercancel', this.dragCancel);
+                    this.drag = null;
+                    this.dragPreview = false;
                 },
-                dragOverBackground: function(event) {
-                    if (event.target.id === 'labels') {
-                        // Keep the pointer on the same spot of the preview
-                        // whatever the screen scale is: 380 x 120 unscaled
-                        // pixels into the label is where its external IDs sit.
-                        const scale = screenScale(),
-                            x = event.pageX - 380 * scale,
-                            y = event.pageY - 120 * scale;
-                        event.preventDefault();
-                        this.mouse = `transform: translate(${x}px, ${y}px) scale(${scale});`;
-                    }
+                moveToLabel: function(from, to, externalId) {
+                    this.insort(to.external_ids, externalId);
+                    this.dropped(from, externalId);
                 },
-                dropNewLabel: function(event) {
-                    const drag = this.getDragInfo(),
-                        newLabel = JSON.parse(JSON.stringify(this.object_list[drag.index]));
-                    this.object_list.splice(drag.index + 1, 0, newLabel);
-                    newLabel.external_ids.splice(0);
-                    this.insort(newLabel.external_ids, drag.externalId);
+                splitToNewLabel: function(from, externalId) {
+                    const newLabel = JSON.parse(JSON.stringify(from));
+                    newLabel.external_ids = [externalId];
+                    this.object_list.splice(
+                        this.object_list.indexOf(from) + 1, 0, newLabel);
                     // force refresh layout of the new label:
                     this.$set(newLabel, 'photo', newLabel.photo);
-                    this.dragSpecies.visible = false;
-                    drag.state = 'dropped';
+                    this.dropped(from, externalId);
                 },
-                dragEnterLabel: function(event) {
-                    const drag = this.getDragInfo(),
-                        enteredLabel = this.getLabelData(event.target);
-                    if (drag.lastLabelIndex === -1) { // background
-                        // For good browser compatibility, don't rely on drag
-                        // exit events. Trigger them manually when entering
-                        // another element.
-                        this.dragExitBackground(event);
-                    } else if (drag.lastLabelIndex !== enteredLabel.index) {
-                        this.dragExitLabel();
+                dropped: function(from, externalId) {
+                    const externalIds = from.external_ids;
+                    externalIds.splice(externalIds.indexOf(externalId), 1);
+                    if (externalIds.length === 0) {
+                        // The last number was moved off this label, so there
+                        // is nothing left for it to print.
+                        this.object_list.splice(
+                            this.object_list.indexOf(from), 1);
                     }
-                    if (drag.lastLabelIndex !== enteredLabel.index
-                        && enteredLabel.speciesId === drag.speciesId) {
-                        // Coming from background or another label, and
-                        // dragging the same species as the entered label. Add
-                        // the dragged external ID to this label.
-                        event.preventDefault();
-                        const labelData = this.object_list[enteredLabel.index];
-                        this.insort(labelData.external_ids, drag.externalId);
-                    }
-                    drag.lastLabelIndex = enteredLabel.index;
-                },
-                dragExitLabel: function() {
-                    // Remove the dragged external ID from the label upon exit
-                    const drag = this.getDragInfo(),
-                        labelData = this.object_list[drag.lastLabelIndex],
-                        externalIds = labelData.external_ids;
-                    externalIds.splice(externalIds.indexOf(drag.externalId), 1);
-                },
-                allowDropOnLabel: function(event) {
-                    // handler for both ondragover and ondrop for labels
-                    if (this.canDropToLabel(event)) {
-                        event.preventDefault();
-                    }
-                },
-                dragDropOnLabel: function(event) {
-                    // handler for both ondragover and ondrop for labels
-                    if (this.canDropToLabel(event)) {
-                        event.preventDefault();
-                        this.getDragInfo().state = 'dropped';
-                    }
+                    // Explicit, rather than the side effect of the preview
+                    // becoming visible that used to enable the button: the
+                    // sheet now differs from what was loaded.
+                    bus.$emit('enable-save');
                 },
                 save: function(event) {
                     // The cookie is issued because this page now renders the
@@ -814,7 +846,14 @@
             },
             data: {
                 object_list: [],
-                dragSpecies: {visible: false, all_photos: {}},
+                // The label drawn under the pointer while a number is being
+                // dragged. ``visible`` is the print tick of the copy, not
+                // whether the preview is shown -- that is ``dragPreview``, so
+                // that showing the preview does not look like a label being
+                // taken out of the print run.
+                dragSpecies: {visible: true, all_photos: {}},
+                dragPreview: false,
+                drag: null,
                 mouse: '',
                 isSaving: false,
                 disableSave: true
@@ -848,17 +887,8 @@
                               + 'keeps happening the response is arriving '
                               + 'incomplete -- see issue 044.');
                     });
-                bus.$on('remove-label-at-index', function(index) {
-                    that.object_list.splice(index, 1);
-                });
-                bus.$on('set-drag-label', function(index, externalId) {
-                    if (index === undefined) {
-                        that.dragSpecies.visible = false;
-                    } else {
-                        that.dragSpecies = JSON.parse(JSON.stringify(that.object_list[index]));
-                        that.dragSpecies.external_ids = [externalId];
-                        that.dragSpecies.visible = false;
-                    }
+                bus.$on('drag-start', function(start) {
+                    that.dragStart(start);
                 });
                 bus.$on('enable-save', function() {
                     that.disableSave = false;
