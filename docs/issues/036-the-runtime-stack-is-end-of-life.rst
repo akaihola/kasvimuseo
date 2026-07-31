@@ -73,9 +73,11 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-No stage started. One obstacle is out of the way: 019 is ``Fixed``, so
+No stage started. Two obstacles are out of the way: 019 is ``Fixed``, so
 ``MIDDLEWARE_CLASSES`` is now written out in ``common_settings`` and Stage 11
-has a list to rename rather than an absence to notice. This issue tracks the
+has a list to rename rather than an absence to notice; and 016 is ``Fixed``, so
+Stage 10's source work no longer includes the ``filter()`` that would have
+corrupted every derived photo slug. This issue tracks the
 programme; the individual obstacles have their own issues:
 
 ============ ===========================================================
@@ -84,7 +86,7 @@ Issue        Blocks or complicates
 019          MIDDLEWARE -- fixed; Stage 8 renames an explicit list
 023          contrib.messages -- required from Stage 5
 024          ``TEMPLATE_DIRS`` python2.7 path -- blocks Stage 10
-016          ``remove_diacritics`` -- silent corruption at Stage 10
+016          ``remove_diacritics`` -- fixed; Stage 10 has nothing to do here
 027          No upper bounds -- every stage needs a real lock
 028, 029     Pillow and setuptools ceilings on specific stages
 030          Early stages need a period-appropriate build image
