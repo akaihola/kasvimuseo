@@ -542,6 +542,25 @@ So:
 Pillow 9.5.0 is the last release that satisfies both sides, and it is the right
 pin for every stage up to and including 16.
 
+**Decided** (issue 028). ``Pillow<10`` through Stage 16 and ``Pillow>=9.1``
+from Stage 17, with 9.5.0 as the pin for everything in between; Stage 10 is
+where 6.2.2 becomes 9.5.0. The constraint is written where the versions are
+set rather than only here: beside the ``Pillow==6.2.2`` pin in
+``dev/Containerfile``, beside ``django-photologue`` in
+``requirements/production.txt`` -- which is the pin that implies it and does
+not name Pillow at all -- and beside the unpinned resolution in the production
+``Dockerfile``. Nothing was upgraded to record it.
+
+Measured while recording it: with ``Image.ANTIALIAS`` deleted, the suite fails
+five tests, not none. Four are the admin photo changelist, which builds
+``admin_thumbnail`` -- a *cropping* size, and photologue's crop branch resizes
+unconditionally. The public reports use ``display``, which does not crop, and
+the non-crop branch returns early rather than upscale, so no test had ever
+scaled an image down. The fifth is the one added with this decision,
+``test_reports_build_an_uncached_photo_size``: a species report, a cold cache
+and a photo twice the ``display`` size. Both call sites are now covered, and
+the page the garden actually serves is one of them.
+
 3b.2 gunicorn ≤ 20.1.0 versus setuptools ≥ 82
 ----------------------------------------------
 
@@ -565,6 +584,21 @@ Unbounded resolution of Stages 13–15 selects ``gunicorn==20.1.0`` *and*
 The fix is free: **go to gunicorn 21.2.0 as early as Stage 10.** It requires only
 Python ≥ 3.5, it is independent of Django, and it removes the constraint
 permanently. There is no reason to spend stages sitting on gunicorn 20.
+
+**Decided** (issue 029). That is the ruling: 0.17.4 → 21.2.0 at Stage 10,
+skipping 19.x and 20.x, and **no** ``setuptools<82`` bound is carried by any
+stage. Stage 10 says so, and the reason is recorded beside the ``gunicorn``
+pin in ``requirements/production.txt``, which is the only place the version is
+set. The pin itself does not change here: 0.17.4 runs on Python 2.7, where
+setuptools 82 does not exist. Nothing else depends on the choice --
+``dev/kasvimuseo app run`` has served the development site through gunicorn
+since issue 044, but it runs the same interpreter and the same pin as
+production, so it is affected exactly when production is, which today is not
+at all. The one thing to carry into Stage 10 is that 19.7.1 removed the
+``run_gunicorn`` management command, which is skipped over rather than passed
+through: nothing in the repository invokes it -- ``dev/kasvimuseo app run``
+runs the ``gunicorn`` executable -- and the ``INSTALLED_APPS`` entry that
+command needed is issue 021.
 
 3b.3 django-sortedm2m < 2.0.0 cannot be built by a modern toolchain
 --------------------------------------------------------------------
@@ -591,6 +625,27 @@ problem if someone tries to rebuild an early stage on a current machine.
 ``setuptools<60``, which will not import on Python 3.12+ (no ``distutils``), and
 no older interpreter was available. The failure is confirmed; the fix is
 inferred.
+
+**Decided** (issue 030). Nothing to pin and nothing to change: the constraint
+is on the *builder*, not on the version, and every stage that needs sortedm2m
+1.1.1-1.5.0 is built in an image old enough to satisfy it. What was owed was
+the record, and it is now beside the ``django-sortedm2m==1.5.0`` pin in
+``dev/Containerfile`` -- the only place the version is set -- so that a build
+failure on a current machine is recognised rather than debugged from scratch.
+Should a stage ever have to be built on a modern toolchain, the way out is
+sortedm2m 2.0.0, the first release with a wheel -- which is a Django 1.11
+floor and therefore not available before Stage 9.
+
+**The hedge above no longer applies.** An interpreter with ``distutils`` was
+available after all (``nix-shell -p python311``), so the workaround was
+measured: on Python 3.11.15, ``django-sortedm2m==1.5.0`` builds and installs
+under setuptools 59.8.0 and fails under 83.0.0 with exactly the
+``UltraMagicString`` traceback above. The boundary is the setuptools in the
+environment, not the Python version -- and pip does not isolate the build of
+these sdists, because they carry no ``pyproject.toml``, so the ambient
+setuptools is the one that decides. The Stage 10 image was checked too:
+``python:3.7-alpine`` ships setuptools 57.5.0 and installs sortedm2m 1.5.0
+without complaint. Issue 030 has the numbers.
 
 3b.4 What is *not* a problem
 -----------------------------
@@ -811,12 +866,15 @@ ceiling versions:
 
 * ``Pillow`` 6.2.2 → **9.5.0** — the highest that still has ``Image.ANTIALIAS``,
   which photologue needs until 3.16 (3b.1), and the highest that supports
-  Python 3.7
+  Python 3.7. This is the decided pin for every stage from here to 16, not an
+  upper limit to be relaxed if a resolver offers more (issue 028).
 * ``psycopg2-binary`` stays 2.8.6 (still the ceiling until Django 3.1)
-* ``gunicorn`` → **21.2.0**, skipping 19.x and 20.x entirely. It needs only
-  Python ≥3.5, is independent of Django, and is the first release free of
-  ``pkg_resources`` (3b.2). Sitting on gunicorn 20 buys nothing and costs a
-  ``setuptools<82`` constraint for the next eight stages.
+* ``gunicorn`` → **21.2.0**, skipping 19.x and 20.x entirely — **decided**,
+  issue 029. It needs only Python ≥3.5, is independent of Django, and is the
+  first release free of ``pkg_resources`` (3b.2). Sitting on gunicorn 20 buys
+  nothing and costs a ``setuptools<82`` constraint for the next eight stages,
+  so no stage carries one. This is the stage where gunicorn moves at all: it
+  stays on 0.17.4 through Stage 9, where Python 2.7 makes the question moot.
 * ``selenium`` 3.141.0 → 4.x, ``Fabric`` 1.6 → 3.x *or* delete both (see Part 5)
 
 The full resolved lock for this stage — and every stage after it — is in

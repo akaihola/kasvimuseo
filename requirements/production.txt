@@ -1,11 +1,34 @@
+# Direct pins only. The upper bounds these packages need are not in anybody's
+# metadata -- the old ones declare lower bounds and nothing else -- so the ones
+# that are known are written beside the pin that implies them, with the issue
+# that establishes them. `setup.py` reads this file line by line into
+# `install_requires`; setuptools drops the comments.
 django==1.5.1
 django-extensions==1.5.9
 django-grappelli==2.4.5
 django-indexer==0.3.0
 django-jqm @ https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip
 django-paging==0.2.4
+# Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
+# stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
+# constraints picks exactly that pair, a gunicorn that cannot import. This pin
+# is unaffected: 0.17.4 runs on Python 2.7, where setuptools 82 does not exist.
+# The remedy is a plan decision rather than a bound here -- go straight to
+# gunicorn 21.2.0 at the Python 3 flip (upgrade plan Stage 10), skipping 19.x
+# and 20.x, so no `setuptools<82` has to be carried through eight stages.
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
 six==1.11.0
 south==0.8.1
+# Issue 028: this pin implies Pillow<10. photologue up to and including
+# 3.15.1 calls `Image.ANTIALIAS`, which Pillow removed in 10.0.0, and the
+# call is reached only when a cached photo size is missing -- so it is a 500 on
+# page render, invisible to anyone with a warm cache. Pillow is not in this
+# file at all (issue 027): `dev/Containerfile` pins it to 6.2.2, the last
+# release for Python 2.7, and the production image resolves it, bounded only by
+# the interpreter. Move to Pillow 9.5.0 at the Python 3 flip (upgrade plan
+# Stage 10): it is the last release that still has `ANTIALIAS` and the first
+# side of the constraint from photologue 3.16 on, which uses
+# `Image.Resampling.LANCZOS` and so needs `Pillow>=9.1` -- not the
+# `Pillow>=9` its own metadata declares.
 django-photologue==2.6.1
