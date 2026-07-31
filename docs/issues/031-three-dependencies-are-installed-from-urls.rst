@@ -31,10 +31,14 @@ package index:
     commit, so at least reproducible, but still a personal repository. Used
     only by ``fabfile.py``.
 
-``podman-compose`` (``integration-tests.txt``)
+``podman-compose`` (``integration-tests.txt``) -- **gone**
     ``https://github.com/containers/podman-compose/archive/devel.zip`` --
-    pinned to a **moving branch**, not a release or a commit. What this
-    installs changes without notice.
+    pinned to a **moving branch**, not a release or a commit, so what it
+    installed changed without notice. It was there for the browser suite's
+    ``docker-compose.yml``, and issue 017 deleted both the suite and
+    ``requirements/integration-tests.txt`` with it, so this third one is no
+    longer a live problem. Two are: the title and the count above are left as
+    they were filed, and this is the correction rather than a rewrite.
 
 None have a version history that can be reasoned about, which is why
 ``docs/dependency-inventory.rst`` has to list them separately from the other
@@ -45,8 +49,9 @@ Impact
 
 Builds are not reproducible and not offline-capable. A GitHub outage, a renamed
 repository or a deleted account breaks production deployment, not just
-development. ``devel.zip`` in particular means the integration test environment
-can change under the project with no commit to show for it.
+development. ``devel.zip`` in particular meant the integration test environment
+could change under the project with no commit to show for it -- which is no
+longer true, because that environment is gone (issue 017).
 
 ``django-jqm`` is the one that matters, because it is a production dependency.
 
@@ -64,5 +69,5 @@ Options
     the same job. See issue 032.
 
 ``podman-compose``
-    Pin to a release or a commit at minimum. It is development tooling, so this
-    is the least urgent of the three.
+    Nothing left to do: it was development tooling for the browser suite, and
+    both went with issue 017.
