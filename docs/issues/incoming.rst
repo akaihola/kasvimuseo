@@ -45,6 +45,9 @@ Waiting
   <048-the-dev-server-loads-photos-from-the-production-media-host>` rather than
   a template one, and it would be the more useful thing to fix first.
 
+  It's good to have iPad Safari debug capability before tackling this issue.
+  See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
+
 * **The species list page names a photo size that is not in the initial data.**
   ``reports/planted-species-list.html`` renders
   ``species.photo.get_mobilethumbnail_url``, but
