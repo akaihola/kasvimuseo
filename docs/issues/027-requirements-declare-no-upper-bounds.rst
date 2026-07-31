@@ -141,6 +141,15 @@ package produced an environment with no Pillow, where importing photologue
 fails; now it declares all ten runtime packages, because the file it reads is
 the whole set.
 
+That is not only a hypothetical installer. ``ansible/install.yaml`` deploys by
+``pip install git+ssh://...kasvimuseo.git`` -- the package, not the
+requirements file -- so ``install_requires`` is what the production server
+resolves from, with ``--no-deps`` set in ``fabfile.py``'s environment for the
+older path. Pillow reached that server either by photologue's unbounded
+``Pillow>=2.0.0`` or not at all; it is a pin now. The comment in ``fabfile.py``
+that called ``--no-deps`` the fix for "the photologue/Pillow problem" says what
+it now is instead, until issue 032 deletes the file.
+
 What 030's record cost
 ======================
 
