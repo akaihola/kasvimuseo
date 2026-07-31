@@ -20,7 +20,7 @@ Issue 023: django.contrib.messages is configured but not installed
     out into ``common_settings``, so the app entry was all that was left of this
     issue. It changes nothing that runs today and is required by the admin's
     system checks from Django 1.7, Stage 5 of the upgrade plan.
-:Resolution: RESOLUTION_COMMIT -- the ``INSTALLED_APPS`` entry in
+:Resolution: 386f88c -- the ``INSTALLED_APPS`` entry in
     ``ylaneenkasvit/common_settings.py``, the test that pins it, and the
     upgrade plan's two now-stale sentences about it
 
