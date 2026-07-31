@@ -73,18 +73,19 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-No stage started. Two obstacles are out of the way: 019 is ``Fixed``, so
+No stage started. Three obstacles are out of the way: 019 is ``Fixed``, so
 ``MIDDLEWARE_CLASSES`` is now written out in ``common_settings`` and Stage 11
-has a list to rename rather than an absence to notice; and 016 is ``Fixed``, so
-Stage 10's source work no longer includes the ``filter()`` that would have
-corrupted every derived photo slug. This issue tracks the
-programme; the individual obstacles have their own issues:
+has a list to rename rather than an absence to notice; 023 is ``Fixed`` with it,
+so ``django.contrib.messages`` is installed and Stage 5 will not meet an admin
+system check it fails; and 016 is ``Fixed``, so Stage 10's source work no longer
+includes the ``filter()`` that would have corrupted every derived photo slug.
+This issue tracks the programme; the individual obstacles have their own issues:
 
 ============ ===========================================================
 Issue        Blocks or complicates
 ============ ===========================================================
 019          MIDDLEWARE -- fixed; Stage 8 renames an explicit list
-023          contrib.messages -- required from Stage 5
+023          contrib.messages -- fixed; the app is installed for Stage 5
 024          ``TEMPLATE_DIRS`` path -- fixed; Stage 10 has one item less
 016          ``remove_diacritics`` -- fixed; Stage 10 has nothing to do here
 027          No upper bounds -- every stage needs a real lock

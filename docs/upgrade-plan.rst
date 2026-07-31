@@ -438,11 +438,14 @@ of ``None`` and Django **2.0 deleted** ``MIDDLEWARE_CLASSES`` and made
 ``MIDDLEWARE`` default to ``[]``. At Django 2.0 the site will therefore run with
 *no middleware whatsoever* — no sessions, no auth, no CSRF, no admin — and it
 will not raise an obvious error. Define ``MIDDLEWARE`` explicitly **now**, while
-it is still just a no-op restatement of the current default.
+it is still just a no-op restatement of the current default. *Done* -- issue 019
+wrote the 1.5 default out into ``common_settings``, under the name Django 1.5
+reads; Stage 8 renames it.
 
 **No** ``django.contrib.messages`` **app.** Its context processor is configured
 but the app is not in ``INSTALLED_APPS``. The admin requires it from Django 1.7
-onwards. Add it in Stage 0.
+onwards. Add it in Stage 0. *Done* -- issue 023 added the entry; the app carries
+no models, so nothing had to be migrated for it.
 
 Python 2 → 3 code work (Stage 10)
 ---------------------------------
@@ -636,8 +639,10 @@ Cheap, zero-risk, and it shortens every later stage.
 #. Remove ``'gunicorn'`` from ``INSTALLED_APPS``. It was only ever there for the
    ``run_gunicorn`` management command, which gunicorn deleted in 19.7.1.
    Gunicorn itself stays as the WSGI server.
-#. Add ``'django.contrib.messages'`` to ``INSTALLED_APPS``.
+#. Add ``'django.contrib.messages'`` to ``INSTALLED_APPS``. **Done** -- issue
+   023.
 #. Add an explicit ``MIDDLEWARE_CLASSES`` equal to today's effective default.
+   **Done** -- issue 019.
 #. Delete the dead ``/media/grappelli/`` URL pattern in ``ylaneenkasvit/urls.py``.
    It serves ``os.path.dirname(grappelli.__file__)/media``, and grappelli 2.4.5
    has no ``media/`` directory — verified by listing its sdist. Delete

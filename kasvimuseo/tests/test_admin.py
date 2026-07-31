@@ -171,9 +171,9 @@ def test_planted_species_report_with_only_null_external_ids(
 def test_planted_species_report_through_the_admin(admin_client):
     """The action really is reachable, and ``message_user`` really works.
 
-    Issue 023 notes that ``django.contrib.messages`` is not in
-    ``INSTALLED_APPS``; its middleware nevertheless is, by way of Django's
-    default ``MIDDLEWARE_CLASSES``, which is what ``message_user`` needs.
+    ``message_user`` needs ``MessageMiddleware``, which the explicit
+    ``MIDDLEWARE_CLASSES`` carries (issue 019); the app itself is in
+    ``INSTALLED_APPS`` since issue 023.
     """
     factories.create_species(name_fi='valkonarsissi', external_id=11)
     factories.create_species(name_fi='nimetön', external_id=None)
