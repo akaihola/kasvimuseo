@@ -16,8 +16,8 @@ Issue 048: The dev server loads photos from the production media host
     028 -- the derived sizes, which are generated locally but were addressed
     remotely
     042 -- replacing a species photo, which is photo work done in development
-    022 -- the dead ``/media/grappelli/`` route, now declared ahead of the one
-    that serves ``/media/``
+    022 -- the dead ``/media/grappelli/`` route, which this fix left declared
+    ahead of the one that serves ``/media/``; 022 has since deleted it
 :Decision: Ruled on 2026-07-29: **option 3**, local first with the production
     media host as the fallback. The current behaviour was deliberate (see "Why
     it is like this"), so this was a design change rather than a repair.
@@ -198,7 +198,9 @@ Traps found on the way
 * **The 260 MB is still worth fetching** for the printable and compact species
   reports, which open the files rather than linking them (issue 011). The
   fallback cannot help those, which is why ``media fetch`` stays.
-* **``/media/grappelli/`` shadows the new route**, because issue 022's dead
-  route is declared first and matches that prefix. Nothing is lost -- no
-  ``grappelli/`` directory exists under ``MEDIA_ROOT`` either -- but it is one
-  more reason to delete it.
+* **``/media/grappelli/`` shadowed the new route**, because issue 022's dead
+  route was declared first and matched that prefix. Nothing was lost -- no
+  ``grappelli/`` directory exists under ``MEDIA_ROOT`` either -- but it was one
+  more reason to delete it, and 022 since has. The prefix is ordinary media
+  now; no other ``/media/`` path was ever reached by that pattern, so nothing
+  here changed with it.

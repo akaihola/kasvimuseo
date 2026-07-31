@@ -12,9 +12,11 @@ import io
 import os
 
 import pytest
+from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission, User
-from django.core.urlresolvers import reverse
+from django.contrib.staticfiles import finders
+from django.core.urlresolvers import resolve, reverse
 from django.test.utils import override_settings
 from django.utils.translation import ugettext
 
@@ -320,6 +322,44 @@ def test_grappelli_urls_are_wired(admin_client):
     assert url.startswith('/grappelli/')
     assert response.status_code == 200
     assert plot.name in content(response)
+
+
+# Issue 022: the dead ``/media/grappelli/`` route is gone, and with it
+# ``ADMIN_MEDIA_PREFIX``. These pin what serves the admin's chrome instead.
+
+def test_the_admin_gets_its_grappelli_assets_from_staticfiles(admin_client):
+    """The stylesheet is named under ``STATIC_URL`` and found in the package.
+
+    grappelli 2.4.5 keeps its assets in ``static/``; the deleted route pointed
+    at a ``media/`` directory the package does not have. Nothing consults
+    ``ADMIN_MEDIA_PREFIX`` either -- grappelli's own ``admin/base.html`` fills
+    ``window.__admin_media_prefix__`` from ``{% static "grappelli/" %}``.
+    """
+    stylesheet = 'grappelli/stylesheets/screen.css'
+
+    response = admin_client.get(reverse('admin:index'))
+
+    assert settings.STATIC_URL + stylesheet in content(response)
+    assert finders.find(stylesheet) is not None
+
+
+def test_media_under_grappelli_reaches_the_media_view(client, db, media_root):
+    """The deleted route matched this prefix ahead of the ``media`` one.
+
+    It served a directory that does not exist, so it 404ed everything; the
+    ordering is the only thing it ever decided (issue 048). With it gone the
+    prefix is ordinary media, served from ``MEDIA_ROOT`` like any other path.
+    """
+    os.mkdir(os.path.join(media_root, 'grappelli'))
+    with io.open(os.path.join(media_root, 'grappelli', 'kukka.jpg'),
+                 'wb') as image_file:
+        image_file.write(jpeg_bytes())
+
+    response = client.get('/media/grappelli/kukka.jpg')
+
+    assert resolve('/media/grappelli/kukka.jpg').url_name == 'media'
+    assert response.status_code == 200
+    assert b''.join(response.streaming_content) == jpeg_bytes()
 
 
 def test_unknown_url_returns_404(client, db):

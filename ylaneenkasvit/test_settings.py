@@ -48,7 +48,6 @@ DATABASES['default'].update({  # noqa: F405
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 
 STATIC_URL = '/static/'
-ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 MEDIA_URL = '/media/'
 # Tests that need real image files override this with a temporary directory;
 # see the ``media_root`` fixture in ``kasvimuseo/tests/conftest.py``. The
