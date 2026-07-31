@@ -1,0 +1,11 @@
+# The browser tests run on the host's Python 3, not in the Python 2.7 app
+# container, so nothing here is installed anywhere near the application. uv
+# resolves this file per run; see `dev/kasvimuseo app browser-test`.
+#
+# playwright is pinned loosely on purpose: the browser build it downloads has
+# to match the library, so the pair must be free to move together. The browsers
+# themselves are never installed by the script -- CI runs `playwright install
+# chromium`, and a development machine points PLAYWRIGHT_BROWSERS_PATH at the
+# copy it already has.
+playwright~=1.61.0
+pytest~=8.4
