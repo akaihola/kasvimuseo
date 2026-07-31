@@ -22,6 +22,7 @@
 /dev/__pycache__/
 /ylaneenkasvit/local_settings.py
 /kasvimuseo/.pytest_cache/
+/browser_tests/.pytest_cache/
 /.pytest_cache/
 # sphinx-autoapi's generated pages; scratch, deleted after each build
 /docs/api/

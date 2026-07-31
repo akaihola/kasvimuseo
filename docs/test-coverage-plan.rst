@@ -52,11 +52,13 @@ There are two existing suites:
     ``photologue.models.Photo`` entirely, so they cannot catch a change in the
     photologue API -- only a regression in our own grouping logic.
 
-``integration_tests/``
-    SeleniumBase browser tests. They hardcode ``http://localhost:8000/`` and a
-    real username/password, and ``conftest.py`` asserts the login page URL is
-    ``/admin/`` before logging in. Effectively unrunnable. Excluded from this
-    plan's coverage targets; see `Out of scope`_.
+``integration_tests/`` -- **deleted since**
+    SeleniumBase browser tests. They hardcoded ``http://localhost:8000/`` and a
+    real username/password, and ``conftest.py`` asserted the login page URL was
+    ``/admin/`` before logging in. Effectively unrunnable, which is why this
+    plan excluded them; see `Out of scope`_. Issue 017 replaced them with
+    ``browser_tests/``, on the host's Python 3, and the password turned out to
+    be production's (issue 050).
 
 
 What the Django 1.5 testing docs give us
@@ -313,9 +315,11 @@ the P4 admin changelist smoke tests, and should be **excluded from the coverage
 target** rather than chased.
 
 Also excluded: ``kasvimuseo/migrations/`` (South history, replaced by
-``syncdb`` in tests), and ``integration_tests/`` -- fixing the SeleniumBase
-suite means pointing it at ``LiveServerTestCase`` instead of a hardcoded
-``localhost:8000`` and a real password, which is its own piece of work.
+``syncdb`` in tests), and the browser suite, which was its own piece of work and
+has since been done -- not as the ``LiveServerTestCase`` this sentence assumed,
+because no browser stack supports Python 2.7 any more, but as ``browser_tests/``
+on the host. It is measured by nothing here: this plan's coverage numbers are
+``coverage run -m pytest`` inside the container, and that suite runs outside it.
 
 
 Targets and definition of done
@@ -439,8 +443,9 @@ remove the file access. See ``docs/issues/011``.
 
 The 626-line Vue label editor in ``planting-labels.html`` is covered only at
 the server contract level -- 200, the mount point, the data endpoint URL and
-the Vue script. Its real behaviour needs a browser, i.e. a repaired
-``integration_tests/`` suite; see ``docs/issues/017``.
+the Vue script. Its real behaviour needs a browser, and has one since issue 017:
+``browser_tests/``, run by ``dev/kasvimuseo app browser-test``. It is a separate
+suite on a separate interpreter, so it adds nothing to the figures above.
 
 
 Sequencing
