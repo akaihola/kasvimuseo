@@ -457,9 +457,12 @@ Python 2 → 3 code work (Stage 10)
   crash. Done ahead of the stage (issue 016): it is a ``u''.join(...)`` over the
   same condition, which returns a text string on both versions and returned
   exactly what ``filter()`` did on Python 2.
-* ``common_settings.py`` hardcodes
+* ``common_settings.py`` used to hardcode
   ``here('..', 'lib', 'python2.7', 'site-packages', 'photologue', 'templates')``
-  in ``TEMPLATE_DIRS``. Remove it — ``APP_DIRS`` finds photologue's templates.
+  in ``TEMPLATE_DIRS``. **Done already** (issue 024): the entry is deleted and
+  photologue's templates come from the app template loader, which is in the
+  Django 1.5 default ``TEMPLATE_LOADERS`` this project does not override. It
+  had stopped resolving long before — nothing to do at this stage.
 * ``u'…'`` literals (≈200) are valid again from Python 3.3; leave them alone.
 
 
@@ -731,9 +734,11 @@ Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 --------------------------------------
 
 * ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS`` / ``TEMPLATE_DEBUG`` →
-  a single ``TEMPLATES`` setting with ``APP_DIRS = True``. This is also where
-  the hardcoded ``lib/python2.7/site-packages/photologue/templates`` path
-  disappears — a prerequisite for Stage 10.
+  a single ``TEMPLATES`` setting with ``APP_DIRS = True``. ``TEMPLATE_DIRS`` is
+  by now the project's own ``templates/`` and nothing else: the hardcoded
+  ``site-packages`` path to photologue's templates went in issue 024, ahead of
+  this stage, so ``APP_DIRS = True`` restates what the 1.5 default loaders were
+  already doing.
 * ``django.core.context_processors`` → ``django.template.context_processors``.
 * ``django.contrib.admin.util`` → ``django.contrib.admin.utils`` in
   ``kasvimuseo_admin_list.py``.
