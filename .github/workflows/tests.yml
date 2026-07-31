@@ -14,8 +14,14 @@
 
 name: tests
 
+# A bare `push:` alongside `pull_request:` runs everything twice while a pull
+# request is open, because a branch with a PR on it matches both. Limiting the
+# push trigger to the integration branch gives exactly one run per event: the
+# pull request builds the merge commit while it is open, and master builds
+# again once something lands on it.
 on:
   push:
+    branches: [master]
   pull_request:
 
 jobs:
