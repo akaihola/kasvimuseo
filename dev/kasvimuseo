@@ -9,7 +9,7 @@
 #   db bootstrap                        empty database from the migrations
 #   media fetch                         download the photos the database uses
 #   app build                           build the Python 2.7 dev image
-#   app run                             Django dev server ($KASVIMUSEO_PORT:8000)
+#   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
 #   app manage <args...>                run a manage.py command
 #   app test [args]                     run the test suite
 #   app coverage [args]                 run the test suite and report coverage
@@ -231,6 +231,58 @@ app_run_container() {
         $extra "$IMAGE" "$@"
 }
 
+# The development site is served by gunicorn, the same WSGI server the
+# production requirements pin, and not by `manage.py runserver`: runserver is
+# wsgiref, which answers HTTP/1.0 without a Content-Length, so the length of a
+# response is whatever arrived before the connection closed. A truncated page
+# is then indistinguishable from a complete one for both the browser and curl
+# -- which is how issue 044 stayed a mystery for as long as it did. gunicorn
+# sends a Content-Length and a client notices a short read.
+#
+# What is lost is the autoreloader: gunicorn 0.17.4 has no --reload, so after
+# editing Python either restart this command or reload the workers in place:
+#
+#     podman kill --signal HUP $(podman ps -qf name=kasvimuseo-dev-)
+#
+# Templates and static files are re-read per request either way. `--runserver`
+# brings the old server back for a session that wants the autoreloader; see
+# README.rst.
+#
+# The container shares the host's network namespace rather than publishing a
+# port, because publishing it is what truncated the responses in issue 044.
+# Rootless podman publishes with pasta, and pasta -- on this host, over a
+# connection with real latency -- forwards about 43 KB of a response and then
+# closes it cleanly, losing the rest. A packet capture on the receiving machine
+# shows the server's own FIN riding the segment that ends at byte 43,140, with
+# every segment before it acknowledged and nothing retransmitted. Responses
+# small enough to be forwarded before the application closes its socket survive,
+# and so do ones too large to be buffered at all, which is why the failure looked
+# like a size threshold with exceptions at both ends. `--publish` restores the
+# published port for anyone who wants to see that happen.
+app_serve() {
+    local runserver=0 network=--network=host bind=${KASVIMUSEO_PORT:-8000}
+    while [ $# -gt 0 ]; do
+        case $1 in
+            --runserver) runserver=1 ;;
+            --publish)   network=-p\ ${KASVIMUSEO_PORT:-8000}:8000; bind=8000 ;;
+            *) die "usage: dev/kasvimuseo app run [--runserver] [--publish]" ;;
+        esac
+        shift
+    done
+    if [ "$runserver" = 1 ]; then
+        with_db app_run_container "$network" \
+            python ylaneenkasvit/manage.py runserver "0.0.0.0:$bind"
+    else
+        # One worker keeps the log readable and matches runserver's behaviour
+        # under a single developer; --timeout is generous because the largest
+        # change forms take a couple of seconds and a debugger pauses longer.
+        with_db app_run_container "$network" \
+            gunicorn ylaneenkasvit.wsgi:application \
+                --bind "0.0.0.0:$bind" --workers 1 --timeout 300 \
+                --access-logfile - --error-logfile -
+    fi
+}
+
 # Starts the cluster if needed and stops it again afterwards.
 DB_STARTED=0
 cleanup() {
@@ -271,8 +323,7 @@ case "${1:-}" in
   app)
     case "${2:-}" in
       build)   podman build -f "$REPO/dev/Containerfile" -t "$IMAGE" "$REPO" ;;
-      run)     with_db app_run_container "-p ${KASVIMUSEO_PORT:-8000}:8000" \
-                   python ylaneenkasvit/manage.py runserver 0.0.0.0:8000 ;;
+      run)     shift 2; app_serve "$@" ;;
       manage)  shift 2; with_db app_run_container "" python ylaneenkasvit/manage.py "$@" ;;
       # Most tests build their own data in a test database, so unlike the app
       # itself they need the cluster but never a production dump or media.
