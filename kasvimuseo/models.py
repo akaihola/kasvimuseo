@@ -89,26 +89,34 @@ class SpeciesManager(models.Manager):
                        .filter(observation__planting__isnull=False,
                                observation__planting__bed__public=True)
                        .prefetch_related(
-                           'observation_set__planting_set__care_set')
+                           'observation_set__planting_set__care_set',
+                           # ``is_public_planted`` opens with
+                           # ``self.bed.public``, so the bed is prefetched
+                           # here for the same reason issue 012 added it to
+                           # ``ObservationManager``: without it every planting
+                           # fetches its own bed row.
+                           'observation_set__planting_set__bed')
                        .order_by())
         species_pks = set()
         for species in all_species:
-            # ``len(...all())`` rather than ``.count()``: it reads the rows
-            # this method's own ``prefetch_related`` already loaded. The
-            # ``_prefetched_objects_cache`` guard ``last_care`` carries is not
-            # needed here, because the prefetch is two lines up -- there is no
-            # unprefetched way into this loop.
-            if any(len(planting.care_set.all()) == 0
-                   or planting.last_care_count() > 0
+            # The same test the other two managers apply, rather than a second
+            # copy of it (issue 001). It reads the rows the two prefetches
+            # above already loaded: ``bed`` directly, and the care records
+            # through ``last_care``, whose ``_prefetched_objects_cache`` guard
+            # picks the in-Python sort. The outer ``filter`` only narrows the
+            # candidates -- a species can reach this loop on one public bed and
+            # be kept alive by a planting in a private one -- so the per-
+            # planting check has to look at the bed as well.
+            if any(planting.is_public_planted()
                    # or sorted(planting.care_set.all(),
                    #           key=operator.attrgetter('date'),
                    #           reverse=True)[0].count > 0
                    for observation in species.observation_set.all()
                    for planting in observation.planting_set.all()):
-                # At least one planting for an observations of the species
-                # hasn't been removed, i.e. the number (count) of plantings
-                # after the last care operation is non-zero.  Include the
-                # species.
+                # At least one planting for an observation of the species is
+                # in a public bed, has not been removed, and has not been
+                # counted down to zero by its last care operation.  Include
+                # the species.
                 species_pks.add(species.pk)
         return base_qs.filter(pk__in=species_pks)
 
