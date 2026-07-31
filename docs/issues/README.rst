@@ -101,8 +101,8 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 019, 025, 037, 039,
-040, 041, 042, 043, 046, 047 and 048 are open: each one either changes
+All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 019, 025, 037,
+039, 040, 041, 042, 043, 046, 047 and 048 are open: each one either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Eight of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
@@ -137,7 +137,12 @@ describes is not solved: the repository stopped carrying the production
 which is everything this repository can do and which remediates nothing by
 itself. Deploying the rotated values -- the act that ends the disclosure -- is
 049, and it is open. 025's file says so at the top rather than reading as a
-completed remediation. 012 needed no ruling either, being purely about query
+completed remediation. 001 needed one between two readings of the same page -- what the garden holds
+now, or what it has held -- and the maintainer took the first, so the public
+species list lost the species whose plantings have all been removed. Its file
+records the argument as well as the ruling, including the two places that had
+already assumed the answer: the method's own docstring and the species detail
+page's bed list. 012 needed no ruling either, being purely about query
 cost, but it is the one whose report was wrong: the ``COUNT`` in its title is
 free under ``prefetch_related``, and the query that actually scaled per planting
 was the bed behind ``is_public_planted``. Its file keeps the original diagnosis
