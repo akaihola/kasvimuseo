@@ -217,6 +217,15 @@ ensure_local_settings() {
 }
 
 app_run_container() {
+    # Without this, podman treats an unbuilt $IMAGE as a Docker Hub short name,
+    # tries to pull docker.io/library/kasvimuseo-dev and fails with "requested
+    # access to the resource is denied" -- which reads as a credentials problem
+    # and is not one. The image is per machine, not per checkout, so a second
+    # machine or a fresh account meets this on its first command.
+    podman image exists "$IMAGE" || die \
+        "The development image $IMAGE is not built on this machine. Build it:
+  dev/kasvimuseo app build
+It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
     ensure_local_settings
     local extra=$1; shift
     # Named so the exit trap can reap it: podman leaves the container running if

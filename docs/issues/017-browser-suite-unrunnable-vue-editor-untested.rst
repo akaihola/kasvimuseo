@@ -118,10 +118,22 @@ What it costs in CI
 
 A third job, ``playwright``, beside ``pytest`` and ``sphinx``. It rebuilds the
 image (the jobs share no machine), installs Playwright's Chromium, and runs the
-suite: about two and a half minutes against the pytest job's one, in parallel,
-so the pipeline's wall clock goes from about a minute to about two and a half.
-Locally the suite is 18 seconds plus about 10 to build the database and start
-the server.
+suite. Measured on the runner rather than guessed, once it had run:
+
+======================= ======= ======================================
+ Job                     Total   Of which
+======================= ======= ======================================
+ ``pytest``              68 s    50 s image, 13 s suite
+ ``playwright``          97 s    48 s image, 24 s browser, 18 s suite
+ ``sphinx``              24 s    16 s build
+ **The pipeline**        97 s    the three in parallel
+======================= ======= ======================================
+
+So it costs about half a minute of wall clock, not the two and a half minutes
+estimated before it ran: the browser download is 24 seconds and the image build
+-- the largest item, and duplicated between two jobs -- would be the thing to
+cache if this ever mattered. Locally the suite is 18 seconds plus about 10 to
+build the database and start the server.
 
 What is now tested, and what is not
 ===================================
@@ -211,6 +223,32 @@ is where new reports go.
   define no ordering, so Python 2 compares them by identity. The editor's own
   ``insort`` sorts numerically, so the same label prints "12 11" until somebody
   drags a number and "11 12" afterwards.
+
+It has run on a runner
+======================
+
+The ``playwright`` job passed on a hosted runner at the first attempt, on
+`pull request 2 <https://github.com/akaihola/kasvimuseo/pull/2>`_: eleven tests
+in 12.5 s, the whole ``app browser-test`` step 18 s on top of the image build
+and the browser download. So the two assumptions this shape rests on are facts
+rather than expectations -- rootless podman does run this server with
+``--network=host`` on ``ubuntu-latest``, and a browser installed by
+``playwright install`` is found by the ephemeral environment ``uv`` builds for
+the suite.
+
+The same run found the one thing this fix had left rough, and found it the way
+a new entry point usually is found -- by somebody typing it on a second machine.
+``dev/kasvimuseo app browser-test`` on a checkout whose development image had
+never been built failed with podman's::
+
+    Error: ... requested access to the resource is denied
+
+because an image podman cannot find locally is a Docker Hub short name to it, so
+it tried to pull ``docker.io/library/kasvimuseo-dev``. That reads as a
+credentials problem and is not one. ``app_run_container`` now checks
+``podman image exists`` first and says to run ``app build``; it is not specific
+to the browser tests -- every ``app`` subcommand had the same first-run
+failure -- but this is the command that met it.
 
 How to run it
 =============
