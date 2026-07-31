@@ -9,6 +9,11 @@ ENV LIBRARY_PATH=/lib:/usr/lib
 ENV PYTHONPATH=/install/lib/python2.7/site-packages
 
 COPY requirements /kasvimuseo/requirements
+# Unlike dev/Containerfile this resolves photologue's dependencies rather than
+# pinning them, so Pillow is chosen here by whatever pip finds. Today the base
+# image is what keeps it below 10 -- Pillow 7.0 dropped Python 2.7 and issue 028
+# is the AttributeError that waits above 9.5.0. When this image leaves Python 2,
+# Pillow needs an explicit bound; production.txt says which, beside photologue.
 RUN pip install --install-option="--prefix=/install" -r /kasvimuseo/requirements/production.txt
 
 # Django 1.5.1 lists its locale catalogs, fixtures and project_template in
