@@ -2,18 +2,25 @@
 Issue 019: Settings define no MIDDLEWARE
 ========================================
 
-:Status: Open
+:Status: Fixed
 :Severity: High
 :Area: settings / Django upgrade
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
-:Evidence: (none -- no test; ``grep -rn MIDDLEWARE kasvimuseo ylaneenkasvit`` returns nothing)
+:Evidence: ``kasvimuseo/tests/test_settings_middleware.py`` -- added with the fix; before it there was none, and ``grep -rn MIDDLEWARE kasvimuseo ylaneenkasvit`` returned nothing
 :Depends on: (none)
-:Blocks: 023 -- ``MessageMiddleware`` needs a middleware list to go in
+:Blocks: 023 -- the middleware list it needs now exists, and already carries
+    ``MessageMiddleware``; what is left there is the ``INSTALLED_APPS`` entry
     036 -- silent loss of the middleware stack at Stage 11
 :Related: 023 -- the other missing-settings landmine, same file
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Write the Django 1.5 default out into ``common_settings`` verbatim,
+    read from the ``global_settings.py`` of the installed 1.5.1 rather than from
+    upstream's current source, and keep the old name. The rename to
+    ``MIDDLEWARE`` waits for Stage 8 (Django 1.10), which is the first release
+    that honours it -- doing it now would be a setting Django 1.5 ignores, which
+    is the same silence this issue is about, only sooner.
+:Resolution: 8202f91 -- the tuple in ``ylaneenkasvit/common_settings.py``, the
+    test that pins it, and the notes in 023 and 036
 
 Problem
 =======
@@ -57,6 +64,55 @@ configuration that later stages can edit.
 
 The rename to ``MIDDLEWARE`` follows at Django 1.10, where both spellings are
 honoured -- see ``docs/upgrade-plan.rst``, Stage 8.
+
+Decision
+========
+
+Done as described above. The tuple was read out of the ``global_settings.py``
+of the Django in the application container -- 1.5.1, the pin in
+``requirements/production.txt`` -- rather than from memory or from upstream's
+current source, since the whole value of the change is that it copies *this*
+project's effective configuration and not a later one::
+
+    MIDDLEWARE_CLASSES = (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+    )
+
+The two entries 1.5 ships commented out -- ``ConditionalGetMiddleware`` and
+``GZipMiddleware`` -- are not copied: they are not part of the value, and
+carrying upstream's commented-out lines into this file would read as a choice
+this project had made.
+
+It stays a tuple, matching ``INSTALLED_APPS`` and
+``TEMPLATE_CONTEXT_PROCESSORS`` in the same file, and it keeps the name
+``MIDDLEWARE_CLASSES``. Renaming it to ``MIDDLEWARE`` belongs to Stage 8
+(Django 1.10), the first release that reads that name; written today it would
+be a setting Django 1.5 silently ignores, which is this issue's own failure
+mode.
+
+``MessageMiddleware`` is in the list because it is in the 1.5 default and has
+therefore been running all along -- not because anything was added for issue
+023. That issue's remaining work is the ``INSTALLED_APPS`` entry; its middleware
+line is already here, in the list this change created.
+
+Nothing else in the settings needed anything. ``ylaneenkasvit_settings.py``,
+``kajala_settings.py`` and ``test_settings.py`` all do ``from .common_settings
+import *`` and none of them mentions middleware, and neither does
+``local_settings.development.py``, whose ``modify()`` rewrites only the
+database, paths and ``ALLOWED_HOSTS``; each was loaded and checked rather than
+assumed.
+
+That the change is a no-op today was measured rather than argued: the
+middleware Django actually applies is byte-for-byte the same list before and
+after, under every settings module that can be loaded, and
+``kasvimuseo/tests/test_settings_middleware.py`` keeps that pinned. It is a
+test expected to be changed deliberately later -- the list grows at Stage 5 and
+is renamed at Stage 8 -- which is the convention the rest of this register
+follows.
 
 See also
 ========

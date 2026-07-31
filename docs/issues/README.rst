@@ -101,10 +101,10 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 025, 037, 039, 040,
-041, 042, 043, 046, 047 and 048 are open: each one either changes behaviour that
-is visible in production, deletes code, or commits to a piece of work, so each
-wants a decision first. Eight of the
+All but 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 019, 025, 037, 039,
+040, 041, 042, 043, 046, 047 and 048 are open: each one either changes
+behaviour that is visible in production, deletes code, or commits to a piece of
+work, so each wants a decision first. Eight of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
 archive view that refused to render an empty list, a missing sort link the
 maintainer asked to have done rather than ruled on, a placeholder image, a
@@ -240,7 +240,10 @@ could be decided immediately; 025 was, and its repository half is fixed, leaving
 somebody to deploy to it. 019, 023 and 024 are one-line
 defensive changes that
 are no-ops today and prevent silent breakage later -- the cheapest things on this
-list. 027 is the one with a real design decision in it. 034 wants deciding before
+list. 019 is done: the Django 1.5 default middleware tuple is copied into
+``common_settings`` verbatim, which changes nothing that runs today and gives
+Stage 8 a list to rename instead of an absence to notice. It also finished half
+of 023, since ``MessageMiddleware`` is in that default. 027 is the one with a real design decision in it. 034 wants deciding before
 the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions.
 
 
