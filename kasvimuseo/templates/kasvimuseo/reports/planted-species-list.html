@@ -1,7 +1,12 @@
 {% extends "jqm/simple.html" %}
 
 {% block sitestyle %}
-    <link rel="stylesheet" 
+    {% comment %}``sitestyle`` is the only block django-jqm leaves inside
+    <head>. Lay out at the device's own width instead of Safari's 980px
+    fallback, so text is legible at 1:1 on a tablet. See docs/issues/045.
+    {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
           href="{{STATIC_URL}}css/planted-species-printable.css" />
 {% endblock sitestyle %}
 
