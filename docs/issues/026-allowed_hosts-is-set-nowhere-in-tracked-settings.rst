@@ -13,7 +13,7 @@ Issue 026: ALLOWED_HOSTS is set nowhere in tracked settings
 :Related: 025 -- the same file, and the same question of what the server carries that the repository does not
     049 -- the deploy that carries this change to the server, and the same split between a repository half and a server half
 :Decision: Both cases were true at once, and the maintainer's look at the server settled it. Set ``ALLOWED_HOSTS`` from the environment with no default (``KASVIMUSEO_ALLOWED_HOSTS``, read by ``hosts_from_env``, exactly 025's idiom) and have Ansible supply it from a **tracked** variable, ``kasvimuseo_allowed_hosts`` in ``ansible/vars/main.yml`` -- not the vault, because a host name is not a secret and putting it in the tracked files is the point. Turning production's ``DEBUG`` off is 051, and it can only happen after this change is deployed.
-:Resolution: Commit `PENDING` -- ``ALLOWED_HOSTS`` is set in the tracked settings and written into the production process environment by ``uwsgi.ini``. That is the whole of the repository half. It does not turn ``DEBUG`` off on the server, which is where the information disclosure actually is: see 051.
+:Resolution: Commit df16cc1 -- ``ALLOWED_HOSTS`` is set in the tracked settings and written into the production process environment by ``uwsgi.ini``. That is the whole of the repository half. It does not turn ``DEBUG`` off on the server, which is where the information disclosure actually is: see 051.
 
 .. warning::
 
