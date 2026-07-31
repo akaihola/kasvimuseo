@@ -26,7 +26,6 @@ SECRET_KEY = secret_from_env('KASVIMUSEO_SECRET_KEY')
 ALLOWED_HOSTS = hosts_from_env('KASVIMUSEO_ALLOWED_HOSTS')
 
 STATIC_URL = '//static.kasvit.ambitone.com/'
-ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
 MEDIA_URL = '//media.kasvit.ambitone.com/'

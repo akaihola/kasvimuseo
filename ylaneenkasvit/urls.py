@@ -4,8 +4,6 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.http import HttpResponseRedirect
 from photologue.views import GalleryArchiveIndexView
-import grappelli
-import os
 import re
 
 admin.autodiscover()
@@ -14,9 +12,6 @@ urlpatterns = patterns(
     '',
 
     (r'^grappelli/', include('grappelli.urls')),
-    (r'^media/grappelli/(?P<path>.*)', 'django.views.static.serve',
-     {'document_root': os.path.join(os.path.dirname(grappelli.__file__),
-                                    'media')}),
     (r'^admin/', include(admin.site.urls)),
     # (r'^sentry/', include('sentry.web.urls')),
     # Photologue's own gallery index is a date archive with ``allow_empty``
