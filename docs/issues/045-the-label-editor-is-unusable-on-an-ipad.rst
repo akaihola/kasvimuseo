@@ -34,8 +34,9 @@ Issue 045: The label editor is unusable on an iPad
     because nothing focuses that checkbox until it is tapped and the complaint
     is that there is nothing visible to tap. The three are argued in "What the
     cheap half decided" below.
-:Resolution: The cheap half is fixed in 1232f2c; the large half is open, so
-    ``Status`` stays ``Accepted``. See "What is left" below.
+:Resolution: The cheap half is fixed in bffb370, with the print toggle's
+    pointer split in 64ddc1b; the large half is open, so ``Status`` stays
+    ``Accepted``. See "What is left" below.
 
 Problem
 =======
@@ -158,14 +159,29 @@ a wrapper ``<div>`` rather than on the button, because jQuery Mobile replaces
 the button with a container of its own and ``display: none`` on the inner
 element would leave that container on the paper.
 
-**``opacity: 0`` dropped, not ``:focus-within`` added.** The toggle now sits at
-``opacity: 0.5`` always and goes to 1 on hover, and a hidden label's toggle is
-at 1 so the one control that un-hides it stays legible through the 0.3 dimming.
-``:focus-within`` would not have fixed the reported symptom: nothing focuses
-that checkbox until it is tapped, and the complaint is that there is nothing
-visible to tap. This is safe only because issue 047 put ``.remove`` in the
-``@media print`` hide list; that line was verified present before the opacity
-went.
+**``opacity: 0`` dropped, not ``:focus-within`` added, and then split by
+pointer type.** ``:focus-within`` was never the answer: nothing focuses that
+checkbox until it is tapped, and the complaint is that there is nothing visible
+to tap. Dropping the ``opacity: 0`` outright fixed the tablet but took away
+something the mouse users had -- a sheet with no controls drawn over it -- so
+the maintainer asked for both, and the rule is now split on whether the device
+can hover at all:
+
+* **No hover** (the iPad, and any touch-only screen): the dimmed printer and
+  its checkbox are simply always drawn. There is no gesture that could reveal
+  them, so there is nothing to reveal them *with*.
+* **A mouse** (``@media (hover: hover)``): hidden at rest, dimmed to 0.5 while
+  the pointer is moving or the page is scrolling, and full over the label the
+  pointer is on. A two-second timer takes them away again. The activity class
+  is set by six lines of script at the top of the page's own ``<script>``,
+  guarded by the same ``matchMedia('(hover: hover)')``, so a touch device never
+  runs it.
+
+A hidden label's toggle stays at full strength inside the 0.3 dimming, since it
+is the one control that puts the label back -- on a mouse that too waits for
+the pointer to move. All of it is safe only because issue 047 put ``.remove``
+in the ``@media print`` hide list; that line was verified present before the
+opacity went, and the printed sheet was checked again afterwards.
 
 What landed, and what it measures
 =================================
@@ -186,7 +202,10 @@ unstyled. Both engines agreed on every number below.
  First content element at 1440px      same box           same box
  Print button on screen               absent             visible
  Print button in ``@media print``     --                 ``display: none``
- Print toggle, no hover               ``opacity: 0``     ``opacity: 0.5``
+ Print toggle, touch, at rest         ``opacity: 0``     ``opacity: 0.5``
+ Print toggle, mouse, at rest         ``opacity: 0``     ``opacity: 0``
+ Print toggle, mouse, moving          ``opacity: 0``     ``opacity: 0.5``
+ Print toggle, mouse, label hovered   ``opacity: 0.5``   ``opacity: 1``
  Print toggle in ``@media print``     ``display: none``  ``display: none``
  Labels across, portrait              3                  2
  Labels across, landscape             3                  3
@@ -201,8 +220,16 @@ symptom has a cause in the templates" predicts. It is a trade worth making
 here: two legible labels beat three unreadable ones, the sheet is arranged
 rather than read, and landscape still shows three.
 
+The four toggle rows were taken in a touch context (``hover: none``,
+``pointer: coarse``) and a mouse one, in both engines: touch holds 0.5 with no
+input at all and after three seconds of stillness; a mouse shows nothing until
+the pointer moves or the page scrolls, 0.5 then, 1 on the label under the
+pointer while its neighbours stay at 0.5, and 0 again three seconds after the
+pointer stops.
+
 Printing each page to PDF puts neither print button on the paper, and the print
-toggle is not on it either.
+toggle is not on it either -- checked again after the toggle was split by
+pointer type, since a mouse-only rule must not be what keeps it off the paper.
 
 **Still not confirmed on the device.** Everything above is emulation. It could
 not have been confirmed until 2026-07-31 for a reason outside this issue: the
