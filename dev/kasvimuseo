@@ -12,6 +12,8 @@
 #   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
 #   app manage <args...>                run a manage.py command
 #   app test [args]                     run the test suite
+#   app browser-test [args]             run the label editor's browser tests
+#   app browser-seed                    reset their data (they call this)
 #   app coverage [args]                 run the test suite and report coverage
 #   app shell                           shell inside the app container
 #   docs [--open] [--clean]             build the Sphinx docs (on the host)
@@ -283,10 +285,102 @@ app_serve() {
     fi
 }
 
+# The label editor's browser tests (issue 017). Two interpreters, and that is
+# the point: the application is Django 1.5 on Python 2.7, nothing that drives a
+# current browser supports 2.7, and the browser this page has to be right in is
+# not one a 2020 Chromium can stand in for. So the server is the real
+# application in its own container and the tests are Python 3 on the host,
+# through uv, talking to it over HTTP -- the same split `docs` already uses.
+#
+# Everything it touches is thrown away: its own database, seeded from
+# browser_tests/seed.py, and its own MEDIA_ROOT under .dev/. The developer's
+# ylaneenkasvit database and media/ are not read or written, and neither is
+# local_settings.py -- the server runs on ylaneenkasvit.test_settings, which is
+# built on common_settings for that reason.
+BROWSER_DB=${KASVIMUSEO_BROWSER_DB_NAME:-${DB_NAME}_browsertest}
+BROWSER_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
+BROWSER_ENV="$BROWSER_ENV -e KASVIMUSEO_MEDIA_ROOT=/src/.dev/browser-test-media"
+
+# The server shares the host's network namespace, as `app run` does (issue
+# 044), so it needs a port nothing else on this machine is on. Set
+# KASVIMUSEO_BROWSER_PORT to pin one.
+free_port() {
+    local port
+    for port in $(seq 8123 8199); do
+        (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && exec 3<&- || {
+            echo "$port"; return; }
+    done
+    die "no free port between 8123 and 8199"
+}
+
+# Wipe the browser tests' database back to what seed.py describes. Its own
+# command because the tests call it between themselves: the editor's save
+# rewrites every label, so a test that saves would otherwise decide what the
+# next one sees.
+browser_seed() {
+    TTY_FLAGS=
+    DB_NAME=$BROWSER_DB
+    app_run_container "$BROWSER_ENV" python browser_tests/seed.py
+}
+
+browser_test() {
+    command -v uv >/dev/null 2>&1 || die \
+        "app browser-test needs uv on the host: https://docs.astral.sh/uv/"
+    # Detached and interactive are a bad pair, and the server runs in the
+    # background of this script.
+    TTY_FLAGS=
+    DB_NAME=$BROWSER_DB
+    local port=${KASVIMUSEO_BROWSER_PORT:-$(free_port)}
+    pg_running || { db_start; DB_STARTED=1; }
+    psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q \
+         -c "DROP DATABASE IF EXISTS $BROWSER_DB" \
+         -c "CREATE DATABASE $BROWSER_DB OWNER $DB_USER"
+    BROWSER_DB_MADE=1
+    # photologue first, as in `db bootstrap`: kasvimuseo:0014 references
+    # photologue_photo. syncdb also loads photologue's initial data, which is
+    # where the `display` photo size the labels render comes from.
+    #
+    # syncdb prints a DatabaseError about initial_data.json on the way, exactly
+    # as `db bootstrap` does: the project fixture names photologue rows, and
+    # photologue's tables are South's, so they are not there yet. South loads
+    # the same fixture again after migrating, which is why this is noise rather
+    # than a failure -- hence `;` and not `&&` after it.
+    app_run_container "$BROWSER_ENV" sh -c \
+        'python ylaneenkasvit/manage.py syncdb --noinput >/dev/null;
+         python ylaneenkasvit/manage.py migrate photologue --noinput >/dev/null &&
+         python ylaneenkasvit/manage.py migrate --noinput >/dev/null'
+    browser_seed
+
+    echo "Serving $BROWSER_DB on port $port ..." >&2
+    app_run_container "$BROWSER_ENV --network=host" \
+        gunicorn ylaneenkasvit.wsgi:application \
+            --bind "127.0.0.1:$port" --workers 2 --timeout 60 \
+            --access-logfile /dev/null --error-logfile - &
+    local url=http://127.0.0.1:$port waited=0
+    until curl -sfo /dev/null "$url/kasvimuseo/planting-labels/"; do
+        waited=$((waited + 1))
+        [ "$waited" -lt 60 ] || die "the server did not answer on $url"
+        sleep 0.5
+    done
+
+    # --no-project: the repository's own setup.py is a Python 2 package and has
+    # nothing to do with these tests.
+    KASVIMUSEO_BROWSER_TEST_URL=$url \
+    KASVIMUSEO_BROWSER_TEST_SEED="$REPO/dev/kasvimuseo app browser-seed" \
+    uv run --no-project --with-requirements "$REPO/browser_tests/requirements.txt" \
+        pytest "$REPO/browser_tests" "$@"
+}
+
 # Starts the cluster if needed and stops it again afterwards.
 DB_STARTED=0
+BROWSER_DB_MADE=0
 cleanup() {
     podman rm -f -t 3 "$CONTAINER" >/dev/null 2>&1 || true
+    # The browser tests' database outlives nothing: dropped here so a failed run
+    # leaves no half-seeded copy behind either.
+    [ "$BROWSER_DB_MADE" = 1 ] && pg_running && \
+        psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q \
+             -c "DROP DATABASE IF EXISTS $BROWSER_DB" >/dev/null 2>&1 || true
     [ "$DB_STARTED" = 1 ] && db_stop || true
 }
 trap cleanup EXIT
@@ -332,6 +426,10 @@ case "${1:-}" in
       # settings explicitly.
       test)    shift 2; with_db app_run_container "$TEST_ENV" \
                    python -m pytest "$@" ;;
+      browser-test)
+               shift 2; browser_test "$@" ;;
+      browser-seed)
+               browser_seed ;;
       coverage)
                shift 2; with_db app_run_container "$TEST_ENV" sh -c \
                  "coverage run --source=kasvimuseo,ylaneenkasvit \
@@ -340,7 +438,7 @@ case "${1:-}" in
                                -m pytest -q $* >/dev/null;
                   coverage report -m" ;;
       shell)   with_db app_run_container "" sh ;;
-      *)       die "usage: dev/kasvimuseo app build|run|manage|test|coverage|shell" ;;
+      *)       die "usage: dev/kasvimuseo app build|run|manage|test|browser-test|browser-seed|coverage|shell" ;;
     esac ;;
   docs)
     case "${2:-}" in
