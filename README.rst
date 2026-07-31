@@ -37,8 +37,51 @@ Run the site at http://localhost:8000/ ::
 
     $ dev/kasvimuseo app run
 
+That serves through **gunicorn**, the WSGI server ``requirements/production.txt``
+pins, rather than through ``manage.py runserver``. ``runserver`` is ``wsgiref``:
+single-threaded, documented as unfit for anything but local use, and -- the part
+that mattered -- it answers HTTP/1.0 with no ``Content-Length``, so the end of
+the response is whatever arrived before the connection closed. A page cut short
+on the way to the browser then looks complete to the browser and to ``curl``
+alike; that is issue 044, where a change form lost its save buttons because the
+last 10 KB never arrived and nothing anywhere said so. gunicorn frames its
+responses (chunked, HTTP/1.1), so the same cut is reported instead of rendered.
+
+``runserver`` is still there, and is the right choice when you are editing
+Python over a loopback-only session::
+
+    $ dev/kasvimuseo app run --runserver
+
+The difference in practice is the autoreloader: ``runserver`` restarts itself
+when a module changes and gunicorn 0.17.4 has no ``--reload``. Under gunicorn,
+templates and static files are still re-read per request; changed Python needs
+either a restart of ``app run`` or a reload of the workers in place::
+
+    $ podman kill --signal HUP $(podman ps -qf name=kasvimuseo-dev-)
+
+The container shares the host's network namespace instead of publishing a port,
+which is the other half of issue 044. Rootless podman publishes a port with
+pasta, and pasta -- over a connection with real latency -- forwards about 43 KB
+of a response and then closes it, losing the rest. Sharing the namespace takes
+that layer out: gunicorn listens on the host's port itself. To watch the old
+behaviour, or if host networking is unwanted::
+
+    $ dev/kasvimuseo app run --publish
+
+An SSH tunnel also avoids it, by making the remote request a loopback one on
+this side, and is the right answer for a ``--runserver`` session::
+
+    $ ssh -N -L 8000:127.0.0.1:8000 <this host>
+
+``/static/`` is served by the app itself in both cases, and only while ``DEBUG``
+is on: ``runserver`` does it by magic, and ``ylaneenkasvit/urls.py`` wires the
+same staticfiles view up explicitly for every other server. Production serves
+``/static/`` from its web server and is unaffected.
+
 Other commands::
 
+    $ dev/kasvimuseo app run --runserver      # the old wsgiref server instead
+    $ dev/kasvimuseo app run --publish        # a published port instead of the host's
     $ dev/kasvimuseo db start|stop|status     # PostgreSQL by hand
     $ dev/kasvimuseo db psql                  # psql on the local database
     $ dev/kasvimuseo media fetch              # photos the database references

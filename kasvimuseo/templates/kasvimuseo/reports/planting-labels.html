@@ -661,10 +661,30 @@
                 const that = this;
                 axios.get('{% url "planting-label-data" %}')
                     .then(response => {
-                        that.object_list = response.data.object_list;
+                        const data = response.data;
+                        // A truncated response does not always arrive as an
+                        // error: axios parses JSON silently, so a body that
+                        // stops mid-string comes through as a plain string
+                        // instead of a rejection (issue 044). Refuse anything
+                        // that is not the expected shape rather than let a
+                        // partial list into the editor -- saving replaces
+                        // every label with what is in it.
+                        if (!data || !Array.isArray(data.object_list)) {
+                            throw new Error(typeof data === 'string'
+                                ? 'the response was not valid JSON; '
+                                  + data.length + ' characters arrived'
+                                : 'the response carried no label list');
+                        }
+                        that.object_list = data.object_list;
                     })
                     .catch(e => {
-                        alert('error');
+                        alert('The labels could not be loaded from\n'
+                              + '{% url "planting-label-data" %}\n\n'
+                              + (e.message || e) + '\n\n'
+                              + 'No labels are shown and nothing can be '
+                              + 'saved. Reload the page to try again. If it '
+                              + 'keeps happening the response is arriving '
+                              + 'incomplete -- see issue 044.');
                     });
                 bus.$on('remove-label-at-index', function(index) {
                     that.object_list.splice(index, 1);
