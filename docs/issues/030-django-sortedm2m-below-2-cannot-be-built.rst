@@ -2,7 +2,7 @@
 Issue 030: django-sortedm2m < 2.0.0 cannot be built by modern tools
 ===================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: Low
 :Area: dependencies / build
 :Reported: 2026-07-28
@@ -12,8 +12,16 @@ Issue 030: django-sortedm2m < 2.0.0 cannot be built by modern tools
 :Blocks: 027 -- a constraint the lock must carry
     036 -- Stage 2 and Stages 4-11
 :Related: (none)
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Be aware of it; act on nothing. The constraint is on the *builder*,
+    not on the version -- sortedm2m 1.1.1-1.5.0 needs ``setuptools<60`` and an
+    interpreter that still has ``distutils`` -- and every stage that pins one
+    of them is built in an image old enough to provide both. Recorded beside
+    ``django-sortedm2m==1.5.0`` in ``dev/Containerfile``, the only place the
+    version is set, and in ``docs/upgrade-plan.rst`` 3b.3. The workaround the
+    issue could only infer **is now verified**, on the two interpreters that
+    matter: see "Verified since" below. Nothing installed changed.
+:Resolution: 679d96d records the build-tool bound beside the pin, and the
+    measurements that turned the inferred workaround into a verified one
 
 Problem
 =======
@@ -65,12 +73,67 @@ assumes.
 Worth recording so that a future build failure is recognised rather than
 debugged from scratch.
 
-Not fully verified
-==================
+What was recorded, and where
+============================
+
+Beside ``django-sortedm2m==1.5.0`` in ``dev/Containerfile``, which is the only
+place the version is set -- ``requirements/production.txt`` does not mention
+the package at all, which is issue 027 -- and in ``docs/upgrade-plan.rst``
+3b.3. The comment says what the pin needs from whatever builds it, rather than
+only what version it is. No pin changed.
+
+Not fully verified when this was filed
+======================================
 
 The failure is confirmed. The workaround is inferred: testing it needs
 ``setuptools<60``, which will not import on Python 3.12+ because ``distutils``
 is gone, and no older interpreter was available when this was investigated.
+
+Verified since
+==============
+
+One was available after all -- ``nix-shell -p python311`` -- so the inference
+above was measured instead of carried forward. On Python 3.11.15, installing
+``django-sortedm2m==1.5.0`` from the sdist:
+
+===================== ==========================================
+setuptools in the env result
+===================== ==========================================
+59.8.0                builds, wheel produced, installs
+83.0.0                fails -- ``AttributeError:
+                      'UltraMagicString' object has no attribute
+                      'endswith'``, at
+                      ``_core_metadata.py`` line 221
+===================== ==========================================
+
+Same interpreter, same sdist, same pip: **the boundary is setuptools, not the
+Python version.** ``distutils`` matters only because setuptools old enough to
+work needs it.
+
+And the container the upgrade plan actually assumes for those stages was
+checked rather than assumed: ``docker.io/library/python:3.7-alpine`` ships
+Python 3.7.17 and **setuptools 57.5.0**, and ``pip install
+django-sortedm2m==1.5.0`` in it succeeds. So does the Python 2.7 image this
+project uses today. The plan's "period-appropriate image" holds for both.
+
+One detail worth carrying, because it decides which setuptools is the one that
+counts: these sdists have no ``pyproject.toml``, so pip does **not** build them
+in an isolated environment. The setuptools that runs ``setup.py`` is whatever
+is installed in the target environment -- which is why the failure follows the
+environment rather than the tool version somebody thinks they are using.
+
+What 027 has to carry
+=====================
+
+No version bound at all -- this one constrains the *builder*, and a lock file
+has nowhere to say that. What the lock can do is make the requirement visible:
+Stages 2 and 4-11 pin ``django-sortedm2m`` between 1.1.1 and 1.5.0, and each
+of those stages has to be built somewhere with ``setuptools<60``. If 027
+adopts ``uv pip compile``, note that the constraint is on the machine doing
+the build, not on anything the resolver can select. The way out, if a stage
+ever has to be built on a current toolchain, is sortedm2m 2.0.0 -- the first
+release with a wheel, and a Django 1.11 floor, so not available before
+Stage 9.
 
 See also
 ========
