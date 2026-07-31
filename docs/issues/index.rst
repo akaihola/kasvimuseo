@@ -63,6 +63,11 @@ changes what the rest of the list means.
 
 .. issue-rank::
 
+   050: A working superuser password for the production admin has been in a
+      tracked file since 2020, and is still the password that account uses.
+      First of these three because it needs no access to anything to use and
+      one command to end, and because the file it was in has just been deleted
+      -- which changes nothing until the password does.
    049: The rotated ``SECRET_KEY`` and database password are in the vault and
       not in use, so the disclosure 025 describes is still live. One playbook
       run ends it, and it is the only item on this page whose timing belongs to
@@ -265,6 +270,10 @@ which is what makes the rest of this page hold.
    017: The 626-line Vue label editor has no behavioural test, and the suite
       meant to cover it cannot start. Either rebuild it on
       ``LiveServerTestCase`` or delete it so it stops looking like coverage.
+      **Fixed**, and by neither: there is no maintained browser stack for
+      Python 2.7, so the tests are Python 3 on the host driving Playwright
+      against the real application, and the old suite is deleted. The password
+      it carried turned out to be live, which is 050.
    038: Already in progress; listed for completeness. Its remaining work is
       triggered by 018 and by Stage 10.
 
