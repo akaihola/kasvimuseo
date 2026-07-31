@@ -66,6 +66,21 @@ INSTALLED_APPS = (
     # TODO: configure raven
 )
 
+# A verbatim copy of the Django 1.5 default, which the site has been running on
+# implicitly. Spelled out because that default is withdrawn at Django 2.0 --
+# ``MIDDLEWARE_CLASSES`` is gone from ``global_settings`` and ``MIDDLEWARE``
+# defaults to ``[]``, so a project that never names its own middleware would
+# quietly start with none: no sessions, no authentication, no CSRF (issue 019).
+# Later stages of ``docs/upgrade-plan.rst`` edit this list, and it stays under
+# the old name until Stage 8 (Django 1.10), where both spellings are honoured.
+MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+)
+
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.core.context_processors.debug',
