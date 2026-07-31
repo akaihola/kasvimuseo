@@ -102,8 +102,8 @@ Open issues
 ===========
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
-020, 021, 023, 024, 025, 033, 034, 037, 039, 040, 041, 042, 043, 046, 047 and
-048 are open: each one
+020, 021, 023, 024, 025, 027, 033, 034, 037, 039, 040, 041, 042, 043, 046, 047
+and 048 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -260,7 +260,18 @@ done as well, and was cheaper still: the ``site-packages`` path it names had
 already stopped resolving in the container, so deleting it changed nothing
 anybody could see, and photologue's templates go on coming from the app
 template loader. All three of them are now off the list.
-027 is the one with a real design decision in it. 034 wanted deciding before
+027 is the one with a real design decision in it, and it has been taken now
+that 028, 029 and 030 -- the three constraints its lock had to record -- are
+all settled. The decision splits the issue in two: the completeness is done
+today, by hand, so ``requirements/production.txt`` names every runtime package
+including Pillow and ``dev/Containerfile`` installs one file with one command;
+the mechanism it proposed, ``uv pip compile`` from a ``*.in``, waits for the
+Python 3 flip, because ``uv`` refuses Python 2.7 outright and its nearest
+answer picks a Pillow that will not install here. The one surprise is in what
+the file does *not* say: ``django-sortedm2m``, which the issue and the
+container comment both called a photologue dependency, is not one until
+photologue 2.8, so it left the image rather than joining the file.
+034 wanted deciding before
 the upgrade reached Stage 6 and has been: it is ``Fixed`` with no code change,
 because what it asked for was a ruling. The ruling retires the ``admin_list``
 fork rather than carrying it, and schedules the deletion for Stage 5 -- the

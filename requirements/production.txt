@@ -1,8 +1,24 @@
-# Direct pins only. The upper bounds these packages need are not in anybody's
-# metadata -- the old ones declare lower bounds and nothing else -- so the ones
-# that are known are written beside the pin that implies them, with the issue
-# that establishes them. `setup.py` reads this file line by line into
-# `install_requires`; setuptools drops the comments.
+# The complete runtime lock for the Python 2.7 stage, maintained by hand. Every
+# package the application needs in order to run is named here at an exact
+# version, so `pip install -r` this file installs that set and nothing else --
+# with or without `--no-deps`, which was measured rather than assumed. It used
+# to be half a picture: direct pins here, Pillow in `dev/Containerfile`, and
+# nothing anywhere saying the two together were the dependency set. That was
+# issue 027.
+#
+# By hand, because `uv pip compile` -- the mechanism `docs/upgrade-plan.rst`
+# Appendix A uses for the locks from Stage 10 onwards -- cannot target this
+# interpreter: `uv pip compile --python-version 2.7` answers "Invalid version
+# request: Python <3.6 is not supported but 2.7 was requested". Asked for 3.7
+# instead it reproduces exactly the set below except for the Pillow version,
+# where it picks 9.5.0 -- correct for Stage 10, uninstallable here. So there is
+# no generated `.in`/`.txt` pair before Stage 10, and this file is the lock.
+#
+# The upper bounds these packages need are in nobody's metadata -- the old ones
+# declare lower bounds and nothing else -- so the ones that are known are
+# written beside the pin that implies them, with the issue that establishes
+# them. `setup.py` reads this file line by line into `install_requires`;
+# setuptools drops the comment lines, so what it declares is the ten pins.
 django==1.5.1
 django-extensions==1.5.9
 django-grappelli==2.4.5
@@ -18,15 +34,26 @@ gunicorn==0.17.4
 psycopg2-binary==2.8.4
 six==1.11.0
 south==0.8.1
-# Issue 028: this pin implies Pillow<10. photologue up to and including
-# 3.15.1 calls `Image.ANTIALIAS`, which Pillow removed in 10.0.0, and the
-# call is reached only when a cached photo size is missing -- so it is a 500 on
-# page render, invisible to anyone with a warm cache. Pillow is not in this
-# file at all (issue 027): `dev/Containerfile` pins it to 6.2.2, the last
-# release for Python 2.7, and the production image resolves it, bounded only by
-# the interpreter. Move to Pillow 9.5.0 at the Python 3 flip (upgrade plan
-# Stage 10): it is the last release that still has `ANTIALIAS` and the first
-# side of the constraint from photologue 3.16 on, which uses
-# `Image.Resampling.LANCZOS` and so needs `Pillow>=9.1` -- not the
-# `Pillow>=9` its own metadata declares.
 django-photologue==2.6.1
+# photologue's, not the application's: it declares `Pillow>=2.0.0` and nothing
+# above, which is issue 027 in one line -- a resolver free to read that picks
+# Pillow 12. Issue 028 is what that costs: photologue up to and including
+# 3.15.1 calls `Image.ANTIALIAS`, removed in Pillow 10.0.0, from the branch
+# that runs only when a cached photo size is missing, so it is a 500 on page
+# render rather than an error at startup, and invisible to anyone with a warm
+# cache. This pin therefore means `Pillow<10` as much as it means "the last
+# release for Python 2.7". Move to 9.5.0 at the Python 3 flip (upgrade plan
+# Stage 10): it is the last release that still has `ANTIALIAS`, and it is above
+# the `Pillow>=9.1` that photologue 3.16 onwards needs for
+# `Image.Resampling.LANCZOS` -- not the `Pillow>=9` its own metadata declares.
+Pillow==6.2.2
+# Not here, deliberately: `django-sortedm2m`. `dev/Containerfile` installed it
+# beside Pillow and called both photologue's runtime dependencies; only Pillow
+# is. photologue 2.6.1 declares `Django>=1.4`, `South>=0.7.5` and
+# `Pillow>=2.0.0`, no file under `photologue/` mentions sortedm2m, nothing in
+# this repository imports it and it is not in `INSTALLED_APPS`. It becomes a
+# real dependency at photologue 2.8 -- upgrade plan Stage 2 -- which needs
+# 1.1.1 or later without declaring it; the declaration first appears at
+# photologue 3.4. The pin to reach for then is in `docs/upgrade-plan.rst`
+# Appendix A, and its build-tool constraint -- `setuptools<60`, on the machine
+# doing the build, not on any version a resolver can pick -- is issue 030.
