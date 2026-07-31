@@ -70,6 +70,90 @@ def test_a_species_planted_only_in_a_private_bed_gets_no_label(editor):
     assert 'sinivuokko' not in [label['name'] for label in labels(editor)]
 
 
+def test_label_text_fits_and_stays_stable_during_layout_passes(editor):
+    """fitty must resize desktop labels without an unbounded feedback loop."""
+    editor.wait_for_function("""() =>
+        document.querySelector('#labels li h1').style.fontSize
+    """)
+    editor.evaluate("""() => {
+        document.querySelector('#labels li h1').textContent =
+            'A name long enough that fitty must make it substantially smaller';
+    }""")
+    editor.wait_for_function("""() =>
+        parseFloat(document.querySelector('#labels li h1').style.fontSize) < 40
+    """)
+
+    samples = []
+    for _ in range(12):
+        editor.evaluate("window.dispatchEvent(new Event('resize'))")
+        editor.wait_for_timeout(150)
+        samples.append(editor.evaluate("""() => {
+        const el = document.querySelector('#labels li h1');
+        return parseFloat(getComputedStyle(el).fontSize);
+    }"""))
+    assert max(samples) / min(samples) < 1.05
+
+
+def test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed(
+        page, base_url):
+    """iPad drops fitty's observer without undoing its fitted font size."""
+    page.add_init_script("""
+        Object.defineProperty(navigator, 'platform', {value: 'MacIntel'});
+        Object.defineProperty(navigator, 'maxTouchPoints', {value: 5});
+    """)
+
+    def make_name_need_fitting(route):
+        response = route.fetch()
+        data = response.json()
+        for label in data['object_list']:
+            label['name_fi'] = (
+                'A name long enough that fitty must make it substantially smaller')
+        route.fulfill(response=response, json=data)
+
+    page.route('**' + DATA_URL, make_name_need_fitting)
+    page.goto(base_url + LABELS_URL)
+    page.wait_for_selector('#labels li')
+    page.wait_for_function("""() => {
+        const el = document.querySelector('#labels li h1');
+        return parseFloat(el.style.getPropertyValue('--fit-screen-size')) < 40;
+    }""")
+    fitted = page.evaluate("""() =>
+        parseFloat(document.querySelector('#labels li h1').style
+            .getPropertyValue('--fit-screen-size'))
+    """)
+    printed = page.evaluate("""() =>
+        parseFloat(document.querySelector('#labels li h1').style
+            .getPropertyValue('--fit-print-size'))
+    """)
+    assert printed == fitted * 2
+
+    chooser = page.locator('#labels li', has=page.locator(
+        '.photo-chooser.next')).first
+    if 'vertical' in (chooser.get_attribute('class') or ''):
+        chooser.locator('.photo-chooser.next').click()
+        page.wait_for_function("""el => el.classList.contains('horizontal')""",
+                               arg=chooser.element_handle())
+    horizontal_size = chooser.locator('h1').evaluate("""el =>
+        parseFloat(el.style.getPropertyValue('--fit-screen-size'))
+    """)
+    chooser.locator('.photo-chooser.next').click()
+    page.wait_for_function("""el => el.classList.contains('vertical')""",
+                           arg=chooser.element_handle())
+    page.wait_for_function("""([el, oldSize]) =>
+        parseFloat(el.querySelector('h1').style
+            .getPropertyValue('--fit-screen-size')) < oldSize
+    """, arg=[chooser.element_handle(), horizontal_size])
+
+    for _ in range(12):
+        page.evaluate("window.dispatchEvent(new Event('resize'))")
+        page.wait_for_timeout(150)
+
+    assert page.evaluate("""() =>
+        parseFloat(document.querySelector('#labels li h1').style
+            .getPropertyValue('--fit-screen-size'))
+    """) == fitted
+
+
 def test_dragging_a_number_onto_the_background_splits_the_label(editor):
     """The editor's reason to exist: two plantings, two labels to print.
 
