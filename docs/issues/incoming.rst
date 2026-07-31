@@ -8,6 +8,43 @@ traced as far as they go.
 Waiting
 -------
 
+* **Label text is about twice the size it should be, and on the labels whose
+  photo loads it grows until it disappears.** Reported from the iPad on
+  2026-07-31, while looking at :doc:`045
+  <045-the-label-editor-is-unusable-on-an-ipad>`'s cheap half. Two symptoms,
+  split by whether the photo arrives. On the majority, where it does not, the
+  text is simply too big and stays that way. On the seven top labels where it
+  does, the text starts at that same doubled size, grows every few seconds, and
+  eventually vanishes.
+
+  The first half has a cause in the template, and it is one line of control
+  flow: ``reports/planting-labels.html`` fits text to the label with fitty, and
+  the only thing that ever calls ``fitTextToSpace`` is the ``verticalPhotoWidth``
+  watcher. That property changes in ``setAspect``, which runs on the photo's
+  ``@load``. **No photo, no fit** -- the text keeps the declared ``30pt`` /
+  ``24pt``, which on a label drawn at 046's 50 % is about double what a fitted
+  label shows. Reproduced in emulated WebKit and Chromium: with half the labels'
+  photos 404ing, every one of them reports ``font-size: 40px`` and never changes.
+
+  The second half is **not reproduced here**. In the same emulation the fitted
+  labels are stable across repeated fit passes, and nothing grows. One suspect
+  was tested and cleared: fitty measuring inside 046's ``zoom: 0.5`` returns the
+  same font size as without it (22.69px vs 22.67px in WebKit, 24.23 vs 24.18 in
+  Chromium, unchanged over three passes), so the zoom is not corrupting its
+  arithmetic -- do not re-test that. What is left to suspect is iOS text
+  autosizing (``-webkit-text-size-adjust``, which the page gets only from the
+  CDN copy of sanitize.css) and fitty's own resize observers on the device.
+  Settling it wants the device, or :doc:`017
+  <017-browser-suite-unrunnable-vue-editor-untested>`'s browser suite, which is
+  also the argument for not fixing it blind.
+
+  Worth asking before it is split: **why do the photos fail at all?** The report
+  says the majority do not load, and that is the trigger for the first half. If
+  the tablet cannot reach the media host, that is a serving question in the
+  neighbourhood of :doc:`048
+  <048-the-dev-server-loads-photos-from-the-production-media-host>` rather than
+  a template one, and it would be the more useful thing to fix first.
+
 * **The species list page names a photo size that is not in the initial data.**
   ``reports/planted-species-list.html`` renders
   ``species.photo.get_mobilethumbnail_url``, but
