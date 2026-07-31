@@ -18,6 +18,13 @@ DATABASES['default'].update({
 
 SECRET_KEY = secret_from_env('KASVIMUSEO_SECRET_KEY')
 
+# The names this site answers to, from the environment and with no default
+# (issue 026). Ansible writes them into uwsgi.ini from ``kasvimuseo_allowed_hosts``
+# in ``ansible/vars/main.yml``; unlike the secrets these are not vaulted, since a
+# host name is not a secret and the deployment should be reproducible from what
+# is tracked here.
+ALLOWED_HOSTS = hosts_from_env('KASVIMUSEO_ALLOWED_HOSTS')
+
 STATIC_URL = '//static.kasvit.ambitone.com/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 

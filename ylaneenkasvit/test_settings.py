@@ -16,6 +16,14 @@ from .common_settings import *  # noqa
 # supplies its own literal instead and needs no variable set.
 SECRET_KEY = 'test'
 
+# Named here rather than read from ``KASVIMUSEO_ALLOWED_HOSTS`` (issue 026), for
+# the same reason as the key above: nothing has to be set to run the suite. The
+# suite itself never reads this -- Django 1.5's ``setup_test_environment``
+# replaces ``ALLOWED_HOSTS`` with ``['*']`` for the duration of a test run
+# (``django/test/utils.py``) -- but the browser tests serve these same settings
+# from gunicorn, outside that, and reach it on ``127.0.0.1`` (issue 017).
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+
 # South migrates apps alphabetically, so ``kasvimuseo`` runs before
 # ``photologue`` and migration 0014 fails on the foreign key to
 # ``photologue_photo``. With this off, South leaves the test database to

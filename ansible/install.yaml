@@ -113,10 +113,12 @@
         app_path: "{{ django_dir }}"
         settings: ylaneenkasvit.ylaneenkasvit_settings
       # Importing the settings needs both secrets, so any manage.py command run
-      # from here needs them in its environment too (issue 025).
+      # from here needs them in its environment too (issue 025) -- and the host
+      # names, which the settings insist on for the same reason (issue 026).
       environment:
         KASVIMUSEO_SECRET_KEY: "{{ kasvimuseo_secret_key }}"
         KASVIMUSEO_DB_PASSWORD: "{{ kasvimuseo_db_password }}"
+        KASVIMUSEO_ALLOWED_HOSTS: "{{ kasvimuseo_allowed_hosts | join(',') }}"
       no_log: true
 
     - name: Install PostgreSQL
