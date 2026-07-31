@@ -13,8 +13,6 @@ def modify(settings):
     db['NAME'] = os.environ.get('KASVIMUSEO_DB_NAME', 'ylaneenkasvit')
     db['USER'] = os.environ.get('KASVIMUSEO_DB_USER', 'ylaneenkasvit')
 
-    #settings['INSTALLED_APPS'] += 'pserver', 'django_extensions',
-
     # The repository root, one level up from this package: static/ and media/
     # live there, and that is where collectstatic writes.
     settings['PROJECT_ROOT'] = os.path.realpath(
