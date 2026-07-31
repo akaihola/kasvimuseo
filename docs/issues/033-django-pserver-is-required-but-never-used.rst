@@ -12,7 +12,7 @@ Issue 033: django-pserver is required but never used
 :Blocks: 036 -- Stage 0
 :Related: (none)
 :Decision: Remove it from ``requirements/dev.txt`` and delete the commented-out line. The threaded server is not wanted: nothing has enabled it in fifteen years, and ``django-extensions``' ``runserver_plus`` is already installed for the same job. The ``django_extensions`` the same comment names is kept -- it is in ``INSTALLED_APPS`` already, so the comment offered a worse way to get something the project has.
-:Resolution: 54cc2fa -- with issues 020 and 021, which edit the same six lines
+:Resolution: 0c82b49 -- with issues 020 and 021, which edit the same six lines
 
 Problem
 =======
@@ -94,7 +94,7 @@ Shared with issues 020 and 021, and written out in full in issue 020.
 ``dev/Containerfile`` installs ``requirements/production.txt`` and the test
 pins, not ``dev.txt``, so ``dev.txt`` is what a developer installs by hand.
 After the change, ``git grep -n "pserver" -- . ':!docs'`` prints nothing, and
-the rebuilt image, the suite (405 passed) and the pages are as recorded in 020.
+the rebuilt image, the suite (406 passed) and the pages are as recorded in 020.
 
 See also
 ========
