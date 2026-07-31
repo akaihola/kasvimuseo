@@ -213,10 +213,11 @@
             position: absolute;
             right: 5px;
             bottom: 0;
-            /* Visible without a hover: a touch screen has none, and the only
-               way to reveal this was Safari's faked hover on a tap meant to do
-               something else. It stays off the paper through the @media print
-               hide list above, not through being invisible (issues 045, 047). */
+            /* A touch screen has no hover, so the toggle is simply always
+               drawn there; the @media (hover: hover) block below takes it away
+               again for a mouse. It stays off the paper through the
+               @media print hide list above, not through being invisible
+               (issues 045, 047). */
             opacity: 0.5;
             transition: all 0.5s ease-in-out;
         }
@@ -238,6 +239,24 @@
         li .remove:hover {
             opacity: 1;
             transition: all 0s;
+        }
+        @media (hover: hover) {
+            /* A mouse can reveal the toggle, so the sheet stays clean until it
+               is used: hidden at rest, dimmed while the pointer is moving or
+               the page is scrolling (``pointer-active``, set by the script
+               below), full over the label it belongs to. */
+            .remove,
+            li.hidden .remove {
+                opacity: 0;
+            }
+            body.pointer-active .remove {
+                opacity: 0.5;
+            }
+            body.pointer-active li:hover .remove,
+            body.pointer-active li.hidden .remove,
+            li:hover .remove {
+                opacity: 1;
+            }
         }
         #drag-wrapper {
             transform: scale(var(--screen-scale));
@@ -292,6 +311,23 @@
 
     <!--suppress StatementWithEmptyBodyJS, JSUnusedGlobalSymbols, JSUnresolvedFunction, JSUnusedLocalSymbols, JSUnresolvedVariable -->
     <script type="text/javascript">
+        // Mouse only: moving the pointer or scrolling dims the print toggles
+        // in, and two seconds of stillness puts them away again. A touch
+        // screen never gets here -- there the stylesheet draws them always,
+        // because there is no hover to reveal them with (issue 045).
+        if (window.matchMedia('(hover: hover)').matches) {
+            let sleep = null;
+            const wake = function() {
+                document.body.classList.add('pointer-active');
+                clearTimeout(sleep);
+                sleep = setTimeout(function() {
+                    document.body.classList.remove('pointer-active');
+                }, 2000);
+            };
+            window.addEventListener('mousemove', wake, {passive: true});
+            window.addEventListener('scroll', wake, {passive: true});
+        }
+
         function screenScale() {
             // The --screen-scale of the stylesheet, so that the drag preview
             // is drawn at the same scale as the label grid (issue 046).

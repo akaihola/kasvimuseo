@@ -582,12 +582,25 @@ def test_printable_pages_offer_a_print_button(client, url_name, external_id,
 def test_the_label_print_toggle_needs_no_hover(client):
     """It was revealed by ``opacity: 0`` plus hover, which a touch screen lacks.
 
-    ``.remove`` is in the ``@media print`` hide list, so nothing but that list
-    keeps it off the paper now.
+    The toggle is drawn by default now, and only a device that *has* a hover
+    takes it away again. ``.remove`` is in the ``@media print`` hide list, so
+    nothing but that list keeps it off the paper.
     """
     content = page(client.get(reverse('planting-label')))
 
     hide_list = re.search(r'@media print \{\s*([^}]*)\}', content)
     assert hide_list, 'the page has no @media print block at all'
     assert '.remove' in hide_list.group(1)
-    assert 'opacity: 0;' not in content
+    # The default -- what a touch screen gets -- is visible.
+    default = re.search(r'\n        \.remove \{([^}]*)\}', content)
+    assert default, 'the page has no unconditional ``.remove`` rule'
+    assert 'opacity: 0.5;' in default.group(1)
+    # Hiding it again is scoped to devices that can hover, and the script that
+    # dims it back in is scoped to the same query.
+    hover_only = re.search(r'@media \(hover: hover\) \{(.*?)\n        \}\n',
+                           content, re.DOTALL)
+    assert hover_only, 'nothing is scoped to ``@media (hover: hover)``'
+    assert 'opacity: 0;' in hover_only.group(1)
+    assert 'body.pointer-active .remove' in hover_only.group(1)
+    assert "matchMedia('(hover: hover)')" in content
+    assert "classList.add('pointer-active')" in content
