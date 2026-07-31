@@ -25,7 +25,7 @@ Issue 001: Public species list shows removed species
            list. ``kasvimuseo/views.py`` had already taken the same side: the
            species detail page lists beds with
            ``.exclude(removal_date__isnull=False)``.
-:Resolution: commit 24d5005 (``SpeciesManager`` applies
+:Resolution: commit 824627a (``SpeciesManager`` applies
              ``is_public_planted`` and prefetches the bed; the pinning test
              rewritten to cover the removed planting and the private-bed one;
              the species query stays flat at 6 queries)
