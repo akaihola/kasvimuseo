@@ -154,21 +154,30 @@ Package                      Pinned    Notes
 ``south``                    0.8.1     Pre-1.7 migrations. Dies at Django 1.7.
 ============================ ========= =========================================
 
-Plus, installed by ``dev/Containerfile`` with ``--no-deps`` and therefore
-*invisible to* ``production.txt``:
+Plus ``Pillow==6.2.2`` — photologue's imaging backend, the last Pillow that
+runs on Python 2.7. It was installed by ``dev/Containerfile`` and therefore
+invisible to ``production.txt`` when this was written; issue 027 has since
+moved it into the file, which now names the whole runtime set.
 
-* ``Pillow==6.2.2`` — photologue's imaging backend (the last Pillow that runs on
-  Python 2.7)
-* ``django-sortedm2m==1.5.0`` — not actually needed by photologue 2.6.1; it
-  becomes a real dependency at photologue 2.8.
+``django-sortedm2m==1.5.0`` was installed alongside it and is gone: the
+suspicion recorded here — that photologue 2.6.1 does not actually need it —
+was confirmed by reading the installed metadata and grepping the package, and
+the image builds and the suite passes without it. It becomes a real dependency
+at photologue 2.8, which is Stage 2 below.
 
 ``django-indexer==0.3.0`` and ``django-paging==0.2.4`` were in this list when it
 was written, referenced by nothing; Stage 0 has since removed them (issue 020),
 which is why the container no longer installs them.
 
-None of the pinned production releases declare ``install_requires`` on PyPI, so
-the *declared* dependency tree is completely flat. The real tree is implicit —
-which is exactly why ``--no-deps`` plus hand-picked extras is currently needed.
+None of the pinned production releases declare ``install_requires`` in the
+metadata PyPI publishes, so the tree looks completely flat from outside — which
+is why ``--no-deps`` plus hand-picked extras was needed. It is not flat once
+they are built: issue 027 read the ``dist-info`` in the image and found
+photologue 2.6.1 declaring ``Django>=1.4``, ``South>=0.7.5`` and
+``Pillow>=2.0.0``, and django-extensions declaring ``six>=1.2``. Those four are
+the whole implicit tree for this stage, all of them now pinned in
+``production.txt``, so ``--no-deps`` and a plain resolve produce the same ten
+packages and the extras are gone.
 
 Test and development
 --------------------
@@ -564,11 +573,13 @@ pin for every stage up to and including 16.
 **Decided** (issue 028). ``Pillow<10`` through Stage 16 and ``Pillow>=9.1``
 from Stage 17, with 9.5.0 as the pin for everything in between; Stage 10 is
 where 6.2.2 becomes 9.5.0. The constraint is written where the versions are
-set rather than only here: beside the ``Pillow==6.2.2`` pin in
-``dev/Containerfile``, beside ``django-photologue`` in
-``requirements/production.txt`` -- which is the pin that implies it and does
-not name Pillow at all -- and beside the unpinned resolution in the production
-``Dockerfile``. Nothing was upgraded to record it.
+set rather than only here: beside the ``Pillow==6.2.2`` pin, beside
+``django-photologue`` -- the pin that implies it -- and beside the resolution
+in the production ``Dockerfile``. Nothing was upgraded to record it. The first
+two of those were in ``dev/Containerfile`` and ``requirements/production.txt``
+respectively when 028 was settled, because the file did not name Pillow at all;
+issue 027 has since moved the pin into ``production.txt``, so both now sit
+there, a few lines apart.
 
 Measured while recording it: with ``Image.ANTIALIAS`` deleted, the suite fails
 five tests, not none. Four are the admin photo changelist, which builds
@@ -648,9 +659,13 @@ inferred.
 **Decided** (issue 030). Nothing to pin and nothing to change: the constraint
 is on the *builder*, not on the version, and every stage that needs sortedm2m
 1.1.1-1.5.0 is built in an image old enough to satisfy it. What was owed was
-the record, and it is now beside the ``django-sortedm2m==1.5.0`` pin in
-``dev/Containerfile`` -- the only place the version is set -- so that a build
+the record, and it is beside the place the package is named, so that a build
 failure on a current machine is recognised rather than debugged from scratch.
+That place has moved: the record sat beside a ``django-sortedm2m==1.5.0`` pin
+in ``dev/Containerfile`` until issue 027 established that photologue 2.6.1 does
+not use the package and removed it from the image, so it is now the comment in
+``requirements/production.txt`` that says why the package is absent and when --
+Stage 2 -- it arrives. Nothing about this ruling changed.
 Should a stage ever have to be built on a modern toolchain, the way out is
 sortedm2m 2.0.0, the first release with a wheel -- which is a Django 1.11
 floor and therefore not available before Stage 9.
@@ -683,15 +698,26 @@ The general rule this implies
 ------------------------------
 
 **Every stage's requirements file must be a full lock, not a list of direct
-pins.** The existing ``dev/Containerfile`` already does this by hand, with
-``pip install --no-deps`` plus two manually chosen extras, and a comment
-explaining that it "avoids photologue dragging in an incompatible Pillow" —
-this analysis is that comment, generalised and made explicit.
+pins.** This used to be done in ``dev/Containerfile``, by ``pip install
+--no-deps`` plus two manually chosen extras, under a comment explaining that it
+"avoids photologue dragging in an incompatible Pillow" — this analysis is that
+comment, generalised and made explicit.
 
-The mechanism to adopt is ``uv pip compile``: keep a short ``*.in`` per stage
-with the direct pins and the upper bounds established above, and commit the
-generated fully-pinned ``*.txt``. `Appendix A — Resolved lock set per stage`_
-gives the output for every stage that could be resolved.
+**Decided** (issue 027), and Stage 0 is now a full lock. It is
+``requirements/production.txt``, maintained by hand: it names every runtime
+package at an exact version, and the extras are gone. By hand because ``uv pip
+compile --python-version 2.7`` answers *"Invalid version request: Python <3.6
+is not supported but 2.7 was requested"* — run rather than assumed. Forced to
+3.7 it reproduces the same set except for Pillow, where it picks 9.5.0: right
+for Stage 10, uninstallable on Python 2.7.
+
+So the mechanism to adopt — a short ``*.in`` per stage with the direct pins and
+the upper bounds established above, plus a committed, generated fully-pinned
+``*.txt`` — starts at **Stage 10**, the Python 3 flip, which is exactly where
+`Appendix A — Resolved lock set per stage`_ begins. Stages 0–9 are locks in
+the plain sense: complete, exact and written out by a person. Nothing before
+Stage 10 gains a ``*.in`` file, because nothing before Stage 10 has a resolver
+that could regenerate the ``*.txt`` from it.
 
 
 Part 4 — The upgrade sequence
@@ -762,6 +788,10 @@ Photologue moves *first* and alone, because it owns tables.
     ``'django.contrib.sites'`` to ``INSTALLED_APPS`` and set ``SITE_ID``.
     Neither exists in the project today.
   - New dependencies: ``django-sortedm2m`` (1.1.1+) and ``django-model-utils``.
+    Both go into ``requirements/production.txt``, which is a complete lock as
+    of issue 027 and no longer has a second install to hide them in. sortedm2m
+    was in the image before this stage needed it and is not any more; its
+    build-tool constraint is 3b.3.
   - Run photologue's South migrations. **This requires dropping**
     ``SOUTH_MIGRATION_MODULES`` and ``ylaneenkasvit/external_migrations/photologue/``,
     which currently override photologue's migration history with a single local
@@ -1203,7 +1233,12 @@ Parts 2.4 and 2.6.
 
 Stages 0–9 run on Python 2.7, which ``uv`` cannot target, so they have no
 generated lock. Build those the way the project already does: ``pip install
---no-deps`` against a hand-maintained pin list.
+--no-deps`` against a hand-maintained pin list — which since issue 027 is a
+complete one. Stage 0's is ``requirements/production.txt`` as it stands today:
+ten packages, every one exact, ``Pillow==6.2.2`` among them, and no second
+install anywhere adding to it. Each stage from 1 to 9 edits that file and stays
+whole; ``--no-deps`` is what makes an omission show up as an ``ImportError``
+in the image rather than as an unpinned package nobody chose.
 
 The test stack
 --------------
