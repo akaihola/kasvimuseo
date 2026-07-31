@@ -58,24 +58,34 @@ How this is ranked
 1. Find out what production actually runs
 -----------------------------------------
 
-Before anything else, and independent of all of it. None is a code change; each
-changes what the rest of the list means.
+Before anything else, and independent of all of it. Each is an act on the
+running server rather than a change to this repository, and each changes what
+the rest of the list means. 026 is the exception that proves it: what it needed
+first was a look at the server, and the fix that answer produced is the
+prerequisite for 051.
 
 .. issue-rank::
 
    050: A working superuser password for the production admin has been in a
       tracked file since 2020, and is still the password that account uses.
-      First of these three because it needs no access to anything to use and
+      First of these because it needs no access to anything to use and
       one command to end, and because the file it was in has just been deleted
       -- which changes nothing until the password does.
    049: The rotated ``SECRET_KEY`` and database password are in the vault and
       not in use, so the disclosure 025 describes is still live. One playbook
       run ends it, and it is the only item on this page whose timing belongs to
       somebody outside the project.
-   026: The answer is either "the deployment is not reproducible" or
+   051: Production serves with ``DEBUG`` on, from an untracked file on the
+      server -- so settings, SQL and full tracebacks are on every error page.
+      This is 026's answer, and it is the same deploy as 049: one playbook run
+      and one deletion, in that order.
+   026: The answer was either "the deployment is not reproducible" or
       "production is serving with ``DEBUG`` on", which is a live
-      information-disclosure problem. One look at the server settles which,
-      and nothing else on this page can.
+      information-disclosure problem. One look at the server settled it -- both,
+      the second by way of the first -- and nothing else on this page could.
+      **Fixed** as far as the repository goes: ``ALLOWED_HOSTS`` is read from the
+      environment and supplied by Ansible, which is what 051 needs to exist
+      before it can act.
    025: Rotating the ``SECRET_KEY`` and the database password costs one round
       of logouts. It depends on nothing and it is in the file the upgrade will
       edit repeatedly.

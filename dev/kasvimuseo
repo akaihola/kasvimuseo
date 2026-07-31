@@ -41,6 +41,11 @@ DB_PASSWORD=${KASVIMUSEO_DB_PASSWORD:-development}
 # Ansible Vault and is never in this repository; the settings refuse to start
 # without KASVIMUSEO_SECRET_KEY, so something has to be passed here.
 SECRET_KEY=${KASVIMUSEO_SECRET_KEY:-development-only-not-a-production-key}
+# The site settings refuse to start without KASVIMUSEO_ALLOWED_HOSTS too (issue
+# 026), and a development server is reached under whatever name its developer
+# published it -- localhost, a container IP, a tailnet name. Production's list
+# comes from ansible/vars/main.yml and is never this.
+ALLOWED_HOSTS=${KASVIMUSEO_ALLOWED_HOSTS:-*}
 IMAGE=${KASVIMUSEO_IMAGE:-kasvimuseo-dev}
 PROD_SSH=${KASVIMUSEO_PROD_SSH:-kasvimuseo@kasvit.ambitone.com}
 
@@ -238,6 +243,7 @@ It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
         -e "KASVIMUSEO_DB_USER=$DB_USER" \
         -e "KASVIMUSEO_DB_PASSWORD=$DB_PASSWORD" \
         -e "KASVIMUSEO_SECRET_KEY=$SECRET_KEY" \
+        -e "KASVIMUSEO_ALLOWED_HOSTS=$ALLOWED_HOSTS" \
         -e "KASVIMUSEO_TEST_SUFFIX=${KASVIMUSEO_TEST_SUFFIX:-}" \
         $extra "$IMAGE" "$@"
 }
