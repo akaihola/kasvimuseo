@@ -431,7 +431,7 @@ Django API                                           Gone in  Used by
 ``SubfieldBase``                                     1.10     —
 ``django.core.context_processors``                   1.10     ``ylaneenkasvit/common_settings.py`` (5 entries)
 ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS``  1.10     ``common_settings.py``
-string view names in ``url()``                       1.10     ``ylaneenkasvit/urls.py`` (3)
+string view names in ``url()``                       1.10     ``ylaneenkasvit/urls.py`` (3 — see Stage 8)
 ``patterns()``                                       **2.0**  ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py``
 ``django.core.urlresolvers``                         2.0      ``kasvimuseo/admin.py``, ``ylaneenkasvit/dashboard.py``
 ``force_unicode``                                    2.0      — (same)
@@ -758,7 +758,13 @@ are done; what is left is the dead grappelli route (022), vendoring
 #. Delete the dead ``/media/grappelli/`` URL pattern in ``ylaneenkasvit/urls.py``.
    It serves ``os.path.dirname(grappelli.__file__)/media``, and grappelli 2.4.5
    has no ``media/`` directory — verified by listing its sdist. Delete
-   ``ADMIN_MEDIA_PREFIX`` too; Django dropped it in 1.4.
+   ``ADMIN_MEDIA_PREFIX`` too; Django dropped it in 1.4. **Done** — issue 022.
+   The installed package in the container was listed as well as the sdist, and
+   the admin was checked on a rendered page: its assets are named under
+   ``STATIC_URL`` and served by ``staticfiles``, and grappelli fills
+   ``window.__admin_media_prefix__`` from ``{% static "grappelli/" %}`` rather
+   than from the setting. Stage 8 has one fewer string view to port — though
+   still three, since issue 048 added ``serve_media`` after this was written.
 #. Vendor ``django-jqm`` into the repo. It is seven templates, two static files
    and three near-empty modules, from a personal fork installed off a GitHub
    URL. Vendoring removes a network dependency from every build and makes the
@@ -912,9 +918,13 @@ Stage 8 — Django 1.9.13 → 1.10.8
   did this).
 * Define ``MIDDLEWARE`` (new style). ``MIDDLEWARE_CLASSES`` is still honoured
   here, so both can coexist for one stage.
-* String view references in ``url()`` are gone → import
-  ``django.views.static.serve`` and the auth views as callables in
-  ``ylaneenkasvit/urls.py``.
+* String view references in ``url()`` are gone → import the views as callables
+  in ``ylaneenkasvit/urls.py``. Three of them, and not the three this plan was
+  written against: ``django.views.static.serve`` for the dead
+  ``/media/grappelli/`` route left with Stage 0 (issue 022), and
+  ``ylaneenkasvit.media.serve_media`` arrived with the live ``/media/`` route
+  (issue 048). What is there now is the two auth views,
+  ``django.contrib.auth.views.login`` and ``.logout``, plus ``serve_media``.
 * ``django.core.urlresolvers`` → ``django.urls`` (available from 1.10).
 * ``django-grappelli`` → 2.9.1; ``django-photologue`` → 3.6.
 

@@ -102,7 +102,7 @@ Open issues
 ===========
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
-020, 021, 023, 024, 025, 026, 027, 033, 034, 037, 039, 040, 041, 042, 043, 046,
+020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 039, 040, 041, 042, 043, 046,
 047 and 048 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
@@ -286,12 +286,19 @@ answer, including two things nobody had noticed: one of the three CSS rules the
 fork exists to serve has never matched anything, and three more Django API
 removals hide inside it. It is also why 014, the dead code in the same file,
 is settled without being touched. 020, 021, 022, 032 and 033 are deletions, and
-three of them -- 020, 021 and 033 -- are done, in one change that took six
-lines out of two requirements files and one settings module. They went together
-because two of them edit the same ``INSTALLED_APPS`` tuple and all three share
-one verification. The only surprise was in 020: ``django-indexer`` does ship a
-model and a South migration, against what the issue asserted, and its empty
-table stays in the production database beside the sentry ones.
+four of them -- 020, 021, 033 and now 022 -- are done. The first three went in
+one change that took six lines out of two requirements files and one settings
+module, together because two of them edit the same ``INSTALLED_APPS`` tuple and
+all three share one verification. The only surprise was in 020:
+``django-indexer`` does ship a model and a South migration, against what the
+issue asserted, and its empty table stays in the production database beside the
+sentry ones. 022 is the one of the four that had a ``Decision`` to make, and
+its single option survived everything that could have overturned it: the
+installed grappelli has no ``media/`` directory, nothing outside these
+documents names either the route or ``ADMIN_MEDIA_PREFIX``, and a rendered
+admin page serves all of its grappelli assets from ``STATIC_URL``. Its file
+also corrects ``upgrade-plan.rst``'s count of the string views Django 1.10
+rejects, which had not been recounted since 048 added one.
 
 
 From the photo management walkthrough

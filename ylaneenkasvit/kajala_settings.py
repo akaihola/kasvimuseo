@@ -19,7 +19,6 @@ DATABASES['default'].update({
 ALLOWED_HOSTS = hosts_from_env('KASVIMUSEO_ALLOWED_HOSTS')
 
 STATIC_URL = '//static.kajalankasvit.ambitone.com/'
-ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 GRAPPELLI_ADMIN_TITLE = u'Kajalan kasvimaat'
 MEDIA_URL = '//media.kajalankasvit.ambitone.com/'
