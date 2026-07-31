@@ -236,6 +236,43 @@ def test_reports_open_no_image_file(client, full_species,
 
 
 @pytest.mark.django_db
+def test_reports_build_an_uncached_photo_size(client, display_size,
+                                              photo_factory):
+    """Issue 028: rendering a report is what builds a missing photo size.
+
+    ``get_display_url()`` calls ``create_size()`` only when the cached file is
+    absent, and ``create_size()`` calls ``resize_image()`` only when the
+    original is not already the size asked for -- which is where photologue
+    asks Pillow for ``Image.ANTIALIAS``, removed in Pillow 10.0.0. There are
+    two such calls, one per branch, and the suite reached only the other one:
+    the admin photo changelist builds ``admin_thumbnail``, a *cropping* size,
+    and the crop branch resizes whatever it is given. The reports use
+    ``display``, which does not crop and therefore returns early rather than
+    upscale -- and every photo the rest of these tests build is smaller than
+    it, so nothing here scaled an image down. This one is twice the size, with
+    a cold cache.
+
+    Asserting the cached file rather than the response, because a
+    ``PhotoSize`` that is never applied still gives a 200 and a URL.
+    """
+    from PIL import Image
+    from photologue.models import PhotoSizeCache
+
+    photosize = PhotoSizeCache().sizes['display']
+    width, height = photosize.size
+    photo = photo_factory(width=width * 2, height=height * 2)
+    species = create_species(name_fi='valkonarsissi', external_id=1,
+                             photo=photo)
+    create_planted(species=species, external_id=1)
+    assert not photo.size_exists(photosize)
+
+    page(client.get(species_url('planted-species', 1)))
+
+    assert photo.size_exists(photosize)
+    assert Image.open(photo.get_display_filename()).size == (width, height)
+
+
+@pytest.mark.django_db
 def test_printable_sheet_shows_flowering_time_and_light_requirement(
         client, full_species):
     content = page(client.get(species_url('planted-species', 1)))
