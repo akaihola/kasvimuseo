@@ -266,9 +266,9 @@ that 032 comes before 031, which it partly resolves.
    032: ``fabfile.py`` was a second, stale deployment next to the maintained
       Ansible one. Deleting it removed ``flax``, which is why it is ranked
       ahead of 031.
-   031: The remaining URL dependencies. ``django-jqm`` is the one that
-      matters: vendoring it takes a personal GitHub URL out of the production
-      build path.
+   031: The remaining URL dependency. ``django-jqm`` is the one that
+      matters, and since 032 took ``flax`` the only one left: vendoring it
+      takes a personal GitHub URL out of the production build path.
    006: 165 lines of template nothing references, which would render wrongly
       if it were ever wired up.
    013: Two standing ``FIXME`` comments that the tests disprove, so readers
