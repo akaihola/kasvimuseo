@@ -43,8 +43,12 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 MEDIA_URL = '/media/'
 # Tests that need real image files override this with a temporary directory;
-# see the ``media_root`` fixture in ``kasvimuseo/tests/conftest.py``.
-MEDIA_ROOT = '/tmp/kasvimuseo-test-media'
+# see the ``media_root`` fixture in ``kasvimuseo/tests/conftest.py``. The
+# variable is for the browser tests, which run the server in one container and
+# seed it from another, so the two need somewhere both of them can see -- these
+# settings serve the server there as well as the suite (issue 017).
+MEDIA_ROOT = os.environ.get('KASVIMUSEO_MEDIA_ROOT',
+                            '/tmp/kasvimuseo-test-media')
 
 # Don't try to mail admins about exceptions raised inside tests.
 LOGGING = dict(LOGGING, loggers={})  # noqa: F405

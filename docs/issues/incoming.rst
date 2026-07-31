@@ -48,6 +48,36 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
+* **Saving the label editor does nothing at all for a browser that did not come
+  through the admin.** Found on 2026-07-31 by the browser suite :doc:`017
+  <017-browser-suite-unrunnable-vue-editor-untested>` builds, on its first run.
+  ``save`` reads the CSRF token out of the cookie with
+  ``document.cookie.match(/\bcsrftoken=(\w+)/)[1]``, and this page sets no such
+  cookie: it renders no ``{% csrf_token %}``, so ``CsrfViewMiddleware`` never
+  issues one. The match returns ``null``, indexing it throws, and the exception
+  is inside the click handler -- no request is made, nothing changes on screen,
+  and the only trace is a ``TypeError`` in the console. Staff reach the editor
+  from the admin dashboard, whose login form does set the cookie, which is why
+  eight years of use never hit it; anyone opening the page directly, or after
+  the cookie expires, gets a Save button that lies. Pinned as it stands today by
+  ``browser_tests/test_label_editor.py::
+  test_saving_without_an_admin_cookie_does_nothing_and_says_nothing``. The fix
+  is a line -- the page can render ``{% csrf_token %}``, or the script can fail
+  loudly -- but which of the two is a decision, and it is worth asking whether
+  a public URL should be able to rewrite every label at all.
+
+* **The museum numbers on a label come back in an arbitrary order.** Same run.
+  ``PlantedSpeciesLabelsApi.get_labels_data`` calls ``sorted(observation_set)``
+  on ``Observation`` instances; the model defines no ordering and no
+  comparison, so Python 2 falls back to comparing them by identity and the
+  order is whatever the objects' addresses happen to be. The editor's own
+  ``insort`` keeps numbers in numerical order, so the same label can print
+  "12 11" and then "11 12" after somebody drags a number and saves. Cosmetic on
+  a printed label, but it is a sheet people read numbers off. One
+  ``key=attrgetter('external_id')`` settles it; the reason it is here and not a
+  numbered issue is that nothing says what the intended order is for the
+  observations with no ``external_id`` at all.
+
 * **The species list page names a photo size that is not in the initial data.**
   ``reports/planted-species-list.html`` renders
   ``species.photo.get_mobilethumbnail_url``, but

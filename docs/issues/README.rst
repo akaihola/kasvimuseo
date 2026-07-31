@@ -101,8 +101,8 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 019, 023,
-024, 025, 037, 039, 040, 041, 042, 043, 046, 047 and 048 are open: each one
+All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
+023, 024, 025, 037, 039, 040, 041, 042, 043, 046, 047 and 048 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -157,7 +157,7 @@ For the order to *do* them in, which cuts across those groups, see "Suggested
 order of implementation" in :doc:`index` -- or :doc:`next`, which is that order
 with the statuses folded in and everything unactionable taken out.
 
-They come from six pieces of work. **001-018** came out of the test coverage
+They come from seven pieces of work. **001-018** came out of the test coverage
 work on branch ``test-coverage_g78``; each has a test pinning the current
 behaviour, so fixing one means deliberately changing a test.
 **019-036** came out of the dependency and platform upgrade analysis on branch
@@ -337,7 +337,8 @@ Reported by the maintainer
 
 043-047 were split out of ``incoming.rst``, where they were written down as
 they were noticed; 048 and 049 were reported straight into a task and never
-passed through it. Unlike the rest of this register they describe symptoms rather
+passed through it. **050** came out of settling 017 and is below them. Unlike
+the rest of this register 043-049 describe symptoms rather
 than causes, so each says how far the cause was traced, and each was taken back
 to the reporter once for the detail that could only come from the machine it
 happens on. 049 is the exception to that as well as the newest: its cause is
@@ -368,6 +369,26 @@ playbook run makes the new values the ones in use. It sits here rather than
 inside 025 because it is a separate act on a machine nothing here can reach, and
 because the customer has to agree when to spend its cost -- one round of logouts
 and any outstanding password-reset links.
+
+
+From settling issue 017
+-----------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 050 High     security / deployment   A production admin password is committed and in use
+==== ======== ======================= ==================================================
+
+The one issue here that was found by *deleting* something. 017's browser suite
+logged into the admin with a username and password written into
+``conftest.py``, and the password matched the production dump's hash for that
+account exactly, so the file had been publishing a working superuser login
+since 2020. 017 could take it out of the tracked files and nothing more, which
+is 025's split repeated: the act that ends the disclosure is on the server, and
+it is this issue. Two smaller findings came out of the same work and are in
+:doc:`incoming` rather than here -- a save that silently does nothing without an
+admin cookie, and museum numbers that arrive in an arbitrary order.
 
 
 Already fixed
