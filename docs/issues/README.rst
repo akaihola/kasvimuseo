@@ -101,15 +101,17 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 019, 025, 037,
-039, 040, 041, 042, 043, 046, 047 and 048 are open: each one either changes
+All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 019, 025,
+037, 039, 040, 041, 042, 043, 046, 047 and 048 are open: each one either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
-work, so each wants a decision first. Eight of the
+work, so each wants a decision first. Nine of the
 exceptions -- restoring an action that crashes, two missing lookup guards, an
 archive view that refused to render an empty list, a missing sort link the
 maintainer asked to have done rather than ruled on, a placeholder image, a
-search box switched off by a typo, and a receiver that could raise on any save
--- needed no ruling, and stay in the tables with ``Status: Fixed``. 040 and 048
+search box switched off by a typo, a receiver that could raise on any save, and
+a ``filter()`` that returns an iterator on Python 3 where the replacement is
+correct on both -- needed no ruling, and stay in the tables with
+``Status: Fixed``. 040 and 048
 did need one -- 040 between its three options, 048 between three shapes of a
 deliberate design change -- and both were ruled and fixed the same day; their
 files carry the reasoning. 037 needed one between four options and got it once
@@ -208,7 +210,9 @@ From the test coverage work
 
 Suggested reading order for a first review: 001, 002 and 017 are the ones with
 real consequences. 013, 006 and 015 are cheap tidying. 016 and 018 are about
-the future rather than today.
+the future rather than today; 016 is fixed, since the construct that is correct
+on both interpreters costs nothing to adopt now and Python 2's behaviour is
+unchanged by it.
 
 From the dependency upgrade analysis
 ------------------------------------
