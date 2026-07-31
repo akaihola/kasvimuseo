@@ -121,6 +121,18 @@ real database password is ``db fetch``, which talks to production::
 
     $ KASVIMUSEO_DB_PASSWORD=... dev/kasvimuseo db fetch
 
+``ALLOWED_HOSTS`` arrives the same way and refuses to start the same way, from
+``KASVIMUSEO_ALLOWED_HOSTS`` -- a comma-separated list of host names (issue
+026). It is not a secret, so production's list is tracked, in
+``ansible/vars/main.yml`` as ``kasvimuseo_allowed_hosts``, and ``uwsgi.ini``
+writes it into the process environment beside the two secrets.
+``dev/kasvimuseo`` passes ``*`` into the container, since a development server
+is reached under whatever name it was published under, and the test settings
+name their own hosts -- so, again, nothing needs setting to work locally. There
+is deliberately no default: an empty list makes Django refuse every request and
+``['*']`` switches the ``Host`` header check off, so either fallback would
+answer a misconfigured deployment silently.
+
 Photos are served by this server, under ``/media/``, and the ones this machine
 does not have are redirected to ``media.kasvit.ambitone.com``. So a fresh clone
 shows every photo the database references without downloading anything, and a

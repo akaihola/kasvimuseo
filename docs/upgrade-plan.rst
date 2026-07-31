@@ -1194,10 +1194,14 @@ repeatedly, so they were worth deciding first: the committed production
 ``SECRET_KEY`` and database password (``docs/issues/025``) — out of the file the
 upgrade edits, read from the environment, and rotated in the vault but not yet
 deployed, which is ``docs/issues/049`` — and the fact that
-``ALLOWED_HOSTS`` is set nowhere in the repository at all
-(``docs/issues/026``) — which, given that Django 1.5 rejects every request when
-it is empty and ``DEBUG`` is off, means production is relying on something this
-repository does not contain.
+``ALLOWED_HOSTS`` was set nowhere in the repository at all
+(``docs/issues/026``), which, given that Django 1.5 rejects every request when
+it is empty and ``DEBUG`` is off, meant production was relying on something this
+repository did not contain. It was: an untracked ``local_settings.py`` on the
+server that turns ``DEBUG`` on, so the check has never been reached.
+``ALLOWED_HOSTS`` now comes from the environment like the secrets, supplied by
+Ansible from ``ansible/vars/main.yml``; deleting that file, which is what turns
+``DEBUG`` off, is ``docs/issues/051``.
 
 Suggested checkpointing
 -----------------------

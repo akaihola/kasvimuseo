@@ -102,8 +102,8 @@ Open issues
 ===========
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
-020, 021, 023, 024, 025, 027, 033, 034, 037, 039, 040, 041, 042, 043, 046, 047
-and 048 are open: each one
+020, 021, 023, 024, 025, 026, 027, 033, 034, 037, 039, 040, 041, 042, 043, 046,
+047 and 048 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -246,12 +246,17 @@ From the dependency upgrade analysis
 ``docs/upgrade-plan.rst``. Read it first; it lists which of the others block it.
 
 Of the rest, 025 and 026 are security questions independent of the upgrade and
-could be decided immediately; 025 was, and its repository half is fixed, leaving
-026 -- which needs somebody to look at the running server -- and 049, which needs
-somebody to deploy to it. 019, 023 and 024 are one-line
-defensive changes that
-are no-ops today and prevent silent breakage later -- the cheapest things on this
-list. 019 is done: the Django 1.5 default middleware tuple is copied into
+could be decided immediately. Both were, and both are ``Fixed`` in the same
+sense: the repository stopped depending on something only the server had, and
+the act that ends the problem is somewhere else. 026's ruling came from the
+maintainer reading the server, and the answer was the bad one -- an untracked
+``local_settings.py`` there sets ``DEBUG = True``, so both of the two cases the
+issue offered were true at once, the second by way of the first. Its file
+carries that output. What is left of each is on the server: 049 deploys the
+rotated secrets, and 051 -- new, from 026 -- deletes that file, which can only
+happen after 026's ``ALLOWED_HOSTS`` change is deployed. 019, 023 and 024 are
+one-line defensive changes that are no-ops today and prevent silent breakage
+later -- the cheapest things on this list. 019 is done: the Django 1.5 default middleware tuple is copied into
 ``common_settings`` verbatim, which changes nothing that runs today and gives
 Stage 8 a list to rename instead of an absence to notice. It also finished half
 of 023, since ``MessageMiddleware`` is in that default; the other half -- the
@@ -363,7 +368,9 @@ Reported by the maintainer
 
 043-047 were split out of ``incoming.rst``, where they were written down as
 they were noticed; 048 and 049 were reported straight into a task and never
-passed through it. **050** came out of settling 017 and is below them. Unlike
+passed through it. **050** came out of settling 017 and is below them, and
+**051** came out of settling 026 the same way -- from being told what is on the
+server, which is the one thing neither issue could find out here. Unlike
 the rest of this register 043-049 describe symptoms rather
 than causes, so each says how far the cause was traced, and each was taken back
 to the reporter once for the detail that could only come from the machine it
@@ -415,6 +422,23 @@ is 025's split repeated: the act that ends the disclosure is on the server, and
 it is this issue. Two smaller findings came out of the same work and are in
 :doc:`incoming` rather than here -- a save that silently does nothing without an
 admin cookie, and museum numbers that arrive in an arbitrary order.
+
+
+From settling issue 026
+-----------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 051 High     deployment / security   Production serves with DEBUG on, from an untracked file
+==== ======== ======================= ==================================================
+
+The third repetition of 025's split, and the only one where the server's copy of
+something is what makes the site work at all: an untracked ``local_settings.py``
+in the deployed package directory turns ``DEBUG`` on, which is why the missing
+``ALLOWED_HOSTS`` never mattered. 026 could put ``ALLOWED_HOSTS`` in the tracked
+settings and nothing more; deleting that file is this issue, and doing it before
+026's change is deployed would 400 the site.
 
 
 Already fixed
