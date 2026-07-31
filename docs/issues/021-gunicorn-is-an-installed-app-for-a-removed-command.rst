@@ -12,7 +12,7 @@ Issue 021: gunicorn is an INSTALLED_APP for a command that is gone
 :Blocks: 036 -- Stage 0
 :Related: 029 -- the real gunicorn constraint, as distinct from this cosmetic one
 :Decision: Remove ``'gunicorn'`` from ``INSTALLED_APPS`` and keep the pin in ``requirements/production.txt``. It is the production server, and since issue 044 the development server too, so the dependency has more use now than when this was filed -- it is only the *app* entry that is dead.
-:Resolution: 54cc2fa -- with issues 020 and 033, which edit the same six lines
+:Resolution: 0c82b49 -- with issues 020 and 033, which edit the same six lines
 
 Problem
 =======
@@ -70,13 +70,17 @@ and through ``ylaneenkasvit/wsgi.py`` in production. Neither path asks Django
 what its installed apps are.
 
 Issue 029 -- the ``setuptools`` ceiling, the real gunicorn constraint -- is
-untouched and stays open.
+untouched. Its own fix landed on ``master`` while this branch was open and
+writes that constraint into ``requirements/production.txt`` as a comment
+directly above the pin, so the line this issue keeps now has seven lines of
+explanation attached to it saying why it is kept and what happens to it at
+Stage 10. Nothing here changes that comment or the pin under it.
 
 Verification
 ============
 
 Shared with issues 020 and 033, and written out in full in issue 020: the
-rebuilt image, the empty greps, ``dev/kasvimuseo app test`` (405 passed),
+rebuilt image, the empty greps, ``dev/kasvimuseo app test`` (406 passed),
 ``manage.py validate`` (0 errors), and the public pages, the two reports and
 the admin change lists all answering ``200`` over HTTP from ``dev/kasvimuseo
 app run`` -- which is to say, served by the gunicorn this issue took out of

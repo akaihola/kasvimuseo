@@ -12,7 +12,7 @@ Issue 020: django-indexer and django-paging are unused
 :Blocks: 036 -- Stage 0
 :Related: (none)
 :Decision: Remove both, from ``requirements/production.txt`` and from ``INSTALLED_APPS``. No database change is made with them: ``paging`` has nothing in the database, and ``indexer``'s one table stays behind, empty, next to the sentry tables from the same integration.
-:Resolution: 54cc2fa -- with issues 021 and 033, which edit the same six lines
+:Resolution: 0c82b49 -- with issues 021 and 033, which edit the same six lines
 
 Problem
 =======
@@ -100,24 +100,35 @@ Shared with issues 021 and 033; recorded here in full because the
 
 **The greps are empty.** Re-run after the change, from the repository root::
 
-    $ grep -rn "indexer\|paging" --include='*.py' --include='*.html' .
+    $ grep -rn "indexer\|paging" --include='*.py' --include='*.html' \
+          --exclude-dir=.dev .
     $ git grep -n "pserver\|indexer\|paging" -- . ':!docs'
 
 Both print nothing and exit 1. Outside ``docs/``, the three names now appear
 nowhere in the repository -- not in a settings module, not in an import, not in
-a template.
+a template. The ``--exclude-dir`` is why the first command is written that way
+and not as this issue's ``Evidence`` field has it: ``.dev/docs/html/`` is the
+untracked Sphinx output, and once the documentation has been built it contains
+this page, whose *filename* has both words in it. ``git grep`` does not have
+the problem, since the directory is not tracked.
 
-**The image really drops them.** ``dev/kasvimuseo app build`` installs from
-``requirements/``, so the change was rebuilt rather than only written down::
+**The image really drops them.** ``dev/Containerfile`` installs from
+``requirements/``, so the change was rebuilt rather than only written down --
+and rebuilt with ``--no-cache``, from the base image up, which is what CI does
+on a fresh runner (issue 018)::
 
     $ python -c "import indexer"   ->  ImportError: No module named indexer
     $ python -c "import paging"    ->  ImportError: No module named paging
+    $ python -c "import pserver"   ->  ImportError: No module named pserver
     $ python -c "import gunicorn"  ->  0.17.4
 
-and ``pip freeze`` in the rebuilt image lists neither, while still listing
-``gunicorn==0.17.4`` (issue 021 keeps it).
+``pip freeze`` in that image is 21 packages, and the three are in none of them,
+while ``gunicorn==0.17.4`` (issue 021 keeps it) and
+``django-extensions==1.5.9`` (issue 033 keeps it) are both there. The build's
+own guard passed too: the step that fails rather than ship an English admin
+(issue 040) found Django's Finnish catalogs where it expects them.
 
-**The suite passes**: ``dev/kasvimuseo app test`` -- 405 passed.
+**The suite passes**: ``dev/kasvimuseo app test`` -- 406 passed.
 ``manage.py validate`` reports 0 errors.
 
 **The site serves.** The production dump was restored, migrated forward, and
@@ -125,9 +136,10 @@ the pages were loaded over HTTP from ``dev/kasvimuseo app run`` -- which is
 gunicorn, so a short response is an error rather than a silent truncation
 (issue 044). All answered ``200`` with their content:
 
-* public: ``/kasvimuseo/planted-species/`` (53,756 bytes),
+* public: ``/kasvimuseo/planted-species/`` (53,540 bytes),
   ``/kasvimuseo/planted-observation/1291/``,
-  ``/kasvimuseo/planting-labels/``, ``/kasvimuseo/planting-labels/data/``,
+  ``/kasvimuseo/planting-labels/``, ``/kasvimuseo/planting-labels/data/``
+  (54,613 bytes -- the response issue 044 was about),
   ``/kasvimuseo/map/22/``, ``/photologue/gallery/``, ``/accounts/login/``
 * the reports: ``/kasvimuseo/planted-species-printable/1,100,102/`` and
   ``/kasvimuseo/planted-species-compact/1,100,102/``
@@ -147,8 +159,21 @@ the sizes are what distinguish the two: ``/admin/`` is **18,319 bytes** with
 that session and **7,088** without it. The change lists are larger still --
 ``/admin/kasvimuseo/observation/`` is 140,264 -- so those are the real pages.
 
-The three ``500``\ s seen on the first pass were the restored dump being older
-than the code -- ``column kasvimuseo_species.photo_is_horizontal does not
-exist``, added by issue 011's migration -- and went away when ``manage.py
-migrate`` brought it forward. Nothing in the server log mentions ``indexer``,
-``paging`` or ``gunicorn`` as an app.
+The same distinction reaches the public pages, which is worth knowing before
+comparing two runs of this check: the species list above is 53,540 bytes
+fetched anonymously and 53,756 with that session still in the cookie jar. The
+whole difference is one element -- ``diff`` shows a single added line, the
+log-out link the base template gives a logged-in visitor -- and it carries the
+user's name, so the number moves with the length of whatever account did the
+check.
+
+Nothing in the server log mentions ``indexer``, ``paging`` or ``gunicorn`` as an
+app.
+
+One thing worth writing down for whoever restores that dump next, because it
+looks exactly like a regression from a change like this one and is not: the
+first pass answered ``500`` on the species list, the observation page and the
+species and planting change lists, with ``column
+kasvimuseo_species.photo_is_horizontal does not exist``. That column is issue
+011's migration; the dump predates it. ``dev/kasvimuseo app manage migrate``
+after ``db restore`` is what fixes it, and every page above was then ``200``.
