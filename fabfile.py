@@ -30,7 +30,10 @@ def ylane():
     env.www_hostnames = ['kasvit.ambitone.com']
     env.wsgi_port = 25121
     env.repository = 'bitbucket.com/akaihola/ylaneenkasvit.git'
-    env.pip_args = '--no-deps'  # fixes photologue/Pillow problem
+    # Was the fix for the photologue/Pillow problem; since issue 027,
+    # requirements/production.txt pins Pillow itself, so this is the same guard
+    # dev/Containerfile keeps rather than the thing that chooses the version.
+    env.pip_args = '--no-deps'
     env.branch = 'master'
     env.db_name = 'ylaneenkasvit'
     env.db_user = 'ylaneenkasvit'

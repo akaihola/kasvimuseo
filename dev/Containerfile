@@ -5,35 +5,17 @@ FROM docker.io/library/python:2.7-alpine
 RUN apk add --no-cache jpeg-dev zlib-dev libpq postgresql-dev gcc musl-dev python2-dev
 
 COPY requirements/production.txt /tmp/production.txt
-# --no-deps keeps the pinned versions exactly as listed (see fabfile.py: it also
-# avoids photologue dragging in an incompatible Pillow -- issue 028). The two
-# packages installed after it are photologue's runtime dependencies, which
-# production.txt does not name (issue 027), and each carries a bound that no
-# metadata declares:
-#
-#   Pillow -- issue 028. photologue <= 3.15.1 calls Image.ANTIALIAS, removed in
-#     Pillow 10.0.0, from resize_image() by way of create_size(), which runs
-#     only when the cached size is missing: a 500 on page render, not at
-#     startup, and invisible to a developer with a warm cache. So this pin
-#     means Pillow<10 as much as it means "the last release for Python 2.7".
-#     The version to move to at the Python 3 flip (upgrade plan Stage 10) is
-#     9.5.0, which satisfies both sides: it still has ANTIALIAS, and it meets
-#     the Pillow>=9.1 that photologue 3.16 onwards needs for
-#     Image.Resampling.LANCZOS (its metadata says >=9, which is wrong).
-#   django-sortedm2m -- issue 030. Every release from 1.1.1 to 1.5.0 is
-#     sdist-only, and their setup.py wraps long_description in an
-#     UltraMagicString that current setuptools rejects, so this pin can only be
-#     built by a period-appropriate toolchain. Measured: it builds under
-#     setuptools 59.8.0 and fails under 83.0.0 on the same interpreter, so the
-#     bound is setuptools < 60 -- and pip runs these sdists' setup.py with
-#     whatever setuptools the environment has, since they carry no
-#     pyproject.toml to trigger build isolation. This image satisfies it, and
-#     so does python:3.7-alpine (setuptools 57.5.0), which is what Stage 10 of
-#     the upgrade plan moves to. Wheels first appear at sortedm2m 2.0.0.
-#     Nothing to do unless a stage is rebuilt on a current machine, where the
-#     failure looks unrelated to the version asked for.
-RUN pip install --no-cache-dir --no-deps -r /tmp/production.txt \
- && pip install --no-cache-dir 'Pillow==6.2.2' 'django-sortedm2m==1.5.0'
+# One install, one file. production.txt now names every runtime package at an
+# exact version, Pillow included, so the second `pip install` this line used to
+# carry is gone -- that was issue 027, and the bounds it explained are beside
+# the pins they belong to. `--no-deps` no longer changes what lands here:
+# measured, `pip install -r production.txt` without it resolves the same ten
+# packages, because the only transitive requirement in the set is photologue's
+# `Pillow>=2.0.0` and the file pins Pillow itself. It stays as the guard that
+# keeps that true -- with it, a package that grows a new dependency fails at
+# import, loudly and in this image, instead of quietly installing something
+# unpinned and unbounded, which is the failure issue 027 is about.
+RUN pip install --no-cache-dir --no-deps -r /tmp/production.txt
 
 # Django 1.5.1 lists its locale catalogs, fixtures and project_template in
 # setup.py's `data_files` rather than `package_data`. That setup.py redirects
