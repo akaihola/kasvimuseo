@@ -708,7 +708,15 @@
                         this.dragSpecies = JSON.parse(JSON.stringify(
                             this.object_list[drag.index]));
                         this.dragSpecies.external_ids = [drag.externalId];
-                        this.dragPreview = true;
+                    }
+                    // The whole label is drawn under the pointer only over the
+                    // empty part of the sheet, where it is the "this becomes a
+                    // new label" indicator -- as it was before the rewrite.
+                    // Over a label it would be a sheet-sized thing following
+                    // the finger for a move that only shifts one number.
+                    this.dragPreview = this.dropTarget(event) === 'background';
+                    if (!this.dragPreview) {
+                        return;
                     }
                     // Keep the pointer on the same spot of the preview
                     // whatever the screen scale is: 380 x 120 unscaled
