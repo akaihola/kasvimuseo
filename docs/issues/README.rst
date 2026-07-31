@@ -339,7 +339,9 @@ and 047 have their rulings recorded -- 50 % on screen with print unaffected,
 and an inline SVG printer whose label toggles the checkbox. 045
 has its scope: the admin works on the tablet, so the work is the label editor
 and printing, and its large half is a drag-and-drop rewrite that should wait
-for 017. 044 turned out not to be an admin issue at all: the pages it names are
+for 017. Its cheap half -- the viewport tag, a print button and a print toggle
+that needs no hover -- is done; it stays open for that large half, which is the
+one symptom in it still unfixed. 044 turned out not to be an admin issue at all: the pages it names are
 cut off mid-response before the submit row is reached, and the boundary is a
 size, not a model. It is filed under the dev environment and is the one item on
 this page that stops the maintainer working today. 048 is from the same pair of
