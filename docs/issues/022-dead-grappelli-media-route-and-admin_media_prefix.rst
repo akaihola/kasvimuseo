@@ -23,7 +23,7 @@ Issue 022: Dead /media/grappelli/ route and ADMIN_MEDIA_PREFIX
     name, so no nginx or Ansible template was left pointing at the prefix; and
     the one consumer of ``ADMIN_MEDIA_PREFIX`` anywhere in the installed stack
     ignores its absence. See "What was checked" below.
-:Resolution: Commit d8a730d -- the route, its ``grappelli`` and ``os``
+:Resolution: Commit 1d08ee4 -- the route, its ``grappelli`` and ``os``
     imports, and ``ADMIN_MEDIA_PREFIX`` in all three site settings modules
     plus the commented example in ``common_settings.py``
 
