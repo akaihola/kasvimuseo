@@ -179,14 +179,19 @@ Test and development
     ``django-extensions==1.5.9``, ``flax`` (``akaihola`` fork, GitHub),
     ``django-pserver``, ``Fabric==1.6.0``, ``Werkzeug==0.8.3``.
 
-``requirements/integration-tests.txt``
+``requirements/integration-tests.txt`` — **deleted since**
     ``pytest==4.6.9``, ``selenium==3.141.0``, ``pytest-selenium==1.17.0``,
     ``pytest-html==1.22.1``, ``pytest-metadata``, ``pytest-variables``,
     ``pytest-base-url``, ``podman-compose`` — plus eleven pins
     (``atomicwrites``, ``configparser``, ``contextlib2``, ``funcsigs``,
     ``importlib-metadata``, ``more-itertools``, ``pathlib2``, ``py``,
-    ``scandir``, ``wcwidth``, ``zipp``) that exist **only** to keep pytest 4.6.9
-    alive on Python 2.7. All eleven disappear the day Python 3 lands.
+    ``scandir``, ``wcwidth``, ``zipp``) that existed **only** to keep pytest
+    4.6.9 alive on Python 2.7. Issue 017 removed the file with the browser
+    suite it belonged to, so all thirteen packages and all eleven backports are
+    already gone rather than waiting for Python 3: the browser tests that
+    replaced them run on the host's Python 3 and pin themselves, in
+    ``browser_tests/requirements.txt``. The stages below are unaffected — this
+    file was never installed into the application image.
 
 
 Part 2 — The hard constraints
@@ -880,8 +885,9 @@ ceiling versions:
 The full resolved lock for this stage — and every stage after it — is in
 `Appendix A — Resolved lock set per stage`_.
 
-And delete: ``six``, ``mock``, ``pbr``, ``funcsigs``, and the eleven Python-2
-backports in ``integration-tests.txt``.
+And delete: ``six``, ``mock``, ``pbr`` and ``funcsigs``. The eleven Python-2
+backports this used to name as well went with ``integration-tests.txt`` in issue
+017, before this stage rather than at it.
 
 Why 3.7 and not 3.6: Django 1.11 supports 3.4–3.7 and 3.7 is the highest, which
 minimises the number of Python bumps still to come. Pin Django ≥ **1.11.17** —
@@ -1364,8 +1370,7 @@ infrastructure lives. The two branches are not identical:
   ``views.py`` are on ``test-coverage_g78`` only.
 
 Everything in Parts 1, 2, 4 and 5 — ``requirements/production.txt``,
-``requirements/dev.txt``, ``requirements/integration-tests.txt``,
-``dev/Containerfile``, ``ylaneenkasvit/common_settings.py``,
+``requirements/dev.txt``, ``dev/Containerfile``, ``ylaneenkasvit/common_settings.py``,
 ``ylaneenkasvit/urls.py`` and the ``kasvimuseo`` application modules — is
 identical on both branches, so the upgrade sequence itself is unaffected.
 Merge ``test-coverage_g78`` before starting Stage 0: the suite is the gate for

@@ -54,6 +54,48 @@ jobs:
       - name: Run the suite
         run: dev/kasvimuseo app test
 
+  # The label editor's behaviour, which only exists in a browser (issue 017).
+  # Its own job rather than a step in the one above, so a drag-and-drop
+  # regression and a model regression arrive as two different red lights, and
+  # so the fast unit signal is not held up by a browser.
+  #
+  # It repeats `app build`, which is the price of that: the two jobs share no
+  # machine. About two and a half minutes in all -- the image, Playwright's
+  # Chromium, then the suite -- against the pytest job's one, and it runs
+  # alongside rather than after.
+  #
+  # `playwright install` is what fetches the browser here. It is deliberately
+  # not in `dev/kasvimuseo`: a development machine already has one, and a
+  # script that downloads 150 MB behind your back is not a script anybody
+  # should have to read twice. PLAYWRIGHT_BROWSERS_PATH overrides where it
+  # comes from.
+  browser:
+    name: playwright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      # The same two runner fixups as the pytest job: `app browser-test` starts
+      # the same cluster through the same script.
+      - name: Prepare the runner for dev/kasvimuseo
+        run: |
+          echo "/usr/lib/postgresql/$(ls /usr/lib/postgresql | sort -V | tail -1)/bin" \
+              >> "$GITHUB_PATH"
+          echo "USER=$(id -un)" >> "$GITHUB_ENV"
+
+      - name: Build the Python 2.7 image
+        run: dev/kasvimuseo app build
+
+      - name: Install Playwright's Chromium
+        run: |
+          uv run --no-project \
+              --with-requirements browser_tests/requirements.txt \
+              playwright install --with-deps chromium
+
+      - name: Run the browser tests
+        run: dev/kasvimuseo app browser-test
+
   # Warnings are errors and docs/issues/next.rst is generated from the issue
   # files' metadata, so this fails on a malformed :Status:, an issue missing from
   # the ranking, or a broken cross-reference -- the class of mistake that is

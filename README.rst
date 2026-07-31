@@ -88,6 +88,7 @@ Other commands::
     $ dev/kasvimuseo db reset                 # delete the cluster entirely
     $ dev/kasvimuseo app manage <args>        # any manage.py command
     $ dev/kasvimuseo app test                 # unit tests; needs no database
+    $ dev/kasvimuseo app browser-test         # the label editor, in a browser
     $ dev/kasvimuseo app shell                # shell in the Python 2.7 container
 
 ``app run`` and ``app manage`` start PostgreSQL if it is down and stop it again
@@ -145,6 +146,44 @@ directory, including material no row points at, still needs SSH::
 
 
 
+Testing
+=======
+
+Two suites, on two interpreters, and the split is deliberate (issue 017)::
+
+    $ dev/kasvimuseo app test                 # the application
+    $ dev/kasvimuseo app browser-test         # the label editor, in a browser
+
+``app test`` is the one you want almost always: pytest inside the Python 2.7
+container, about twenty seconds, its own PostgreSQL, no dump and no media.
+
+``app browser-test`` runs ``browser_tests/`` on the **host's** Python 3, through
+uv, driving Playwright's Chromium against the real application in its own
+container. It covers what only exists in a browser: dragging museum numbers
+between labels, the save cycle, the per-label photo and the print toggle. The
+application is Python 2.7 and nothing that drives a current browser supports
+2.7, which is why this half lives outside the container -- and Playwright can
+drive WebKit, which is the engine the iPad work (issue 045) needs and no
+browser old enough for 2.7 could have provided.
+
+It builds and drops its own database, ``ylaneenkasvit_browsertest``, seeded from
+``browser_tests/seed.py``, serves it with gunicorn on the first free port from
+8123, and points ``MEDIA_ROOT`` at ``.dev/browser-test-media``. Your database,
+your ``media/`` and your ``local_settings.py`` are not read or written. Any
+pytest arguments pass straight through::
+
+    $ dev/kasvimuseo app browser-test -k drag -x
+
+The browsers are never downloaded by the script. Set ``PLAYWRIGHT_BROWSERS_PATH``
+if you have them already, or install one once::
+
+    $ uv run --no-project --with-requirements browser_tests/requirements.txt \
+          playwright install chromium
+
+The page loads Vue, axios and sanitize.css from CDNs; the tests answer those
+requests from ``browser_tests/vendor/`` instead, so a run needs no network.
+
+
 Continuous integration
 ======================
 
@@ -169,10 +208,14 @@ describe. No production dump and no ``media fetch`` are involved: the tests
 build their own data, and the test settings point ``MEDIA_ROOT`` at a
 throwaway directory, so nothing reads a photo.
 
-A full run is about a minute on a hosted runner, the two jobs in parallel:
-``pytest`` builds the Python 2.7 image from scratch and runs the suite, and
-``sphinx`` builds the documentation, which is how a malformed issue field is
-caught on push rather than by whoever next builds the docs.
+A full run is about two and a half minutes on a hosted runner, the three jobs in
+parallel: ``pytest`` builds the Python 2.7 image from scratch and runs the
+suite, ``sphinx`` builds the documentation -- which is how a malformed issue
+field is caught on push rather than by whoever next builds the docs -- and
+``playwright`` runs the browser tests, which is the slowest of the three
+because it needs both the image and a browser. It is a separate job rather than
+a step in ``pytest`` so that a drag-and-drop regression and a model regression
+arrive as two different red lights.
 
 **The workflow only sees the GitHub remote**, ``origin``, which has been the
 mirror rather than the one ``master`` tracks. Work that is only ever pushed to
@@ -193,7 +236,10 @@ locally:
 * **sphinx** -- run ``dev/kasvimuseo docs --clean`` and read the ``WARNING``
   lines. ``--clean`` matters: an incremental build cannot report a problem in a
   file nobody touched, and CI always builds from scratch.
-* **the image build** -- three dependencies install from URLs rather than from
+* **playwright** -- run ``dev/kasvimuseo app browser-test`` here. Same image and
+  same seed data; the runner differs only in where its browser comes from, since
+  CI downloads one and you have one already.
+* **the image build** -- two dependencies install from URLs rather than from
   PyPI (issue 031), so this is the job that goes red without anybody changing
   anything, when one of those URLs stops answering.
 
@@ -206,7 +252,9 @@ machine. ``.git/hooks`` is not tracked, so install it once per clone::
     $ ln -sf "$PWD/dev/pre-push" "$(git rev-parse --git-path hooks)/pre-push"
 
 It skips a push that only deletes branches, and ``git push --no-verify`` skips
-it entirely.
+it entirely. It runs ``app test`` only: the browser suite needs about half a
+minute more and a browser, which is more than a push should wait for, so it is
+left to CI and to whoever is changing that page.
 
 
 Documentation

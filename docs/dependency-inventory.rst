@@ -1602,9 +1602,11 @@ typing-extensions
 Python 2 backports and tooling
 ==============================
 
-These exist in ``requirements/integration-tests.txt`` and ``requirements/dev.txt``
-only to keep the Python 2.7 toolchain working. All of them are dropped at
-Stage 10 of the upgrade plan; they are listed for completeness.
+These existed in ``requirements/integration-tests.txt`` and
+``requirements/dev.txt`` only to keep the Python 2.7 toolchain working. The
+first of those two files went with the browser suite in issue 017, so most of
+them are already gone; the rest are dropped at Stage 10 of the upgrade plan.
+They are listed for completeness, as this inventory found them.
 
 django-pserver
 --------------
