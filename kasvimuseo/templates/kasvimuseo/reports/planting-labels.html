@@ -94,13 +94,18 @@
             page-break-inside: avoid;
             overflow: hidden;
         }
-        li.hidden {
+        li.hidden > *:not(.remove) {
+            /* A label left out of the print run is dimmed by its *contents*,
+               not as a box: ``opacity`` on the ``li`` makes a compositing
+               group, and everything inside it -- the print toggle included --
+               is then drawn against that 0.3, however opaque its own rule
+               says it is. That is what made the toggle paler on an unchecked
+               label than on a checked one, in both its states. The toggle is
+               excluded here, so it renders identically either way. */
             opacity: 0.3;
         }
-        li.hidden .remove {
-            /* The label is dimmed to 0.3, so its own toggle -- the one control
-               that puts it back -- is drawn at full strength inside it. */
-            opacity: 1;
+        li.hidden {
+            border-color: #d9d9d9;
         }
 
         /* photo in label */
@@ -245,15 +250,13 @@
                is used: hidden at rest, dimmed while the pointer is moving or
                the page is scrolling (``pointer-active``, set by the script
                below), full over the label it belongs to. */
-            .remove,
-            li.hidden .remove {
+            .remove {
                 opacity: 0;
             }
             body.pointer-active .remove {
                 opacity: 0.5;
             }
             body.pointer-active li:hover .remove,
-            body.pointer-active li.hidden .remove,
             li:hover .remove {
                 opacity: 1;
             }

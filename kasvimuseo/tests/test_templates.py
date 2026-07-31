@@ -604,3 +604,24 @@ def test_the_label_print_toggle_needs_no_hover(client):
     assert 'body.pointer-active .remove' in hover_only.group(1)
     assert "matchMedia('(hover: hover)')" in content
     assert "classList.add('pointer-active')" in content
+
+
+@pytest.mark.django_db
+def test_a_label_left_out_of_the_run_is_dimmed_by_its_contents(client):
+    """``opacity`` on the ``li`` would take the print toggle down with it.
+
+    It makes a compositing group, so the toggle inside renders against the
+    dimming however opaque its own rule says it is -- 89 levels paler on an
+    unchecked label, while ``getComputedStyle`` reports the same 0.5 for both.
+    No assertion here can see that; what it can do is pin the shape of the rule
+    that avoids it.
+    """
+    content = page(client.get(reverse('planting-label')))
+
+    dimmed = re.search(r'li\.hidden > \*:not\(\.remove\) \{([^}]*)\}', content)
+    assert dimmed, 'nothing dims a label around its print toggle'
+    assert 'opacity: 0.3;' in dimmed.group(1)
+    # The box itself must not be dimmed, only what is in it besides the toggle.
+    box = re.search(r'\n        li\.hidden \{([^}]*)\}', content)
+    assert box, 'the ``li.hidden`` rule is gone'
+    assert 'opacity' not in box.group(1)
