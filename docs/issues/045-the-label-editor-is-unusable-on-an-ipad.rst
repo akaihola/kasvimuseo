@@ -14,7 +14,7 @@ Issue 045: The label editor is unusable on an iPad
     ``test_the_label_print_toggle_needs_no_hover`` assert the markup of the
     cheap half, and cannot see what any of it *does*. What the large half does
     is in ``browser_tests/test_label_editor.py``, which 017 made runnable:
-    ``test_a_number_moves_between_labels_by_touch`` and the five tests around
+    ``test_a_number_moves_between_labels_by_touch`` and the six tests around
     it drive an emulated touch screen, and the two mouse drag tests that were
     there before now go through the same pointer handlers
 :Depends on: (none -- 044 briefly blocked *verifying* this on the device, since
@@ -50,7 +50,8 @@ Issue 045: The label editor is unusable on an iPad
 :Resolution: The cheap half is fixed in bffb370, with the print toggle's
     pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c.
     The large half -- pointer events, and the touch tests that hold them up --
-    is fixed in b8159fb, which is what makes this ``Fixed``.
+    is fixed in e06a2d7, which is what makes this ``Fixed``, with the drag
+    preview put back where it belongs in 214f197.
 
 Problem
 =======
@@ -330,11 +331,15 @@ listen for ``mousemove`` and ``scroll``, passively, and were not touched: the
 toggle behaviour this issue's cheap half and issue 047 settled is exactly as it
 was, and ``.remove`` is still in the ``@media print`` hide list.
 
-**The preview follows the pointer for the whole drag** rather than only over
-the background, because on a touch screen the finger covers the number and the
-preview is the only feedback there is. It still reads ``--screen-scale`` and
-still offsets by 380 x 120 unscaled pixels, so it matches the grid at issue
-046's 50 %;
+**The preview stays what it was: the "this becomes a new label" indicator.**
+It is a whole label, so it is drawn only while the pointer is over the empty
+part of the sheet, which is the drop that makes one. The first attempt showed
+it for the whole drag, on the argument that a finger covers the number it is
+moving and the preview is the only feedback there is; the maintainer saw it
+and the answer was no -- a sheet-sized label following the finger across the
+labels is worse than no feedback, for a move that shifts one number. It still
+reads ``--screen-scale`` and still offsets by 380 x 120 unscaled pixels, so it
+matches the grid at issue 046's 50 %;
 ``test_the_drag_preview_follows_the_finger_at_the_screen_zoom`` reads the
 computed matrix and would fail if either constant moved without the other.
 
@@ -349,7 +354,7 @@ sheet nobody had changed.
 What it was tested with, and what it was not
 ============================================
 
-``browser_tests/test_label_editor.py`` grew six tests and a second browser
+``browser_tests/test_label_editor.py`` grew seven tests and a second browser
 context. The touch ones drive an emulated iPad: ``has_touch``, ``is_mobile``
 and 1080 x 810, which is the device landscape, and at 50 % zoom is three labels
 across with empty sheet beside them. The gesture is dispatched over the Chrome
@@ -370,13 +375,15 @@ events to generate.
  A release off the sheet changes nothing     Mouse, released on the Save
                                              button
  The preview tracks at 50 %                  The computed transform matrix,
-                                             mid-drag
+                                             mid-drag, over the empty sheet
+ The preview is drawn nowhere else           Mid-drag over a label, where it
+                                             must be hidden
  The save cycle keeps the arrangement        Touch drag, save, reload
 =========================================== ================================
 
-Four of the six fail against the previous template, which is the point of
-writing them: the two that pass are the ones asserting that nothing happens,
-and before the rewrite nothing was what touch did anyway.
+Four of the seven fail against the previous template, which is the point of
+writing them: the three that pass are the ones asserting that nothing happens
+or nothing is drawn, and before the rewrite nothing was what touch did anyway.
 
 **What this is not.** It is Chromium with touch emulation, not an iPad, and the
 engine that matters is iOS Safari's. The suite runs Chromium only:
