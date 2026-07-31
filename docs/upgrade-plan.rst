@@ -191,7 +191,9 @@ Test and development
 ``requirements/dev.txt``
     ``django-extensions==1.5.9``, ``flax`` (``akaihola`` fork, GitHub),
     ``Fabric==1.6.0``, ``Werkzeug==0.8.3``. ``django-pserver`` was here too,
-    and Stage 0 removed it (issue 033).
+    and Stage 0 removed it (issue 033). ``flax`` and ``Fabric`` have gone the
+    same way since, ahead of the Stage 10 this table put them in: they existed
+    only for ``fabfile.py``, which issue 032 deleted. Two lines are left.
 
 ``requirements/integration-tests.txt`` — **deleted since**
     ``pytest==4.6.9``, ``selenium==3.141.0``, ``pytest-selenium==1.17.0``,
@@ -406,7 +408,8 @@ Package                      Ladder
                              conservative — 5.5 can be adopted at any time.
 ``mock`` / ``pbr``           superseded by ``unittest.mock`` on Python 3
 ``Fabric``                   1.x is py2-only up to 1.14.1; 1.15.0 added py3;
-                             2.x/3.x are a rewrite with a different API
+                             2.x/3.x are a rewrite with a different API.
+                             **Gone** -- issue 032, deleted rather than ported
 ``Werkzeug``                 1.0.1 is the last with py2.7; 2.x needs 3.6+
 ``selenium``                 3.141.0 is the last with py2.7; 4.x is a new API
 ============================ =========================================================
@@ -730,9 +733,11 @@ imports.
 Stage 0 — Dead weight and defensive settings (no version changes)
 -----------------------------------------------------------------
 
-Cheap, zero-risk, and it shortens every later stage. Five of its eight items
-are done; what is left is the dead grappelli route (022), vendoring
-``django-jqm`` (031) and taking ``django-extensions`` out of production.
+Cheap, zero-risk, and it shortens every later stage. Six of its eight items
+are done; what is left is vendoring ``django-jqm`` (031) and taking
+``django-extensions`` out of production. Not on this list, but done ahead of
+its own stage for the same reasons: ``fabfile.py``, with ``Fabric`` and
+``flax`` (issue 032), which Part 5 had scheduled for Stage 10.
 
 #. Remove ``django-indexer`` and ``django-paging`` from ``production.txt`` and
    ``INSTALLED_APPS``. Nothing in the repo references ``indexer`` or ``paging``
@@ -972,7 +977,9 @@ ceiling versions:
   nothing and costs a ``setuptools<82`` constraint for the next eight stages,
   so no stage carries one. This is the stage where gunicorn moves at all: it
   stays on 0.17.4 through Stage 9, where Python 2.7 makes the question moot.
-* ``selenium`` 3.141.0 → 4.x, ``Fabric`` 1.6 → 3.x *or* delete both (see Part 5)
+* ``selenium`` 3.141.0 → 4.x — and ``Fabric`` is no longer a question here: it
+  was deleted rather than ported (issue 032, see Part 5), which is also what
+  happened to ``selenium``, with the browser suite in issue 017
 
 The full resolved lock for this stage — and every stage after it — is in
 `Appendix A — Resolved lock set per stage`_.
@@ -1107,7 +1114,10 @@ Package                             Dies at   Because
 Python 2 backports [1]_             Stage 10  Pinned only to keep pytest 4.6.9 on Python 2.7
 ``Fabric`` + ``flax``               Stage 10  Fabric 1.x is Python 2 only, and
                                               ``ansible/install.yaml`` already does the job —
-                                              delete rather than port to Fabric 3
+                                              delete rather than port to Fabric 3.
+                                              **Gone** -- issue 032, and ahead of
+                                              this stage: nothing about it needed
+                                              Python 3 to be decided
 ``pytz``                            Stage 17  Django 4.0 switched to ``zoneinfo``
 ``ExifRead``                        Stage 19  Photologue 3.20 dropped it
 ``Werkzeug``                        optional  Only for django-extensions' ``runserver_plus``

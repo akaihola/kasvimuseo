@@ -8,7 +8,8 @@ Issue 031: Three dependencies are installed from URLs, not from PyPI
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
-:Depends on: 032 -- deleting ``fabfile.py`` removes ``flax``, one of the three
+:Depends on: 032 -- **met**: deleting ``fabfile.py`` removed ``flax``, one of
+    the three
 :Blocks: 036 -- Stage 0
 :Related: 032
 :Decision: undecided
@@ -17,8 +18,11 @@ Issue 031: Three dependencies are installed from URLs, not from PyPI
 Problem
 =======
 
-Three requirements are fetched over the network from places that are not a
-package index:
+Three requirements were fetched over the network from places that are not a
+package index. Two of the three have since gone, each with the thing that
+wanted it, and the annotations below say which; **``django-jqm`` is what is
+left**, and it is the one that mattered, being the only one of the three in
+production.
 
 ``django-jqm`` (``production.txt``)
     ``https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip`` -- a
@@ -26,10 +30,13 @@ package index:
     reachable and unchanged. The package is small: seven templates, two static
     files and three near-empty modules.
 
-``flax`` (``dev.txt``)
+``flax`` (``dev.txt``) -- **gone**
     ``git+https://github.com/akaihola/django-flax@868c863...`` -- pinned to a
-    commit, so at least reproducible, but still a personal repository. Used
-    only by ``fabfile.py``.
+    commit, so at least reproducible, but still a personal repository. It was
+    used only by ``fabfile.py``, and issue 032 deleted that file and both of
+    the lines in ``dev.txt`` that existed for it, ``flax`` and
+    ``Fabric==1.6.0``, having established that ``ansible/install.yaml`` and
+    ``dev/kasvimuseo`` cover everything it did.
 
 ``podman-compose`` (``integration-tests.txt``) -- **gone**
     ``https://github.com/containers/podman-compose/archive/devel.zip`` --
@@ -53,7 +60,11 @@ development. ``devel.zip`` in particular meant the integration test environment
 could change under the project with no commit to show for it -- which is no
 longer true, because that environment is gone (issue 017).
 
-``django-jqm`` is the one that matters, because it is a production dependency.
+``django-jqm`` is the one that matters, because it is a production dependency,
+and with ``flax`` gone as well it is the only one left. ``README.rst`` names
+this issue as the reason the image build "goes red without anybody changing
+anything, when one of those URLs stops answering" -- with one URL rather than
+two, there is now exactly one way for that to happen.
 
 Options
 =======
@@ -65,8 +76,9 @@ Options
     round-trip through another repository. Upgrade plan Stage 0.
 
 ``flax``
-    Delete along with ``fabfile.py`` -- ``ansible/install.yaml`` already does
-    the same job. See issue 032.
+    Nothing left to do: it went with ``fabfile.py``, since
+    ``ansible/install.yaml`` already did the same job. See issue 032, which
+    also records what that file was the only copy of.
 
 ``podman-compose``
     Nothing left to do: it was development tooling for the browser suite, and

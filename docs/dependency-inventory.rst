@@ -1262,6 +1262,11 @@ werkzeug
 
 fabric
 ------
+No longer a requirement: ``Fabric==1.6.0`` was in ``requirements/dev.txt`` for
+``fabfile.py``, and issue 032 deleted both. The survey stays, since this
+document records what was looked at rather than what is installed, and it is
+what the "1.x is Python 2 only" finding in ``upgrade-plan.rst`` rests on.
+
 * **1.6.0 – 1.6.2 (3 releases)**
     :Python: ``clf:2.5,2.6``
     :Requires: nothing declared
@@ -1771,8 +1776,9 @@ podman-compose
 Dependencies with no PyPI presence
 ==================================
 
-Three requirements are installed from URLs rather than from PyPI, so they have
-no version history to inventory:
+Three requirements were installed from URLs rather than from PyPI, so they have
+no version history to inventory. Two have since gone, each with the thing that
+wanted it; ``django-jqm`` is the one that is left (issue 031):
 
 ``django-jqm``
     ``https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip`` — a personal
@@ -1780,9 +1786,11 @@ no version history to inventory:
     modules (``models.py``, ``views.py``, ``__init__.py``). The upgrade plan
     recommends vendoring it into the repository at Stage 0.
 
-``flax``
-    ``git+https://github.com/akaihola/django-flax`` at a pinned commit. Used
-    only by ``fabfile.py``. Superseded by ``ansible/install.yaml``.
+``flax`` — **gone**
+    ``git+https://github.com/akaihola/django-flax`` at a pinned commit. It was
+    used only by ``fabfile.py`` and superseded by ``ansible/install.yaml``, and
+    issue 032 deleted the file and this requirement with it, along with the
+    ``Fabric==1.6.0`` pin below.
 
 ``podman-compose``
     ``https://github.com/containers/podman-compose/archive/devel.zip`` — pinned
