@@ -35,8 +35,9 @@ Issue 045: The label editor is unusable on an iPad
     is that there is nothing visible to tap. The three are argued in "What the
     cheap half decided" below.
 :Resolution: The cheap half is fixed in bffb370, with the print toggle's
-    pointer split in 64ddc1b; the large half is open, so ``Status`` stays
-    ``Accepted``. See "What is left" below.
+    pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c;
+    the large half is open, so ``Status`` stays ``Accepted``. See "What is
+    left" below.
 
 Problem
 =======
@@ -177,11 +178,22 @@ can hover at all:
   guarded by the same ``matchMedia('(hover: hover)')``, so a touch device never
   runs it.
 
-A hidden label's toggle stays at full strength inside the 0.3 dimming, since it
-is the one control that puts the label back -- on a mouse that too waits for
-the pointer to move. All of it is safe only because issue 047 put ``.remove``
-in the ``@media print`` hide list; that line was verified present before the
-opacity went, and the printed sheet was checked again afterwards.
+The toggle looks the same on every label, whatever its state. That took one
+more change than it sounds: a label left out of the print run was dimmed with
+``opacity: 0.3`` on the ``li``, which makes a **compositing group**, so
+everything inside it -- the toggle included -- is composited against that 0.3
+however opaque its own rule says it is. The toggle came out 89 levels of grey
+paler on an unchecked label than on a checked one, in both of its states, while
+``getComputedStyle`` reported the same ``0.5`` for both; no computed-style
+assertion could have caught it, and the pixels had to be sampled. The dimming
+now applies to the label's *contents* (``li.hidden > *:not(.remove)``) with the
+border toned down separately, so the toggle is outside the group and renders
+identically either way -- measured at 126/255 against 126/255, was 126 against
+215.
+
+All of it is safe only because issue 047 put ``.remove`` in the ``@media print``
+hide list; that line was verified present before the opacity went, and the
+printed sheet was checked again afterwards.
 
 What landed, and what it measures
 =================================
@@ -207,6 +219,8 @@ unstyled. Both engines agreed on every number below.
  Print toggle, mouse, moving          ``opacity: 0``     ``opacity: 0.5``
  Print toggle, mouse, label hovered   ``opacity: 0.5``   ``opacity: 1``
  Print toggle in ``@media print``     ``display: none``  ``display: none``
+ Toggle ink, checked label            126/255            126/255
+ Toggle ink, unchecked label          215/255            126/255
  Labels across, portrait              3                  2
  Labels across, landscape             3                  3
 ==================================== ================== ==================
@@ -226,6 +240,11 @@ input at all and after three seconds of stillness; a mouse shows nothing until
 the pointer moves or the page scrolls, 0.5 then, 1 on the label under the
 pointer while its neighbours stay at 0.5, and 0 again three seconds after the
 pointer stops.
+
+The two ink rows are the darkest pixel of the printer glyph itself, sampled
+from a screenshot of the control rather than read out of ``getComputedStyle``,
+which reports 0.5 in every one of those four cells and so cannot tell the
+states apart.
 
 Printing each page to PDF puts neither print button on the paper, and the print
 toggle is not on it either -- checked again after the toggle was split by
