@@ -101,8 +101,9 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 019, 023,
-024, 025, 037, 039, 040, 041, 042, 043, 046, 047 and 048 are open: each one
+All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 019, 020,
+021, 023, 024, 025, 033, 037, 039, 040, 041, 042, 043, 046, 047 and 048 are
+open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -260,7 +261,13 @@ already stopped resolving in the container, so deleting it changed nothing
 anybody could see, and photologue's templates go on coming from the app
 template loader. All three of them are now off the list.
 027 is the one with a real design decision in it. 034 wants deciding before
-the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions.
+the upgrade reaches Stage 6. 020, 021, 022, 032 and 033 are deletions, and
+three of them -- 020, 021 and 033 -- are done, in one change that took six
+lines out of two requirements files and one settings module. They went together
+because two of them edit the same ``INSTALLED_APPS`` tuple and all three share
+one verification. The only surprise was in 020: ``django-indexer`` does ship a
+model and a South migration, against what the issue asserted, and its empty
+table stays in the production database beside the sentry ones.
 
 
 From the photo management walkthrough
