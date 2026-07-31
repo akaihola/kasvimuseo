@@ -24,7 +24,7 @@ Issue 018: No CI: the suite is only ever run by hand
     asked for and skipped, and cheap to change. Both jobs have since passed on
     a hosted runner. See "Decision" below for what was asked and what each
     platform costs, and "It has run" for what the runner actually did.
-:Resolution: Fixed in 11d33c8.
+:Resolution: Fixed in 331fd74.
 
 Problem
 =======
@@ -154,7 +154,7 @@ the pull request existed:
 Step                                       Here            GitHub runner
 ========================================== =============== ===============
 ``app build``, no cache, base image pulled 1 min 20 s      included below
-``app test``, 394 tests                    25 s            1 min 6 s
+``app test``, the whole suite              25 s            1 min 6 s
 ``docs``, clean, in the parallel job       20 s            28 s
 **A full run**, the two jobs at once       **about 2 min** **about 1 min**
 ========================================== =============== ===============
@@ -175,8 +175,10 @@ mounted -- on the runner too, which has neither and could fetch neither. No
 test turned out to need media, and no test was changed, skipped or weakened
 for CI.
 
-The 245 in "Problem" above is the count when this was filed; it is 394 now, and
-the growth rather than the number is this issue's point.
+The 245 in "Problem" above is the count when this was filed. It was 402 while
+this was being written, and it moved twice during the writing, as 016, 024 and
+045 landed on ``master``. The growth rather than the number is this issue's
+point, which is why the table above counts seconds and not tests.
 
 It has run
 ==========
