@@ -4,6 +4,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    {% comment %}Lay out at the device's own width instead of Safari's 980px
+    fallback, so text is legible at 1:1 on a tablet. The labels get larger, not
+    smaller; what fits three of them across the screen is the 50 %
+    --screen-scale below. See docs/issues/045.
+    {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{{ STATIC_URL }}img/favicon.ico">
     <title>{{ object.observation.species.name_fi }}</title>
     <link rel="stylesheet"
@@ -91,7 +97,9 @@
         li.hidden {
             opacity: 0.3;
         }
-        li.hidden:hover .remove {
+        li.hidden .remove {
+            /* The label is dimmed to 0.3, so its own toggle -- the one control
+               that puts it back -- is drawn at full strength inside it. */
             opacity: 1;
         }
 
@@ -205,7 +213,11 @@
             position: absolute;
             right: 5px;
             bottom: 0;
-            opacity: 0;
+            /* Visible without a hover: a touch screen has none, and the only
+               way to reveal this was Safari's faked hover on a tap meant to do
+               something else. It stays off the paper through the @media print
+               hide list above, not through being invisible (issues 045, 047). */
+            opacity: 0.5;
             transition: all 0.5s ease-in-out;
         }
         .remove label {
@@ -220,7 +232,7 @@
             cursor: pointer;
         }
         li:hover .remove {
-            opacity: 0.5;
+            opacity: 1;
             cursor: pointer;
         }
         li .remove:hover {
@@ -259,6 +271,10 @@
                 v-on:click="save"
                 v-bind:class="{ progress: isSaving }"
                 v-bind:disabled="disableSave">Save changes</button>
+        {% comment %}iPadOS Safari hides its print command in the Share menu.
+        @media print already hides every button. See docs/issues/045.
+        {% endcomment %}
+        <button onclick="window.print()">Print</button>
         {# What the chevrons choose: the label's own photo, read back since 039 (issue 037) #}
         <p id="photo-help">{% trans "The arrows over a photo change the photo of this label only, not the photo of the species. The choice is kept once you click “Save changes”; unsaved, it is lost when the page is reloaded. The photo of the species itself is chosen on the species page in the admin." %}</p>
         <ul id="labels"
