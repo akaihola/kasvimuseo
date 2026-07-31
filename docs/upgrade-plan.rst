@@ -91,7 +91,8 @@ Issue               Analysed in
 =================== ===========================================================
 
 Issue ``016``, filed by the test coverage work, is the other Python 3 landmine
-and is a prerequisite of Stage 10.
+and was a prerequisite of Stage 10. It is ``Fixed``: ``remove_diacritics``
+joins rather than filters, so Stage 10 has nothing to do there.
 
 
 The destination is verified
@@ -449,11 +450,13 @@ Python 2 → 3 code work (Stage 10)
 * ``__unicode__`` on 12 model/class definitions → ``__str__``
 * ``unicode(...)`` at 3 sites
 * ``force_unicode`` / ``smart_str`` → ``force_text`` / ``smart_text``
-* ``kasvimuseo/forms.py``: ``remove_diacritics`` is
+* ``kasvimuseo/forms.py``: ``remove_diacritics`` **was**
   ``filter(lambda x: not combining(x), normalize('NFKD', u))``. On Python 2 that
-  returns a string; on Python 3 it returns an iterator, and ``slugify()`` will
-  receive ``<filter object …>``. This is a **silent** data corruption bug, not a
-  crash. Must become ``''.join(...)``.
+  returns a string; on Python 3 it returns an iterator, and ``slugify()`` would
+  have received ``<filter object …>`` -- a **silent** data corruption bug, not a
+  crash. Done ahead of the stage (issue 016): it is a ``u''.join(...)`` over the
+  same condition, which returns a text string on both versions and returned
+  exactly what ``filter()`` did on Python 2.
 * ``common_settings.py`` hardcodes
   ``here('..', 'lib', 'python2.7', 'site-packages', 'photologue', 'templates')``
   in ``TEMPLATE_DIRS``. Remove it — ``APP_DIRS`` finds photologue's templates.
@@ -789,7 +792,8 @@ Django 1.11):
 
 * ``__unicode__`` → ``__str__`` (12 sites)
 * ``unicode(...)`` → ``str(...)`` (3 sites)
-* the ``filter()`` bug in ``kasvimuseo/forms.py`` (see Part 3)
+* the ``filter()`` bug in ``kasvimuseo/forms.py`` -- already done, issue 016
+  (see Part 3)
 * ``force_unicode``/``smart_str`` → ``force_text``/``smart_text``
 
 Then flip the base image ``python:2.7-alpine`` → ``python:3.7-alpine`` and the
