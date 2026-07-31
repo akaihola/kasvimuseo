@@ -64,7 +64,15 @@ Ohjeita:
 - piilota kyltti tulosteesta:
 
 - poista tulostusrasti kyltin oikeassa alalaidassa, tulostimen kuvan
-  vierestä; myös kuvan napsauttaminen poistaa ja palauttaa rastin
+  vierestä; myös kuvan napsauttaminen poistaa ja palauttaa rastin. Rasti
+  näkyy nyt heti, ilman että kyltin päälle pitää viedä hiirtä -- se oli
+  tabletilla käytännössä löytymätön
+
+- tulosta kyltit:
+
+- napsauta “Print”-painiketta sivun ylälaidassa. Sama painike (“Tulosta”)
+  on myös kasvikorteissa. iPadin Safarissa tulostus löytyy muuten vain
+  Jaa-valikosta
 
 - talleta muutokset:
 

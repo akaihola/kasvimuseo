@@ -34,6 +34,9 @@
 
 @media print {
     nav { display: none; }
+    /* The sheet's own print button, for browsers that hide the command in a
+       menu (issue 045). Both sheet bases link this stylesheet. */
+    .print-sheet { display: none; }
     .species { padding-top: 4em; }
     html { font-size: 12pt; }
 }

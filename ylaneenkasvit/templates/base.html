@@ -1,4 +1,10 @@
 <!doctype html>
+<head>
+    {% comment %}Lay out at the device's own width instead of Safari's 980px
+    fallback, so text is legible at 1:1 on a tablet. See docs/issues/045.
+    {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
 <body>
     {% block content %}{% endblock %}
 </body>

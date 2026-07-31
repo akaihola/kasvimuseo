@@ -11,9 +11,11 @@ map.
 from __future__ import unicode_literals
 
 import os
+import re
 
 import pytest
 from django.core.urlresolvers import reverse
+from django.template.loader import render_to_string
 
 from kasvimuseo.templatetags.bush import bush_shadow
 from kasvimuseo.templatetags.lightings import lighting_name
@@ -521,3 +523,71 @@ def test_partly_unknown_external_id_still_renders_what_matched(client,
         reverse(url_name, kwargs={'species_external_ids': '1,999999'})))
 
     assert 'valkonarsissi' in content
+
+
+# The tablet viewport and the print buttons; see docs/issues/045
+#
+# What these assert is the markup, which is all the server can be asked about:
+# whether the tag has the effect it is there for, and whether the button is
+# absent from the paper, are questions for a browser and a printer -- see issue
+# 017 for why neither is asked here.
+
+
+VIEWPORT_TAG = ('<meta name="viewport" '
+                'content="width=device-width, initial-scale=1">')
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name,external_id', [
+    ('planted-species-list', None),
+    ('planting-label', None),
+    ('planted-species', 1),
+    ('planted-species-compact', 1),
+])
+def test_report_pages_lay_out_at_the_device_width(client, url_name,
+                                                 external_id):
+    create_planted(name_fi='ahdekaunokki', external_id=1)
+
+    url = (species_url(url_name, external_id) if external_id
+           else reverse(url_name))
+
+    assert VIEWPORT_TAG in page(client.get(url))
+
+
+def test_the_public_base_template_lays_out_at_the_device_width():
+    """``base.html`` is what photologue's pages extend, and had no ``<head>``."""
+    assert VIEWPORT_TAG in render_to_string('base.html')
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name,external_id,caption', [
+    ('planting-label', None, 'Print'),
+    ('planted-species', 1, 'Tulosta'),
+    ('planted-species-compact', 1, 'Tulosta'),
+])
+def test_printable_pages_offer_a_print_button(client, url_name, external_id,
+                                              caption):
+    """iPadOS Safari's own print command is in the Share menu, not on a bar."""
+    create_planted(name_fi='ahdekaunokki', external_id=1)
+
+    url = (species_url(url_name, external_id) if external_id
+           else reverse(url_name))
+    content = page(client.get(url))
+
+    assert 'onclick="window.print()"' in content
+    assert '>{0}</button>'.format(caption) in content
+
+
+@pytest.mark.django_db
+def test_the_label_print_toggle_needs_no_hover(client):
+    """It was revealed by ``opacity: 0`` plus hover, which a touch screen lacks.
+
+    ``.remove`` is in the ``@media print`` hide list, so nothing but that list
+    keeps it off the paper now.
+    """
+    content = page(client.get(reverse('planting-label')))
+
+    hide_list = re.search(r'@media print \{\s*([^}]*)\}', content)
+    assert hide_list, 'the page has no @media print block at all'
+    assert '.remove' in hide_list.group(1)
+    assert 'opacity: 0;' not in content
