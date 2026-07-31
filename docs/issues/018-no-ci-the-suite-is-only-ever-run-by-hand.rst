@@ -21,10 +21,10 @@ Issue 018: No CI: the suite is only ever run by hand
     008 -- the kind of empty-database failure CI would catch
 :Decision: **GitHub Actions**, in ``.github/workflows/tests.yml``, plus the
     tracked ``dev/pre-push`` hook -- taken as the default when the ruling was
-    asked for and skipped, and cheap to change. See "Decision" below for what
-    was asked, what each platform costs, and what has to happen for the first
-    run to be green.
-:Resolution: Fixed in ff8be30.
+    asked for and skipped, and cheap to change. Both jobs have since passed on
+    a hosted runner. See "Decision" below for what was asked and what each
+    platform costs, and "It has run" for what the runner actually did.
+:Resolution: Fixed in 11d33c8.
 
 Problem
 =======
@@ -86,11 +86,12 @@ does not exist. GitHub Actions has no enabling step -- the file's presence is
 the enablement -- and ``ubuntu-latest`` already ships podman and a PostgreSQL
 server, so the workflow calls ``dev/kasvimuseo`` rather than paraphrasing it.
 
-The cost of that choice is stated plainly rather than hidden: **the mirror is
-behind, so nothing runs until it is pushed to.** ``git push origin master`` is
-the whole of what the maintainer has to do for the first run to happen. If the
-answer is really Bitbucket, the same two commands go into a
-``bitbucket-pipelines.yml`` with a ``docker`` service and the same two runner
+The cost of that choice was stated plainly rather than hidden: **the mirror was
+behind, so nothing would run until it was pushed to.** That has since happened
+-- see "It has run" below -- but it remains the standing condition of this
+choice, not a one-off: work pushed only to ``bitbucket`` is tested by nothing
+but the hook. If the answer is really Bitbucket, the same two commands go into
+a ``bitbucket-pipelines.yml`` with a ``docker`` service and the same two runner
 fixups; the work in this issue is the shape, not the YAML dialect.
 
 The hook is the half that depends on none of that. It needs no account, no
@@ -146,51 +147,68 @@ database), so it runs in parallel and adds no wall-clock time.
 What it costs
 =============
 
-Measured in a checkout of this branch, on a four-core machine:
+Measured on a four-core development machine, and then on the runner itself once
+the pull request existed:
 
-=========================================== ===================
-Step                                        Wall clock
-=========================================== ===================
-``app build``, no cache, base image pulled  1 min 20 s
-``app test``, 384 tests                     25 s
-``docs``, clean, in the parallel job        20 s
-**A full run**                              **about 2 minutes**
-=========================================== ===================
+========================================== =============== ===============
+Step                                       Here            GitHub runner
+========================================== =============== ===============
+``app build``, no cache, base image pulled 1 min 20 s      included below
+``app test``, 394 tests                    25 s            1 min 6 s
+``docs``, clean, in the parallel job       20 s            28 s
+**A full run**, the two jobs at once       **about 2 min** **about 1 min**
+========================================== =============== ===============
 
-The tests themselves are 19 to 22 seconds of that 25; the rest is initialising,
-starting and stopping the cluster. Most of the build is compiling Pillow and
-psycopg2 against musl. A hosted
-two-core runner is slower than the machine above, and adds checkout and job
-startup, so expect several minutes rather than two; it is still a suite whose
-cost is the image rather than the tests. Caching the image on its build inputs
-would take roughly a minute off each run, and was left out deliberately: it is
-machinery to maintain, and it is not worth it until the build is the thing
-anybody is waiting for.
+The runner's ``pytest`` figure is the whole job -- checkout, image build and
+suite together -- so the image costs less on a hosted two-core runner than the
+arithmetic here suggests, and the two jobs run at the same time. Locally the
+tests are 19 to 22 seconds of that 25 and the rest is initialising, starting
+and stopping the cluster; most of the build is compiling Pillow and psycopg2
+against musl. Caching the image on its build inputs would take a chunk off each
+run and was left out deliberately: it is machinery to maintain, and a
+one-minute pipeline is not what anybody is waiting for.
 
 The suite needs no production dump and no ``media fetch``. That was checked
 rather than assumed: ``test_settings`` sets ``MEDIA_ROOT`` to a throwaway
-directory, and the full 384 tests pass in a container with no ``media/``
-mounted. No test turned out to need media, and no test was changed, skipped or
-weakened for CI.
+directory, and the whole suite passes in a container with no ``media/``
+mounted -- on the runner too, which has neither and could fetch neither. No
+test turned out to need media, and no test was changed, skipped or weakened
+for CI.
 
-The 245 in "Problem" above is the count when this was filed; it is 384 now.
+The 245 in "Problem" above is the count when this was filed; it is 394 now, and
+the growth rather than the number is this issue's point.
 
-What the maintainer has to do
-=============================
+It has run
+==========
 
-The first real run cannot be triggered from here -- it needs a push to a remote
-this checkout cannot reach. Everything the workflow runs was run locally
-instead, in the workflow's own order, and passed.
+The first real run could not be triggered from the branch -- it needs a push to
+a remote this working copy has no credentials for -- so everything the workflow
+does was run locally first, in the workflow's own order. The maintainer then
+opened `pull request 1 <https://github.com/akaihola/kasvimuseo/pull/1>`_, and
+both jobs passed on a hosted runner at the first attempt: ``pytest`` green in
+1 min 6 s, ``sphinx`` in 28 s. The two assumptions this fix rests on are
+therefore facts rather than expectations -- ``ubuntu-latest`` does carry podman
+and a PostgreSQL server, and rootless podman does start this image and reach
+the cluster's socket through the bind mount.
 
-1. ``git push origin master``. The workflow triggers on ``push`` and
-   ``pull_request``; the Actions tab shows two jobs, ``pytest`` and ``sphinx``.
-2. Green looks like ``384 passed`` from the first and
-   ``docs: .../html/index.html`` from the second.
-3. If ``pytest`` fails on the runner and not here, read it as a PostgreSQL
-   version difference before anything else: the runner's server version is the
-   one thing CI has that a developer machine does not.
-4. Install the hook in each clone -- it is one line, and it is in ``README.rst``
-   under "Continuous integration".
+That run also found the one defect in the first version of the workflow, and
+found it the way CI is supposed to: the maintainer saw it before anybody
+explained it. Every job ran twice, because a bare ``push:`` alongside
+``pull_request:`` matches both events for a branch with a pull request open.
+The push trigger is now limited to ``master``, so a pull request builds its
+merge commit while it is open and ``master`` builds what lands. The gap that
+leaves -- a branch pushed with no pull request open runs nothing -- is exactly
+what ``dev/pre-push`` covers, which is part of why both halves are here.
 
-If Bitbucket is the right answer after all, say so and the same two commands
-move; nothing else in this fix depends on which service runs them.
+What is left is small:
+
+1. Install the hook in each clone. It is one line, in ``README.rst`` under
+   "Continuous integration".
+2. Decide whether pushing to GitHub is part of the routine now, since that is
+   the remote the workflow watches, or whether this should move to Bitbucket
+   after all. If it moves, the same two commands go into a
+   ``bitbucket-pipelines.yml`` with the same two runner fixups; nothing else in
+   this fix depends on which service runs them.
+3. If ``pytest`` ever fails on the runner and not locally, read it as a
+   PostgreSQL version difference before anything else: the runner's server
+   version is the one thing CI has that a developer machine does not.
