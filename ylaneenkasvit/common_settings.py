@@ -56,12 +56,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'django_extensions',
-    'gunicorn',
     'south',
 
-    'indexer',
     'jqm',
-    'paging',
     'photologue',
 
     # TODO: configure raven

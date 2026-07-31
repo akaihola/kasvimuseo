@@ -6,9 +6,7 @@
 django==1.5.1
 django-extensions==1.5.9
 django-grappelli==2.4.5
-django-indexer==0.3.0
 django-jqm @ https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip
-django-paging==0.2.4
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
 # constraints picks exactly that pair, a gunicorn that cannot import. This pin
