@@ -24,7 +24,9 @@ Issue 031: Three dependencies were installed from URLs, not from PyPI
     between here and Stage 19 are edits somebody has to make in *some*
     repository -- vendoring only decides which one, and the one where the
     templates are already overridden is this one.
-:Resolution: (none yet)
+:Resolution: 9bc7a7c -- the vendored copy in ``jqm/``, the deleted
+    requirement line, and the ``setup.py`` and ``Dockerfile`` changes that
+    make the production image carry it.
 
 Problem
 =======
