@@ -103,7 +103,7 @@ Open issues
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
 020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 038, 039, 040, 041, 042, 043, 046,
-047, 048 and 053 are open: each one
+047, 048, 053 and 054 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -470,6 +470,26 @@ in the deployed package directory turns ``DEBUG`` on, which is why the missing
 ``ALLOWED_HOSTS`` never mattered. 026 could put ``ALLOWED_HOSTS`` in the tracked
 settings and nothing more; deleting that file is this issue, and doing it before
 026's change is deployed would 400 the site.
+
+
+From covering issue 011
+-----------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 054 Low      fixtures / public site  Species list names a photo size not in the fixtures
+==== ======== ======================= ==================================================
+
+The one issue found by writing a test that had to *arrange* the defect away
+before it could test anything else: 011's coverage of the species list needed a
+``mobilethumbnail`` ``PhotoSize`` that ``initial_data.json`` did not ship, and
+the fixture that created it was the report. Unlike 050 and 051 above, the thing
+only the server could answer -- whether production has the row -- did not need
+the maintainer: the dump under ``.dev/backups/`` has the table, the row is in
+it, and that closed the half of the issue that would have been a live defect.
+It is the reverse of 025's split, in other words: everything left to do was in
+this repository.
 
 
 Already fixed

@@ -48,24 +48,33 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
+* **``initial_data.json`` is never installed on a database built the way**
+  ``db bootstrap`` **builds one, so such a database has no photo sizes at
+  all.** Found on 2026-08-01 while checking :doc:`054
+  <054-the-species-list-names-a-photo-size-the-fixtures-lack>` in the running
+  application. ``syncdb`` loads the project fixture before South has created
+  photologue's tables and dies on the first row::
 
-* **The species list page names a photo size that is not in the initial data.**
-  ``reports/planted-species-list.html`` renders
-  ``species.photo.get_mobilethumbnail_url``, but
-  ``ylaneenkasvit/fixtures/initial_data.json`` defines only
-  ``admin_thumbnail``, ``thumbnail`` and ``display``. Photologue attaches
-  ``get_<size>_url`` only for sizes that are in the database, so where that row
-  is missing the accessor does not exist, the template renders ``src=""``, and
-  the list shows a broken image for every species. Found while covering
-  :doc:`011 <011-species-report-opens-every-image-file-to-pick-a-css-class>`,
-  whose test had to create the size to have a photo to assert about. Whether
-  production is affected is exactly the open question: ``initial_data.json`` is
-  loaded at ``syncdb``, so a ``mobilethumbnail`` row added by hand years ago
-  would be in the production database and in no dump this repository has. It
-  needs one ``SELECT name FROM photologue_photosize`` on the server before it
-  is worth a number -- if the row is there, the fix is a line of fixture so a
-  fresh database matches; if it is not, it is also a visible defect in
-  production.
+      DatabaseError: Problem installing fixture
+      '/src/ylaneenkasvit/fixtures/initial_data.json': Could not load
+      photologue.PhotoSize(pk=1): relation "photologue_photosize" does not exist
+
+  Nothing loads it afterwards: South's own "Loading initial data" pass is per
+  application, and ``ylaneenkasvit`` has no migrations for it to run under.
+  ``dev/kasvimuseo``'s comment calls this "noise rather than a failure" and
+  says photologue's own initial data supplies ``display``; both halves are
+  wrong -- the fixture is not installed, and ``migrate photologue`` reports
+  ``Installed 0 object(s) from 0 fixture(s)``. On a freshly bootstrapped
+  database ``SELECT * FROM photologue_photosize`` returns only the row 054's
+  data migration writes, so ``display`` and ``admin_thumbnail`` are missing too
+  and every photo on every report and in the admin changelist renders
+  ``src=""``. The test database is unaffected, because
+  ``SOUTH_TESTS_MIGRATE = False`` makes ``syncdb`` create every table at once
+  and the fixture then loads cleanly -- which is why the suite has never seen
+  it. What it wants before it is worth a number is a decision about where the
+  three photologue rows belong: a data migration like 054's, a fixture loaded
+  after ``migrate`` rather than during ``syncdb``, or a documented
+  ``loaddata`` step in ``db bootstrap``.
 
 Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
@@ -108,3 +117,13 @@ places that sort the same list both put a missing number first, so the ruling
 changes nothing anybody can see today and only says what happens when the
 nullable column is finally used. The two reports left on this page -- 052
 removed one the same day -- are untouched.
+
+Emptied of one more the same day: the missing ``mobilethumbnail`` photo size
+became :doc:`054
+<054-the-species-list-names-a-photo-size-the-fixtures-lack>`, and it is fixed
+too. The question that had kept it here -- whether production has the row --
+was answered without asking anybody, by the ``photologue_photosize`` block of
+the dump in ``.dev/backups/``, which has it. That halved the issue: a fixture
+gap and not a live defect. That leaves the iPad label text as the one report
+this page arrived with; checking 054 in the running application added the
+second one, which is new rather than left over.
