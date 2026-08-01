@@ -262,9 +262,9 @@ locally:
 * **playwright** -- run ``dev/kasvimuseo app browser-test`` here. Same image and
   same seed data; the runner differs only in where its browser comes from, since
   CI downloads one and you have one already.
-* **the image build** -- two dependencies install from URLs rather than from
-  PyPI (issue 031), so this is the job that goes red without anybody changing
-  anything, when one of those URLs stops answering.
+* **the image build** -- one dependency, ``django-jqm``, installs from a URL
+  rather than from PyPI (issue 031), so this is the job that goes red without
+  anybody changing anything, when that URL stops answering.
 
 Before the push
 ---------------
