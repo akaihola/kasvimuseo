@@ -181,6 +181,14 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       moved by touch -- is deliberately not here; it wants the browser suite
       of 017 first, since it rewrites the one part of the editor no test can
       see.
+   054: The mobile species list asks for a ``mobilethumbnail`` photo size that
+      ``initial_data.json`` did not define, so every row of it is a broken
+      image on any database built from the fixtures. Same shape as 004 and
+      the same one-line repair, and last in this group because it is the only
+      item here that no visitor can see: the production dump shows the server
+      has the row, so what was broken was every *fresh* database, including
+      CI's. **Fixed**: the row, with the production values, plus a data
+      migration for the databases that already exist.
 
 4. The photo path
 -----------------

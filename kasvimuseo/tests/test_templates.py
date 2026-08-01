@@ -94,6 +94,53 @@ def test_species_list_offers_the_jquery_mobile_search_box(client):
     assert 'data-filter-theme="b"' in content
 
 
+@pytest.mark.django_db
+def test_the_initial_data_defines_the_mobilethumbnail_photo_size():
+    """docs/issues/054: the size the list page's accessor is named after.
+
+    No fixture creates it here. ``initial_data.json`` is what the test
+    database is built from, so this asserts the shipped data rather than
+    anything the suite arranges -- which is the whole defect: the row was
+    missing from the fixture while production had it.
+    """
+    from photologue.models import PhotoSize
+
+    size = PhotoSize.objects.get(name='mobilethumbnail')
+
+    assert (size.width, size.height, size.quality) == (80, 45, 80)
+    assert size.crop and size.upscale
+
+
+@pytest.mark.django_db
+def test_species_list_renders_a_photo_url_from_the_fixtures_alone(
+        client, photo_factory):
+    """docs/issues/054: a real ``src``, on a database built from the fixtures.
+
+    Photologue attaches ``get_<size>_url`` only for the sizes that are rows in
+    ``photologue_photosize``, so with the row missing the accessor does not
+    exist -- and Django 1.5 resolves an unknown variable to the empty string
+    instead of raising, which is why the failure is a broken image on every row
+    of the list rather than an exception anywhere. Hence the assertion on
+    ``src=""``: the page is a 200 either way.
+
+    ``PhotoSizeCache`` is a Borg whose contents outlive a test transaction, so
+    reset it before the photo is built; the accessors are attached at
+    ``post_init`` from whatever it holds.
+    """
+    from photologue.models import PhotoSizeCache
+
+    PhotoSizeCache().reset()
+    photo = photo_factory()
+    species = create_species(name_fi='valkonarsissi', external_id=1,
+                             photo=photo)
+    create_planted(species=species, external_id=1)
+
+    content = page(client.get(reverse('planted-species-list')))
+
+    assert 'src=""' not in content
+    assert 'src="{0}"'.format(photo.get_mobilethumbnail_url()) in content
+
+
 # reports/planted-species.html on planted-species-base-printable.html
 
 
@@ -205,8 +252,7 @@ def test_reports_render_when_the_image_file_is_missing(client, media_root,
 @pytest.mark.parametrize('url_name', ['planted-species',
                                       'planted-species-compact',
                                       'planted-species-list'])
-def test_reports_open_no_image_file(client, full_species,
-                                    mobile_thumbnail_size, image_opens,
+def test_reports_open_no_image_file(client, full_species, image_opens,
                                     url_name):
     """The point of docs/issues/011: the header class costs no file access.
 

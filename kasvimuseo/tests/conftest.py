@@ -88,28 +88,6 @@ def display_size(db):
 
 
 @pytest.fixture
-def mobile_thumbnail_size(db):
-    """The ``mobilethumbnail`` size the species list page asks for.
-
-    Photologue's initial data ships ``admin_thumbnail``, ``thumbnail`` and
-    ``display`` -- not this one -- yet
-    ``reports/planted-species-list.html`` renders
-    ``species.photo.get_mobilethumbnail_url``. That accessor only exists when a
-    ``PhotoSize`` of that name is in the database, so without this fixture the
-    list page renders no image at all and a test about file access on it would
-    pass by testing nothing. Same ``PhotoSizeCache`` discipline as
-    ``display_size``.
-    """
-    from photologue.models import PhotoSize, PhotoSizeCache
-
-    PhotoSize.objects.get_or_create(name='mobilethumbnail',
-                                    defaults={'width': 80, 'height': 80})
-    PhotoSizeCache().reset()
-    yield
-    PhotoSizeCache().reset()
-
-
-@pytest.fixture
 def image_opens(monkeypatch):
     """Record every image file a piece of code opens, and return the list.
 
