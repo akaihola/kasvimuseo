@@ -292,6 +292,26 @@
                 opacity: 1;
             }
         }
+        #drag-number {
+            /* The number being dragged, drawn under the pointer for the whole
+               gesture -- what the HTML5 drag layer used to get for free as the
+               browser's drag image, and what tells you the number is in your
+               hand rather than still on its label (issue 045). Its font size
+               is measured from the number it copies, because ``zoom`` and the
+               iPad's font compensation above make "the size it is drawn at"
+               something only the source element knows. */
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top left;
+            pointer-events: none;
+            z-index: 10;
+            margin: 0;
+            padding: 0 0.1em;
+            background: white;
+            font-weight: bold;
+            transition: none; /* it has to keep up with the pointer */
+        }
         #drag-wrapper {
             transform: scale(var(--screen-scale));
             transform-origin:top left;
@@ -313,6 +333,10 @@
 </head>
 <body>
     <div id="app">
+        <p id="drag-number"
+           class="observation-id"
+           v-show="drag && drag.moved"
+           :style="dragNumberStyle">[[ dragNumber ]]</p>
         <div id="drag-wrapper"
              v-show="dragPreview"
              :style="mouse">
@@ -499,15 +523,29 @@
                             || (event.pointerType === 'mouse' && event.button !== 0)) {
                             return;
                         }
-                        const label = this.getLabelData(event.target);
+                        const el = event.target,
+                            label = this.getLabelData(el),
+                            rect = el.getBoundingClientRect(),
+                            // What ``zoom`` does to this element: the rect is
+                            // in drawn pixels, offsetWidth is in layout ones.
+                            // The copy under the pointer is outside #labels,
+                            // so it has to be told the difference.
+                            drawn = rect.width / el.offsetWidth || 1,
+                            fontSize = parseFloat(
+                                window.getComputedStyle(el).fontSize) * drawn;
                         event.preventDefault();
                         bus.$emit('drag-start', {
                             index: label.index,
                             speciesId: label.speciesId,
-                            externalId: parseInt(event.target.textContent),
+                            externalId: parseInt(el.textContent),
                             pointerId: event.pointerId,
                             startX: event.clientX,
-                            startY: event.clientY
+                            startY: event.clientY,
+                            // Where in the number the pointer took hold, so it
+                            // stays under that spot rather than jumping.
+                            grabX: event.clientX - rect.left,
+                            grabY: event.clientY - rect.top,
+                            fontSize: fontSize
                         });
                     }
                 }
@@ -703,12 +741,20 @@
                             return;
                         }
                         drag.moved = true;
+                        this.dragNumber = drag.externalId;
                         // The preview is a copy of the label the number came
                         // from, carrying that number alone.
                         this.dragSpecies = JSON.parse(JSON.stringify(
                             this.object_list[drag.index]));
                         this.dragSpecies.external_ids = [drag.externalId];
                     }
+                    // The number itself follows the pointer for the whole
+                    // gesture, wherever it is: over a label, over the empty
+                    // sheet, off the sheet altogether.
+                    this.dragNumberStyle =
+                        `transform: translate(${event.pageX - drag.grabX}px,`
+                        + ` ${event.pageY - drag.grabY}px) rotate(-3deg);`
+                        + ` font-size: ${drag.fontSize}px;`;
                     // The whole label is drawn under the pointer only over the
                     // empty part of the sheet, where it is the "this becomes a
                     // new label" indicator -- as it was before the rewrite.
@@ -862,6 +908,9 @@
                 dragSpecies: {visible: true, all_photos: {}},
                 dragPreview: false,
                 drag: null,
+                // The copy of the dragged number that follows the pointer.
+                dragNumber: null,
+                dragNumberStyle: '',
                 mouse: '',
                 isSaving: false,
                 disableSave: true
