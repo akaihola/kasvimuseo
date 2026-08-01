@@ -48,34 +48,6 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
-* **``initial_data.json`` is never installed on a database built the way**
-  ``db bootstrap`` **builds one, so such a database has no photo sizes at
-  all.** Found on 2026-08-01 while checking :doc:`054
-  <054-the-species-list-names-a-photo-size-the-fixtures-lack>` in the running
-  application. ``syncdb`` loads the project fixture before South has created
-  photologue's tables and dies on the first row::
-
-      DatabaseError: Problem installing fixture
-      '/src/ylaneenkasvit/fixtures/initial_data.json': Could not load
-      photologue.PhotoSize(pk=1): relation "photologue_photosize" does not exist
-
-  Nothing loads it afterwards: South's own "Loading initial data" pass is per
-  application, and ``ylaneenkasvit`` has no migrations for it to run under.
-  ``dev/kasvimuseo``'s comment calls this "noise rather than a failure" and
-  says photologue's own initial data supplies ``display``; both halves are
-  wrong -- the fixture is not installed, and ``migrate photologue`` reports
-  ``Installed 0 object(s) from 0 fixture(s)``. On a freshly bootstrapped
-  database ``SELECT * FROM photologue_photosize`` returns only the row 054's
-  data migration writes, so ``display`` and ``admin_thumbnail`` are missing too
-  and every photo on every report and in the admin changelist renders
-  ``src=""``. The test database is unaffected, because
-  ``SOUTH_TESTS_MIGRATE = False`` makes ``syncdb`` create every table at once
-  and the fixture then loads cleanly -- which is why the suite has never seen
-  it. What it wants before it is worth a number is a decision about where the
-  three photologue rows belong: a data migration like 054's, a fixture loaded
-  after ``migrate`` rather than during ``syncdb``, or a documented
-  ``loaddata`` step in ``db bootstrap``.
-
 Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
 :doc:`044 <044-large-admin-pages-are-truncated-for-a-remote-browser>`,
@@ -127,3 +99,18 @@ the dump in ``.dev/backups/``, which has it. That halved the issue: a fixture
 gap and not a live defect. That leaves the iPad label text as the one report
 this page arrived with; checking 054 in the running application added the
 second one, which is new rather than left over.
+
+Emptied of that second one on 2026-08-01, the day after it arrived: the
+fixture that never reaches a bootstrapped database became :doc:`055
+<055-initial-data-never-reaches-a-bootstrapped-database>`, and it is fixed.
+This is the one report on this page whose open question was not a question
+about the world -- nothing had to be found out from a machine, a browser or a
+person, because everything it needed was in the tree. What it wanted was a
+choice between three repairs, and the difference between them was an argument
+rather than a fact: the maintainer was given all three with the evidence and
+took the second, a fixture loaded after ``migrate``, which turned out to be
+one ``git mv`` because ``kasvimuseo`` has migrations and ``ylaneenkasvit``
+never did. It also repairs the databases that are already wrong, which the
+other two would not have, so nobody has to be told to rebuild anything. The
+iPad label text is once again the only report here, and it is still waiting on
+the device or on :doc:`017 <017-browser-suite-unrunnable-vue-editor-untested>`.
