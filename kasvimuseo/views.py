@@ -4,11 +4,12 @@
 #         Used * or ** magic
 import json
 from collections import OrderedDict
+from functools import wraps
 from itertools import groupby
 from operator import attrgetter
 
 from django.db import transaction
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.generic import View, ListView
@@ -41,6 +42,28 @@ class PlantedSpeciesList(ListView):
 
 class PlantedSpeciesLabels(TemplateView):
     template_name = 'kasvimuseo/reports/planting-labels.html'
+
+
+def staff_only_api(view):
+    """Refuse a non-staff request with 403, rather than a page it cannot use.
+
+    ``staff_member_required`` answers with the admin's login form and a status
+    of 200, which is right for a page and wrong for the endpoint the editor
+    calls with axios: HTML behind a 200 is the silent success this whole issue
+    is about (issue 052). The editor page itself is gated the admin way, so a
+    browser only arrives here unauthenticated when its session has expired
+    underneath it -- and then the editor says so, because a 403 is a rejection
+    axios reports.
+    """
+    @wraps(view)
+    def _checkstaff(request, *args, **kwargs):
+        if not (request.user.is_active and request.user.is_staff):
+            return HttpResponseForbidden(
+                'The planting labels can only be read and written by a staff'
+                ' member. Log in to the admin and reload the editor.',
+                content_type='text/plain')
+        return view(request, *args, **kwargs)
+    return _checkstaff
 
 
 class PlantedSpeciesLabelsApi(View):

@@ -10,33 +10,32 @@ Issue 052: Saving the label editor does nothing without an admin cookie
 :Evidence: ``browser_tests/test_label_editor.py::
     test_saving_without_an_admin_cookie_does_nothing_and_says_nothing`` pinned
     the silence: no cookie, no request, no message. The fix replaces it with
-    ``test_saving_works_for_a_browser_that_did_not_come_through_the_admin``
-    and ``test_saving_with_no_cookie_says_so_rather_than_nothing``.
+    ``test_the_page_issues_the_csrf_cookie_its_own_save_needs`` and
+    ``test_saving_with_no_cookie_says_so_rather_than_nothing``, and adds
+    ``test_the_editor_and_its_endpoint_are_staff_only`` and
+    ``test_a_save_the_server_refuses_says_so`` for the gate.
 :Depends on: (none)
 :Blocks: (none)
 :Related: 017 -- the browser suite that found this on its first run
     010 -- the same ``post`` handler, which this makes reachable more often
     039 -- the same handler again, and the photo choice a failed save loses
     045 -- the same page, whose remaining half rewrites this template
-:Decision: Ruled here on 2026-08-01 on the evidence, because the question did
-    not reach the maintainer: ``ask_user_question_kandev`` was put twice and
-    neither call came back. **Option 1, with option 2 kept as the fallback.**
-    The third question decided the first: the endpoint is not protected by
-    anything, so rendering the token widens nothing. ``PlantedSpeciesLabelsApi``
-    is a bare ``View`` (``kasvimuseo/views.py:46``), routed bare
-    (``kasvimuseo/urls.py:24-26``) under an include with no decorator
-    (``ylaneenkasvit/urls.py:25``); the editor page is a bare ``TemplateView``
-    (``views.py:42``). There is no ``login_required`` and no
+:Decision: Ruled by the maintainer on 2026-08-01: **option 1 for the fix, and
+    the whole of the third question in the same pull request.** The page renders
+    the token, and the endpoint stops being public. The evidence that produced
+    the second half: ``PlantedSpeciesLabelsApi`` was a bare ``View``
+    (``kasvimuseo/views.py``), routed bare (``kasvimuseo/urls.py``) under an
+    include with no decorator (``ylaneenkasvit/urls.py:25``), the editor page a
+    bare ``TemplateView``; no ``login_required`` and no
     ``staff_member_required`` anywhere on that path, and the only middleware
-    that touches the POST is ``CsrfViewMiddleware``
-    (``ylaneenkasvit/common_settings.py:108``), which is forgery protection
-    rather than authentication. Measured rather than argued: against
-    ``Client(enforce_csrf_checks=True)``, an anonymous request that sets its own
-    ``csrftoken`` cookie and a matching ``X-CSRFToken`` header is accepted
-    (``200``) and leaves ``Label.objects.count() == 0``. A script can already do
-    what the button could not, so the browser gets nothing new. Whether that
-    endpoint should be public at all is a separate ruling with its own cost --
-    a logged-in browser suite -- and is back in :doc:`incoming` as a report.
+    touching the POST was ``CsrfViewMiddleware``
+    (``ylaneenkasvit/common_settings.py:108``), which is forgery protection and
+    not authentication. Measured rather than argued: against
+    ``Client(enforce_csrf_checks=True)`` an anonymous request that set its own
+    ``csrftoken`` cookie and a matching ``X-CSRFToken`` header was accepted with
+    a 200 and left ``Label.objects.count() == 0``. That also settled the first
+    half -- rendering the token widened nothing, because a script already had
+    what the button lacked.
 :Resolution: Fixed in e061b41.
 
 Problem
@@ -71,72 +70,88 @@ regrouping museum numbers, the per-label photo choices of issue 039 and the
 print toggles of 047 are all discarded on the next reload, with nothing on
 screen having suggested they were not saved.
 
-The third question, which outranks both options
-===============================================
+The third question, which outranked both options
+================================================
 
 The report asked whether a public URL should be able to rewrite every label at
-all, since ``PlantedSpeciesLabelsApi.post`` (``kasvimuseo/views.py:137``) opens
-with ``Label.objects.all().delete()`` (line 153) and rebuilds the table from
-the request body. The answer decides whether option 1 is a fix or a widening,
-and it is stated in ``Decision`` above with its files and lines: **nothing
-protects the endpoint today**. Not the view, not the URL conf, not the
-middleware.
+all, since ``PlantedSpeciesLabelsApi.post`` opens with
+``Label.objects.all().delete()`` and rebuilds the table from the request body.
+The answer decides whether option 1 is a fix or a widening, and it was the bad
+one: **nothing protected the endpoint**. Not the view -- a bare ``View`` -- not
+the URL conf, which routed it and the editor page without a decorator, and not
+the middleware: ``CsrfViewMiddleware`` is the only one that touches the POST,
+and it protects a logged-in user's browser from a third-party page rather than
+the endpoint from a stranger. A client that sets its own cookie and matching
+header passes it, which is what the measurement in ``Decision`` did.
 
-That means option 1 hands a browser no capability that ``curl`` did not already
-have -- the measurement in ``Decision`` is one anonymous request that empties
-the table -- so the CSRF fix is safe to make now. It also means the register is
-carrying an authorization defect that nobody had written down, which is why it
-went back to :doc:`incoming` as its own report rather than being folded in
-here: gating the view changes what production allows, wants a ruling of its
-own, and costs the browser suite a seeded staff account and a login -- next
-door to what issue 050 was about.
+So option 1 handed a browser no capability that one ``curl`` did not already
+have, and the maintainer took both halves: render the token *and* close the
+endpoint.
 
 The options
 ===========
 
 1. **Render the token on the page.** One tag. The middleware then issues the
    cookie for this response, and the existing cookie read finds it, so the
-   editor saves for any browser that opens the URL. Nothing about who may post
-   changes.
-2. **Leave the token where it is and fail loudly.** Guard the match and say
-   "open this page from the admin" when there is no cookie. Honest, but the
-   Save button still cannot save, and the workflow stays "go through the admin
-   first" -- which is a rule nothing states and nothing enforces.
-3. **Restrict the endpoint instead.** Making the page staff-only would give a
-   logged-in browser the cookie as a side effect, so it would hide this defect
-   without fixing it -- an expired cookie on a live session still lands in the
-   same silence. It is a different question, kept as one.
-
-Options 1 and 2 are not exclusive, and the reason to take both is in the last
-sentence of option 3: rendering the token does not make the cookie certain. A
-browser refusing cookies for the site, or a page restored from the back-forward
-cache after the cookie expired, still arrives at ``save`` with nothing to read.
+   editor saves for any browser that has the page open. **Taken.**
+2. **Leave the token where it is and fail loudly.** Guard the match and say why
+   nothing happened. Honest, but on its own the Save button still cannot save.
+   **Taken as well, as the fallback** -- rendering the token does not make the
+   cookie certain, since a browser can refuse cookies and a sheet can outlive
+   one.
+3. **Restrict the endpoint.** A different question, and the one that outranked
+   the other two. **Taken.** On its own it would have hidden option 1's defect
+   rather than fixed it -- a logged-in browser gets the cookie from the login
+   form, and an expired cookie under a live session lands back in the same
+   silence -- which is why all three are here and not one.
 
 Resolution
 ==========
 
-Commit e061b41. Option 1 with option 2 behind it:
+Commit e061b41. All three options, because the ruling was for all three:
 
 * ``{% csrf_token %}`` is rendered beside the Save button, outside the ``GET``
   form for the box size -- inside it the token would ride along in the query
   string on every "Set box size".
 * ``save`` reads the match before indexing it, and an absent cookie now raises
-  an ``alert`` naming ``csrftoken`` instead of throwing into the console.
-* The browser suite's ``editor`` fixture no longer stops at ``/admin/`` on the
-  way in. That hop existed only to borrow the admin's cookie, so every test in
-  the file now arrives the way a bookmark does.
+  an ``alert`` naming ``csrftoken`` instead of throwing into the console. The
+  ``catch`` around the POST does the same for a rejected save, which used to
+  reach ``console.log`` and nowhere else -- so the 403 below is visible too.
+* The editor page is wrapped in ``staff_member_required`` and the endpoint in
+  ``staff_only_api``, both in ``kasvimuseo/urls.py``. The page answers the way
+  the admin does, with a login form at the requested URL; the endpoint answers
+  403 with a line of text, because Django 1.5's decorator renders that login
+  form behind a **200**, and HTML behind a 200 is exactly what axios cannot
+  tell from a saved sheet. ``staff_only_api`` is eleven lines in
+  ``kasvimuseo/views.py`` for that reason.
+* The gate is on ``is_staff``, not on ``is_superuser``: the museum's own
+  accounts are gardeners, and the suite's ``staff_client`` fixture is one of
+  those rather than ``admin_client``, so a check written against the wrong
+  attribute fails.
 
-The suite: 416 passing in the container (``dev/kasvimuseo app test``), 14 in the
-browser (``dev/kasvimuseo app browser-test``).
-``test_label_editor_issues_the_csrf_cookie_its_save_reads`` in
-``kasvimuseo/tests/test_templates.py`` asserts the server half -- the response
-carries the cookie and the page carries both the token and the read -- and the
-two browser tests named in ``Evidence`` assert the round trip and the message
-that is left when the cookie is gone.
+What it cost, and it is the cost the ruling accepted: the browser suite now
+logs in. ``browser_tests/seed.py`` creates one staff account,
+``dev/kasvimuseo`` generates its password per run and passes it to both halves
+in ``KASVIMUSEO_BROWSER_TEST_PASSWORD``, and the ``page`` fixture goes through
+the admin's login form. No password is written into a tracked file -- that rule
+is issue 050, which is what a password in ``conftest.py`` turned out to be
+worth. ``docs/user-guide.rst`` gains the sentence that the page is staff-only,
+and ``README.rst`` the paragraph about the generated one.
+
+The suite: 419 passing in the container (``dev/kasvimuseo app test``) and 16 in
+the browser (``dev/kasvimuseo app browser-test``). Beyond the tests named in
+``Evidence``, ``test_labels_api_refuses_anyone_who_is_not_staff`` covers
+anonymous and logged-in-but-not-staff on both methods,
+``test_the_label_editor_page_shows_a_login_form_to_anyone_else`` covers the
+page, and ``test_label_editor_issues_the_csrf_cookie_its_save_reads`` asserts
+the server half of the token. One existing assertion moved deliberately:
+``test_labels_api_get_reads_the_label_photo_without_more_queries`` counts 16
+queries where it counted 14, and the two new ones are the session row and the
+user it names -- what every admin page already pays.
 
 See also
 ========
 
 Issue 017 (the suite that found this), issues 010 and 039 (the same ``post``
-handler), issue 045 (the same page), and :doc:`incoming` for the authorization
-report this one produced.
+handler, now behind the gate), issue 045 (the same page), issue 050 (why no
+password is in a tracked file).

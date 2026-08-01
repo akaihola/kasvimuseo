@@ -797,7 +797,18 @@
                     }).catch(e => {
                         this.isSaving = false;
                         bus.$emit('enable-save');
-                        console.log(e);
+                        // A rejected save used to reach the console and
+                        // nowhere else, which is the same silence as the
+                        // token that was never there (issue 052). The 403 of
+                        // an expired session arrives here.
+                        const status = e.response && e.response.status;
+                        alert('The labels were not saved'
+                              + (status ? ' (' + status + ')' : '') + '.\n\n'
+                              + (status === 403
+                                 ? 'The editor is for staff: log in to the '
+                                   + 'admin in another tab, then click Save '
+                                   + 'again. Nothing on this page is lost.'
+                                 : (e.message || e)));
                     });
                 }
             },

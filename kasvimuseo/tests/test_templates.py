@@ -501,8 +501,9 @@ def test_bed_map_renders_an_empty_bed(client):
 
 
 @pytest.mark.django_db
-def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(client):
-    content = page(client.get(reverse('planting-label')))
+def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(
+        staff_client):
+    content = page(staff_client.get(reverse('planting-label')))
 
     assert 'id="app"' in content
     assert "el: '#app'" in content
@@ -511,7 +512,7 @@ def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(client):
 
 
 @pytest.mark.django_db
-def test_label_editor_issues_the_csrf_cookie_its_save_reads(client):
+def test_label_editor_issues_the_csrf_cookie_its_save_reads(staff_client):
     """Issue 052: the page renders the token, so the cookie exists.
 
     ``save`` takes the token out of ``document.cookie``, and rendering the tag
@@ -519,7 +520,7 @@ def test_label_editor_issues_the_csrf_cookie_its_save_reads(client):
     asserted here: without the cookie the save is rejected, and without the
     read from it the JavaScript has nothing to send.
     """
-    response = client.get(reverse('planting-label'))
+    response = staff_client.get(reverse('planting-label'))
 
     assert 'csrftoken' in response.cookies
     assert 'csrfmiddlewaretoken' in page(response)
@@ -527,9 +528,9 @@ def test_label_editor_issues_the_csrf_cookie_its_save_reads(client):
 
 
 @pytest.mark.django_db
-def test_label_editor_names_the_photo_buttons(client):
+def test_label_editor_names_the_photo_buttons(staff_client):
     """The chevrons are glyphs, so the attributes are their only name (037)."""
-    content = page(client.get(reverse('planting-label')))
+    content = page(staff_client.get(reverse('planting-label')))
 
     for direction in ['Edellinen', 'Seuraava']:
         name = '{0} kuva t\xe4lle kyltille'.format(direction)
@@ -538,9 +539,9 @@ def test_label_editor_names_the_photo_buttons(client):
 
 
 @pytest.mark.django_db
-def test_label_editor_says_what_the_photo_choice_applies_to(client):
+def test_label_editor_says_what_the_photo_choice_applies_to(staff_client):
     """The label's own photo, kept once saved -- what issue 039 implemented."""
-    content = page(client.get(reverse('planting-label')))
+    content = page(staff_client.get(reverse('planting-label')))
 
     assert 'vain t\xe4m\xe4n kyltin kuvan, eiv\xe4t lajin kuvaa' in content
     assert 'Valinta s\xe4ilyy, kun napsautat \u201cSave changes\u201d' in content
@@ -597,14 +598,14 @@ VIEWPORT_TAG = ('<meta name="viewport" '
     ('planted-species', 1),
     ('planted-species-compact', 1),
 ])
-def test_report_pages_lay_out_at_the_device_width(client, url_name,
-                                                 external_id):
+def test_report_pages_lay_out_at_the_device_width(staff_client, url_name,
+                                                  external_id):
     create_planted(name_fi='ahdekaunokki', external_id=1)
 
     url = (species_url(url_name, external_id) if external_id
            else reverse(url_name))
 
-    assert VIEWPORT_TAG in page(client.get(url))
+    assert VIEWPORT_TAG in page(staff_client.get(url))
 
 
 def test_the_public_base_template_lays_out_at_the_device_width():
@@ -618,28 +619,28 @@ def test_the_public_base_template_lays_out_at_the_device_width():
     ('planted-species', 1, 'Tulosta'),
     ('planted-species-compact', 1, 'Tulosta'),
 ])
-def test_printable_pages_offer_a_print_button(client, url_name, external_id,
-                                              caption):
+def test_printable_pages_offer_a_print_button(staff_client, url_name,
+                                              external_id, caption):
     """iPadOS Safari's own print command is in the Share menu, not on a bar."""
     create_planted(name_fi='ahdekaunokki', external_id=1)
 
     url = (species_url(url_name, external_id) if external_id
            else reverse(url_name))
-    content = page(client.get(url))
+    content = page(staff_client.get(url))
 
     assert 'onclick="window.print()"' in content
     assert '>{0}</button>'.format(caption) in content
 
 
 @pytest.mark.django_db
-def test_the_label_print_toggle_needs_no_hover(client):
+def test_the_label_print_toggle_needs_no_hover(staff_client):
     """It was revealed by ``opacity: 0`` plus hover, which a touch screen lacks.
 
     The toggle is drawn by default now, and only a device that *has* a hover
     takes it away again. ``.remove`` is in the ``@media print`` hide list, so
     nothing but that list keeps it off the paper.
     """
-    content = page(client.get(reverse('planting-label')))
+    content = page(staff_client.get(reverse('planting-label')))
 
     hide_list = re.search(r'@media print \{\s*([^}]*)\}', content)
     assert hide_list, 'the page has no @media print block at all'
@@ -660,7 +661,7 @@ def test_the_label_print_toggle_needs_no_hover(client):
 
 
 @pytest.mark.django_db
-def test_a_label_left_out_of_the_run_is_dimmed_by_its_contents(client):
+def test_a_label_left_out_of_the_run_is_dimmed_by_its_contents(staff_client):
     """``opacity`` on the ``li`` would take the print toggle down with it.
 
     It makes a compositing group, so the toggle inside renders against the
@@ -669,7 +670,7 @@ def test_a_label_left_out_of_the_run_is_dimmed_by_its_contents(client):
     No assertion here can see that; what it can do is pin the shape of the rule
     that avoids it.
     """
-    content = page(client.get(reverse('planting-label')))
+    content = page(staff_client.get(reverse('planting-label')))
 
     dimmed = re.search(r'li\.hidden > \*:not\(\.remove\) \{([^}]*)\}', content)
     assert dimmed, 'nothing dims a label around its print toggle'
