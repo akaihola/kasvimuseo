@@ -93,8 +93,9 @@ What was done
   back 200 with the right class.
 * The two templates render ``{% if ...photo_is_horizontal %}``, and the debug
   comment is gone. ``planted-species-compact.html`` carried the same
-  expression and was fixed with them; it is the dead template of issue 006, so
-  deleting it later removes a copy of this rather than un-fixing anything.
+  expression and was fixed with them; it was the dead template of issue 006,
+  which has since deleted it, and that removed a copy of this rather than
+  un-fixing anything.
 
 **The fallback is** ``vertical``. ``NULL`` means "not measured": no photo, no
 file behind the photo, or a file that could not be read. The template treats it
