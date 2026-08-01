@@ -12,21 +12,17 @@ Issue 032: fabfile.py duplicates the Ansible deployment, in Python 2
 :Blocks: 031 -- removes the ``flax`` third of it
     036 -- Stage 0
 :Related: 031
-:Decision: Delete it, and write down the one thing it was the only copy of.
-    Every task the file offered is covered twice over -- by
+:Decision: Delete it. Every task the file offered is covered twice over -- by
     ``ansible/install.yaml`` on the server and by ``dev/kasvimuseo`` here --
     and the two comments added to it since have their live copies elsewhere;
-    the measurements are in "What was checked" below. What deleting it did
-    cost is the second site's deployment: ``kajala()`` was the only tracked
-    description of how *Kajalan kasvimaat* was ever installed, so it is
-    transcribed into "What the second site's entry recorded", below, in the
-    same change that removed the file. Whether that site still exists is a
-    separate question, and it is in :doc:`incoming` rather than answered here.
-    Recorded rather than ruled: the question was put to the maintainer and no
-    answer came back, so this is what the evidence below supports, and the two
-    things a ruling could still change are cheap to change -- restoring the
-    file is one revert, and the second site's values are transcribed either
-    way.
+    the measurements are in "What was checked" below. The one thing deleting it
+    cost was the second site's deployment -- ``kajala()`` was the only tracked
+    description of how *Kajalan kasvimaat* was installed -- and the maintainer
+    ruled on that on 2026-08-01, having been asked rather than second-guessed:
+    the site no longer exists, its configuration is not to be transcribed here,
+    and this issue is to stay silent about it. ``git show edd59db^:fabfile.py``
+    is where it lives now. Recorded because the deletion was deliberate; not
+    elaborated, for the same reason.
 :Resolution: edd59db -- deletes ``fabfile.py`` and the two ``requirements/dev.txt``
     lines that existed for it.
 
@@ -161,51 +157,6 @@ finished. And the Stage 9 bullet still offered "``selenium`` 3.141.0 → 4.x,
 already gone with ``requirements/integration-tests.txt`` in issue 017; both
 halves of that bullet are now deletions that happened, and neither package is a
 requirement any more.
-
-What the second site's entry recorded
-=====================================
-
-``fabfile.py``'s ``kajala()`` task was the only tracked description of how
-*Kajalan kasvimaat* -- the second site ``docs/index.rst`` says this codebase
-serves, whose settings module ``ylaneenkasvit/kajala_settings.py`` is still
-here and still maintained -- was deployed. ``ansible/hosts`` names one host,
-and ``ansible/vars/main.yml`` names only ``ylaneenkasvit`` databases, nginx
-servers and certbot domains, so Ansible has never known about it. Deleting the
-file without transcribing this would have deleted the record, so here it is as
-it stood:
-
-=========================== ==============================================
-Host                        ``kala.ambitone.com`` -- a different machine
-                            from Yläne's ``kasvit.ambitone.com``
-Project root                ``/www/ylaneenkasvit`` (shared with Yläne)
-Site root                   ``/www/kajalankasvit``
-Project name                ``kajalankasvit``
-Public host name            ``kajalankasvit.ambitone.com``
-Django port                 ``11110``
-Database name and user      ``kajalankasvit`` (password from
-                            ``KASVIMUSEO_DB_PASSWORD``, issue 025)
-Settings module             ``ylaneenkasvit.kajala_settings``
-Static site                 ``static.kajalankasvit.ambitone.com`` →
-                            ``/www/ylaneenkasvit/static/``
-Media site                  ``media.kajalankasvit.ambitone.com`` →
-                            ``/www/kajalankasvit/media/``
-nginx                       ``client_max_body_size 10m;``
-gunicorn timeout            240 s
-=========================== ==============================================
-
-Two things in it are worth reading rather than filing. The static site pointed
-at the *Yläne* project root while the media site pointed at Kajala's own, which
-is consistent with ``kajala_settings.py``: it overrides ``MEDIA_ROOT`` to
-``SITE_ROOT/media`` and takes ``STATIC_ROOT`` from the common settings. And the
-host is a different machine from the one Ansible deploys, so this was never a
-second virtual host on the current server -- it was a second installation
-somewhere else.
-
-Whether that installation still exists is not a question this repository can
-answer, and it is not this issue: it is filed in :doc:`incoming`, because the
-answer decides between two quite different pieces of work -- teaching Ansible a
-second host, or deleting ``kajala_settings.py`` and the sentence in
-``docs/index.rst`` that promises two sites.
 
 What this leaves of issue 031
 =============================

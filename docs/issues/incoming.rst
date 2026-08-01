@@ -78,26 +78,6 @@ Waiting
   fresh database matches; if it is not, it is also a visible defect in
   production.
 
-* **Does the second site still exist, and if so, what deploys it?** Raised on
-  2026-08-01 by settling :doc:`032
-  <032-fabfile-duplicates-the-ansible-deployment>`, which deleted the only
-  tracked answer. The codebase serves two sites -- ``docs/index.rst`` opens by
-  saying so, and ``ylaneenkasvit/kajala_settings.py`` is a maintained settings
-  module for the second one, edited by 019, 022, 025 and 026 as recently as
-  last week. But ``ansible/hosts`` names one host, and ``ansible/vars/main.yml``
-  names only ``ylaneenkasvit`` databases, nginx servers and certbot domains, so
-  the maintained deployment has never known about *Kajalan kasvimaat*. The one
-  description of how it was installed was ``fabfile.py``'s ``kajala()`` task,
-  which put it on ``kala.ambitone.com`` -- a different machine from Yläne's --
-  under ``/www/kajalankasvit`` on port 11110, with its own database, static
-  host and media host. 032 transcribed those values into its own file before
-  deleting the file that held them, so nothing is lost either way; what is not
-  known here is which of two quite different pieces of work this is. If the
-  site is live, it has no maintained deployment path and Ansible needs a second
-  host. If it is not, ``kajala_settings.py`` is dead code and the promise of
-  two sites in ``docs/index.rst`` is wrong. Only the maintainer can say which,
-  and nothing in this repository can be read to find out.
-
 Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
 :doc:`044 <044-large-admin-pages-are-truncated-for-a-remote-browser>`,
