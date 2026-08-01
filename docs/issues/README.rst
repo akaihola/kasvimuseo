@@ -286,7 +286,8 @@ answer, including two things nobody had noticed: one of the three CSS rules the
 fork exists to serve has never matched anything, and three more Django API
 removals hide inside it. It is also why 014, the dead code in the same file,
 is settled without being touched. 020, 021, 022, 032 and 033 are deletions, and
-four of them -- 020, 021, 033 and now 022 -- are done. The first three went in
+all five are done now, 022 and then 032 following the first three. The first
+three went in
 one change that took six lines out of two requirements files and one settings
 module, together because two of them edit the same ``INSTALLED_APPS`` tuple and
 all three share one verification. The only surprise was in 020:
@@ -298,7 +299,15 @@ installed grappelli has no ``media/`` directory, nothing outside these
 documents names either the route or ``ADMIN_MEDIA_PREFIX``, and a rendered
 admin page serves all of its grappelli assets from ``STATIC_URL``. Its file
 also corrects ``upgrade-plan.rst``'s count of the string views Django 1.10
-rejects, which had not been recounted since 048 added one.
+rejects, which had not been recounted since 048 added one. 032 is the last of
+the five, and the one whose deletion took a ruling rather than a check: the
+file also described a second site, and what to do about that record was the
+maintainer's to say, not a thing to infer from the tree. It was asked and
+answered -- the deployment is not written down here, and the file in the
+history is where it stays. 032 also
+finishes a third of 031: two of that issue's three URL dependencies have now
+gone with the things that wanted them, and ``django-jqm``, the only one in
+production, is what it is still open for.
 
 
 From the photo management walkthrough

@@ -116,10 +116,13 @@ history. Where it was plumbed:
     settings now needs them. ``postgresql_users`` takes the password from the
     same variable instead of the plain-text one it held.
 
-``fabfile.py``
-    The Kajala password it held is read from the environment too. The file is
-    superseded by Ansible (issue 032) but is still tracked, so it could not
-    keep the value.
+``fabfile.py`` -- **deleted since**
+    The Kajala password it held was made to read from the environment too: the
+    file was superseded by Ansible but still tracked, so it could not keep the
+    value. Issue 032 has since deleted it, having checked first that this was
+    not the last copy of anything -- the same environment variable, with the
+    same explanation, is read in ``ylaneenkasvit/kajala_settings.py``, which is
+    where the Kajala database password actually reaches the application.
 
 Measured, in the container: the suite passes (357 tests, three of them the new
 ones for ``secret_from_env``); with both variables

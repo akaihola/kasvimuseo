@@ -2,7 +2,7 @@
 Issue 032: fabfile.py duplicates the Ansible deployment, in Python 2
 ====================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: Low
 :Area: deployment / cleanup
 :Reported: 2026-07-28
@@ -12,8 +12,19 @@ Issue 032: fabfile.py duplicates the Ansible deployment, in Python 2
 :Blocks: 031 -- removes the ``flax`` third of it
     036 -- Stage 0
 :Related: 031
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Delete it. Every task the file offered is covered twice over -- by
+    ``ansible/install.yaml`` on the server and by ``dev/kasvimuseo`` here --
+    and the two comments added to it since have their live copies elsewhere;
+    the measurements are in "What was checked" below. The one thing deleting it
+    cost was the second site's deployment -- ``kajala()`` was the only tracked
+    description of how *Kajalan kasvimaat* was installed -- and the maintainer
+    ruled on that on 2026-08-01, having been asked rather than second-guessed:
+    the site no longer exists, its configuration is not to be transcribed here,
+    and this issue is to stay silent about it. ``git show edd59db^:fabfile.py``
+    is where it lives now. Recorded because the deletion was deliberate; not
+    elaborated, for the same reason.
+:Resolution: edd59db -- deletes ``fabfile.py`` and the two ``requirements/dev.txt``
+    lines that existed for it.
 
 Problem
 =======
@@ -54,8 +65,114 @@ If any of it is still wanted, the alternative is a rewrite against Fabric 3,
 which is a real piece of work and should be a deliberate decision rather than a
 side effect of the upgrade.
 
+What was checked
+================
+
+The two the issue asked about
+-----------------------------
+
+``clone_db``
+    Covered, and by two independent paths. ``dev/kasvimuseo``'s ``db_fetch``
+    dumps production over SSH into ``.dev/backups/production.sql`` and
+    ``db restore`` loads it, adapting the dump to a current PostgreSQL as it
+    goes; both are the first thing ``README.rst`` documents. For anyone without
+    an SSH account there is the Ansible route instead -- ``ansible-playbook -t
+    backup -e backup_database=/backup-dir ansible/install.yaml``, the ``Back up
+    the database`` and ``Fetch database backup from host`` tasks in
+    ``install.yaml`` -- and ``db fetch`` names that route itself in the error it
+    dies with when the password is missing.
+
+``manage``
+    Covered. ``dev/kasvimuseo app manage <args>`` runs any management command in
+    the Python 2.7 container, starting and stopping the cluster around it. On
+    the server the only management command the deployment actually runs is
+    ``collectstatic``, and ``install.yaml`` runs it through ``django_manage``
+    with the settings module named and the three environment values the
+    settings now insist on.
+
+The rest of the file
+--------------------
+
+Every remaining task has an Ansible equivalent: ``configure_nginx`` →
+``nginxinc.nginx``, ``configure_postgresql`` + ``create_db`` +
+``create_db_user`` → ``geerlingguy.postgresql`` with ``postgresql_databases``
+and ``postgresql_users`` in ``ansible/vars/main.yml``, ``install_django`` +
+``install_project`` + ``update_code`` → the ``pip`` task that installs the
+package from git, ``restart_django`` → the ``akaihola.uwsgi`` role.
+``configure_supervisor`` is the one with no equivalent, and deliberately so:
+the Ansible deployment runs uWSGI, not supervisor. Two further signs the file
+had stopped describing this system: it names
+``bitbucket.com/akaihola/ylaneenkasvit.git`` as the repository, where
+``install.yaml`` installs ``git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git``,
+and it configures ``gunicorn`` as the production web server, which since the
+Ansible setup has been uWSGI behind nginx.
+
+The two comments added since
+----------------------------
+
+Both were checked against the places the facts live now, and neither was the
+only copy:
+
+``env.pip_args = '--no-deps'`` (issue 027)
+    The live copy is ``dev/Containerfile``'s comment on the same flag, quoted
+    verbatim in 027's own file. 027 had already written the sentence this
+    deletion needs -- that the fabfile comment describes what ``--no-deps`` now
+    is "until issue 032 deletes the file" -- so the only thing left to do here
+    was to put that clause in the past tense, which this change does.
+
+``env.db_password = os.environ['KASVIMUSEO_DB_PASSWORD']`` (issue 025)
+    The same fact, with the same explanation, is in
+    ``ylaneenkasvit/kajala_settings.py``, which is where the Kajala database
+    password is actually read; ``ansible/vars/main.yml`` does the equivalent for
+    Yläne out of the vault. 025's own file describes the fabfile line, and that
+    paragraph is now past tense.
+
+The rest of the tree
+--------------------
+
+Nothing outside the documentation referred to the file. ``setup.py``, ``dev/``
+and ``.github/`` needed no change, and ``README.rst`` never described the
+Fabric route at all -- it documents ``dev/kasvimuseo`` and Ansible and nothing
+else. ``README.rst`` did need one change, found by reading this change back
+rather than by grepping for the word: its list of ways a CI job goes red said
+"two dependencies install from URLs rather than from PyPI (issue 031)", and
+taking ``flax`` out leaves one. Correcting the count turned up a second thing
+that entry had wrong from the start -- ``flax`` was in ``dev.txt``, and
+``dev/Containerfile`` installs ``production.txt`` alone, so ``flax`` was never
+in the image and could never have reddened that build. One URL could, and still
+can: ``django-jqm``. What was left after that was prose:
+``docs/dependency-inventory.rst``; four places in ``docs/upgrade-plan.rst`` --
+Part 5's table, the Part 2 ladder, its listing of ``dev.txt``, and the Stage 9
+bullet -- plus the Stage 0 preamble, which now says the deletion happened ahead
+of the Stage 10 Part 5 had scheduled it for; issues 025, 027 and 031; and this
+register. All are past tense now. ``fabric``'s version table stays in the
+inventory, since that document records what was surveyed rather than what is
+installed, with a line saying the package is gone.
+
+Two things turned up in that sweep that were untrue before this change rather
+than because of it, and are corrected with it. Stage 0's preamble still counted
+the dead grappelli route among its unfinished items, which issue 022 had
+finished. And the Stage 9 bullet still offered "``selenium`` 3.141.0 → 4.x,
+``Fabric`` 1.6 → 3.x *or* delete both" as an open choice, when ``selenium`` had
+already gone with ``requirements/integration-tests.txt`` in issue 017; both
+halves of that bullet are now deletions that happened, and neither package is a
+requirement any more.
+
+What this leaves of issue 031
+=============================
+
+031 filed three dependencies installed from URLs. ``podman-compose`` went with
+issue 017, which deleted the browser suite's ``requirements/integration-tests.txt``
+along with it; ``flax`` is gone with this change. **One is left**:
+``django-jqm``, the ``production.txt`` entry installed from
+``https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip``, and it is the
+one that mattered all along, being the only one of the three in production. Its
+option is unchanged -- vendor it into the repository, at upgrade-plan Stage 0 --
+and 031 stays open for it. 031's ``Depends on`` note is updated to say the
+``flax`` third is done rather than that it will be.
+
 See also
 ========
 
-Issue 031 -- ``flax`` is one of the three URL dependencies.
+Issue 031 -- ``django-jqm`` is the one URL dependency left.
 ``docs/upgrade-plan.rst`` Part 5.
