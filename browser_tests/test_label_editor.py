@@ -74,6 +74,97 @@ def test_a_species_planted_only_in_a_private_bed_gets_no_label(editor):
     assert 'sinivuokko' not in [label['name'] for label in labels(editor)]
 
 
+LONG_NAME = 'A name long enough that fitty must make it substantially smaller'
+
+
+def make_names_need_fitting(route):
+    """Answer the data endpoint with a name no label holds at its declared size.
+
+    The seeded names fit at 30pt, so a test that only looked at the labels as
+    they arrive could not tell a fitted label from an unfitted one.
+    """
+    response = route.fetch()
+    data = response.json()
+    for label in data['object_list']:
+        label['name_fi'] = LONG_NAME
+    route.fulfill(response=response, json=data)
+
+
+def fitted_sizes(page):
+    """The drawn font size of every label's species name."""
+    return page.evaluate("""() =>
+        Array.from(document.querySelectorAll('#labels li h1')).map(el =>
+            parseFloat(getComputedStyle(el).fontSize))
+    """)
+
+
+def test_a_label_whose_photo_never_loads_still_fits_its_text(page, base_url):
+    """Issue 056's first half, and the one the iPad showed on most labels.
+
+    Until 746ce71 the only thing that ever called ``fitTextToSpace`` was the
+    ``verticalPhotoWidth`` watcher, and that property changes in ``setAspect``,
+    which runs on the photo's ``@load``. No photo, no fit: the text kept the
+    declared 30pt, which under issue 046's 50 % screen zoom is twice what a
+    fitted label shows. ``fitMixin.mounted`` fits regardless now, so a label
+    with no photo is fitted like any other.
+
+    The photos are failed rather than the data changed, because it is the
+    photo's absence and nothing else that used to decide whether a label was
+    fitted at all.
+    """
+    page.route(re.compile(r'/media/'), lambda route: route.abort())
+    page.route('**' + DATA_URL, make_names_need_fitting)
+    page.goto(base_url + LABELS_URL)
+    page.wait_for_selector('#labels li')
+
+    # The trigger, asserted rather than assumed.
+    assert page.evaluate("""() =>
+        Array.from(document.querySelectorAll('#labels li .photo img'))
+             .every(img => img.naturalWidth === 0)
+    """)
+    page.wait_for_function("""() =>
+        Array.from(document.querySelectorAll('#labels li h1')).every(el =>
+            parseFloat(getComputedStyle(el).fontSize) < 40)
+    """)
+    assert len(fitted_sizes(page)) == 2
+
+
+def test_the_ipad_fits_a_label_whose_photo_never_loads(ipad_page, base_url):
+    """The same half again, down the branch the device takes.
+
+    ``ipad_page`` carries the iPad's user agent as well as its viewport and
+    touch screen, so ``fitTextToSpace`` measures a clone and writes
+    ``--fit-screen-size`` / ``--fit-print-size`` instead of handing the label
+    to fitty. What this cannot show is the other half of that branch: the
+    stylesheet only reads those two properties inside ``@supports
+    (-webkit-touch-callout: none)``, which no engine here implements, so the
+    numbers are checked where they are written rather than where they are
+    drawn. Confirming the drawn size wants the device (issue 056).
+    """
+    ipad_page.route(re.compile(r'/media/'), lambda route: route.abort())
+    ipad_page.route('**' + DATA_URL, make_names_need_fitting)
+    ipad_page.goto(base_url + LABELS_URL)
+    ipad_page.wait_for_selector('#labels li')
+
+    ipad_page.wait_for_function("""() =>
+        Array.from(document.querySelectorAll('#labels li h1')).every(el =>
+            parseFloat(el.style.getPropertyValue('--fit-screen-size')) < 20)
+    """)
+    # Screen and print are the same fit at the two scales, which is what keeps
+    # the paper at 30pt while the screen matches issue 046's 50 %.
+    assert ipad_page.evaluate("""() =>
+        Array.from(document.querySelectorAll('#labels li h1')).every(el =>
+            parseFloat(el.style.getPropertyValue('--fit-print-size'))
+            === 2 * parseFloat(el.style.getPropertyValue('--fit-screen-size')))
+    """)
+    # fitty is what grew the text on the device, so on this branch the label
+    # must not have been handed to it.
+    assert ipad_page.evaluate("""() =>
+        Array.from(document.querySelectorAll('#labels li h1'))
+             .every(el => !el.style.fontSize)
+    """)
+
+
 def test_label_text_fits_and_stays_stable_during_layout_passes(editor):
     """fitty must resize desktop labels without an unbounded feedback loop."""
     editor.wait_for_function("""() =>
@@ -99,22 +190,16 @@ def test_label_text_fits_and_stays_stable_during_layout_passes(editor):
 
 
 def test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed(
-        page, base_url):
-    """iPad drops fitty's observer without undoing its fitted font size."""
-    page.add_init_script("""
-        Object.defineProperty(navigator, 'platform', {value: 'MacIntel'});
-        Object.defineProperty(navigator, 'maxTouchPoints', {value: 5});
-    """)
+        ipad_page, base_url):
+    """iPad drops fitty's observer without undoing its fitted font size.
 
-    def make_name_need_fitting(route):
-        response = route.fetch()
-        data = response.json()
-        for label in data['object_list']:
-            label['name_fi'] = (
-                'A name long enough that fitty must make it substantially smaller')
-        route.fulfill(response=response, json=data)
-
-    page.route('**' + DATA_URL, make_name_need_fitting)
+    On the tablet the editor is a tablet in every way the browser can be told
+    about -- viewport, touch screen and user agent -- rather than a desktop
+    page with two ``navigator`` properties redefined, which is how this test
+    reached the branch when it was written (issue 056).
+    """
+    page = ipad_page
+    page.route('**' + DATA_URL, make_names_need_fitting)
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
     page.wait_for_function("""() => {
