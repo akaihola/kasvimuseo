@@ -172,7 +172,9 @@ container, about twenty seconds, its own PostgreSQL, no dump and no media.
 ``app browser-test`` runs ``browser_tests/`` on the **host's** Python 3, through
 uv, driving Playwright's Chromium against the real application in its own
 container. It covers what only exists in a browser: dragging museum numbers
-between labels, the save cycle, the per-label photo and the print toggle. The
+between labels, the save cycle, the per-label photo and the print toggle --
+and, since issue 013, the two admin changelist controls Grappelli builds out of
+JavaScript, its filter pulldown and its action dropdown. The
 application is Python 2.7 and nothing that drives a current browser supports
 2.7, which is why this half lives outside the container -- and Playwright can
 drive WebKit, which is the engine the iPad work (issue 045) needs and no

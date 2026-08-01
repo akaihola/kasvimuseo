@@ -1,4 +1,4 @@
-"""Fixtures for the label editor's browser tests.
+"""Fixtures for the browser tests: the label editor, and the admin of 013.
 
 These run on the **host's Python 3**, not in the application container: the
 application is Django 1.5 on Python 2.7, and nothing that drives a current
