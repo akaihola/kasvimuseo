@@ -111,7 +111,7 @@
       django_manage:
         command: collectstatic
         app_path: "{{ django_dir }}"
-        settings: ylaneenkasvit.ylaneenkasvit_settings
+        settings: "{{ django_settings_module }}"
       # Importing the settings needs both secrets, so any manage.py command run
       # from here needs them in its environment too (issue 025) -- and the host
       # names, which the settings insist on for the same reason (issue 026).

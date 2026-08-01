@@ -83,10 +83,39 @@ In this order, in one maintenance window:
 #. Restart uWSGI and check both halves: an ordinary page still renders, and a
    deliberately bad ``Host`` header gets a 400 rather than a page.
 
-Nothing in this repository needs to change for it. If it turns out the file was
-there for something other than ``DEBUG`` -- it is not, on the copy above, but
-the next person to find one should assume less -- whatever that was belongs in
-the tracked settings, which is the lesson 026 already drew.
+When this was filed, nothing in this repository needed to change for it, and
+the section below is the one thing that did. If it turns out the file was there
+for something other than ``DEBUG`` -- it is not, on the copy above, but the next
+person to find one should assume less -- whatever that was belongs in the
+tracked settings, which is the lesson 026 already drew.
+
+The playbook that does it exists now
+====================================
+
+Those three steps are ``ansible/secure-production.yaml``, in that order, with
+the runbook in ``README.rst`` under "The security maintenance window". Three
+things about it are this issue's:
+
+* The ordering is not left to whoever is typing. The deletion is guarded by a
+  check that reads the server -- that ``uwsgi.ini`` already carries
+  ``KASVIMUSEO_ALLOWED_HOSTS``, and that the installed ``common_settings.py``
+  is one that reads the environment at all. Running the deletion's tag on a
+  server that has not had the deploy fails on that check, names this issue and
+  changes nothing. The failure mode described above is therefore not reachable
+  by choosing one tag rather than another, which is what it used to be.
+* It deletes the bytecode as well as the source. On Python 2 a
+  ``local_settings.pyc`` with no ``.py`` beside it is still importable, so
+  removing only the file this issue names would leave ``DEBUG`` on and look
+  like it had not.
+* It checks step 3 rather than describing it: a separate, read-only play
+  asserts that an ordinary page answers 200, that a request carrying a host
+  name the site does not answer to gets a 400 and that the 400 is not Django's
+  debug page, and that neither the file nor its bytecode is left behind. It can
+  be run on its own afterwards with ``-t verify``.
+
+Nothing about the state of the server has changed, and ``Status`` says so. The
+site still serves with ``DEBUG`` on until the window is run, and when to run it
+is the timing this issue's ``Decision`` field leaves to the maintainer.
 
 See also
 ========

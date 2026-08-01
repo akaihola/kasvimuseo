@@ -13,7 +13,7 @@
   # runs as, and not echoed into the play's output or a --diff run.
   template:
     src: uwsgi.ini
-    dest: /home/kasvimuseo/uwsgi.ini
+    dest: "{{ uwsgi_ini }}"
     owner: kasvimuseo
     mode: 0600
   no_log: true
@@ -24,7 +24,7 @@
 - name: Setup systemd service
   template:
     src: uwsgi_systemd
-    dest: "/etc/systemd/system/ylaneenkasvit-wsgi.service"
+    dest: "/etc/systemd/system/{{ uwsgi_service }}.service"
     owner: root
     group: root
     mode: 0644
@@ -37,9 +37,9 @@
   when: wsgi_service.changed
 
 - name: Ensure that the wsgi service is enabled
-  service: "name=ylaneenkasvit-wsgi enabled=yes"
+  service: "name={{ uwsgi_service }} enabled=yes"
 
 # We can't use a handler for this, because handlers don't work well with dynamic parameters.
 - name: Restart uWSGI service
-  service: "name=ylaneenkasvit-wsgi state=restarted"
+  service: "name={{ uwsgi_service }} state=restarted"
   when: wsgi_service.changed or wsgi_config.changed

@@ -1,0 +1,86 @@
+"""Report every account in ``auth_user``, and what the admin log says it did.
+
+Rendered by ``ansible/secure-production.yaml`` and handed to the server's
+Python 2.7 on standard input, the same way and for the same reason as
+``rotate_admin_passwords.py.j2``: the settings it has to import read the
+``SECRET_KEY`` and the database password from the environment, and this keeps
+both off the command line.
+
+It reads and writes nothing. It exists for the two things issue 050 asks for
+beyond the one password: *look at the other four accounts while there*, and
+*decide whether to treat the disclosure as exploited* -- for which the admin's
+``LogEntry`` table is the only record there is.
+
+It never prints a password hash. The algorithm and the iteration count are
+enough to see that an account is on the same 2020-era hasher as the one whose
+password turned out to be ``123``.
+
+Python 2.7, in the subset that also parses on Python 3.
+"""
+import json
+import os
+import sys
+
+PARAMS = json.loads(r"""{{ audit_params | to_json }}""")
+
+os.environ['DJANGO_SETTINGS_MODULE'] = PARAMS['settings_module']
+for _name, _value in PARAMS['environment'].items():
+    os.environ[_name] = _value
+
+try:
+    from django.contrib.admin.models import LogEntry
+    from django.contrib.auth.models import User
+except ImportError as error:
+    sys.stderr.write('cannot import Django from %s: %s\n' % (sys.prefix, error))
+    raise SystemExit(2)
+
+
+def hasher(encoded):
+    """Name the algorithm and its work factor -- never the hash itself."""
+    parts = encoded.split('$')
+    if len(parts) < 2:
+        return {'algorithm': parts[0] or 'unusable', 'iterations': None}
+    iterations = parts[1] if parts[1].isdigit() else None
+    return {'algorithm': parts[0], 'iterations': iterations}
+
+
+def moment(value):
+    return None if value is None else str(value)
+
+
+accounts = []
+try:
+    for user in User.objects.order_by('id'):
+        entries = LogEntry.objects.filter(user=user).order_by('action_time')
+        first = entries[0].action_time if entries.count() else None
+        last = entries.reverse()[0].action_time if entries.count() else None
+        account = {
+            'id': user.id,
+            'username': user.username,
+            'is_active': user.is_active,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'last_login': moment(user.last_login),
+            'date_joined': moment(user.date_joined),
+            'rotated_by_this_play': user.username in PARAMS['covered'],
+            'admin_actions': entries.count(),
+            'first_admin_action': moment(first),
+            'last_admin_action': moment(last),
+        }
+        account.update(hasher(user.password))
+        accounts.append(account)
+except Exception as error:  # noqa: BLE001 -- the message is the useful part
+    sys.stderr.write('%s: %s\n' % (type(error).__name__, str(error)))
+    raise SystemExit(3)
+
+privileged = [
+    account['username'] for account in accounts
+    if (account['is_staff'] or account['is_superuser'])
+    and account['is_active']
+    and not account['rotated_by_this_play']
+]
+
+print(json.dumps({
+    'accounts': accounts,
+    'privileged_accounts_this_play_does_not_rotate': privileged,
+}, indent=2, sort_keys=True))

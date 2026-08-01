@@ -70,6 +70,27 @@ The assertion added by 025 fails the run before anything is installed if either
 value is missing from the vault, so a forgotten variable stops the deploy rather
 than the site.
 
+The playbook that does it exists now
+====================================
+
+``ansible/secure-production.yaml`` is the maintenance window as a playbook: it
+imports ``install.yaml`` whole -- so this issue's deploy is exactly the run
+described above, not a reimplementation of it -- and then carries out the two
+other server-side acts that are open, 050's password rotation and 051's
+deletion, in the one order that is safe. ``README.rst``, under "The security
+maintenance window", is the runbook: the command, the downtime, what the
+customer sees, and what is checked afterwards. Its last play asserts this
+issue's own post-conditions on the server -- that ``uwsgi.ini`` carries the
+values the vault holds, and that uWSGI *started after* that file was written,
+which is what distinguishes a process signing with the new key from one still
+signing with the old.
+
+This changes nothing about the state of the disclosure, which is why ``Status``
+still says ``Accepted``. What was missing was never the knowledge of what to
+type; it was the decision this issue's ``Decision`` field names, and that is
+still the customer's to give. The mechanism is ready, and the disclosure is live
+until somebody runs it.
+
 What to expect afterwards
 =========================
 
