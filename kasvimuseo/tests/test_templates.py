@@ -203,6 +203,36 @@ def test_printable_sheet_uses_the_vertical_header_for_a_portrait_photo(
     assert 'class="header vertical"' in content
 
 
+# reports/planted-species.html on planted-species-base-compact.html
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name,base', [
+    ('planted-species', 'planted-species-base-printable.html'),
+    ('planted-species-compact', 'planted-species-base-compact.html'),
+])
+def test_both_species_reports_render_from_the_one_sheet_template(client,
+                                                                url_name,
+                                                                base):
+    """One sheet, two bases; see docs/issues/006.
+
+    ``PlantedSpeciesCompact`` differs from ``PlantedSpeciesPrintable`` only in
+    ``base_template_name``, so the compact report is this template too. There
+    used to be a second, separate ``reports/planted-species-compact.html``
+    whose name says it owns this URL and which nothing had rendered since
+    ``base_template`` replaced it; it was deleted, and this is what would have
+    noticed had it still been the live one.
+    """
+    create_planted(name_fi='ahdekaunokki', external_id=1)
+
+    response = client.get(species_url(url_name, 1))
+    names = [template.name for template in response.templates]
+
+    assert 'kasvimuseo/reports/planted-species.html' in names
+    assert 'kasvimuseo/reports/' + base in names
+    assert 'kasvimuseo/reports/planted-species-compact.html' not in names
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize('width,height,expected', [
     (12, 8, 'horizontal'),

@@ -145,8 +145,9 @@ report bases, and the label editor, which extends nothing. The species list and
 the compact base reach ``<head>`` only through django-jqm's vendored
 ``jqm/v1_1_0.html``, which lives in site-packages and cannot be edited from
 here, so their tag goes in ``{% block sitestyle %}`` -- the one block that
-template leaves inside ``<head>``. Not added to ``mobile-base.html`` (dead,
-issue 006), the observation page or the bed map, all outside this issue's scope.
+template leaves inside ``<head>``. Not added to ``mobile-base.html``, which was
+dead and has since been deleted by issue 006, nor to the observation page or
+the bed map, both outside this issue's scope.
 One trap on the way: a multi-line ``{# ... #}`` is not a comment in Django 1.5,
 so the comments explaining the tag are ``{% comment %}`` blocks -- the first
 attempt rendered its own explanation onto every page.
@@ -276,5 +277,5 @@ See also
 
 Issue 046 (the zoom), issue 047 (the print toggle's glyph), issue 017 (the
 browser suite that would have to catch a regression in any of this), issue 006
-(which now also covers ``mobile-base.html``, the abandoned start of a mobile
-front end), issue 044 (the other report that needed a browser to settle).
+(which also covered ``mobile-base.html``, the abandoned start of a mobile front
+end, and deleted it), issue 044 (the other report that needed a browser to settle).

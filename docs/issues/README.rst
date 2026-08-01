@@ -101,9 +101,9 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
-020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 038, 039, 040, 041, 042, 043, 046,
-047, 048, 053 and 054 are open: each one
+All but 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 016, 017,
+019, 020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 038, 039, 040, 041,
+042, 043, 046, 047, 048, 053 and 054 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -211,7 +211,15 @@ From the test coverage work
 ==== ======== ======================= ==================================================
 
 Suggested reading order for a first review: 001, 002 and 017 are the ones with
-real consequences. 013, 006 and 015 are cheap tidying. 016 and 018 are about
+real consequences. 013, 006 and 015 are cheap tidying; 006 is done, and its
+ruling was to delete both of the dead templates it names. The work in it was
+not the deletion but the proof: a template can be reached by name from another
+template rather than from Python, and the app-directory loader means a
+same-named file in an installed package would decide which copy the loader
+hands back, so both were checked before either was removed. It also left the
+suite able to notice: nothing had pinned which template file the compact report
+renders from, so the suite would have stayed green whichever of the two files
+had been deleted. 016 and 018 are about
 the future rather than today; 016 is fixed, since the construct that is correct
 on both interpreters costs nothing to adopt now and Python 2's behaviour is
 unchanged by it.
