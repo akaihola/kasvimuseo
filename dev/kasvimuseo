@@ -362,16 +362,12 @@ browser_test() {
          -c "CREATE DATABASE $BROWSER_DB OWNER $DB_USER"
     BROWSER_DB_MADE=1
     # photologue first, as in `db bootstrap`: kasvimuseo:0014 references
-    # photologue_photo. syncdb also loads photologue's initial data, which is
-    # where the `display` photo size the labels render comes from.
-    #
-    # syncdb prints a DatabaseError about initial_data.json on the way, exactly
-    # as `db bootstrap` does: the project fixture names photologue rows, and
-    # photologue's tables are South's, so they are not there yet. South loads
-    # the same fixture again after migrating, which is why this is noise rather
-    # than a failure -- hence `;` and not `&&` after it.
+    # photologue_photo. The photo sizes the labels render -- `display` among
+    # them -- come from kasvimuseo/fixtures/initial_data.json, which South
+    # loads after migrating kasvimuseo; photologue ships no initial data of
+    # its own (issue 055).
     app_run_container "$BROWSER_ENV" sh -c \
-        'python ylaneenkasvit/manage.py syncdb --noinput >/dev/null;
+        'python ylaneenkasvit/manage.py syncdb --noinput >/dev/null &&
          python ylaneenkasvit/manage.py migrate photologue --noinput >/dev/null &&
          python ylaneenkasvit/manage.py migrate --noinput >/dev/null'
     browser_seed
@@ -427,8 +423,16 @@ case "${1:-}" in
                # Empty database from the migrations, for working without a
                # production dump. photologue must go first: kasvimuseo:0014
                # references photologue_photo.
+               #
+               # The photo sizes arrive with the last of these: they are
+               # kasvimuseo/fixtures/initial_data.json, and South loads an
+               # app's initial data after migrating it. They live in a
+               # migrated app for exactly that reason -- as ylaneenkasvit's,
+               # they were loaded by `syncdb` before South had created
+               # photologue_photosize, which failed and left the database with
+               # no photo sizes at all (issue 055).
                with_db app_run_container "" sh -c \
-                 'python ylaneenkasvit/manage.py syncdb --noinput;
+                 'python ylaneenkasvit/manage.py syncdb --noinput &&
                   python ylaneenkasvit/manage.py migrate photologue --noinput &&
                   python ylaneenkasvit/manage.py migrate --noinput' ;;
       restore) db_restore "${3:-}" ;;

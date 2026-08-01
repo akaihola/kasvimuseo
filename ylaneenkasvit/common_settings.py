@@ -75,7 +75,13 @@ TIME_ZONE = 'Europe/Helsinki'
 USE_TZ = True
 
 INSTALLED_APPS = (
-    'ylaneenkasvit',  # for fixtures
+    # Not for fixtures any more: ``initial_data.json`` moved to ``kasvimuseo``,
+    # which has migrations, so South loads it after ``migrate`` instead of
+    # ``syncdb`` trying it before photologue's tables exist (issue 055). What
+    # keeps this entry is ``ylaneenkasvit/locale/``: there is no
+    # ``LOCALE_PATHS``, so those translations are found because the package is
+    # an installed application. It defines no models.
+    'ylaneenkasvit',
     'kasvimuseo',
 
     'grappelli.dashboard',
