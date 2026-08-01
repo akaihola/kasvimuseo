@@ -48,17 +48,6 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
-* **The museum numbers on a label come back in an arbitrary order.** Same run.
-  ``PlantedSpeciesLabelsApi.get_labels_data`` calls ``sorted(observation_set)``
-  on ``Observation`` instances; the model defines no ordering and no
-  comparison, so Python 2 falls back to comparing them by identity and the
-  order is whatever the objects' addresses happen to be. The editor's own
-  ``insort`` keeps numbers in numerical order, so the same label can print
-  "12 11" and then "11 12" after somebody drags a number and saves. Cosmetic on
-  a printed label, but it is a sheet people read numbers off. One
-  ``key=attrgetter('external_id')`` settles it; the reason it is here and not a
-  numbered issue is that nothing says what the intended order is for the
-  observations with no ``external_id`` at all.
 
 * **The species list page names a photo size that is not in the initial data.**
   ``reports/planted-species-list.html`` renders
@@ -107,3 +96,15 @@ so the same pull request closed it. The page renders the token and issues its
 own cookie, a save that finds none says so, and both the editor and its data
 endpoint are staff-only -- which is also why the browser suite now logs in.
 The other three reports here are untouched.
+
+Emptied of one more on 2026-08-01: the museum numbers arriving in an arbitrary
+order became :doc:`053
+<053-museum-numbers-on-a-label-are-in-an-arbitrary-order>`, and it is fixed.
+The question that kept it here -- where an observation with no ``external_id``
+belongs in that order -- was put to the maintainer with the data behind it and
+ruled the same day: numerically, with a missing number first. The data is why
+that answer was cheap. The production dump has no such row, and the two other
+places that sort the same list both put a missing number first, so the ruling
+changes nothing anybody can see today and only says what happens when the
+nullable column is finally used. The two reports left on this page -- 052
+removed one the same day -- are untouched.

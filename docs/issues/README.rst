@@ -103,7 +103,7 @@ Open issues
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
 020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 038, 039, 040, 041, 042, 043, 046,
-047 and 048 are open: each one
+047, 048 and 053 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -436,6 +436,7 @@ From settling issue 017
   ID Severity Area                    Title
 ==== ======== ======================= ==================================================
  050 High     security / deployment   A production admin password is committed and in use
+ 053 Low      views / labels API      Museum numbers on a label come in any order
 ==== ======== ======================= ==================================================
 
 The one issue here that was found by *deleting* something. 017's browser suite
@@ -444,9 +445,14 @@ logged into the admin with a username and password written into
 account exactly, so the file had been publishing a working superuser login
 since 2020. 017 could take it out of the tracked files and nothing more, which
 is 025's split repeated: the act that ends the disclosure is on the server, and
-it is this issue. Two smaller findings came out of the same work and are in
-:doc:`incoming` rather than here -- a save that silently does nothing without an
-admin cookie, and museum numbers that arrive in an arbitrary order.
+it is this issue. Two smaller findings came out of the same work and went to
+:doc:`incoming` rather than here. One of them is now **053**: the museum
+numbers on a label arrived in whatever order the ``Observation`` objects sat at
+in memory, and it is ``Fixed``. The ruling it was waiting for turned out to be
+about the nullable column rather than about the numbers -- no data anybody has
+reaches that case -- and the maintainer gave it the same day it was asked for.
+The other, a save that silently does nothing without an admin cookie, is still
+in :doc:`incoming`.
 
 
 From settling issue 026
