@@ -37,7 +37,7 @@ Issue 052: Saving the label editor does nothing without an admin cookie
     what the button could not, so the browser gets nothing new. Whether that
     endpoint should be public at all is a separate ruling with its own cost --
     a logged-in browser suite -- and is back in :doc:`incoming` as a report.
-:Resolution: Fixed in 51d0f3b.
+:Resolution: Fixed in e061b41.
 
 Problem
 =======
@@ -115,7 +115,7 @@ cache after the cookie expired, still arrives at ``save`` with nothing to read.
 Resolution
 ==========
 
-Commit 51d0f3b. Option 1 with option 2 behind it:
+Commit e061b41. Option 1 with option 2 behind it:
 
 * ``{% csrf_token %}`` is rendered beside the Save button, outside the ``GET``
   form for the box size -- inside it the token would ride along in the query
