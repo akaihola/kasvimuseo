@@ -103,9 +103,13 @@ jobs:
   # job above: the host's Python 3 through uv, no container and no database, so
   # it costs about 20 seconds and runs in parallel.
   #
-  # Issue 038 owns the design of this build and is still in progress; this job
-  # only puts the existing command on a runner, and 038 remains free to change
-  # what it does.
+  # `--clean` throws away any previous output and doctrees first. On a hosted
+  # runner there are none -- every run starts from a fresh checkout -- so this
+  # buys nothing today and is here to say what the job depends on: an
+  # incremental Sphinx build re-reads only what changed, and would go quiet
+  # about a warning in a page the branch never touched. The day anything caches
+  # .dev/docs between runs to save the 25 seconds, the flag is what keeps that
+  # from turning the check into a rubber stamp.
   docs:
     name: sphinx
     runs-on: ubuntu-latest
@@ -113,4 +117,57 @@ jobs:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Build the documentation
-        run: dev/kasvimuseo docs
+        run: dev/kasvimuseo docs --clean
+
+      # Only what landed on master is ever published, so a pull request builds
+      # the documentation and fails on a warning without deploying anything.
+      # The condition is on the upload rather than only on the deploy job so a
+      # pull request does not carry a 12 MB artifact nobody will read.
+      - name: Package the HTML for GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: .dev/docs/html
+
+  # Publishing the site the sphinx job just built (issue 038). Separate job
+  # because deploying wants permissions -- `pages: write` and `id-token: write`
+  # -- that the build has no business holding, and because a deployment belongs
+  # to an environment while a build does not.
+  #
+  # This is dormant until somebody with repository settings sets Pages -> Source
+  # to "GitHub Actions"; no workflow can do that, and turning it on is the
+  # maintainer's decision rather than this file's. Until then the API says the
+  # repository has no Pages site, the deploy is skipped with a notice, and the
+  # run stays green -- rather than every push to master going red over a switch
+  # that has not been flipped. Once it is flipped this job starts publishing
+  # with no change here.
+  publish:
+    name: pages
+    needs: docs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Is GitHub Pages switched on for this repository?
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/pages" >/dev/null 2>&1; then
+              echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::Pages is not enabled: set Settings -> Pages ->" \
+                   "Source to 'GitHub Actions' to publish the documentation." \
+                   "See README.rst."
+          fi
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        if: steps.check.outputs.enabled == 'true'
+        uses: actions/deploy-pages@v5

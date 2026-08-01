@@ -2,7 +2,7 @@
 Issue 038: The repository has no rendered docs
 ==============================================
 
-:Status: In progress
+:Status: Fixed
 :Severity: Low
 :Area: documentation / tooling
 :Reported: 2026-07-28
@@ -13,8 +13,26 @@ Issue 038: The repository has no rendered docs
 :Related: 018 -- the build moves into CI once one exists
     036 -- each workaround has a stage at which it falls away
     016 -- the ``ur''`` prefix that blocks the parser
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: GitHub Pages, deployed from ``master`` alone, and inert until the
+    repository's Pages source is set to "GitHub Actions" by hand. Read the Docs
+    was the alternative and was not taken: it would build these documents a
+    second way, on its own runner with its own invocation of Sphinx, and the
+    value of the CI job is that it runs ``dev/kasvimuseo docs --clean`` -- the
+    same command a developer runs, so the two cannot drift. What Read the Docs
+    offers over Pages is a rendered preview per pull request; ``dev/docs-serve``
+    already renders every unmerged branch, which is the same need answered
+    without a second toolchain. Publishing at all was ruled safe because the
+    repository is already public: this register names production hostnames, the
+    contents of an untracked settings file on the server, and three live
+    security issues (049, 050, 051), and every word of it is served by
+    github.com today. A rendered site changes how easily that is found, not
+    whether it is disclosed -- closing those three issues is what ends the
+    disclosure.
+:Resolution: d95f545 -- the ``sphinx`` job builds with ``--clean`` and a
+    ``pages`` job deploys from ``master``. Neither has been seen on a runner:
+    the credentials available here cannot push to ``github.com``, so the
+    workflow is validated by ``actionlint`` and by running its command locally,
+    and the first real run is whatever pushes this.
 
 Problem
 =======
@@ -217,14 +235,15 @@ Stage 10                Add ``sphinx.ext.intersphinx`` against the Python and Dj
                         publishes an inventory for 1.5.
 Stage 11+ (Django 2.0)  Consider ``sphinxcontrib-django`` for model field tables in the
                         API reference. It requires Django >= 2.
-CI exists (issue 018)   Run ``dev/kasvimuseo docs --clean`` in CI, where ``--clean`` is
-                        the point: it re-reads every file, so a warning in a page
-                        nobody touched still fails the pipeline. ``-W`` is already on
-                        locally. Publish the HTML (GitHub Pages or Read the Docs)
-                        instead of relying on a local ``.dev/`` directory. The hook
-                        stays as the fast local loop, and ``dev/docs-serve`` stays
-                        useful for unmerged branches -- which is exactly what a
-                        published site cannot show.
+CI exists (issue 018)   **Done, with this issue.** ``dev/kasvimuseo docs
+                        --clean`` runs on every pull request and every push to
+                        ``master``; a ``pages`` job publishes the HTML from
+                        ``master`` alone, so a pull request builds and fails on
+                        a warning without deploying anything. ``-W`` was already
+                        on locally. The hook is still the fast local loop, and
+                        ``dev/docs-serve`` still shows unmerged branches, which
+                        the published site cannot. One switch is not in the
+                        repository: see "Not done here".
 Any time                ``sphinx-autobuild`` would give ``dev/docs-serve`` live reload
                         and rebuild-on-change in one process. It is a dependency and a
                         different design -- one checkout per process -- so it is worth
@@ -241,6 +260,28 @@ Any time                If Markdown becomes preferable for new documents, add ``
                         coexist in one project.
 ======================= ================================================================
 
+With that row done, nothing left in this table is waiting on this issue. Every
+remaining trigger is either a stage of ``docs/upgrade-plan.rst`` that has not
+been reached -- Stage 10 for the four workarounds above, Stage 11 for the model
+field tables -- or an "Any time" row that is a standing option rather than
+outstanding work, including the ``doctest`` and ``coverage`` builders that CI
+existing has now made possible. That is scheduled, not forgotten: this issue is
+``Fixed`` because the design landed and CI now enforces it, not because the
+table is empty.
+
+One thing measured while wiring the build into CI, and worth writing down
+because it cuts against the row above: ``--clean`` catches nothing on a hosted
+runner *today*. Every run starts from a fresh checkout, so there are no
+doctrees to be incremental against and the build was already reading the whole
+tree. What the flag does is state the property the job depends on, so that
+caching ``.dev/docs`` to save twenty-five seconds cannot quietly turn the check
+into a rubber stamp. The property itself was verified rather than assumed,
+though against the command and not against a runner: a ``:doc:`` reference to a
+document that does not exist, added to ``upgrade-plan.rst`` -- a page the change
+does not otherwise touch -- made ``dev/kasvimuseo docs --clean`` exit 1 and name
+the file and the line. That is the same command the job runs, on the same
+freshly-read tree.
+
 Two things deliberately do **not** change with the stack. The output stays in
 ``.dev/`` and out of version control -- rendered HTML in a diff is noise. And
 the rebuild stays detached and non-blocking; a documentation build is never
@@ -253,6 +294,18 @@ The ``PostToolUse`` hook has to be registered in ``.claude/settings.json``, whic
 coding agents cannot write to. The scripts are in the repository and work when
 run by hand; the registration is a one-line manual step, recorded in
 ``README.rst``.
+
+The published site needs the same kind of step, for the same reason. A workflow
+cannot switch GitHub Pages on for its own repository, so until somebody sets
+**Settings -> Pages -> Source** to "GitHub Actions" there is nowhere to deploy
+to. The ``pages`` job asks the API whether a Pages site exists and skips the
+deployment with a notice when it does not, so master stays green rather than
+going red over a switch nobody has flipped; the moment it is flipped, the next
+push to ``master`` publishes, with no change to the workflow. The site is
+``https://akaihola.github.io/kasvimuseo/``, and it is in ``README.rst``.
+``actions/configure-pages`` can enable Pages itself with ``enablement: true``,
+which was deliberately not used: whether these documents are published is the
+maintainer's decision and not a side effect of a build.
 
 Sphinx deletes no page whose source has gone, so renaming a document leaves its
 old HTML in ``.dev/docs/html/`` -- reachable by URL and by nothing else, since
