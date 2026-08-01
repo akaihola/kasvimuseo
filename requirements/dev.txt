@@ -1,4 +1,21 @@
+# The development set: everything the application needs to run, plus the tools
+# that are only ever useful on a developer's machine. `dev/Containerfile`
+# installs this file, so the development image has them and the production
+# image -- which installs `production.txt` -- does not.
 -r production.txt
 
+# `runserver_plus` and `shell_plus`, with the Werkzeug debugger the first of
+# them needs. Development only since upgrade plan Stage 0: it is in nobody's
+# import list, and `ylaneenkasvit/local_settings.development.py` is what puts
+# it into INSTALLED_APPS. `runserver_plus` is also what replaced the removed
+# `django-pserver` (issue 033) -- reach it with
+# `dev/kasvimuseo app manage runserver_plus`; `app run` serves with gunicorn
+# (issue 044).
 django-extensions==1.5.9
 Werkzeug==0.8.3
+
+# django-extensions' own dependency -- `six>=1.2` in its metadata, imported by
+# 22 of its modules -- and nobody else's here, which is why it moved out of
+# `production.txt` with it. Pinned rather than resolved because
+# `dev/Containerfile` installs this file with `--no-deps`.
+six==1.11.0

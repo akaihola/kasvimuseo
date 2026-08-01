@@ -27,7 +27,6 @@
 # vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
 # build reaches nothing but PyPI.
 django==1.5.1
-django-extensions==1.5.9
 django-grappelli==2.4.5
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
@@ -38,7 +37,6 @@ django-grappelli==2.4.5
 # and 20.x, so no `setuptools<82` has to be carried through eight stages.
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
-six==1.11.0
 south==0.8.1
 django-photologue==2.6.1
 # photologue's, not the application's: it declares `Pillow>=2.0.0` and nothing
@@ -53,6 +51,26 @@ django-photologue==2.6.1
 # the `Pillow>=9.1` that photologue 3.16 onwards needs for
 # `Image.Resampling.LANCZOS` -- not the `Pillow>=9` its own metadata declares.
 Pillow==6.2.2
+# Not here either, and this is where they went: `django-extensions` and `six`.
+# Upgrade plan Stage 0 moved `django-extensions` to `requirements/dev.txt`
+# alone -- it is `runserver_plus` and `shell_plus`, nothing in this repository
+# imports it, and `ylaneenkasvit/local_settings.development.py` is now what
+# puts it into INSTALLED_APPS, so a production install has neither the package
+# nor the app entry.
+#
+# `six` followed it, which the plan did not foresee: it lists `six` as Stage 10
+# work, "Python 3 only", and Part 1 notes that nothing in this repository
+# imports it. Neither says why it was installed at all. Measured in the image
+# rather than reasoned: `django_extensions` is the only installed distribution
+# that declares `six>=1.2`, and the only one with a file importing it -- 22 of
+# them. Django 1.5 vendors its own copy as `django.utils.six`; `django`,
+# `django-photologue`, `django-grappelli`, `south`, `gunicorn`,
+# `psycopg2-binary` and `Pillow` neither declare it nor import it. So with
+# django-extensions out of production, `six` is a runtime dependency of nothing
+# here, and a complete runtime lock cannot keep naming it. It is pinned in
+# `dev.txt` instead, where the package that needs it is. The test stack pulls
+# its own (`pytest`, `mock`), which is why the suite is unaffected.
+#
 # Not here, deliberately: `django-sortedm2m`. `dev/Containerfile` installed it
 # beside Pillow and called both photologue's runtime dependencies; only Pillow
 # is. photologue 2.6.1 declares `Django>=1.4`, `South>=0.7.5` and
