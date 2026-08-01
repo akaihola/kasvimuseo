@@ -7,9 +7,12 @@ import json
 from contextlib import contextmanager
 
 import pytest
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.test import Client
 
 from kasvimuseo.models import Label, Planting, Species
+from kasvimuseo.tests.conftest import log_in_as_staff
 from kasvimuseo.tests.factories import (create_bed, create_location,
                                         create_observation, create_planted,
                                         create_planting, create_species)
@@ -91,7 +94,7 @@ def test_planted_species_list_deduplicates_species(client):
 
 
 @pytest.mark.django_db
-def test_labels_api_get_groups_by_species_and_reports_visibility(client):
+def test_labels_api_get_groups_by_species_and_reports_visibility(staff_client):
     labelled = create_planted(name_fi='ahdekaunokki', external_id=1,
                               nickname='mummon kukka')
     label = Label.objects.create(species=labelled.observation.species,
@@ -100,7 +103,7 @@ def test_labels_api_get_groups_by_species_and_reports_visibility(client):
     labelled.save()
     create_planted(name_fi='valkonarsissi', external_id=2)
 
-    response = client.get(reverse('planting-label-data'))
+    response = staff_client.get(reverse('planting-label-data'))
 
     assert response.status_code == 200
     assert response['Content-Type'] == 'application/json'
@@ -118,11 +121,11 @@ def test_labels_api_get_groups_by_species_and_reports_visibility(client):
 
 
 @pytest.mark.django_db
-def test_labels_api_get_returns_full_species_shape(client):
+def test_labels_api_get_returns_full_species_shape(staff_client):
     create_planted(name_fi='valkonarsissi', external_id=7)
 
-    data = json.loads(
-        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+    response = staff_client.get(reverse('planting-label-data'))
+    data = json.loads(response.content.decode('utf-8'))
 
     entry, = data['object_list']
     assert sorted(entry) == ['all_photos', 'external_ids', 'genus', 'group',
@@ -136,7 +139,7 @@ def test_labels_api_get_returns_full_species_shape(client):
 
 
 @pytest.mark.django_db
-def test_labels_api_get_reads_back_the_label_photo(client, display_size,
+def test_labels_api_get_reads_back_the_label_photo(staff_client, display_size,
                                                    photo_factory):
     """Issue 039: the photo chosen for a label wins over the species photo.
 
@@ -155,8 +158,8 @@ def test_labels_api_get_reads_back_the_label_photo(client, display_size,
     planting.label = label
     planting.save()
 
-    data = json.loads(
-        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+    response = staff_client.get(reverse('planting-label-data'))
+    data = json.loads(response.content.decode('utf-8'))
 
     entry, = data['object_list']
     assert entry['photo_pk'] == chosen.pk
@@ -166,7 +169,8 @@ def test_labels_api_get_reads_back_the_label_photo(client, display_size,
 
 
 @pytest.mark.django_db
-def test_labels_api_get_falls_back_to_the_species_photo(client, display_size,
+def test_labels_api_get_falls_back_to_the_species_photo(staff_client,
+                                                        display_size,
                                                         photo_factory):
     """A species with no ``Label`` row, and a label with no photo of its own."""
     unlabelled = create_planted(name_fi='tulppaani', external_id=1)
@@ -176,8 +180,8 @@ def test_labels_api_get_falls_back_to_the_species_photo(client, display_size,
     labelled.label = Label.objects.create(species=labelled.observation.species)
     labelled.save()
 
-    data = json.loads(
-        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+    response = staff_client.get(reverse('planting-label-data'))
+    data = json.loads(response.content.decode('utf-8'))
 
     by_name = dict((entry['name_fi'], entry) for entry in data['object_list'])
     assert by_name['tulppaani']['photo_pk'] == tulppaani.pk
@@ -187,7 +191,7 @@ def test_labels_api_get_falls_back_to_the_species_photo(client, display_size,
 
 @pytest.mark.django_db
 def test_labels_api_get_reads_the_label_photo_without_more_queries(
-        client, display_size, photo_factory):
+        staff_client, display_size, photo_factory):
     """Reading the photo choice back costs nothing: it rides on the join.
 
     18 queries for this data before the fix, 16 after it. Preferring
@@ -198,6 +202,10 @@ def test_labels_api_get_reads_the_label_photo_without_more_queries(
 
     Issue 012 then took it to 14: ``ObservationManager`` prefetches the beds it
     used to fetch one planting at a time.
+
+    16 now, and the two on top are not this view's: the endpoint is staff-only
+    since issue 052, so every request first reads the session row and then the
+    user it names. They are what any admin page already pays.
     """
     first = create_planted(name_fi='valkonarsissi', external_id=1)
     second = create_planted(name_fi='tulppaani', external_id=2)
@@ -210,20 +218,20 @@ def test_labels_api_get_reads_the_label_photo_without_more_queries(
     create_planted(name_fi='ahdekaunokki', external_id=3)
 
     with counted_queries() as queries:
-        response = client.get(reverse('planting-label-data'))
+        response = staff_client.get(reverse('planting-label-data'))
 
     assert response.status_code == 200
     assert len(json.loads(response.content.decode('utf-8'))
                ['object_list']) == 3
-    assert queries.count == 14
+    assert queries.count == 16
 
 
 @pytest.mark.django_db
-def test_labels_api_get_omits_non_public_species(client):
+def test_labels_api_get_omits_non_public_species(staff_client):
     create_planted(name_fi='piilokasvi', external_id=1, public=False)
 
-    data = json.loads(
-        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+    response = staff_client.get(reverse('planting-label-data'))
+    data = json.loads(response.content.decode('utf-8'))
 
     assert data == {'object_list': []}
 
@@ -232,7 +240,8 @@ def test_labels_api_get_omits_non_public_species(client):
 
 
 @pytest.mark.django_db
-def test_labels_api_post_links_each_planting_to_its_own_species_label(client):
+def test_labels_api_post_links_each_planting_to_its_own_species_label(
+        staff_client):
     """Round-trip with several items and non-sequential species primary keys.
 
     The view re-links plantings via ``zip(items, labels)``, i.e. it assumes
@@ -256,7 +265,7 @@ def test_labels_api_post_links_each_planting_to_its_own_species_label(client):
                         visible=(index != 1))
              # posted newest species first, i.e. descending primary key
              for index, planting in enumerate(reversed(remaining))]
-    response = client.post(reverse('planting-label-data'),
+    response = staff_client.post(reverse('planting-label-data'),
                            data=json.dumps(items),
                            content_type='application/json')
 
@@ -288,7 +297,7 @@ def test_labels_api_post_links_each_planting_to_its_own_species_label(client):
                            bed=create_bed(name='2'))
     items = [label_item(species, [remaining[0].observation.external_id]),
              label_item(species, [9], visible=False)]
-    response = client.post(reverse('planting-label-data'),
+    response = staff_client.post(reverse('planting-label-data'),
                            data=json.dumps(items),
                            content_type='application/json')
 
@@ -301,15 +310,15 @@ def test_labels_api_post_links_each_planting_to_its_own_species_label(client):
 
 
 @pytest.mark.django_db
-def test_labels_api_post_survives_a_get_round_trip(client):
+def test_labels_api_post_survives_a_get_round_trip(staff_client):
     planting = create_planted(name_fi='valkonarsissi', external_id=3)
     species = planting.observation.species
 
-    client.post(reverse('planting-label-data'),
+    staff_client.post(reverse('planting-label-data'),
                 data=json.dumps([label_item(species, [3], visible=False)]),
                 content_type='application/json')
-    data = json.loads(
-        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+    response = staff_client.get(reverse('planting-label-data'))
+    data = json.loads(response.content.decode('utf-8'))
 
     entry, = data['object_list']
     assert entry['id'] == species.pk
@@ -318,7 +327,8 @@ def test_labels_api_post_survives_a_get_round_trip(client):
 
 
 @pytest.mark.django_db
-def test_labels_api_post_round_trips_the_photo_choice(client, display_size,
+def test_labels_api_post_round_trips_the_photo_choice(staff_client,
+                                                      display_size,
                                                       photo_factory):
     """Issue 039, end to end: POST a photo choice, GET it back.
 
@@ -332,12 +342,12 @@ def test_labels_api_post_round_trips_the_photo_choice(client, display_size,
     species_photo = photo_factory(title='valkonarsissi lehdet')
     species = planting.observation.species
 
-    client.post(reverse('planting-label-data'),
+    staff_client.post(reverse('planting-label-data'),
                 data=json.dumps([label_item(species, [3],
                                             photo_pk=chosen.pk)]),
                 content_type='application/json')
-    data = json.loads(
-        client.get(reverse('planting-label-data')).content.decode('utf-8'))
+    response = staff_client.get(reverse('planting-label-data'))
+    data = json.loads(response.content.decode('utf-8'))
 
     assert Label.objects.get().photo_id == chosen.pk
     entry, = data['object_list']
@@ -358,6 +368,7 @@ def test_labels_api_post_keeps_the_old_labels_when_the_save_fails(client,
     ``TestCase`` replaces ``transaction.rollback`` with a no-op for the length
     of the test.
     """
+    staff_client = log_in_as_staff(client)
     planting = create_planted(name_fi='valkonarsissi', external_id=3)
     species = planting.observation.species
     kept = Label.objects.create(species=species, visible=False)
@@ -367,26 +378,78 @@ def test_labels_api_post_keeps_the_old_labels_when_the_save_fails(client,
 
     monkeypatch.setattr(Planting, 'save', fail)
     with pytest.raises(RuntimeError):
-        client.post(reverse('planting-label-data'),
-                    data=json.dumps([label_item(species, [3])]),
-                    content_type='application/json')
+        staff_client.post(reverse('planting-label-data'),
+                          data=json.dumps([label_item(species, [3])]),
+                          content_type='application/json')
 
     label = Label.objects.get()
     assert (label.pk, label.visible) == (kept.pk, False)
 
 
 @pytest.mark.django_db
-def test_labels_api_post_ignores_non_public_plantings(client):
+def test_labels_api_post_ignores_non_public_plantings(staff_client):
     planting = create_planted(name_fi='piilokasvi', external_id=1,
                               public=False)
     species = planting.observation.species
 
-    client.post(reverse('planting-label-data'),
-                data=json.dumps([label_item(species, [1])]),
-                content_type='application/json')
+    staff_client.post(reverse('planting-label-data'),
+                      data=json.dumps([label_item(species, [1])]),
+                      content_type='application/json')
 
     assert Label.objects.count() == 1
     assert Planting.objects.get(pk=planting.pk).label is None
+
+
+# The staff gate on both label URLs (issue 052)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('method', ['get', 'post'])
+def test_labels_api_refuses_anyone_who_is_not_staff(client, method):
+    """Anonymous, then logged in without staff rights. Both are refused.
+
+    Until this gate existed, ``post`` was reachable by anyone who knew the
+    URL, and it opens with ``Label.objects.all().delete()``: one request from
+    outside emptied the table. 403 rather than the admin's login form, because
+    the caller is axios and a login page behind a 200 reads as a saved sheet.
+    """
+    planting = create_planted(name_fi='valkonarsissi', external_id=1)
+    species = planting.observation.species
+    Label.objects.create(species=species)
+    body = dict(data=json.dumps([label_item(species, [1])]),
+                content_type='application/json') if method == 'post' else {}
+
+    response = getattr(client, method)(reverse('planting-label-data'), **body)
+
+    assert response.status_code == 403
+    assert Label.objects.count() == 1
+
+    user = User.objects.create_user('vierailija', 'v@invalid', 'salasana')
+    assert not user.is_staff
+    client.login(username='vierailija', password='salasana')
+
+    response = getattr(client, method)(reverse('planting-label-data'), **body)
+
+    assert response.status_code == 403
+    assert Label.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_the_label_editor_page_shows_a_login_form_to_anyone_else(staff_client):
+    """The page is gated the admin's way, which in Django 1.5 is a 200.
+
+    ``staff_member_required`` renders the admin login form at the requested
+    URL rather than redirecting -- the register notes that under "Observations,
+    not actionable" -- so the assertion is on what came back, not on a status.
+    """
+    create_planted(name_fi='valkonarsissi', external_id=1)
+
+    anonymous = Client().get(reverse('planting-label'))
+
+    assert 'id="app"' not in anonymous.content.decode('utf-8')
+    assert 'name="password"' in anonymous.content.decode('utf-8')
+    assert 'id="app"' in staff_client.get(
+        reverse('planting-label')).content.decode('utf-8')
 
 
 # PlantedSpecies.get_context_data

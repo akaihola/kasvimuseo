@@ -311,6 +311,13 @@
             <input type="text" placeholder="8cm" name="height">
             <input type="submit" value="Set box size">
         </form>
+        {% comment %}Rendering the token is what makes CsrfViewMiddleware put
+        a csrftoken cookie on this page's response, and ``save`` below reads
+        that cookie. Without it the cookie only existed for a browser that had
+        been to the admin first, so the Save button did nothing at all for
+        anyone else (issue 052). Outside the form above, which is a GET and
+        would carry the token into the query string.{% endcomment %}
+        {% csrf_token %}
         <button id="save"
                 v-on:click="save"
                 v-bind:class="{ progress: isSaving }"
@@ -761,7 +768,23 @@
                     }
                 },
                 save: function(event) {
-                    const token = document.cookie.match(/\bcsrftoken=(\w+)/)[1];
+                    // The cookie is issued because this page now renders the
+                    // csrf token tag. It can still be absent -- cookies
+                    // refused, or a stale page reloaded from the cache -- and
+                    // indexing the failed match threw inside this handler,
+                    // where nothing showed it: no request, no change on
+                    // screen, a TypeError in a console nobody has open
+                    // (issue 052). Say so instead.
+                    const match = document.cookie.match(/\bcsrftoken=(\w+)/);
+                    if (!match) {
+                        alert('The labels cannot be saved: this browser has '
+                              + 'no csrftoken cookie, so the request would be '
+                              + 'rejected.\n\nReload the page. If it keeps '
+                              + 'happening, cookies are being refused for '
+                              + 'this site -- see issue 052.');
+                        return;
+                    }
+                    const token = match[1];
                     this.isSaving = true;
                     this.disableSave = true;
                     axios.post(
@@ -774,7 +797,18 @@
                     }).catch(e => {
                         this.isSaving = false;
                         bus.$emit('enable-save');
-                        console.log(e);
+                        // A rejected save used to reach the console and
+                        // nowhere else, which is the same silence as the
+                        // token that was never there (issue 052). The 403 of
+                        // an expired session arrives here.
+                        const status = e.response && e.response.status;
+                        alert('The labels were not saved'
+                              + (status ? ' (' + status + ')' : '') + '.\n\n'
+                              + (status === 403
+                                 ? 'The editor is for staff: log in to the '
+                                   + 'admin in another tab, then click Save '
+                                   + 'again. Nothing on this page is lost.'
+                                 : (e.message || e)));
                     });
                 }
             },

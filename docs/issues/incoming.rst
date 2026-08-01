@@ -48,24 +48,6 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
-* **Saving the label editor does nothing at all for a browser that did not come
-  through the admin.** Found on 2026-07-31 by the browser suite :doc:`017
-  <017-browser-suite-unrunnable-vue-editor-untested>` builds, on its first run.
-  ``save`` reads the CSRF token out of the cookie with
-  ``document.cookie.match(/\bcsrftoken=(\w+)/)[1]``, and this page sets no such
-  cookie: it renders no ``{% csrf_token %}``, so ``CsrfViewMiddleware`` never
-  issues one. The match returns ``null``, indexing it throws, and the exception
-  is inside the click handler -- no request is made, nothing changes on screen,
-  and the only trace is a ``TypeError`` in the console. Staff reach the editor
-  from the admin dashboard, whose login form does set the cookie, which is why
-  eight years of use never hit it; anyone opening the page directly, or after
-  the cookie expires, gets a Save button that lies. Pinned as it stands today by
-  ``browser_tests/test_label_editor.py::
-  test_saving_without_an_admin_cookie_does_nothing_and_says_nothing``. The fix
-  is a line -- the page can render ``{% csrf_token %}``, or the script can fail
-  loudly -- but which of the two is a decision, and it is worth asking whether
-  a public URL should be able to rewrite every label at all.
-
 * **The museum numbers on a label come back in an arbitrary order.** Same run.
   ``PlantedSpeciesLabelsApi.get_labels_data`` calls ``sorted(observation_set)``
   on ``Observation`` instances; the model defines no ordering and no
@@ -115,3 +97,13 @@ the same truncated response as
 second URL -- one that carries no admin, no login and no HTML -- so it was
 filed there as evidence instead. It narrows that issue's three suspects to two
 and gives it a one-command reproduction.
+
+Emptied again on 2026-08-01: the silent save became :doc:`052
+<052-saving-the-label-editor-does-nothing-without-an-admin-cookie>`, and it is
+fixed. The maintainer ruled on all three of the questions in it, and the third
+one is the reason this entry is longer than the report was: settling it meant
+establishing what protected that endpoint, and the answer was nothing at all,
+so the same pull request closed it. The page renders the token and issues its
+own cookie, a save that finds none says so, and both the editor and its data
+endpoint are staff-only -- which is also why the browser suite now logs in.
+The other three reports here are untouched.

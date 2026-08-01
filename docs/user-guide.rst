@@ -41,6 +41,10 @@ Osoite: https://kasvit.ambitone.com/kasvimuseo/planting-labels/
 
 Ohjeita:
 
+- sivu on vain henkilökunnalle: se avataan ylläpidon etusivun linkistä, ja
+  jos kirjautuminen on vanhentunut, sivun tilalla näkyy ylläpidon
+  kirjautumislomake
+
 - ruudun koko ei ole tulosteen koko: kyltit piirretään ruudulle puoleen
   kokoon, jotta niitä mahtuu rinnakkain useampi, mutta tuloste tulee aina
   lomakkeen mittojen mukaan (oletuksena 14 cm × 8 cm)

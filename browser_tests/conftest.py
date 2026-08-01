@@ -38,6 +38,10 @@ CDN_REPLACEMENTS = {
 LABELS_URL = '/kasvimuseo/planting-labels/'
 DATA_URL = '/kasvimuseo/planting-labels/data/'
 
+# The account ``seed.py`` creates. Its password is not here and never in the
+# repository: ``dev/kasvimuseo`` makes one per run (issues 050 and 052).
+STAFF_USERNAME = 'puutarhuri'
+
 
 def pytest_addoption(parser):
     parser.addoption('--headed', action='store_true',
@@ -87,7 +91,7 @@ def browser(request):
 
 
 @pytest.fixture
-def page(browser, base_url):
+def anonymous_page(browser, base_url):
     """A page with the CDN scripts served locally and console errors collected.
 
     The viewport is 1280x900: at issue 046's 50 % screen zoom that is five
@@ -119,14 +123,35 @@ def page(browser, base_url):
 
 
 @pytest.fixture
+def page(anonymous_page, base_url):
+    """The same page, logged in as the gardener ``seed.py`` creates.
+
+    The editor and its data endpoint are staff-only (issue 052), so this is
+    what every test but the one about the gate itself needs. The password is
+    made per run by ``dev/kasvimuseo`` and reaches both halves through the
+    environment, so nothing here is a credential anybody could reuse.
+    """
+    password = os.environ.get('KASVIMUSEO_BROWSER_TEST_PASSWORD')
+    if not password:
+        pytest.fail('KASVIMUSEO_BROWSER_TEST_PASSWORD is unset -- run these'
+                    ' through `dev/kasvimuseo app browser-test`.')
+    anonymous_page.goto(base_url + '/admin/')
+    anonymous_page.fill('#id_username', STAFF_USERNAME)
+    anonymous_page.fill('#id_password', password)
+    anonymous_page.click('input[type="submit"]')
+    anonymous_page.wait_for_selector('#id_username', state='detached')
+    return anonymous_page
+
+
+@pytest.fixture
 def editor(page, base_url):
     """The label editor, loaded, with its labels drawn.
 
-    It stops at ``/admin/`` on the way for one reason: the editor's ``save``
-    reads the ``csrftoken`` cookie, and the editor itself sets none -- so this
-    is a browser arriving the way the staff do, from the admin.
+    ``page`` has been through the admin's login form, which is what the editor
+    now requires (issue 052). It used to stop at ``/admin/`` for a different
+    reason -- to borrow the ``csrftoken`` cookie the editor set none of -- and
+    that half is gone: the page issues its own.
     """
-    page.goto(base_url + '/admin/')
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
     return page
