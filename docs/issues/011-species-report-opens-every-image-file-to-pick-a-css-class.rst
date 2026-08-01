@@ -130,12 +130,15 @@ render, and the test warms it before it measures -- then asserts the warm-up
 rendering its photo. Turning ``pre_cache`` on would move even that to upload
 time; it is a data change, not a code one, and was left alone.
 
-Covering the list page turned up something that is not this issue either and is
-in :doc:`incoming`: it renders ``get_mobilethumbnail_url``, and no
-``mobilethumbnail`` ``PhotoSize`` is in ``initial_data.json``, so on any
-database built from that fixture the accessor does not exist and the page shows
-a broken image. The test creates the size rather than working around its
-absence, which is why it is a test of file access rather than a test of nothing.
+Covering the list page turned up something that is not this issue either: it
+renders ``get_mobilethumbnail_url``, and no ``mobilethumbnail`` ``PhotoSize``
+was in ``initial_data.json``, so on any database built from that fixture the
+accessor did not exist and the page showed a broken image. The test created the
+size rather than working around its absence, which is why it was a test of file
+access rather than a test of nothing. That is now :doc:`054
+<054-the-species-list-names-a-photo-size-the-fixtures-lack>` and is fixed, so
+the size comes from the shipped data and the ``mobile_thumbnail_size`` fixture
+this test used is gone.
 
 
 Consequences elsewhere
