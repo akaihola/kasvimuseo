@@ -12,7 +12,10 @@ COPY requirements /kasvimuseo/requirements
 # This resolves rather than passing --no-deps, unlike dev/Containerfile, and
 # since issue 027 that no longer decides anything: production.txt names every
 # runtime package including Pillow, and the two mechanisms were measured to
-# install the same ten packages. Pillow used to be chosen here by whatever pip
+# install the same nine packages -- ten until issue 031 vendored `django-jqm`
+# into `jqm/`, which this image now gets from the COPY below rather than from a
+# GitHub URL, so this is the last pip line here that ever reached the network
+# for anything but PyPI. Pillow used to be chosen here by whatever pip
 # found, held below 10 only by the base image -- Pillow 7.0 dropped Python 2.7,
 # and issue 028 is the AttributeError that waits above 9.5.0. It is pinned in
 # the file now, so this image stops depending on that accident.
@@ -46,6 +49,11 @@ RUN set -e; \
 COPY setup.py /kasvimuseo/setup.py
 COPY kasvimuseo /kasvimuseo/kasvimuseo
 COPY ylaneenkasvit /kasvimuseo/ylaneenkasvit
+# The vendored django-jqm (issue 031). It is a third package rather than part
+# of either of the two above because it stayed an app: `'jqm'` is in
+# `INSTALLED_APPS`, and that is what makes the template loader and the
+# staticfiles finder look inside it.
+COPY jqm /kasvimuseo/jqm
 RUN pip install --install-option="--prefix=/install" /kasvimuseo
 
 FROM python:2.7-alpine

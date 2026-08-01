@@ -81,6 +81,12 @@ longer an app -- leaving the grappelli route (022), vendoring ``django-jqm``
 the first evidence against this issue's own caveat below: the container was
 built, the suite run and the pages rendered.
 
+Stage 0 is nearly closed since: 022's route is gone, and 031 is ``Fixed`` --
+``django-jqm`` is vendored into ``jqm/`` rather than fetched from a GitHub URL,
+so no build reaches anywhere but PyPI and the templates the later stages have
+to fix are in this repository. Moving ``django-extensions`` out of production
+is the one item of the eight left.
+
 Three further obstacles are out of the way: 019 is ``Fixed``, so
 ``MIDDLEWARE_CLASSES`` is now written out in ``common_settings`` and Stage 11
 has a list to rename rather than an absence to notice; 023 is ``Fixed`` with it,
@@ -100,6 +106,7 @@ Issue        Blocks or complicates
 027          No upper bounds -- every stage needs a real lock
 028, 029     Pillow and setuptools ceilings on specific stages
 030          Early stages need a period-appropriate build image
+031          URL dependency -- fixed; Stage 0 has one item less
 034          Recurring cost at all 19 Django steps; decide before Stage 6
 035          The ceiling that will cause this to recur
 ============ ===========================================================

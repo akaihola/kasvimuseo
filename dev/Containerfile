@@ -9,7 +9,7 @@ COPY requirements/production.txt /tmp/production.txt
 # exact version, Pillow included, so the second `pip install` this line used to
 # carry is gone -- that was issue 027, and the bounds it explained are beside
 # the pins they belong to. `--no-deps` no longer changes what lands here:
-# measured, `pip install -r production.txt` without it resolves the same ten
+# measured, `pip install -r production.txt` without it resolves the same nine
 # packages, because the only transitive requirement in the set is photologue's
 # `Pillow>=2.0.0` and the file pins Pillow itself. It stays as the guard that
 # keeps that true -- with it, a package that grows a new dependency fails at

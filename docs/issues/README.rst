@@ -102,8 +102,8 @@ Open issues
 ===========
 
 All but 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 016, 017,
-019, 020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 038, 039, 040, 041,
-042, 043, 046, 047, 048, 053 and 054 are open: each one
+019, 020, 021, 022, 023, 024, 025, 026, 027, 031, 033, 034, 037, 038, 039, 040,
+041, 042, 043, 046, 047, 048, 053 and 054 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
 work, so each wants a decision first. Nine of the
@@ -122,6 +122,11 @@ fourth, a separate page repeating them, was not. 011's three options settled
 themselves once the pinned photologue was read rather than argued about: the
 cheap one was not there, so the expensive one was the only one, and the file
 records what was looked at as well as what was chosen.
+031 needed one as well, between vendoring the fork and publishing it to a
+package index -- the second is not this repository's to do, but it was a real
+option and the field said ``undecided``, so it was asked rather than assumed;
+the maintainer chose vendoring, and the file records that the evidence would
+have carried the same ruling alone.
 042 needed one too, and got it when the defect it
 describes was reported from the garden a second time, as a species photo that
 would not change; it is the reason 002 had to be fixed first, and the two are
@@ -242,7 +247,7 @@ From the dependency upgrade analysis
  028 Medium   dependencies            photologue <=3.15.1 breaks on Pillow >=10
  029 Low      dependencies / build    gunicorn <=20.1.0 breaks on setuptools >=82
  030 Low      dependencies / build    django-sortedm2m <2 cannot be built by modern tools
- 031 Medium   dependencies / build    Three dependencies install from URLs, not PyPI
+ 031 Medium   dependencies / build    Three dependencies installed from URLs, not PyPI
  032 Low      deployment / cleanup    fabfile.py duplicates the Ansible deployment
  033 Low      dependencies / cleanup  django-pserver is required but never used
  034 High     templatetags / upgrade  admin_list fork needs re-syncing 19 times
@@ -313,9 +318,16 @@ file also described a second site, and what to do about that record was the
 maintainer's to say, not a thing to infer from the tree. It was asked and
 answered -- the deployment is not written down here, and the file in the
 history is where it stays. 032 also
-finishes a third of 031: two of that issue's three URL dependencies have now
-gone with the things that wanted them, and ``django-jqm``, the only one in
-production, is what it is still open for.
+finished a third of 031: two of that issue's three URL dependencies went with
+the things that wanted them, and ``django-jqm``, the only one in production,
+was what it stayed open for. It is ``Fixed`` now too, and it is the one issue
+here whose fix is a *copy*: the fork is six templates and two static files in
+``jqm/``, taken at 1.1.0.2 with the URL and the date recorded beside them, and
+nothing under ``requirements/`` names a URL any more. Its file says what was
+left behind as well -- a seventh template for a page this site does not have,
+and three ``startapp`` stubs -- and says the one thing vendoring did not fix:
+these templates still fetch jQuery from a CDN when a browser renders them,
+which is a page asset rather than a build input.
 
 
 From the photo management walkthrough
