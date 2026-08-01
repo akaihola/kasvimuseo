@@ -1777,14 +1777,19 @@ Dependencies with no PyPI presence
 ==================================
 
 Three requirements were installed from URLs rather than from PyPI, so they have
-no version history to inventory. Two have since gone, each with the thing that
-wanted it; ``django-jqm`` is the one that is left (issue 031):
+no version history to inventory. All three have since gone, each with the thing
+that wanted it, so nothing under ``requirements/`` now names anything but a
+package and a version (issue 031, ``Fixed``):
 
-``django-jqm``
+``django-jqm`` — **gone**
     ``https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip`` — a personal
     fork. Contents: seven templates, two static files, and three near-empty
-    modules (``models.py``, ``views.py``, ``__init__.py``). The upgrade plan
-    recommends vendoring it into the repository at Stage 0.
+    modules (``models.py``, ``views.py``, ``__init__.py``). It was not a
+    dependency to be upgraded but a copy to be taken, which is what issue 031
+    did at Stage 0 of the upgrade plan: six of the templates and both static
+    files are in ``jqm/`` in this repository, with the URL, the version and the
+    date in ``jqm/README.rst``. It is therefore out of this inventory in the
+    strongest sense — it is not a package any resolver ever sees again.
 
 ``flax`` — **gone**
     ``git+https://github.com/akaihola/django-flax`` at a pinned commit. It was
@@ -1792,6 +1797,8 @@ wanted it; ``django-jqm`` is the one that is left (issue 031):
     issue 032 deleted the file and this requirement with it, along with the
     ``Fabric==1.6.0`` pin whose survey is above.
 
-``podman-compose``
+``podman-compose`` — **gone**
     ``https://github.com/containers/podman-compose/archive/devel.zip`` — pinned
-    to a moving branch, not a release. Development tooling only.
+    to a moving branch, not a release. Development tooling only: it was there
+    for the browser suite's ``docker-compose.yml``, and issue 017 deleted the
+    suite and ``requirements/integration-tests.txt`` together.

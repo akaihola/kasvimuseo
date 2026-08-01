@@ -18,11 +18,17 @@
 # declare lower bounds and nothing else -- so the ones that are known are
 # written beside the pin that implies them, with the issue that establishes
 # them. `setup.py` reads this file line by line into `install_requires`;
-# setuptools drops the comment lines, so what it declares is the ten pins.
+# setuptools drops the comment lines, so what it declares is the nine pins.
+#
+# Every one of them is a name and a version, resolvable from a package index
+# and nothing else. That is issue 031: `django-jqm` used to be here as a URL
+# pointing at a zip in a personal GitHub repository, so a build needed that URL
+# to answer, and there was no version history behind it to reason about. It is
+# vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
+# build reaches nothing but PyPI.
 django==1.5.1
 django-extensions==1.5.9
 django-grappelli==2.4.5
-django-jqm @ https://github.com/akaihola/django-jqm/archive/1.1.0.2.zip
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
 # constraints picks exactly that pair, a gunicorn that cannot import. This pin
