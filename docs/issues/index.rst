@@ -190,6 +190,23 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       has the row, so what was broken was every *fresh* database, including
       CI's. **Fixed**: the row, with the production values, plus a data
       migration for the databases that already exist.
+   055: The same table again, and the reason 054's fixture half never reached
+      the database it was verified on: ``initial_data.json`` sat in an
+      application with no migrations, so ``syncdb`` tried it before South had
+      created ``photologue_photosize`` and died, and nothing loaded it
+      afterwards. A database built by ``db bootstrap`` had one photo size
+      instead of four, and every photo on every report and in the admin
+      changelist rendered ``src=""``. Last in this group with 054 and for the
+      same reason -- no visitor can see it, because the only databases that
+      lack the rows are ones this repository builds. By the ordering rule at
+      the top of this page it would come before 054 rather than after: it is
+      the same size of repair, one ``git mv``, and it is the larger fault of
+      the two, three sizes rather than one and the admin as well as the public
+      list. That reading is retrospective, though, and the file numbers record
+      what it cost to see: 054 had to be fixed and then checked in a running
+      application before this was visible at all. **Fixed**: the fixture moves
+      to ``kasvimuseo``, which has migrations, so South loads it after
+      ``migrate`` -- which also repairs the databases that are already wrong.
 
 4. The photo path
 -----------------
