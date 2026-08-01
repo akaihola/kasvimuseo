@@ -462,7 +462,11 @@ but the server still runs the old ones, so the disclosure is live until a
 playbook run makes the new values the ones in use. It sits here rather than
 inside 025 because it is a separate act on a machine nothing here can reach, and
 because the customer has to agree when to spend its cost -- one round of logouts
-and any outstanding password-reset links.
+and any outstanding password-reset links. The typing, at least, is written down
+now: 049, 050 and 051 are one sequence with a load-bearing order, and
+``ansible/secure-production.yaml`` is that sequence, with its runbook in
+``README.rst``. All three stay open, because what they are waiting for is the
+ruling on *when*, not a way to do it.
 
 
 From settling issue 017
