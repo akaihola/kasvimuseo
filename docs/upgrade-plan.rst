@@ -146,7 +146,8 @@ Package                      Pinned    Notes
 ``django-photologue``        2.6.1     Owns database schema. The hard pacer.
 ``django-grappelli``         2.4.5     Admin skin. The other hard pacer.
 ``django-extensions``        1.5.9     In ``INSTALLED_APPS``; nothing imports it
-``django-jqm``               1.1.0.2   ``akaihola`` fork, installed from GitHub
+``django-jqm``               1.1.0.2   ``akaihola`` fork; was installed from
+                                       GitHub, now vendored (issue 031)
 ``gunicorn``                 0.17.4    Production and, since issue 044,
                                        development server
 ``psycopg2-binary``          2.8.4     ``2.8.6`` is the last 2.8 patch
@@ -733,9 +734,8 @@ imports.
 Stage 0 — Dead weight and defensive settings (no version changes)
 -----------------------------------------------------------------
 
-Cheap, zero-risk, and it shortens every later stage. Six of its eight items
-are done; what is left is vendoring ``django-jqm`` (031) and taking
-``django-extensions`` out of production. Not on this list, but done ahead of
+Cheap, zero-risk, and it shortens every later stage. Seven of its eight items
+are done; what is left is taking ``django-extensions`` out of production. Not on this list, but done ahead of
 its own stage for the same reasons: ``fabfile.py``, with ``Fabric`` and
 ``flax`` (issue 032), which Part 5 had scheduled for Stage 10.
 
@@ -773,7 +773,15 @@ its own stage for the same reasons: ``fabfile.py``, with ``Fabric`` and
 #. Vendor ``django-jqm`` into the repo. It is seven templates, two static files
    and three near-empty modules, from a personal fork installed off a GitHub
    URL. Vendoring removes a network dependency from every build and makes the
-   Django-version fixes to those templates ordinary in-repo edits.
+   Django-version fixes to those templates ordinary in-repo edits. **Done** --
+   issue 031. Six of the seven templates and both static files are in ``jqm/``;
+   the seventh renders a form page for a generic view this project does not
+   have, and the three modules were ``startapp`` stubs, so neither was copied.
+   ``'jqm'`` is still an app, which is what finds the templates and the static
+   files, and Django 1.5 does not mind that it has no ``models`` module. The
+   Django-version fixes this item was written for now have a file to happen
+   in: ``jqm/templates/jqm/`` is where the Stage 8 and Stage 11 template work
+   on ``{% url %}``, ``{% load %}`` and ``STATIC_URL`` lands.
 #. Move ``django-extensions`` out of ``production.txt`` into ``dev.txt`` only
    (it is already listed in both) and out of the production ``INSTALLED_APPS``.
 
@@ -1107,7 +1115,8 @@ Package                             Dies at   Because
                                               **Gone** -- issue 033
 ``gunicorn`` as an *app*            Stage 0   ``run_gunicorn`` removed in gunicorn 19.7.1.
                                               **Gone** -- issue 021; the package stays
-``django-jqm`` as a *dependency*    Stage 0   Vendored into the repo
+``django-jqm`` as a *dependency*    Stage 0   Vendored into the repo.
+                                              **Gone** -- issue 031
 ``south``                           Stage 5   Django 1.7 ships migrations
 ``django-model-utils``              Stage 6   Photologue 3.2: "Django can now natively chain
                                               custom manager filters"
