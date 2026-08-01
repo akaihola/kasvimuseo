@@ -222,13 +222,18 @@ throwaway directory, so nothing reads a photo.
 
 A full run is about a minute and a half on a hosted runner, the three jobs in
 parallel: ``pytest`` builds the Python 2.7 image from scratch and runs the suite
-(68 s), ``sphinx`` builds the documentation (24 s) -- which is how a malformed
-issue field is caught on push rather than by whoever next builds the docs -- and
+(68 s), ``sphinx`` builds the documentation with ``--clean`` (25 s) -- which is
+how a malformed issue field is caught on push rather than by whoever next builds
+the docs -- and
 ``playwright`` runs the browser tests (97 s), the slowest of the three because
 it needs both the image and a browser. That last one is a separate job rather
 than a step in ``pytest`` so that a drag-and-drop regression and a model
 regression arrive as two different red lights; the price is that both jobs build
 the same image.
+
+A fourth job, ``pages``, runs only on a push to ``master`` and publishes what
+``sphinx`` built. A pull request builds the documentation and fails on a warning
+like any other check, and deploys nothing.
 
 **The workflow only sees the GitHub remote**, ``origin``, which has been the
 mirror rather than the one ``master`` tracks. Work that is only ever pushed to
@@ -317,6 +322,27 @@ nothing the documentation is built from, and a rebuild after one that does takes
 about six seconds. It stays silent when the build succeeds and reports the file
 and line when it does not, so a page broken by an edit is not discovered a week
 later.
+
+Reading the published documentation
+-----------------------------------
+
+The docs as they stand on ``master`` are at
+
+    https://akaihola.github.io/kasvimuseo/
+
+published by the ``pages`` job of ``.github/workflows/tests.yml`` on every push
+to ``master``, from the same ``dev/kasvimuseo docs --clean`` build the ``sphinx``
+job runs. Nothing else publishes: a pull request builds the documentation and
+fails on a warning, but deploys nothing, so the site is always what has landed.
+
+**One manual step, once.** A workflow cannot switch GitHub Pages on for its own
+repository, so somebody with access has to set **Settings -> Pages -> Source**
+to *GitHub Actions*. Until that is done the ``pages`` job notices there is no
+Pages site, skips the deployment with a notice and leaves the run green, and the
+address above does not answer; afterwards the next push to ``master`` publishes
+with no change to the workflow. This is the same class of step as registering the
+hook above, and for the same reason -- see the "Not done here" section of
+``docs/issues/038-no-rendered-documentation.rst``.
 
 Reading the docs from another machine
 -------------------------------------

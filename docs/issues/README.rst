@@ -102,7 +102,7 @@ Open issues
 ===========
 
 All but 001, 002, 003, 004, 005, 007, 008, 009, 010, 011, 012, 016, 017, 019,
-020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 039, 040, 041, 042, 043, 046,
+020, 021, 022, 023, 024, 025, 026, 027, 033, 034, 037, 038, 039, 040, 041, 042, 043, 046,
 047 and 048 are open: each one
 either changes
 behaviour that is visible in production, deletes code, or commits to a piece of
@@ -336,6 +336,15 @@ From the documentation work
 waiting for a decision when it was filed: it carries the design of the Sphinx
 build in ``docs/``, including
 which of its workarounds fall away at which stage of ``docs/upgrade-plan.rst``.
+It is ``Fixed``, and the ruling it eventually needed was not about the build but
+about the reader: where the rendered documentation should live, and whether
+these pages should be published at all while the register names production
+hostnames and three unremediated security issues. The answer to the second was
+that the repository is already public, so a rendered site changes how easily
+that is found and not whether it is disclosed. The first went to GitHub Pages
+rather than Read the Docs, so that CI and a developer keep running the one same
+command. Its remaining table rows are triggers that have not fired, all but two
+of them Stage 10 of the upgrade plan.
 
 
 From the dashboard walkthrough
