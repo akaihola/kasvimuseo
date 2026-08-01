@@ -511,6 +511,22 @@ def test_label_editor_mounts_vue_and_points_at_the_data_endpoint(client):
 
 
 @pytest.mark.django_db
+def test_label_editor_issues_the_csrf_cookie_its_save_reads(client):
+    """Issue 052: the page renders the token, so the cookie exists.
+
+    ``save`` takes the token out of ``document.cookie``, and rendering the tag
+    is what makes ``CsrfViewMiddleware`` set that cookie. Both halves are
+    asserted here: without the cookie the save is rejected, and without the
+    read from it the JavaScript has nothing to send.
+    """
+    response = client.get(reverse('planting-label'))
+
+    assert 'csrftoken' in response.cookies
+    assert 'csrfmiddlewaretoken' in page(response)
+    assert 'document.cookie.match(' in page(response)
+
+
+@pytest.mark.django_db
 def test_label_editor_names_the_photo_buttons(client):
     """The chevrons are glyphs, so the attributes are their only name (037)."""
     content = page(client.get(reverse('planting-label')))

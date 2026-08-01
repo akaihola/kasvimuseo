@@ -122,11 +122,11 @@ def page(browser, base_url):
 def editor(page, base_url):
     """The label editor, loaded, with its labels drawn.
 
-    It stops at ``/admin/`` on the way for one reason: the editor's ``save``
-    reads the ``csrftoken`` cookie, and the editor itself sets none -- so this
-    is a browser arriving the way the staff do, from the admin.
+    It used to stop at ``/admin/`` on the way, because the editor's ``save``
+    reads the ``csrftoken`` cookie and the page set none -- so the tests had to
+    arrive the way the staff do. The page issues the cookie itself now (issue
+    052), so this is any browser opening the URL.
     """
-    page.goto(base_url + '/admin/')
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
     return page

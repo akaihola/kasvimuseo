@@ -258,32 +258,59 @@ def test_save_is_disabled_until_something_changes(editor):
     assert editor.locator('#save').is_enabled()
 
 
-def test_saving_without_an_admin_cookie_does_nothing_and_says_nothing(
+def test_saving_works_for_a_browser_that_did_not_come_through_the_admin(
         page, base_url):
-    """What the page does today for a browser that arrives straight at it.
+    """Issue 052: the page issues its own ``csrftoken`` cookie.
 
-    ``save`` reads the ``csrftoken`` cookie with ``match(...)[1]``, and this
-    page sets no such cookie: it renders no ``{% csrf_token %}``, so
-    ``CsrfViewMiddleware`` never puts one on the response. Staff reach the
-    editor from the admin, where the login form does set it, which is why this
-    has never been noticed. Reported in ``docs/issues/incoming.rst``; the
-    assertions here are what the code does, so fixing it means changing them.
+    ``save`` reads that cookie, and the page used to render no token, so
+    ``CsrfViewMiddleware`` set none and the read threw inside the click
+    handler: no request, nothing on screen, a ``TypeError`` in the console.
+    Staff reach the editor from the admin, where the login form does set the
+    cookie, which is why eight years of use never hit it. The assertions here
+    replace the ones that pinned that silence.
+    """
+    page.goto(base_url + LABELS_URL)
+    page.wait_for_selector('#labels li')
+
+    assert 'csrftoken' in [cookie['name'] for cookie in page.context.cookies()]
+
+    page.locator('#labels li').first.locator('.remove svg').click()
+    save(page)
+
+    page.reload()
+    page.wait_for_selector('#labels li')
+    assert labels(page)[0]['hidden']
+    assert [error for error in page.console_errors
+            if 'TypeError' in error] == []
+
+
+def test_saving_with_no_cookie_says_so_rather_than_nothing(page, base_url):
+    """The failure mode left over: the cookie can still be absent.
+
+    Cookies refused for the site, or a page restored from the cache after the
+    cookie expired, and the request would be rejected whatever it sent. What
+    issue 052 removes is the silence, not the dependency, so the button has to
+    say why it did nothing.
     """
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
     page.locator('#labels li').first.locator('.remove svg').click()
+    page.context.clear_cookies()
 
+    alerts = []
+    page.on('dialog', lambda dialog: (alerts.append(dialog.message),
+                                      dialog.dismiss()))
     posts = []
     page.on('request', lambda request: posts.append(request)
             if request.method == 'POST' else None)
     page.click('#save')
     page.wait_for_timeout(500)
 
-    assert 'csrftoken' not in [cookie['name']
-                               for cookie in page.context.cookies()]
     assert posts == []
-    assert any('null' in error or 'undefined' in error
-               for error in page.console_errors), page.console_errors
+    assert len(alerts) == 1
+    assert 'csrftoken' in alerts[0]
+    assert [error for error in page.console_errors
+            if 'TypeError' in error] == []
 
 
 def test_a_truncated_response_leaves_the_editor_empty_rather_than_partial(

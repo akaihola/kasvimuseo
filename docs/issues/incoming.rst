@@ -48,23 +48,28 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
-* **Saving the label editor does nothing at all for a browser that did not come
-  through the admin.** Found on 2026-07-31 by the browser suite :doc:`017
-  <017-browser-suite-unrunnable-vue-editor-untested>` builds, on its first run.
-  ``save`` reads the CSRF token out of the cookie with
-  ``document.cookie.match(/\bcsrftoken=(\w+)/)[1]``, and this page sets no such
-  cookie: it renders no ``{% csrf_token %}``, so ``CsrfViewMiddleware`` never
-  issues one. The match returns ``null``, indexing it throws, and the exception
-  is inside the click handler -- no request is made, nothing changes on screen,
-  and the only trace is a ``TypeError`` in the console. Staff reach the editor
-  from the admin dashboard, whose login form does set the cookie, which is why
-  eight years of use never hit it; anyone opening the page directly, or after
-  the cookie expires, gets a Save button that lies. Pinned as it stands today by
-  ``browser_tests/test_label_editor.py::
-  test_saving_without_an_admin_cookie_does_nothing_and_says_nothing``. The fix
-  is a line -- the page can render ``{% csrf_token %}``, or the script can fail
-  loudly -- but which of the two is a decision, and it is worth asking whether
-  a public URL should be able to rewrite every label at all.
+* **Anyone who knows the URL can delete and rewrite every label.** Found on
+  2026-08-01 while settling :doc:`052
+  <052-saving-the-label-editor-does-nothing-without-an-admin-cookie>`, which
+  had to establish what protects that endpoint before its own fix could be
+  called a fix rather than a widening. The answer is nothing:
+  ``PlantedSpeciesLabelsApi`` is a bare ``View`` (``kasvimuseo/views.py:46``),
+  routed bare (``kasvimuseo/urls.py:24-26``) under an include with no decorator
+  (``ylaneenkasvit/urls.py:25``), and no ``login_required`` or
+  ``staff_member_required`` appears anywhere on the path. The only middleware
+  touching the POST is ``CsrfViewMiddleware``, which is forgery protection
+  rather than authentication: against ``Client(enforce_csrf_checks=True)`` an
+  anonymous request that sets its own ``csrftoken`` cookie and a matching
+  ``X-CSRFToken`` header is accepted with ``200``, and
+  ``PlantedSpeciesLabelsApi.post`` opens with ``Label.objects.all().delete()``
+  (``views.py:153``), so one command empties the table. The same URL conf gives
+  the same treatment to the editor page itself. What it needs before it is
+  worth a number is a ruling on who the label sheet is for -- the gardeners
+  reach it from the admin and are logged in anyway, so a gate would cost them
+  nothing, but it is a change to what production allows, and it makes the
+  browser suite of :doc:`017 <017-browser-suite-unrunnable-vue-editor-untested>`
+  log in, which means seeding a staff account next door to what :doc:`050
+  <050-the-production-admin-password-is-committed-and-in-use>` was about.
 
 * **The museum numbers on a label come back in an arbitrary order.** Same run.
   ``PlantedSpeciesLabelsApi.get_labels_data`` calls ``sorted(observation_set)``
@@ -115,3 +120,13 @@ the same truncated response as
 second URL -- one that carries no admin, no login and no HTML -- so it was
 filed there as evidence instead. It narrows that issue's three suspects to two
 and gives it a one-command reproduction.
+
+Emptied again on 2026-08-01: the silent save became :doc:`052
+<052-saving-the-label-editor-does-nothing-without-an-admin-cookie>`, and it is
+fixed -- the page renders the token, so it issues its own cookie, and a save
+that still finds none says so. The ruling was made here rather than by the
+maintainer, who could not be reached, and the file records both that and the
+measurement that made it safe to make. Settling it also answered the question
+the report attached to itself, badly enough to be a report of its own: nothing
+protects that endpoint, and it is waiting above in the place the fixed one
+left. The other three are untouched.
