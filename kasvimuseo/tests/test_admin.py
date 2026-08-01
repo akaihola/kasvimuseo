@@ -225,13 +225,15 @@ def test_admin_page_returns_200(admin_client, sample_data, model, page):
 def test_admin_chrome_is_finnish(admin_client):
     """The strings Django itself provides are Finnish, not just ours.
 
-    Django 1.5.1 lists its locale catalogs in ``setup.py``'s ``data_files``,
-    and a wheel installs those beside the package rather than inside it, where
+    Django 1.5.1 listed its locale catalogs in ``setup.py``'s ``data_files``,
+    and a wheel installed those beside the package rather than inside it, where
     ``gettext`` never finds them -- so everything the project does not
-    translate itself used to render in English (issue 040). Both image
-    definitions move the tree back after ``pip install``; this is what notices
-    if that step is dropped, since every other assertion in the suite is about
-    a string this repository translates.
+    translate itself used to render in English (issue 040). Django 1.5.12
+    packages them as ``package_data`` instead, which is why the pinned version
+    needs no repair; both image definitions still assert that the catalogs are
+    readable inside the package. This is what notices if either that assertion
+    or Django's packaging stops holding, since every other assertion in the
+    suite is about a string this repository translates.
     """
     index = admin_client.get(reverse('admin:index')).content.decode('utf-8')
 

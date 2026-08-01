@@ -8,6 +8,33 @@ traced as far as they go.
 Waiting
 -------
 
+* **The production image ships no** ``ylaneenkasvit/templates/``, **so every
+  page that extends** ``base.html`` **is a 500 in it.** Found on 2026-08-01
+  while verifying Stage 1 of the upgrade plan, which is how a page got
+  rendered from the production ``Dockerfile`` image at all. ``/admin/``,
+  ``/accounts/login/`` and ``/kasvimuseo/planted-species/`` answer 200;
+  ``/photologue/gallery/`` answers 500, and with ``DEBUG`` forced on it is
+  ``TemplateDoesNotExist: base.html``.
+
+  Not caused by that stage, and not by the ``django-extensions`` change beside
+  it: the same directory is missing from ``kasvi-027-prod``, an image built
+  from this repository before either. The cause is one missing line rather
+  than anything subtle. ``setup.py`` names ``kasvimuseo`` and ``jqm``
+  templates in ``package_data`` explicitly, and those are in the image;
+  ``ylaneenkasvit/templates/*.html`` -- ``base.html``, ``404.html``,
+  ``500.html`` and ``grappelli/`` -- comes only from ``MANIFEST.in`` plus
+  ``include_package_data``, and ``Dockerfile`` never copies ``MANIFEST.in``
+  into the build context it installs from. ``COPY MANIFEST.in`` is the
+  suspected whole of it, unverified.
+
+  Worth settling before it is split: **is this image deployed anywhere?**
+  Production is installed by ``ansible/install.yaml`` from a checkout, not
+  from a container, and nothing in this repository builds or pushes this
+  image, so the fault may have no user. That answer decides whether this is a
+  defect or a definition of a thing nobody runs -- and either way the image is
+  what a reader would reach for to see the application without a development
+  checkout.
+
 * **Label text is about twice the size it should be, and on the labels whose
   photo loads it grows until it disappears.** Reported from the iPad on
   2026-07-31, while looking at :doc:`045

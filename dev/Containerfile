@@ -23,14 +23,21 @@ COPY requirements /tmp/requirements
 # is about.
 RUN pip install --no-cache-dir --no-deps -r /tmp/requirements/dev.txt
 
-# Django 1.5.1 lists its locale catalogs, fixtures and project_template in
-# setup.py's `data_files` rather than `package_data`. That setup.py redirects
-# the `data` install scheme to `purelib` so they still land inside the package
-# -- but only when pip runs `setup.py install`; the wheel pip builds here
-# ignores the redirection and drops them in /usr/local/django, where gettext
-# never looks and the admin chrome stays English (issue 040). Move them back,
-# and fail the build rather than shipping an English admin if they are neither
-# in the package nor beside it.
+# Django 1.5.1 listed its locale catalogs, fixtures and project_template in
+# setup.py's `data_files` rather than `package_data`. That setup.py redirected
+# the `data` install scheme to `purelib` so they still landed inside the
+# package -- but only when pip ran `setup.py install`; the wheel pip builds
+# here ignored the redirection and dropped them in /usr/local/django, where
+# gettext never looks and the admin chrome stayed English (issue 040).
+#
+# Django 1.5.12 -- upgrade plan Stage 1 -- collects them as `package_data` and
+# redirects nothing, so there is no stray tree to move any more: measured on
+# this image, /usr/local/django does not exist and both `fi` catalogs are
+# inside the package. The `cp` below is therefore a no-op today and stays as
+# the repair for a Django that puts them beside the package again; the `test
+# -f` is the part that still does work, and it now asserts that Django
+# packaged them rather than that this file moved them. Either way the build
+# fails instead of shipping an English admin.
 RUN set -e; \
     prefix=/usr/local; \
     pkg=$prefix/lib/python2.7/site-packages/django; \

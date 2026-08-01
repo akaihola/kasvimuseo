@@ -142,7 +142,8 @@ Runtime (``requirements/production.txt``, Python 2.7)
 ============================ ========= =========================================
 Package                      Pinned    Notes
 ============================ ========= =========================================
-``django``                   1.5.1     1.5.12 is the last 1.5 patch release
+``django``                   1.5.12    The last 1.5 patch release; 1.5.1 until
+                                       Stage 1
 ``django-photologue``        2.6.1     Owns database schema. The hard pacer.
 ``django-grappelli``         2.4.5     Admin skin. The other hard pacer.
 ``django-extensions``        1.5.9     Was in ``INSTALLED_APPS``; nothing
@@ -854,6 +855,58 @@ Stage 1 — Django 1.5.1 → 1.5.12
 
 Security patches only, no API change. Free.
 
+**Done** -- one line in ``requirements/production.txt``, and nothing else in
+the repository had a Django version of its own to move: neither ``Dockerfile``
+nor ``dev/Containerfile`` names one (both install the lock), and no other pin
+in the lock had to move with it -- ``south`` 0.8.1, ``django-grappelli``
+2.4.5, ``django-photologue`` 2.6.1 and ``Pillow`` 6.2.2 all declare lower
+bounds at or below 1.5 and no upper bound, and 1.5.12 is inside the same
+series each of them was chosen against.
+
+"No API change" is nearly right, and it was checked against this project
+rather than restated. Eleven releases, from the sdists and their own release
+notes:
+
+* **New setting, old default.** 1.5.3 added ``SESSION_SERIALIZER``, defaulting
+  to ``PickleSerializer`` -- the pre-1.5.3 behaviour. That is the only
+  difference between the two ``global_settings.py`` files, so no setting in
+  this repository has to change. (Switching to the JSON serializer is a
+  hardening step this project could take at any time; it is not part of this
+  stage.)
+* **Two removals, neither reachable from here.** 1.5.5 removed
+  ``django.core.servers.basehttp.WSGIServerException`` and 1.5.8 removed
+  ``fix_IE_for_attach``/``fix_IE_for_vary`` from ``django.http``. Nothing in
+  this repository imports any of the three.
+* **``reverse()`` stopped importing arbitrary dotted paths** (1.5.6). Every
+  ``reverse()`` call and every ``{% url %}`` here names a URL pattern name --
+  ``'planting-label'``, ``'admin:...'`` and so on -- so there is nothing to
+  fix. This is worth knowing for Stage 8 anyway, where dotted-path reversal
+  goes away for good.
+* **The admin ``to_field`` restriction** (1.5.9, with regression fixes in
+  1.5.10, 1.5.11 and 1.5.12 -- which is most of the reason to take 1.5.12
+  rather than 1.5.9). ``ChangeList`` now raises
+  ``DisallowedModelAdminToField`` unless ``ModelAdmin.to_field_allowed()``
+  passes, which it does for the primary key and for fields other admins point
+  at. No ``ModelAdmin`` in this repository sets ``raw_id_fields``, and the one
+  place that touches the value at all --
+  ``kasvimuseo/templatetags/kasvimuseo_admin_list.py``, which reads
+  ``cl.to_field`` to build the popup link -- only reads what the request
+  already carried. Confirmed on a running instance rather than by reading.
+* **The password length cap** added in 1.5.4 was reverted in 1.5.5, so the net
+  change over the eleven releases is none.
+* **And a bonus this document did not predict:** the packaging accident behind
+  issue 040 is *gone at 1.5.12*. 1.5.1's ``setup.py`` redirects the ``data``
+  install scheme to ``purelib`` and lists the locale catalogs, fixtures and
+  ``project_template`` in ``data_files``; 1.5.12's collects them into
+  ``package_data`` and has no scheme redirection at all, so they land inside
+  the package whichever way pip installs it. The image definitions keep their
+  assertion that ``conf/locale/fi`` and ``contrib/admin/locale/fi`` are
+  readable inside the package -- it now passes because Django packages them
+  correctly rather than because a ``cp`` moved them -- and the ``cp`` branch
+  is left in place as the thing that fires if a future stage ever reintroduces
+  the fault. 040's own "option 3", waiting for the upgrade to fix this, turns
+  out to have needed only Stage 1.
+
 Stage 2 — Photologue 2.6.1 → 2.8.3, still on Django 1.5
 --------------------------------------------------------
 
@@ -1241,7 +1294,10 @@ Measured while deciding this, rather than estimated:
 
 * A mechanical diff of the three forked functions against the installed Django
   1.5.1 copy is six hunks, ``-9 / +22`` lines; ``results`` is byte-identical.
-  Every difference is a CSS class. The rest of the file is Django's.
+  Every difference is a CSS class. The rest of the file is Django's. Still
+  true after Stage 1: ``contrib/admin/templatetags/admin_list.py`` is one of
+  the files that does *not* differ between the 1.5.1 and 1.5.12 sdists, so the
+  fork is no more and no less stale than it was.
 * Three selectors in the whole repository consume those classes, all in
   ``kasvimuseo/static/css/kasvimuseo.admin.css``, and only one of them —
   ``.fieldname_edit``, in ``@media print`` — is fully live. The

@@ -42,6 +42,16 @@ Runtime dependencies
 
 django
 ------
+The pin is **1.5.12** since Stage 1 of the upgrade plan; it was 1.5.1 when this
+inventory was generated. Both are inside the first band below, which is exactly
+the point: the metadata is identical across all 25 of those releases, so
+nothing here distinguishes them and nothing here could have shown what the bump
+is for. What it is for is eleven releases of security fixes, and one packaging
+change the metadata does not carry either -- 1.5.1's ``setup.py`` ships the
+locale catalogs as ``data_files``, 1.5.12's as ``package_data``, which is the
+cause of issue 040 disappearing. Read the sdists, not this table, when the
+question is what changed inside a band.
+
 * **1.5 – 1.6.11 (25 releases)**
     :Python: ``clf:2.6,2.7,3.2,3.3``
     :Requires: nothing declared

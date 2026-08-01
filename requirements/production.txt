@@ -26,7 +26,15 @@
 # to answer, and there was no version history behind it to reason about. It is
 # vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
 # build reaches nothing but PyPI.
-django==1.5.1
+# 1.5.12 is the last release in the 1.5 series and carries the security fixes
+# 1.5.1 never had (upgrade plan Stage 1). It is also where Django's own
+# packaging accident stops: 1.5.1 lists its locale catalogs, fixtures and
+# project_template in `data_files`, which is issue 040; 1.5.12's `setup.py`
+# collects them as `package_data` instead, so they land inside the package
+# whichever way pip installs it. Both image definitions keep the assertion
+# that they are readable there -- see the comment beside it in
+# `dev/Containerfile`.
+django==1.5.12
 django-grappelli==2.4.5
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
