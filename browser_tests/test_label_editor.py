@@ -52,17 +52,18 @@ def empty_space(page):
 
 
 def test_the_sheet_draws_one_label_per_species_with_its_museum_numbers(editor):
-    """Sorted, because the order the server sends them in is not.
+    """In numerical order, which is issue 053.
 
-    ``get_labels_data`` calls ``sorted()`` on ``Observation`` instances, which
-    define no ordering, so Python 2 falls back to comparing them by identity
-    and a label's numbers arrive in whatever order the objects happen to sit
-    in. The editor's own ``insort`` puts them in numerical order the moment one
-    is dragged, so the same label can print "12 11" and then "11 12". Reported
-    in ``docs/issues/incoming.rst``; this test asserts what the page must do
-    either way rather than pinning an arbitrary order.
+    ``get_labels_data`` used to call ``sorted()`` on the ``Observation``
+    instances themselves, which on Python 2 compares them by address, so a
+    label's numbers arrived in whatever order the objects happened to sit in.
+    The editor's own ``insort`` puts them in numerical order the moment one is
+    dragged, so the same label could print "12 11" and then "11 12". This
+    version of the test is the one the server can now be held to; the order
+    itself is pinned more cheaply in
+    ``kasvimuseo/tests/test_views.py::test_labels_api_get_orders_the_museum_numbers_on_a_label``.
     """
-    assert [(label['name'], sorted(label['ids'])) for label in labels(editor)] \
+    assert [(label['name'], label['ids']) for label in labels(editor)] \
         == [(ESIKKO, ['21']), (NARSISSI, ['11', '12'])]
 
 
