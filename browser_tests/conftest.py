@@ -55,6 +55,23 @@ DESKTOP = {'width': 1280, 'height': 900}
 # two this data has to drop a number onto.
 IPAD_LANDSCAPE = {'width': 1080, 'height': 810}
 
+# The device's own user agent, for the tests that are about the branch the
+# template picks from it. ``fitTextToSpace`` reads ``navigator.userAgent``
+# (issue 056), so without this Chromium takes the desktop path however tablet
+# the rest of the emulation is.
+#
+# It is deliberately *not* on ``anonymous_touch_page``: the iOS half of the
+# template is half CSS, and that half lives behind ``@supports
+# (-webkit-touch-callout: none)``, which neither Playwright's Chromium nor its
+# WebKit implements. Putting the user agent on the shared fixture would run
+# every touch test down a code path only half of which the browser can apply,
+# so the tests that measure layout would be measuring a mixture. The fixtures
+# below keep the two emulated dimensions apart: ``touch_page`` is the finger,
+# ``ipad_page`` is the user agent.
+IPAD_USER_AGENT = (
+    'Mozilla/5.0 (iPad; CPU OS 18_7 like Mac OS X) AppleWebKit/605.1.15'
+    ' (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1')
+
 
 def pytest_addoption(parser):
     parser.addoption('--headed', action='store_true',
@@ -155,6 +172,21 @@ def anonymous_touch_page(browser):
         yield page
 
 
+@pytest.fixture
+def anonymous_ipad_page(browser):
+    """The tablet again, this time as the template's ``isIOS`` test sees it.
+
+    Everything ``anonymous_touch_page`` emulates, plus ``IPAD_USER_AGENT``, so
+    the label fitter takes the branch the device takes (issue 056). Still
+    Chromium: the JavaScript half of that branch runs here, the CSS half
+    cannot -- see ``IPAD_USER_AGENT``.
+    """
+    for page in offline_page(browser, viewport=IPAD_LANDSCAPE,
+                             has_touch=True, is_mobile=True,
+                             user_agent=IPAD_USER_AGENT):
+        yield page
+
+
 def log_in(page, base_url):
     """Through the admin's login form, as the gardener ``seed.py`` creates.
 
@@ -184,6 +216,12 @@ def page(anonymous_page, base_url):
 def touch_page(anonymous_touch_page, base_url):
     """The tablet, logged in: the gardener carrying it is staff too."""
     return log_in(anonymous_touch_page, base_url)
+
+
+@pytest.fixture
+def ipad_page(anonymous_ipad_page, base_url):
+    """The same, for the tests that need the iPad's user agent as well."""
+    return log_in(anonymous_ipad_page, base_url)
 
 
 def open_editor(page, base_url):
