@@ -171,6 +171,10 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       reachable by anyone who knew the URL, and the ruling closed that in the
       same change, which is the one part of this entry that belonged in
       group 1.
+   053: The museum numbers on a label arrive in whatever order the objects sat
+      at in memory, and in a different one again after a save. Here because it
+      is the same printed sheet as 046, 047 and 052 and the same size of
+      change -- one sort key -- and ahead of 045, which is waiting on 017.
    045: The rest of the tablet work, now that its scope is settled: a viewport
       tag, a print button, and a toggle that does not need a hover. Its large
       half -- replacing drag-and-drop with pointer events so numbers can be

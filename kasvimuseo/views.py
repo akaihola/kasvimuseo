@@ -91,7 +91,15 @@ class PlantedSpeciesLabelsApi(View):
         carries the photo choice and the visibility, so both are read from it
         and only fall back to the species defaults when there is no label
         (issue 039).
+
+        ``observation_set`` is ordered by museum number here rather than by
+        each caller, so that both ways into this method -- a species whose
+        label already exists and one that has none yet -- print the same order
+        (issue 053). A museum number that is not set sorts first, which is
+        what ``kasvimuseo_model_tags.external_ids`` and the editor's own
+        ``insort`` do with it.
         """
+        observations = sorted(observation_set, key=attrgetter('external_id'))
         photo_pk, photo_alternatives = get_species_photo_info(
             species, photo_pks_and_urls_by_title,
             photo=label.photo if label else None)
@@ -101,13 +109,13 @@ class PlantedSpeciesLabelsApi(View):
             'photo_pk': photo_pk,
             'all_photos': photo_alternatives,
             'external_ids': [observation.external_id
-                             for observation in observation_set],
+                             for observation in observations],
             'genus': species.genus,
             'species': species.species,
             'group': species.group,
             'subspecies': species.subspecies,
             'nicknames': [observation.nickname
-                          for observation in observation_set],
+                          for observation in observations],
             'visible': label.visible if label else True}
 
     def get_labels_data(self):
@@ -122,7 +130,10 @@ class PlantedSpeciesLabelsApi(View):
         all_photos = get_photo_pks_and_urls_by_species()
         # noinspection PyUnresolvedReferences
         observations_by_species = OrderedDict([
-            (species, sorted(observation_set))
+            # ``list()`` because ``groupby`` invalidates the group the moment
+            # the next one is asked for; the ordering is
+            # ``get_species_data``'s (issue 053).
+            (species, list(observation_set))
             for species, observation_set
             in groupby(queryset, attrgetter('species'))])
         labels = (Label.objects
