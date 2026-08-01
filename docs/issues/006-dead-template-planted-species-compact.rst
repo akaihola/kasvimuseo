@@ -23,7 +23,7 @@ Issue 006: Dead template: planted-species-compact.html
     the mobile front end by nothing that was ever built. The two were offered
     separately in case the evidence differed; it does not, so one ruling covers
     both
-:Resolution: a8f22e7 -- both files deleted, plus the assertion that pins which
+:Resolution: 77f382e -- both files deleted, plus the assertion that pins which
     template the live compact report is rendered from
 
 Problem
@@ -114,8 +114,12 @@ started.
 Verification
 ============
 
-**The suite passes**: ``dev/kasvimuseo app test`` -- 415 passed, up from 413,
-the two being the parameters of the new assertion.
+**The suite passes**: ``dev/kasvimuseo app test`` -- 426 passed. The branch
+adds two of those, the parameters of the new assertion; measured on its own
+tree before rebasing it was 415 against a baseline of 413, and the rest
+arrived with ``master``.
+``dev/kasvimuseo app browser-test`` passes too -- 16 passed -- which this
+change cannot reach but the pull request's CI runs anyway.
 
 **The new assertion is the point.** Nothing pinned which template file the
 compact URL renders from, so the suite would have stayed green whichever of
@@ -124,27 +128,40 @@ step removed. ``test_both_species_reports_render_from_the_one_sheet_template``
 reads ``response.templates`` for both reports and asserts the sheet, the right
 base, and the absence of the deleted name.
 
-**The greps are empty.** From the repository root::
+**The greps are down to the assertion.** From the repository root::
 
     $ git grep -n 'planted-species-compact\.html\|mobile-base' -- . ':!docs'
+    kasvimuseo/tests/test_templates.py:174: ... ``reports/planted-species-compact.html``
+    kasvimuseo/tests/test_templates.py:186: assert '...planted-species-compact.html' not in names
 
-prints nothing and exits 1. ``git grep`` rather than ``grep -rn`` for the
-reason issue 020 records: ``.dev/docs/html/`` is untracked Sphinx output, and
-once this page has been built its own filename matches.
+``mobile-base`` is gone from the tracked tree entirely. The two remaining
+matches are the new test's ``not in`` assertion and the docstring line that
+explains it -- the one place the name is *supposed* to survive, since its
+whole job is to fail if that file ever comes back as the live template.
+``git grep`` rather than ``grep -rn`` for the reason issue 020 records:
+``.dev/docs/html/`` is untracked Sphinx output, and once this page has been
+built its own filename matches.
 
 **The page still renders in the running application**, which is the check the
 suite cannot make on its own here, since the point of the issue is that the
 live path uses a different file. The production dump restored and migrated
 forward (``db restore`` then ``app manage migrate``; without the second step
 the species pages ``500`` on ``photo_is_horizontal``, see issue 020),
-then over HTTP::
+then over HTTP, both reports so the pair can be compared::
 
-    GET /kasvimuseo/planted-species-compact/116,83/   200, 12,663 bytes
+    GET /kasvimuseo/planted-species-compact/116,83/    200, 12,616 bytes
+    GET /kasvimuseo/planted-species-printable/116,83/  200, 11,086 bytes
 
-with both species' Finnish names on it, the ``header`` class, the
-"Yleistietoja kasvilajista" table, the viewport tag, the print button, and
-``navbar-species-name`` -- the previous/next bar that only the compact base
-has, which is what distinguishes the page from the printable one.
+Both carry the species' Finnish names, the ``header`` class, the "Yleistietoja
+kasvilajista" table, the viewport tag and the print button. Only the compact
+one has ``navbar-species-name``, the previous/next bar that lives in the
+compact base -- which is what shows the two pages really are the one sheet
+under two different bases, rather than the check passing on the wrong page.
 
-**The documentation builds**: ``dev/kasvimuseo docs`` clean, with warnings as
-errors.
+**The documentation builds**: ``dev/kasvimuseo docs --clean`` clean, with
+warnings as errors, and ``next.rst`` moves 006 out of "Ready now" into "Not in
+the queue" with "Status is Fixed" as the reason.
+
+``actionlint`` on ``.github/workflows/tests.yml`` reports two ``SC2012``
+informational notes, on the two ``ls /usr/lib/postgresql`` lines. Both are on
+``master`` already and this branch does not touch the file.
