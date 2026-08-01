@@ -15,6 +15,10 @@ fixtures:
 * ``kevätesikko`` has one planting, number 21, and one photo. It is the label
   that must *not* change when the first one does.
 * ``sinivuokko`` is planted in a private bed, so it must not appear at all.
+
+It also creates the staff account the tests log in with, since the editor is
+staff-only (issue 052). Its password comes from the environment and is made
+per run, so this file holds no credential.
 """
 
 from __future__ import unicode_literals
@@ -23,12 +27,16 @@ import io
 import os
 import shutil
 
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from photologue.models import Photo, PhotoSize, PhotoSizeCache
 
 from kasvimuseo import models
 from kasvimuseo.tests import factories
+
+
+STAFF_USERNAME = 'puutarhuri'
 
 
 def jpeg_bytes(width, height, color):
@@ -67,8 +75,32 @@ def wipe():
         shutil.rmtree(settings.MEDIA_ROOT)
 
 
+def create_staff_user():
+    """The account the tests log in with. Staff, not a superuser.
+
+    The label editor and its endpoint are staff-only (issue 052), so the tests
+    have to arrive logged in. The password is made once per run by
+    ``dev/kasvimuseo`` and handed to both halves in the environment, so this
+    file carries no credential -- which is issue 050's rule, learned from a
+    password in a test file that turned out to be production's.
+    """
+    password = os.environ.get('KASVIMUSEO_BROWSER_TEST_PASSWORD')
+    if not password:
+        raise SystemExit('KASVIMUSEO_BROWSER_TEST_PASSWORD is unset -- run'
+                         ' this through `dev/kasvimuseo app browser-test`,'
+                         ' which makes one.')
+    user, _ = User.objects.get_or_create(
+        username=STAFF_USERNAME, defaults={'email': 'puutarhuri@invalid'})
+    user.is_staff = True
+    user.is_active = True
+    user.set_password(password)
+    user.save()
+    return user
+
+
 def main():
     wipe()
+    create_staff_user()
     # ``get_display_url`` is the URL the labels render, and the accessor only
     # exists when a ``PhotoSize`` of that name is in the database. syncdb loads
     # photologue's own initial data, so this is a safety net for a database

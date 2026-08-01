@@ -316,6 +316,16 @@ BROWSER_DB=${KASVIMUSEO_BROWSER_DB_NAME:-${DB_NAME}_browsertest}
 BROWSER_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
 BROWSER_ENV="$BROWSER_ENV -e KASVIMUSEO_MEDIA_ROOT=/src/.dev/browser-test-media"
 
+# The label editor is staff-only (issue 052), so the tests log in, so the
+# seeded database needs an account. Its password is made here, once per run,
+# and passed to both halves through the environment: `browser-seed` creates
+# the user with it and the tests type it in. Nothing tracked in this
+# repository is ever a working credential -- that rule is issue 050, which
+# came from a password in a test file that turned out to be production's.
+BROWSER_PASSWORD=${KASVIMUSEO_BROWSER_TEST_PASSWORD:-$(
+    od -An -N16 -tx1 /dev/urandom | tr -d ' \n')}
+BROWSER_ENV="$BROWSER_ENV -e KASVIMUSEO_BROWSER_TEST_PASSWORD=$BROWSER_PASSWORD"
+
 # The server shares the host's network namespace, as `app run` does (issue
 # 044), so it needs a port nothing else on this machine is on. Set
 # KASVIMUSEO_BROWSER_PORT to pin one.
@@ -382,6 +392,7 @@ browser_test() {
     # nothing to do with these tests.
     KASVIMUSEO_BROWSER_TEST_URL=$url \
     KASVIMUSEO_BROWSER_TEST_SEED="$REPO/dev/kasvimuseo app browser-seed" \
+    KASVIMUSEO_BROWSER_TEST_PASSWORD=$BROWSER_PASSWORD \
     uv run --no-project --with-requirements "$REPO/browser_tests/requirements.txt" \
         pytest "$REPO/browser_tests" "$@"
 }
