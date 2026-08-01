@@ -300,12 +300,11 @@ documents names either the route or ``ADMIN_MEDIA_PREFIX``, and a rendered
 admin page serves all of its grappelli assets from ``STATIC_URL``. Its file
 also corrects ``upgrade-plan.rst``'s count of the string views Django 1.10
 rejects, which had not been recounted since 048 added one. 032 is the last of
-the five and the only one that had to *keep* something before it could delete:
-``fabfile.py``'s ``kajala()`` task was the only tracked description of how the
-second site was ever deployed, so its file transcribes those values before
-recording the deletion, and the question they raise -- whether *Kajalan
-kasvimaat* still exists, given that Ansible deploys one host and the codebase
-serves two -- is in :doc:`incoming` rather than answered by guesswork. 032 also
+the five, and the one whose deletion took a ruling rather than a check: the
+file also described a second site, and what to do about that record was the
+maintainer's to say, not a thing to infer from the tree. It was asked and
+answered -- the deployment is not written down here, and the file in the
+history is where it stays. 032 also
 finishes a third of 031: two of that issue's three URL dependencies have now
 gone with the things that wanted them, and ``django-jqm``, the only one in
 production, is what it is still open for.
