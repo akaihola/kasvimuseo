@@ -19,7 +19,7 @@ Issue 054: The species list names a photo size not in the fixtures
 :Blocks: (none)
 :Related: 011 -- found while covering it, and its test carried the workaround; 004 -- the other broken-image issue on a public page, Fixed
 :Decision: Production is not affected, and the dump says so rather than the maintainer: ``photologue_photosize`` in ``.dev/backups/production.sql`` holds four rows, and the fourth is ``mobilethumbnail`` at 80x45, quality 80, ``crop`` and ``upscale`` on. So this is a fixture gap, not a live defect: the row was added on the server by hand and never written back. Option 1 plus option 2 -- the row goes into ``initial_data.json`` with the production values, so a fresh database matches the server, and a South data migration gives it to the databases that already exist, since ``initial_data.json`` is loaded at ``syncdb`` and never again. Option 3, pointing the template at ``thumbnail``, is rejected: it would change what production serves, which is the one thing here that is currently correct. Nothing had to be invented, so the question of what size to choose does not arise.
-:Resolution: 8b1c8fc -- the fixture row, migration ``0022_add_mobilethumbnail_photo_size``, and the two tests. The suite's ``mobile_thumbnail_size`` fixture is deleted with it.
+:Resolution: 6f6d20b -- the fixture row, migration ``0022_add_mobilethumbnail_photo_size``, and the two tests. The suite's ``mobile_thumbnail_size`` fixture is deleted with it.
 
 Problem
 =======
