@@ -145,8 +145,9 @@ and that URL answers 200 with 309 bytes of ``image/jpeg`` measuring 80x45 --
 photologue building the cached copy on the first request, as ``pre_cache: false``
 says it should.
 
-**That check found something that is not this issue**, and it is in
-:doc:`incoming`: on the ``db bootstrap`` path ``initial_data.json`` is not
+**That check found something that is not this issue**, and it is :doc:`055
+<055-initial-data-never-reaches-a-bootstrapped-database>`: on the
+``db bootstrap`` path ``initial_data.json`` is not
 installed at all. ``syncdb`` loads it before South has created
 ``photologue_photosize`` and dies on the first row, and nothing loads it again,
 so such a database has no ``display`` and no ``admin_thumbnail`` either. It is
@@ -155,6 +156,13 @@ rather than through the fixture. The fixture entry is still the right half of
 the fix -- it is what the test database and any future non-South build get --
 but on that path the migration is doing all the work, and the three older sizes
 have nobody doing theirs.
+
+055 is fixed now, so that last sentence has stopped being true: the fixture
+moved to ``kasvimuseo/fixtures/initial_data.json``, where South loads it after
+``migrate``, and it is what puts all four sizes into a bootstrapped database.
+The paths written above are the ones this issue's own change touched and are
+left as they were; ``0022`` is unchanged and still correct, and it still runs
+first, so what it creates the fixture then overwrites by primary key.
 
 **An existing database needs the migration and nothing else.** ``syncdb``
 loaded ``initial_data.json`` once, when the tables were created, so a running
