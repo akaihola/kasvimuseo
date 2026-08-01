@@ -5,6 +5,14 @@ def modify(settings):
     settings['DEBUG'] = True
     settings['TEMPLATE_DEBUG'] = True
 
+    # Development only, which is why it is here and not in common_settings:
+    # `django-extensions` is in `requirements/dev.txt` alone since upgrade plan
+    # Stage 0, so a production install has neither the package nor this entry.
+    # It is what `runserver_plus` and `shell_plus` come from
+    # (`dev/kasvimuseo app manage runserver_plus`), and `runserver_plus` is
+    # what replaced `django-pserver` (issue 033).
+    settings['INSTALLED_APPS'] += ('django_extensions',)
+
     # The defaults match dev/kasvimuseo, which passes these through to the app
     # container as environment variables.
     db = settings['DATABASES']['default']

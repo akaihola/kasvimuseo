@@ -3,3 +3,13 @@
 media/
 static/
 *.pyc
+# Untracked, machine-local, and copied into the production image by
+# `COPY ylaneenkasvit` in Dockerfile unless it is excluded here: a developer's
+# copy switches DEBUG on and opens ALLOWED_HOSTS, and since upgrade plan Stage
+# 0 it also appends `django_extensions` -- which the production image does not
+# install, so an image built in a working checkout died on `ImportError: No
+# module named django_extensions` instead of silently running in debug. The
+# development image is unaffected either way: it has no app code at all and
+# reads the working copy from the /src bind mount, which is where its
+# local_settings.py is supposed to come from.
+ylaneenkasvit/local_settings.py
