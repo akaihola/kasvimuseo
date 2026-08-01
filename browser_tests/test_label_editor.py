@@ -261,6 +261,58 @@ def test_a_touch_gesture_the_system_takes_away_changes_nothing(touch_editor):
     assert touch_editor.locator('#drag-wrapper').is_hidden()
 
 
+def holds(box, x, y):
+    """Is the point inside the box? The box is a Playwright bounding box."""
+    return (box['x'] <= x <= box['x'] + box['width']
+            and box['y'] <= y <= box['y'] + box['height'])
+
+
+def test_the_dragged_number_follows_the_finger(touch_editor):
+    """What the HTML5 drag layer got for free as the browser's drag image.
+
+    Without it the gesture has no feedback at all over a label -- the sheet
+    only changes on release, so nothing on the screen says the number is in
+    your hand. Reported after the rewrite landed, on the iPad and on a
+    desktop browser alike.
+    """
+    source = number(touch_editor, 11).bounding_box()
+    target = touch_editor.locator('#labels li').nth(1).bounding_box()
+    x, y = target['x'] + target['width'] / 2, target['y'] + 20
+    end = touch_drag(touch_editor, number(touch_editor, 11), x, y,
+                     release=None)
+    touch_editor.wait_for_timeout(100)
+
+    dragged = touch_editor.locator('#drag-number')
+    assert dragged.is_visible()
+    assert dragged.text_content().strip() == '11'
+    assert holds(dragged.bounding_box(), x, y), dragged.bounding_box()
+    # And at the size the number is drawn on the sheet, which is neither its
+    # own font size nor a fixed fraction of it: the copy is outside the zoomed
+    # ``#labels``, and iOS Safari and desktop browsers disagree about what the
+    # zoom does to text. Generous, because the copy is rotated and padded --
+    # this is here to catch it being drawn at twice the size, or half.
+    assert dragged.bounding_box()['height'] == pytest.approx(
+        source['height'], rel=0.5), (dragged.bounding_box(), source)
+
+    end('touchEnd')
+    assert touch_editor.locator('#drag-number').is_hidden()
+
+
+def test_the_dragged_number_follows_the_mouse(editor):
+    """The same, for the pointer that always had a drag image."""
+    target = editor.locator('#labels li').nth(1).bounding_box()
+    x, y = target['x'] + target['width'] / 2, target['y'] + 20
+    drag(editor, number(editor, 11), x, y, release=False)
+    editor.wait_for_timeout(100)
+
+    dragged = editor.locator('#drag-number')
+    assert dragged.is_visible()
+    assert holds(dragged.bounding_box(), x, y), dragged.bounding_box()
+
+    editor.mouse.up()
+    assert editor.locator('#drag-number').is_hidden()
+
+
 def test_the_drag_preview_is_drawn_only_over_the_empty_sheet(touch_editor):
     """It is the "this becomes a new label" indicator, not a cursor.
 
