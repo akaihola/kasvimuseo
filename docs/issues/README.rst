@@ -448,10 +448,11 @@ is 025's split repeated: the act that ends the disclosure is on the server, and
 it is this issue. Two smaller findings came out of the same work and went to
 :doc:`incoming` rather than here. One of them is now **053**: the museum
 numbers on a label arrived in whatever order the ``Observation`` objects sat at
-in memory, and it is ``Fixed`` -- the ruling it was waiting for is about the
-nullable column rather than about the numbers, and no data anybody has reaches
-it. The other, a save that silently does nothing without an admin cookie, is
-still in :doc:`incoming`.
+in memory, and it is ``Fixed``. The ruling it was waiting for turned out to be
+about the nullable column rather than about the numbers -- no data anybody has
+reaches that case -- and the maintainer gave it the same day it was asked for.
+The other, a save that silently does nothing without an admin cookie, is still
+in :doc:`incoming`.
 
 
 From settling issue 026

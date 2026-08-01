@@ -101,8 +101,10 @@ Emptied of one more on 2026-08-01: the museum numbers arriving in an arbitrary
 order became :doc:`053
 <053-museum-numbers-on-a-label-are-in-an-arbitrary-order>`, and it is fixed.
 The question that kept it here -- where an observation with no ``external_id``
-belongs in that order -- was put to the maintainer and did not reach anyone, so
-it was ruled from the data instead: the production dump has no such row, and
-the two other places that sort the same list both put a missing number first,
-so that is where this one puts it too. The other reports on this page are
-untouched.
+belongs in that order -- was put to the maintainer with the data behind it and
+ruled the same day: numerically, with a missing number first. The data is why
+that answer was cheap. The production dump has no such row, and the two other
+places that sort the same list both put a missing number first, so the ruling
+changes nothing anybody can see today and only says what happens when the
+nullable column is finally used. The two reports left on this page -- 052
+removed one the same day -- are untouched.
