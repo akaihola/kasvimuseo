@@ -2,7 +2,7 @@
 Issue 015: bush_shadow mixes integer and float division
 =======================================================
 
-:Status: Open
+:Status: Rejected
 :Severity: Low
 :Area: templatetags / front end
 :Reported: 2026-07-28
@@ -11,8 +11,20 @@ Issue 015: bush_shadow mixes integer and float division
 :Depends on: (none)
 :Blocks: (none)
 :Related: (none)
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Option 1 -- leave it. Nothing reads the difference: both forms are
+    valid CSS lengths, a browser parses ``2.0em`` and ``2em`` identically, and
+    the bed map is right today. "Consistently" is also less obvious than it
+    sounds -- ``test_templatetags.py``'s third case is a 5 by 5 planting whose
+    radius is ``2.5em``, so the halves cannot be printed as integers without
+    moving the shadow, and the only consistent formatting left is floats
+    everywhere, which turns ``6em`` into ``6.0em`` and reads worse than what is
+    there. That would rewrite the three expected strings the tests pin, for a
+    diff whose only reader is this issue. Option 2 said "if the CSS is ever
+    cleaned up"; no such cleanup is scheduled, and one would touch these
+    strings anyway and could carry the formatting with it. The report is
+    accurate -- it is the repair that is not worth its churn.
+:Resolution: Ruled, no code change. ``bush_shadow`` and the tests that pin its
+    output are untouched.
 
 Problem
 =======

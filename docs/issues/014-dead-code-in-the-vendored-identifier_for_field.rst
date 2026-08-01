@@ -2,7 +2,7 @@
 Issue 014: Dead code in the vendored identifier_for_field
 =========================================================
 
-:Status: Open
+:Status: Deferred
 :Severity: Low
 :Area: templatetags / vendored
 :Reported: 2026-07-28
@@ -19,7 +19,10 @@ Issue 014: Dead code in the vendored identifier_for_field
     there. Two of the three Django API removals nobody had listed --
     ``_meta.module_name`` at 1.8 and ``_meta.get_field_by_name`` at 1.10 -- are
     in this same function, which is a second reason not to invest in it.
-:Resolution: (none yet -- closes when the file is deleted in Stage 5)
+:Resolution: Ruled and recorded; no code change. It closes as ``Fixed`` in the
+    Stage 5 commit that deletes
+    ``kasvimuseo/templatetags/kasvimuseo_admin_list.py``, and in nothing
+    earlier.
 
 Problem
 =======
@@ -59,8 +62,17 @@ That last sentence turned out to be the whole answer. Django closed ticket
 Stage 5, and 034 ruled it deleted there rather than carried. Neither option
 above is taken: the dead branch stays exactly as it is until the file goes.
 
-``Status`` stays ``Open`` because the file is still in the tree. It becomes
-``Fixed`` -- by deletion -- in the Stage 5 commit, and the four steps of that
-deletion are listed under Stage 5 in ``docs/upgrade-plan.rst``. Nothing here
-should be worked on before then; picking this up would mean repairing code with
-a deletion date.
+``Status`` is ``Deferred``, which is this register's word for real but not now
+(``README.rst``): the dead branch is still in the tree, and nothing about it is
+to be touched before the file goes. It was ``Open`` until this ruling was
+written down, and that was the one thing wrong with it -- ``Open`` is
+actionable, so :doc:`next` listed 014 as ready work with its decision already
+made, which is precisely the row a picker should not take. ``Deferred`` moves
+it to the parked table with the reason attached.
+
+It becomes ``Fixed`` -- by deletion -- in the Stage 5 commit that removes
+``kasvimuseo/templatetags/kasvimuseo_admin_list.py``, and the four steps of
+that deletion are listed under Stage 5 in ``docs/upgrade-plan.rst``. That
+commit is the only event that closes this issue: no repair of
+``identifier_for_field`` closes it, because repairing code with a deletion date
+is the thing 034 ruled against.
