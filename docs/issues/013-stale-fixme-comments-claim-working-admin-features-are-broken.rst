@@ -22,7 +22,10 @@ Issue 013: Stale FIXME comments claim working admin features are broken
     the changelist form from the dropdown's ``change`` event instead, so an
     action runs the moment it is chosen and there is no button to press. That
     is what "action selection doesn't work" was looking at.
-:Resolution: (none yet)
+:Resolution: 243105b -- the five comments deleted from ``kasvimuseo/admin.py``,
+    ``browser_tests/test_admin_changelist.py`` added with the two checks that
+    settled the choice, and ``browser_tests/seed.py`` given the permissions and
+    the second ``type`` those checks need.
 
 Problem
 =======
