@@ -28,7 +28,11 @@ Issue 038: The repository has no rendered docs
     github.com today. A rendered site changes how easily that is found, not
     whether it is disclosed -- closing those three issues is what ends the
     disclosure.
-:Resolution: (to be filled in with the commit)
+:Resolution: d95f545 -- the ``sphinx`` job builds with ``--clean`` and a
+    ``pages`` job deploys from ``master``. Neither has been seen on a runner:
+    the credentials available here cannot push to ``github.com``, so the
+    workflow is validated by ``actionlint`` and by running its command locally,
+    and the first real run is whatever pushes this.
 
 Problem
 =======
@@ -271,9 +275,12 @@ runner *today*. Every run starts from a fresh checkout, so there are no
 doctrees to be incremental against and the build was already reading the whole
 tree. What the flag does is state the property the job depends on, so that
 caching ``.dev/docs`` to save twenty-five seconds cannot quietly turn the check
-into a rubber stamp. The property itself was verified rather than assumed: a
-deliberate broken cross-reference in a page the branch did not otherwise touch
-turned the job red.
+into a rubber stamp. The property itself was verified rather than assumed,
+though against the command and not against a runner: a ``:doc:`` reference to a
+document that does not exist, added to ``upgrade-plan.rst`` -- a page the change
+does not otherwise touch -- made ``dev/kasvimuseo docs --clean`` exit 1 and name
+the file and the line. That is the same command the job runs, on the same
+freshly-read tree.
 
 Two things deliberately do **not** change with the stack. The output stays in
 ``.dev/`` and out of version control -- rendered HTML in a diff is noise. And
