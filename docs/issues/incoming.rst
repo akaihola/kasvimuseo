@@ -48,29 +48,6 @@ Waiting
   It's good to have iPad Safari debug capability before tackling this issue.
   See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
 
-* **Anyone who knows the URL can delete and rewrite every label.** Found on
-  2026-08-01 while settling :doc:`052
-  <052-saving-the-label-editor-does-nothing-without-an-admin-cookie>`, which
-  had to establish what protects that endpoint before its own fix could be
-  called a fix rather than a widening. The answer is nothing:
-  ``PlantedSpeciesLabelsApi`` is a bare ``View`` (``kasvimuseo/views.py:46``),
-  routed bare (``kasvimuseo/urls.py:24-26``) under an include with no decorator
-  (``ylaneenkasvit/urls.py:25``), and no ``login_required`` or
-  ``staff_member_required`` appears anywhere on the path. The only middleware
-  touching the POST is ``CsrfViewMiddleware``, which is forgery protection
-  rather than authentication: against ``Client(enforce_csrf_checks=True)`` an
-  anonymous request that sets its own ``csrftoken`` cookie and a matching
-  ``X-CSRFToken`` header is accepted with ``200``, and
-  ``PlantedSpeciesLabelsApi.post`` opens with ``Label.objects.all().delete()``
-  (``views.py:153``), so one command empties the table. The same URL conf gives
-  the same treatment to the editor page itself. What it needs before it is
-  worth a number is a ruling on who the label sheet is for -- the gardeners
-  reach it from the admin and are logged in anyway, so a gate would cost them
-  nothing, but it is a change to what production allows, and it makes the
-  browser suite of :doc:`017 <017-browser-suite-unrunnable-vue-editor-untested>`
-  log in, which means seeding a staff account next door to what :doc:`050
-  <050-the-production-admin-password-is-committed-and-in-use>` was about.
-
 * **The museum numbers on a label come back in an arbitrary order.** Same run.
   ``PlantedSpeciesLabelsApi.get_labels_data`` calls ``sorted(observation_set)``
   on ``Observation`` instances; the model defines no ordering and no
@@ -123,10 +100,10 @@ and gives it a one-command reproduction.
 
 Emptied again on 2026-08-01: the silent save became :doc:`052
 <052-saving-the-label-editor-does-nothing-without-an-admin-cookie>`, and it is
-fixed -- the page renders the token, so it issues its own cookie, and a save
-that still finds none says so. The ruling was made here rather than by the
-maintainer, who could not be reached, and the file records both that and the
-measurement that made it safe to make. Settling it also answered the question
-the report attached to itself, badly enough to be a report of its own: nothing
-protects that endpoint, and it is waiting above in the place the fixed one
-left. The other three are untouched.
+fixed. The maintainer ruled on all three of the questions in it, and the third
+one is the reason this entry is longer than the report was: settling it meant
+establishing what protected that endpoint, and the answer was nothing at all,
+so the same pull request closed it. The page renders the token and issues its
+own cookie, a save that finds none says so, and both the editor and its data
+endpoint are staff-only -- which is also why the browser suite now logs in.
+The other three reports here are untouched.

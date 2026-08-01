@@ -258,18 +258,33 @@ def test_save_is_disabled_until_something_changes(editor):
     assert editor.locator('#save').is_enabled()
 
 
-def test_saving_works_for_a_browser_that_did_not_come_through_the_admin(
-        page, base_url):
-    """Issue 052: the page issues its own ``csrftoken`` cookie.
+def drop_csrf_cookie(page):
+    """Expire the ``csrftoken`` cookie and leave the session alone.
 
-    ``save`` reads that cookie, and the page used to render no token, so
-    ``CsrfViewMiddleware`` set none and the read threw inside the click
-    handler: no request, nothing on screen, a ``TypeError`` in the console.
-    Staff reach the editor from the admin, where the login form does set the
-    cookie, which is why eight years of use never hit it. The assertions here
-    replace the ones that pinned that silence.
+    ``clear_cookies`` would take the session with it, which is a different
+    failure -- that one is the 403 below.
+    """
+    page.evaluate("() => { document.cookie = "
+                  "'csrftoken=; Max-Age=0; path=/'; }")
+    assert 'csrftoken' not in [cookie['name']
+                               for cookie in page.context.cookies()]
+
+
+def test_the_page_issues_the_csrf_cookie_its_own_save_needs(page, base_url):
+    """Issue 052: the editor no longer depends on some other page's cookie.
+
+    ``save`` reads ``csrftoken`` out of ``document.cookie``, and the page used
+    to render no token, so ``CsrfViewMiddleware`` set none: for a browser that
+    had not been given one elsewhere, the read threw inside the click handler
+    and the button did nothing and said nothing. The cookie is dropped here to
+    reproduce exactly that -- a session that outlives it, or one refused and
+    re-granted -- and the reload has to be enough to put it back.
     """
     page.goto(base_url + LABELS_URL)
+    page.wait_for_selector('#labels li')
+    drop_csrf_cookie(page)
+
+    page.reload()
     page.wait_for_selector('#labels li')
 
     assert 'csrftoken' in [cookie['name'] for cookie in page.context.cookies()]
@@ -287,15 +302,15 @@ def test_saving_works_for_a_browser_that_did_not_come_through_the_admin(
 def test_saving_with_no_cookie_says_so_rather_than_nothing(page, base_url):
     """The failure mode left over: the cookie can still be absent.
 
-    Cookies refused for the site, or a page restored from the cache after the
-    cookie expired, and the request would be rejected whatever it sent. What
-    issue 052 removes is the silence, not the dependency, so the button has to
-    say why it did nothing.
+    Cookies refused for the site, or a sheet left open past the cookie's life,
+    and the request would be rejected whatever it sent. What issue 052 removes
+    is the silence, not the dependency, so the button has to say why it did
+    nothing.
     """
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
     page.locator('#labels li').first.locator('.remove svg').click()
-    page.context.clear_cookies()
+    drop_csrf_cookie(page)
 
     alerts = []
     page.on('dialog', lambda dialog: (alerts.append(dialog.message),
@@ -311,6 +326,62 @@ def test_saving_with_no_cookie_says_so_rather_than_nothing(page, base_url):
     assert 'csrftoken' in alerts[0]
     assert [error for error in page.console_errors
             if 'TypeError' in error] == []
+
+
+def test_the_editor_and_its_endpoint_are_staff_only(anonymous_page, base_url):
+    """Issue 052's other half: not logged in, nothing to see and nothing to do.
+
+    ``PlantedSpeciesLabelsApi.post`` deletes every label and rebuilds the table
+    from the request body, and until this gate it ran for anyone who knew the
+    URL. The page answers with the admin's login form -- Django 1.5 renders it
+    at the requested URL with a 200 rather than redirecting -- and the endpoint
+    answers 403, because a login page behind a 200 is what axios cannot tell
+    from a saved sheet.
+    """
+    anonymous_page.goto(base_url + LABELS_URL)
+
+    assert anonymous_page.locator('#labels li').count() == 0
+    assert anonymous_page.locator('input[name="password"]').count() == 1
+
+    assert anonymous_page.request.get(base_url + DATA_URL).status == 403
+
+    # The POST carries the token the login page just handed this browser, so
+    # ``CsrfViewMiddleware`` is satisfied and the 403 below is the staff check
+    # refusing it rather than the CSRF check. That is the whole of what an
+    # outsider had to do before this gate existed.
+    token, = [cookie['value'] for cookie in anonymous_page.context.cookies()
+              if cookie['name'] == 'csrftoken']
+    refused = anonymous_page.request.post(
+        base_url + DATA_URL, data=[], headers={'X-CSRFToken': token})
+
+    assert refused.status == 403
+    assert 'staff' in refused.text()
+
+
+def test_a_save_the_server_refuses_says_so(page, base_url):
+    """A session that expires under an open sheet must not fail quietly.
+
+    The gate turns that into a 403, and a rejected save used to reach the
+    console and nowhere else -- the same silence the missing token caused.
+    """
+    page.goto(base_url + LABELS_URL)
+    page.wait_for_selector('#labels li')
+    page.locator('#labels li').first.locator('.remove svg').click()
+    page.route('**' + DATA_URL,
+               lambda route: route.fulfill(status=403,
+                                           content_type='text/plain',
+                                           body='staff only')
+               if route.request.method == 'POST' else route.fallback())
+
+    alerts = []
+    page.on('dialog', lambda dialog: (alerts.append(dialog.message),
+                                      dialog.dismiss()))
+    page.click('#save')
+    page.wait_for_timeout(500)
+
+    assert len(alerts) == 1
+    assert '403' in alerts[0]
+    assert page.locator('#save').is_enabled()
 
 
 def test_a_truncated_response_leaves_the_editor_empty_rather_than_partial(

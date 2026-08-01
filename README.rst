@@ -181,7 +181,12 @@ browser old enough for 2.7 could have provided.
 It builds and drops its own database, ``ylaneenkasvit_browsertest``, seeded from
 ``browser_tests/seed.py``, serves it with gunicorn on the first free port from
 8123, and points ``MEDIA_ROOT`` at ``.dev/browser-test-media``. Your database,
-your ``media/`` and your ``local_settings.py`` are not read or written. Any
+your ``media/`` and your ``local_settings.py`` are not read or written.
+
+The editor is staff-only (issue 052), so the seed makes one account for the
+tests to log in with and the script generates its password per run, passing it
+to both halves in ``KASVIMUSEO_BROWSER_TEST_PASSWORD``. No password is written
+down anywhere in this repository -- see issue 050 for why that rule exists. Any
 pytest arguments pass straight through::
 
     $ dev/kasvimuseo app browser-test -k drag -x

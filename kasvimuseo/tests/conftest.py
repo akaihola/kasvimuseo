@@ -22,6 +22,35 @@ def jpeg_bytes(width=8, height=8, color=(0, 128, 0)):
     return buffer.getvalue()
 
 
+def log_in_as_staff(client):
+    """Log ``client`` in as a gardener: staff, and nothing more.
+
+    A function as well as a fixture because the transactional test cannot take
+    the fixture: it is marked ``django_db(transaction=True)``, and a fixture
+    that asked for ``db`` would pull the ordinary, non-transactional database
+    setup in beside it.
+    """
+    from django.contrib.auth.models import User
+    user = User.objects.create_user('puutarhuri', 'p@invalid', 'salasana')
+    user.is_staff = True
+    user.save()
+    assert client.login(username='puutarhuri', password='salasana')
+    return client
+
+
+@pytest.fixture
+def staff_client(client, db):
+    """A client logged in as a gardener: staff, and nothing more.
+
+    The label editor and its data endpoint are staff-only (issue 052). The
+    accounts the museum actually uses are staff without being superusers, so
+    the gate is exercised with one of those rather than with pytest-django's
+    ``admin_client`` -- that way a check written against ``is_superuser``
+    instead of ``is_staff`` would fail here.
+    """
+    return log_in_as_staff(client)
+
+
 @pytest.fixture
 def media_root(tmpdir):
     """Point ``MEDIA_ROOT`` at a per-test temporary directory.

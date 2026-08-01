@@ -166,7 +166,11 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       group 2 because it is the same page as 046, 047 and 045 and was found by
       the same suite that will carry them, and ahead of 045 because 045
       rewrites the template around it: one tag and one guard land more easily
-      before that than after.
+      before that than after. Its third question turned out to outrank the
+      group: settling it found that the handler which deletes every label was
+      reachable by anyone who knew the URL, and the ruling closed that in the
+      same change, which is the one part of this entry that belonged in
+      group 1.
    045: The rest of the tablet work, now that its scope is settled: a viewport
       tag, a print button, and a toggle that does not need a hover. Its large
       half -- replacing drag-and-drop with pointer events so numbers can be
