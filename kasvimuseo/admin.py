@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 
-# FIXME: action selection doesn't work in admin!
 import os
 
 from django.conf import settings
@@ -108,7 +107,6 @@ class SpeciesAdmin(admin.ModelAdmin):
         'additional_info',
         "photo_image",
     )
-    # FIXME: filtering doesn't work
     list_filter = ("type",)
     fieldsets = (
         (
@@ -141,7 +139,6 @@ class SpeciesAdmin(admin.ModelAdmin):
             },
         ),
     )
-    # FIXME: action selection doesn't work
     actions = [planted_species_report]
 
     class Media:
@@ -227,7 +224,6 @@ class ObservationAdmin(admin.ModelAdmin):
                     'notes',
                     'environment',
                     'page',)
-    # FIXME: filtering doesn't work
     list_filter = 'origin', 'species__type', 'date',
 
     def page(self, obj):
@@ -273,7 +269,6 @@ class CareAdmin(admin.ModelAdmin):
                     'planting',
                     'description',
                     'count',)
-    # FIXME: filtering doesn't work
     list_filter = 'planting__bed', 'date',
     fieldsets = ((None,
                   {'fields': ('planting', 'date', 'description', 'count',),
