@@ -39,7 +39,7 @@ Issue 053: The museum numbers on a label come in any order
     ``Species``, and that has none either -- and every observation in
     ``browser_tests/seed.py`` has one. So the ruling costs nothing today and
     only says what happens when the nullable column is finally used.
-:Resolution: Fixed in the commit named below.
+:Resolution: Fixed in 6f431cd.
 
 Problem
 =======
