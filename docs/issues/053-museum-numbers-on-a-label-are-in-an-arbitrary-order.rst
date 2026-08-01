@@ -19,11 +19,11 @@ Issue 053: The museum numbers on a label come in any order
     010 -- the same handler, and the other half of the save round trip
     039 -- the same ``get_species_data``, whose signature it last changed
     009 -- the same nullable ``external_id``, from the admin side
-:Decision: Sort by the museum number itself, as a number, with an observation
-    that has none first: ``sorted(observation_set, key=attrgetter('external_id'))``.
-    The maintainer was asked to choose between first, last and excluded and
-    between numeric and string ordering, and the question did not reach anyone,
-    so it is ruled on the evidence. **Numeric** because the column is an
+:Decision: Ruled by the maintainer on 2026-08-01: option 1, sort by the museum
+    number itself, as a number, with an observation that has none first --
+    ``sorted(observation_set, key=attrgetter('external_id'))``. It is the
+    option the evidence put in front of the other three. **Numeric** because
+    the column is an
     ``IntegerField`` and production ids run from 1 to 1314, so a text sort would
     read 1, 11, 12, 1314, 2 -- a different wrong order rather than a fix -- and
     because the two places that already sort this same list sort numerically.
@@ -39,7 +39,7 @@ Issue 053: The museum numbers on a label come in any order
     ``Species``, and that has none either -- and every observation in
     ``browser_tests/seed.py`` has one. So the ruling costs nothing today and
     only says what happens when the nullable column is finally used.
-:Resolution: Fixed in 6f431cd.
+:Resolution: Fixed in 0a151ad.
 
 Problem
 =======
