@@ -342,8 +342,8 @@ late.
       upgrade, and it fails silently. Decided: retired, with the deletion
       scheduled for Stage 5, where Django's own ``field-`` classes arrive.
    014: Dead code inside that same file. It waited for 034 and 034 answered it:
-      the file has a deletion date, so there is nothing here to repair. Left
-      open only because the file is still in the tree; it closes with it.
+      the file has a deletion date, so there is nothing here to repair.
+      ``Deferred`` while the file is still in the tree; it closes with it.
    028: Pillow ceiling.
    029: setuptools ceiling on gunicorn.
    030: Build-tool floor for early ``django-sortedm2m``.
