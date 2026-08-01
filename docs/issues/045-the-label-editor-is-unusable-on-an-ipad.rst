@@ -14,7 +14,7 @@ Issue 045: The label editor is unusable on an iPad
     ``test_the_label_print_toggle_needs_no_hover`` assert the markup of the
     cheap half, and cannot see what any of it *does*. What the large half does
     is in ``browser_tests/test_label_editor.py``, which 017 made runnable:
-    ``test_a_number_moves_between_labels_by_touch`` and the six tests around
+    ``test_a_number_moves_between_labels_by_touch`` and the eight tests around
     it drive an emulated touch screen, and the two mouse drag tests that were
     there before now go through the same pointer handlers
 :Depends on: (none -- 044 briefly blocked *verifying* this on the device, since
@@ -51,7 +51,8 @@ Issue 045: The label editor is unusable on an iPad
     pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c.
     The large half -- pointer events, and the touch tests that hold them up --
     is fixed in e06a2d7, which is what makes this ``Fixed``, with the drag
-    preview put back where it belongs in 214f197.
+    preview put back where it belongs in 214f197 and the dragged number given
+    something to draw in 5fac5a8.
 
 Problem
 =======
@@ -343,6 +344,22 @@ matches the grid at issue 046's 50 %;
 ``test_the_drag_preview_follows_the_finger_at_the_screen_zoom`` reads the
 computed matrix and would fail if either constant moved without the other.
 
+**The number itself needed drawing, which the first attempt forgot.** The drag
+image was the one thing the HTML5 layer provided for nothing: the browser drew
+the element being dragged under the cursor, and no pointer-event code does that
+for you. Without it the gesture had no feedback at all over a label -- the
+sheet only changes on release -- so the number appeared to stay where it was
+until the finger came up, on the iPad and in desktop browsers alike. There is
+now a copy of it under the pointer for the whole gesture, taking hold where the
+pointer took hold so it does not jump. Its font size is **measured** from the
+number it copies rather than derived from ``--screen-scale``: the copy lives
+outside ``#labels``, and what "the size it is drawn at" means there differs by
+engine -- desktop browsers scale the text with the ``zoom``, iOS Safari scales
+the boxes but not the text and the stylesheet halves the font itself to
+compensate. ``getBoundingClientRect().width / offsetWidth`` is the drawn-to-laid-
+out ratio either way, so the copy is told the answer instead of computing one
+that is right on one engine only.
+
 **Enabling Save is now deliberate.** It used to be a side effect: showing the
 preview set ``dragSpecies.visible``, and the label component's watcher reported
 that as an edit. So what enabled the button after a drag was passing over the
@@ -354,7 +371,7 @@ sheet nobody had changed.
 What it was tested with, and what it was not
 ============================================
 
-``browser_tests/test_label_editor.py`` grew seven tests and a second browser
+``browser_tests/test_label_editor.py`` grew nine tests and a second browser
 context. The touch ones drive an emulated iPad: ``has_touch``, ``is_mobile``
 and 1080 x 810, which is the device landscape, and at 50 % zoom is three labels
 across with empty sheet beside them. The gesture is dispatched over the Chrome
@@ -378,12 +395,19 @@ events to generate.
                                              mid-drag, over the empty sheet
  The preview is drawn nowhere else           Mid-drag over a label, where it
                                              must be hidden
+ The number follows the finger               Mid-drag over a label: the
+                                             pointer is inside the drawn
+                                             copy's box, by touch and by
+                                             mouse
  The save cycle keeps the arrangement        Touch drag, save, reload
 =========================================== ================================
 
-Four of the seven fail against the previous template, which is the point of
-writing them: the three that pass are the ones asserting that nothing happens
-or nothing is drawn, and before the rewrite nothing was what touch did anyway.
+The two that catch the missing drag image are the ones this issue got wrong
+once: they assert a *point in a box*, not a style, because what was wrong was
+that nothing was drawn where the finger was. Four of the nine fail against the
+previous template, and the ones that pass are the ones asserting that nothing
+happens or nothing is drawn -- before the rewrite nothing was what touch did
+anyway.
 
 **What this is not.** It is Chromium with touch emulation, not an iPad, and the
 engine that matters is iOS Safari's. The suite runs Chromium only:
