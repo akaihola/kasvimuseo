@@ -50,9 +50,9 @@ Issue 045: The label editor is unusable on an iPad
 :Resolution: The cheap half is fixed in bffb370, with the print toggle's
     pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c.
     The large half -- pointer events, and the touch tests that hold them up --
-    is fixed in e06a2d7, which is what makes this ``Fixed``, with the drag
-    preview put back where it belongs in 214f197 and the dragged number given
-    something to draw in 5fac5a8.
+    is fixed in 336ad21, which is what makes this ``Fixed``, with the drag
+    preview put back where it belongs in ea60a03 and the dragged number given
+    something to draw in 1a5e5db.
 
 Problem
 =======
