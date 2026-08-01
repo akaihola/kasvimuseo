@@ -236,6 +236,57 @@ def test_labels_api_get_omits_non_public_species(staff_client):
     assert data == {'object_list': []}
 
 
+@pytest.mark.django_db
+def test_labels_api_get_orders_the_museum_numbers_on_a_label(staff_client):
+    """Issue 053: smallest museum number first, and as a number.
+
+    The handler used to sort the ``Observation`` instances themselves, which
+    on Python 2 compares them by address, so the numbers arrived in whatever
+    order the objects happened to sit in memory. 2, 11 and 12 tell the two
+    wrong answers apart as well: sorted as text they would come back 11, 12,
+    2.
+
+    The nicknames are built from the same sequence, so they have to travel
+    with their own numbers.
+    """
+    species = create_species(name_fi='valkonarsissi')
+    for external_id, nickname in ((12, 'mummon kukka'),
+                                  (2, 'papan kukka'),
+                                  (11, 'tädin kukka')):
+        create_planted(species=species, external_id=external_id,
+                       nickname=nickname)
+
+    data = json.loads(
+        staff_client.get(reverse('planting-label-data'))
+        .content.decode('utf-8'))
+
+    entry, = data['object_list']
+    assert entry['external_ids'] == [2, 11, 12]
+    assert entry['nicknames'] == ['papan kukka', 'tädin kukka',
+                                  'mummon kukka']
+
+
+@pytest.mark.django_db
+def test_labels_api_get_puts_a_missing_number_first(staff_client):
+    """Issue 053: ``external_id`` is nullable, so the order has to say where.
+
+    Nothing in the production dump or in ``browser_tests/seed.py`` is missing
+    one, but the column allows it. First is where ``None`` lands in
+    ``kasvimuseo_model_tags.external_ids`` and where ``null`` lands in the
+    editor's ``insort``, so it is where it lands here.
+    """
+    species = create_species(name_fi='valkonarsissi')
+    create_planted(species=species, external_id=7)
+    create_planted(species=species, external_id=None)
+
+    data = json.loads(
+        staff_client.get(reverse('planting-label-data'))
+        .content.decode('utf-8'))
+
+    entry, = data['object_list']
+    assert entry['external_ids'] == [None, 7]
+
+
 # PlantedSpeciesLabelsApi.post
 
 
@@ -324,6 +375,32 @@ def test_labels_api_post_survives_a_get_round_trip(staff_client):
     assert entry['id'] == species.pk
     assert entry['visible'] is False
     assert entry['external_ids'] == [3]
+
+
+@pytest.mark.django_db
+def test_labels_api_post_round_trips_the_museum_numbers_in_order(staff_client):
+    """Issue 053, the half a saved label reaches.
+
+    Once a ``Label`` exists the numbers come from its plantings rather than
+    from the grouped queryset, and ``Planting.Meta.ordering`` orders by the
+    species name, which says nothing about two plantings of the same species.
+    Post them out of order -- what dragging a number in the editor does -- and
+    the sheet still has to read 2, 11, 12.
+    """
+    species = create_species(name_fi='valkonarsissi')
+    for external_id in (12, 2, 11):
+        create_planted(species=species, external_id=external_id)
+
+    staff_client.post(reverse('planting-label-data'),
+                      data=json.dumps([label_item(species, [12, 2, 11])]),
+                      content_type='application/json')
+    data = json.loads(
+        staff_client.get(reverse('planting-label-data'))
+        .content.decode('utf-8'))
+
+    entry, = data['object_list']
+    assert Label.objects.count() == 1
+    assert entry['external_ids'] == [2, 11, 12]
 
 
 @pytest.mark.django_db

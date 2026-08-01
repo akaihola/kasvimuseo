@@ -222,7 +222,10 @@ is where new reports go.
   ``get_labels_data`` calls ``sorted()`` on ``Observation`` instances, which
   define no ordering, so Python 2 compares them by identity. The editor's own
   ``insort`` sorts numerically, so the same label prints "12 11" until somebody
-  drags a number and "11 12" afterwards.
+  drags a number and "11 12" afterwards. Now :doc:`053
+  <053-museum-numbers-on-a-label-are-in-an-arbitrary-order>`, and fixed:
+  ``test_the_sheet_draws_one_label_per_species_with_its_museum_numbers`` no
+  longer sorts the numbers before asserting them.
 
 It has run on a runner
 ======================
