@@ -27,7 +27,8 @@ import io
 import os
 import shutil
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from photologue.models import Photo, PhotoSize, PhotoSizeCache
@@ -95,6 +96,13 @@ def create_staff_user():
     user.is_active = True
     user.set_password(password)
     user.save()
+    # Every permission on this application's own models, and nothing else: the
+    # admin's changelists are what issue 013's tests drive, and a staff account
+    # without ``change`` on the model gets a 403 instead of one. A gardener is
+    # what this account stands for, so the grant stops at ``kasvimuseo`` --
+    # not a superuser, which would also hide a missing permission.
+    user.user_permissions = Permission.objects.filter(
+        content_type__in=ContentType.objects.filter(app_label='kasvimuseo'))
     return user
 
 
@@ -125,8 +133,12 @@ def main():
     create_photo('valkonarsissi kukassa', 400, 300, (40, 120, 40))
     create_photo('valkonarsissi lehdet', 300, 400, (120, 40, 40))
 
+    # The one species of a different ``type``: the other two are the
+    # factory's default 2 (Perenna), so ``SpeciesAdmin``'s ``type`` filter has
+    # something to narrow, which is what issue 013's browser test checks.
     esikko = factories.create_species(name_fi='kevätesikko',
                                       external_id=2,
+                                      type=3,
                                       genus='Primula',
                                       species='veris')
     factories.create_planting(
