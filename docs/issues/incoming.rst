@@ -35,6 +35,27 @@ Waiting
   what a reader would reach for to see the application without a development
   checkout.
 
+* **The museum number is not visible while it is being dragged on the iPad.**
+  Reported on 2026-08-02, from the tablet, while checking :doc:`056
+  <056-ipad-label-text-is-doubled-and-grows-until-it-vanishes>`'s first half --
+  which is why it is here rather than in that file: it is the drag layer of
+  :doc:`045 <045-the-label-editor-is-unusable-on-an-ipad>` rather than the
+  fitter, and one report per file is the rule.
+
+  Nothing is traced yet. What to look at first: ``#drag-number`` is the copy
+  that follows the pointer, it sits outside ``#labels`` so 046's ``zoom`` does
+  not apply to it, and ``dragStart`` gives it an inline ``font-size`` computed
+  as the number's ``getBoundingClientRect().width / offsetWidth`` times its
+  computed ``font-size``. Those are the two coordinate systems 746ce71 says
+  Safari reports differently inside a zoomed subtree, so a size of zero or of
+  something absurd is the first thing to measure. 045's own emulated touch
+  tests cover the drag itself and pass, so whatever this is, it is not the
+  gesture.
+
+  It is not known whether the number still moves and is merely invisible, or
+  whether the gesture does nothing at all. The report says only that the number
+  is not visible, so ask before assuming either.
+
 Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
 :doc:`044 <044-large-admin-pages-are-truncated-for-a-remote-browser>`,
@@ -124,3 +145,11 @@ narrow it to two things about the machine the development server runs on, and
 neither is a defect anybody here can show, so it is recorded in 056 rather than
 given a number of its own. It also stopped being the more urgent half: a label
 is fitted now whether its photo arrives or not.
+
+The next day the tablet answered, which is the one thing none of the above
+could do: the text is the right size and the names fit, so 056's first half is
+confirmed where it was reported. The same look put the second of the two
+reports above on this page -- the museum number that cannot be seen while it is
+dragged -- and left 056's photo question exactly where it was, since the photos
+are still not all there. A report that has been to the device once is cheaper
+to settle than one that has not, and both of these have now.
