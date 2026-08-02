@@ -60,18 +60,49 @@ jobs:
   # so the fast unit signal is not held up by a browser.
   #
   # It repeats `app build`, which is the price of that: the two jobs share no
-  # machine. About two and a half minutes in all -- the image, Playwright's
-  # Chromium, then the suite -- against the pytest job's one, and it runs
-  # alongside rather than after.
+  # machine. About two and a half minutes in all -- the image, the browser,
+  # then the suite -- against the pytest job's one, and it runs alongside
+  # rather than after.
+  #
+  # **One leg per engine** (issue 061). Every defect this page has ever been
+  # reported for came from iOS Safari, and until 061 every one of them was
+  # verified in Chromium; the suite now runs in both engines, and the matrix
+  # is how CI does it. Two legs rather than one job running both, for the same
+  # reason this job is separate from `pytest` in the first place: an engine
+  # regression should arrive as a red light that names the engine. `webkit`
+  # red beside `chromium` green *is* the finding, and a single job would make
+  # it one red light and a log to read.
+  #
+  # The price is one more image build, because the legs share no machine: two
+  # jobs of about two and a half minutes each instead of one, in parallel, so
+  # the wall clock of a whole run is unchanged and the runner minutes for this
+  # job roughly double (about 5 in place of 2.5). That is the whole cost, and
+  # it buys the engine the reports come from. Splitting the suite instead --
+  # everything in Chromium, only the iPad tests in WebKit -- was considered and
+  # rejected in 061: it saves about a minute of runner time and gives up the
+  # thing the split is for, since the tests that would stay Chromium-only are
+  # the layout and measurement ones where the two engines can differ most.
+  #
+  # WebKit skips six touch-drag tests, which need `Input.dispatchTouchEvent`
+  # -- a Chrome DevTools Protocol call, and WebKit has no CDP (issues 045 and
+  # 061). That leg is green with those six skipped, not silently short.
   #
   # `playwright install` is what fetches the browser here. It is deliberately
   # not in `dev/kasvimuseo`: a development machine already has one, and a
   # script that downloads 150 MB behind your back is not a script anybody
   # should have to read twice. PLAYWRIGHT_BROWSERS_PATH overrides where it
-  # comes from.
+  # comes from. Each leg installs only the engine it runs, so neither pays for
+  # the other's download -- and WebKit's build is the smaller of the two here,
+  # 134 MB unpacked against Chromium's 380 MB.
   browser:
-    name: playwright
+    name: playwright (${{ matrix.engine }})
     runs-on: ubuntu-latest
+    strategy:
+      # One engine's failure must not cancel the other's run: which engines
+      # agree is exactly the information this matrix exists to produce.
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -87,14 +118,14 @@ jobs:
       - name: Build the Python 2.7 image
         run: dev/kasvimuseo app build
 
-      - name: Install Playwright's Chromium
+      - name: Install Playwright's ${{ matrix.engine }}
         run: |
           uv run --no-project \
               --with-requirements browser_tests/requirements.txt \
-              playwright install --with-deps chromium
+              playwright install --with-deps ${{ matrix.engine }}
 
       - name: Run the browser tests
-        run: dev/kasvimuseo app browser-test
+        run: dev/kasvimuseo app browser-test --engine ${{ matrix.engine }}
 
   # Warnings are errors and docs/issues/next.rst is generated from the issue
   # files' metadata, so this fails on a malformed :Status:, an issue missing from

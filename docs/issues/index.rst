@@ -205,6 +205,18 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       (-webkit-touch-callout: none)`` and neither Playwright engine
       implements it. **Accepted**, and what is left is five minutes with the
       device rather than a change to the template.
+   062: WebKit will not draw text inside 046's ``zoom: 0.5`` smaller than nine
+      used pixels, so a species name fitty fits to anything under 18px is
+      drawn at 18px -- up to twice the size it was fitted to, on the engine
+      every report about this page came from. Immediately behind 056 because
+      it is the same page, the same "the text does not fit" family, and the
+      same one look at the tablet settles both: 056's item 2 and this issue's
+      only open question are the same computed ``font-size`` reading. Behind
+      056 rather than beside it because 056 is a fix awaiting confirmation
+      while this is a measurement awaiting a ruling, and ahead of 054 and 055
+      for this group's own reason -- a gardener holding the tablet can see it.
+      Its three options are ranked in its file rather than here, since two of
+      them reach 046's rule and one of them reaches the printed sheet.
    054: The mobile species list asks for a ``mobilethumbnail`` photo size that
       ``initial_data.json`` did not define, so every row of it is a broken
       image on any database built from the fixtures. Same shape as 004 and
@@ -362,6 +374,17 @@ which is what makes the rest of this page hold.
       it carried turned out to be live, which is 050.
    038: Already in progress; listed for completeness. Its remaining work is
       triggered by 018 and by Stage 10.
+   061: The browser suite 017 built ran in Chromium only, so every claim this
+      register makes about a mobile-Safari defect -- 045, 046, 047 and 056 --
+      was verified in the one engine none of them was reported from. Last in
+      this group because it is 017's suite made honest rather than a new
+      capability, and it could only be done once that suite existed; ahead of
+      nothing, since the group's other three are done. It is also the cheapest
+      correction on this page relative to what it covers: one parameter, and
+      it runs the whole suite in the engine iOS Safari is built on. **Fixed**:
+      both engines by default, a matrix leg each in CI, six touch drags
+      skipped in WebKit for want of a Chrome DevTools Protocol, and one
+      product finding -- 062 -- that no Chromium run could have produced.
 
 9. The upgrade programme
 ------------------------

@@ -539,6 +539,31 @@ It is the reverse of 025's split, in other words: everything left to do was in
 this repository.
 
 
+From running the suite in a second engine
+-----------------------------------------
+
+==== ======== ======================= ==================================================
+  ID Severity Area                    Title
+==== ======== ======================= ==================================================
+ 061 Medium   tests / browser engines Every Safari claim was checked in Chromium
+ 062 Medium   templates / labels UI   WebKit draws fitted label text at a 9px floor
+==== ======== ======================= ==================================================
+
+017's browser suite launched Chromium and nothing else, so the four iPad
+reports -- 045, 046, 047 and 056 -- were all verified in the engine none of
+them came from. **061** is that corrected: every test runs in Chromium and in
+Playwright's WebKit, which is Safari's engine without iOS around it, and CI
+runs one leg per engine. It is ``Fixed``, and the useful part of it is what the
+second engine said. It agreed with every assertion the register rests on, and
+it disagreed about two measurements no assertion was tight enough to notice.
+One of those is **062**: inside 046's ``zoom: 0.5`` WebKit will not draw text
+below nine used pixels, so a name fitted under 18px is drawn at 18px -- the
+size fitty computes is not the size drawn, on the engine every report about
+that page came from. 062 is a measurement waiting for a ruling between three
+answers, and the one thing it cannot establish here is whether iOS Safari has
+the same floor.
+
+
 Already fixed
 =============
 

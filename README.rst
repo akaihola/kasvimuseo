@@ -104,7 +104,7 @@ Other commands::
     $ dev/kasvimuseo db reset                 # delete the cluster entirely
     $ dev/kasvimuseo app manage <args>        # any manage.py command
     $ dev/kasvimuseo app test                 # unit tests; needs no database
-    $ dev/kasvimuseo app browser-test         # the label editor, in a browser
+    $ dev/kasvimuseo app browser-test         # the label editor, in two browsers
     $ dev/kasvimuseo app shell                # shell in the Python 2.7 container
 
 ``app run`` and ``app manage`` start PostgreSQL if it is down and stop it again
@@ -180,13 +180,13 @@ Testing
 Two suites, on two interpreters, and the split is deliberate (issue 017)::
 
     $ dev/kasvimuseo app test                 # the application
-    $ dev/kasvimuseo app browser-test         # the label editor, in a browser
+    $ dev/kasvimuseo app browser-test         # the label editor, in two browsers
 
 ``app test`` is the one you want almost always: pytest inside the Python 2.7
 container, about twenty seconds, its own PostgreSQL, no dump and no media.
 
 ``app browser-test`` runs ``browser_tests/`` on the **host's** Python 3, through
-uv, driving Playwright's Chromium against the real application in its own
+uv, driving Playwright against the real application in its own
 container. It covers what only exists in a browser: dragging museum numbers
 between labels, the save cycle, the per-label photo and the print toggle --
 and, since issue 013, the two admin changelist controls Grappelli builds out of
@@ -195,6 +195,23 @@ application is Python 2.7 and nothing that drives a current browser supports
 2.7, which is why this half lives outside the container -- and Playwright can
 drive WebKit, which is the engine the iPad work (issue 045) needs and no
 browser old enough for 2.7 could have provided.
+
+**Every test runs in both engines** since issue 061: Chromium, and Playwright's
+WebKit, which is what iOS Safari is built on and the engine every defect this
+page has been reported for came from. A test is named after the engine it ran
+in -- ``test_a_tap_on_a_number_moves_nothing[webkit]`` -- and either engine can
+be run on its own::
+
+    $ dev/kasvimuseo app browser-test --engine webkit
+    $ KASVIMUSEO_BROWSER_ENGINES=chromium dev/kasvimuseo app browser-test
+
+WebKit skips the six touch-drag tests. They dispatch the gesture over the
+Chrome DevTools Protocol so the browser does its own hit-testing, and WebKit
+speaks no CDP; the skip names that reason where it happens. It is not Safari
+either: it is Safari's engine on Linux, without iOS, so an ``@supports
+(-webkit-touch-callout: none)`` rule is as false there as in Chromium (issue
+056). What it does share is how text is measured, which is what the iPad
+reports have all been about.
 
 It builds and drops its own database, ``ylaneenkasvit_browsertest``, seeded from
 ``browser_tests/seed.py``, serves it with gunicorn on the first free port from
@@ -210,10 +227,10 @@ pytest arguments pass straight through::
     $ dev/kasvimuseo app browser-test -k drag -x
 
 The browsers are never downloaded by the script. Set ``PLAYWRIGHT_BROWSERS_PATH``
-if you have them already, or install one once::
+if you have them already, or install them once::
 
     $ uv run --no-project --with-requirements browser_tests/requirements.txt \
-          playwright install chromium
+          playwright install chromium webkit
 
 The page loads Vue, axios and sanitize.css from CDNs; the tests answer those
 requests from ``browser_tests/vendor/`` instead, so a run needs no network.
@@ -243,7 +260,7 @@ describe. No production dump and no ``media fetch`` are involved: the tests
 build their own data, and the test settings point ``MEDIA_ROOT`` at a
 throwaway directory, so nothing reads a photo.
 
-A full run is about a minute and a half on a hosted runner, the three jobs in
+A full run is about a minute and a half on a hosted runner, the four jobs in
 parallel: ``pytest`` builds the Python 2.7 image from scratch and runs the suite
 (68 s), ``sphinx`` builds the documentation with ``--clean`` (25 s) -- which is
 how a malformed issue field is caught on push rather than by whoever next builds
@@ -253,6 +270,13 @@ it needs both the image and a browser. That last one is a separate job rather
 than a step in ``pytest`` so that a drag-and-drop regression and a model
 regression arrive as two different red lights; the price is that both jobs build
 the same image.
+
+Since issue 061 ``playwright`` is a matrix of two, ``playwright (chromium)`` and
+``playwright (webkit)``, for the same reason: an engine regression should say
+which engine, and WebKit is the engine every defect on the label page has been
+reported from. They run in parallel, so the wall clock of a run is unchanged and
+the price is again one more image build. WebKit's leg is green with six
+touch-drag tests skipped; the reason is in ``browser_tests/conftest.py``.
 
 A fourth job, ``pages``, runs only on a push to ``master`` and publishes what
 ``sphinx`` built. A pull request builds the documentation and fails on a warning
@@ -277,7 +301,8 @@ locally:
 * **sphinx** -- run ``dev/kasvimuseo docs --clean`` and read the ``WARNING``
   lines. ``--clean`` matters: an incremental build cannot report a problem in a
   file nobody touched, and CI always builds from scratch.
-* **playwright** -- run ``dev/kasvimuseo app browser-test`` here. Same image and
+* **playwright** -- run ``dev/kasvimuseo app browser-test --engine <the one the
+  red job names>`` here, or leave the flag off and get both. Same image and
   same seed data; the runner differs only in where its browser comes from, since
   CI downloads one and you have one already.
 * **the image build** -- both jobs above start with ``dev/kasvimuseo app
