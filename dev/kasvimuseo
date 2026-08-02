@@ -7,6 +7,7 @@
 #   db fetch [file]                     dump the production database over SSH
 #   db restore <file>                   load a dump into the local database
 #   db bootstrap                        empty database from the migrations
+#   db upgrade-photologue               existing database -> photologue 2.8.3
 #   media fetch                         download the photos the database uses
 #   app build                           build the Python 2.7 dev image
 #   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
@@ -150,6 +151,63 @@ db_restore() {
              -v ON_ERROR_STOP=1 -q -o /dev/null
     echo "Restored $file into $DB_NAME" >&2
     [ "$started" = 1 ] && db_stop || true
+}
+
+# Take an existing database -- a restored production dump, or any database this
+# project was running before upgrade plan Stage 2 -- from photologue 2.6.1's
+# schema to photologue 2.8.3's. This is the deployment step for that stage, and
+# it is here rather than in a shell history because it is what production will
+# have to be given, once, before the new code serves a request.
+#
+# Four things about it are not obvious, and all four were found by running it
+# against `.dev/backups/production.sql`:
+#
+# 1. `syncdb` first, and not for photologue: `django.contrib.sites` arrives
+#    with this stage and is not a migrated app, so nothing else creates
+#    `django_site` -- and photologue's data migration 0006 looks up
+#    `Site.objects.get(pk=SITE_ID)`. syncdb's `create_default_site` receiver
+#    writes row 1, which is what SITE_ID is set to.
+#
+# 2. Nothing has to be faked back to 0001. The local squashed migration that
+#    `SOUTH_MIGRATION_MODULES` used to point photologue at *is* photologue's
+#    own `0001_initial` -- identical but for whitespace and a redundant
+#    `db_index=True` -- so the `photologue/0001_initial` row already in
+#    `south_migrationhistory` means exactly what the package means by it. The
+#    upgrade plan expected a `--fake` back to 0001 here; there is none.
+#
+# 3. `kasvimuseo` is migrated to the end *before* photologue moves, and the
+#    order is load-bearing rather than tidy. `kasvimuseo:0021` is a data
+#    migration that reads `species.photo` through South's frozen ORM, and that
+#    frozen copy of `photologue.Photo` still has a `title_slug` field -- so run
+#    it after photologue's rename and it stops with `column
+#    photologue_photo.title_slug does not exist`. Any database old enough to
+#    need 0021 is therefore migrated on the old photologue schema first. On a
+#    database that is already current this step does nothing.
+#
+# 4. 0002 is faked, and it is the one migration in this history this project
+#    must not run. Its schema half narrows three `title` columns from 100
+#    characters to 50; its data half rewrites the title of **every** photo,
+#    not only the long ones, because it truncates the title and then tests
+#    `Photo.objects.filter(title=<the same title>).exists()` -- which is true
+#    of the photo itself -- and appends a digit to escape a collision with the
+#    row it is looking at. On this database that would put a `1` on the end of
+#    every photo title, and a photo's title is what attaches it to a species
+#    here. Faking it leaves the columns at `varchar(100)`, wider than the model
+#    declares and therefore harmless; the alternative loses data.
+#
+# 0003 (a `photologue_photosize.name` widening), 0004 (default photo sizes,
+# which returns early when the table is not empty), 0005 (the `title_slug` ->
+# `slug` rename and the two `sites` join tables) and 0006 (sort values, and
+# every gallery and photo onto the current site) then run for real -- as part
+# of the plain `migrate` that ends this, so a database that is also behind on
+# `kasvimuseo` migrations, as a restored dump usually is, comes out current.
+photologue_upgrade() {
+    with_db app_run_container "" sh -c '
+        set -e
+        python ylaneenkasvit/manage.py syncdb --noinput
+        python ylaneenkasvit/manage.py migrate kasvimuseo --noinput
+        python ylaneenkasvit/manage.py migrate photologue 0002 --fake --noinput
+        python ylaneenkasvit/manage.py migrate --noinput'
 }
 
 # The printable and compact species views make Django open the image files to
@@ -436,8 +494,10 @@ case "${1:-}" in
                   python ylaneenkasvit/manage.py migrate photologue --noinput &&
                   python ylaneenkasvit/manage.py migrate --noinput' ;;
       restore) db_restore "${3:-}" ;;
+      upgrade-photologue)
+               photologue_upgrade ;;
       reset)   db_stop; rm -rf "$PGDATA"; echo "Cluster deleted" ;;
-      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|restore|bootstrap|reset" ;;
+      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|restore|bootstrap|upgrade-photologue|reset" ;;
     esac ;;
   media)
     case "${2:-}" in
@@ -464,7 +524,7 @@ case "${1:-}" in
                shift 2; with_db app_run_container "$TEST_ENV" sh -c \
                  "coverage run --source=kasvimuseo,ylaneenkasvit \
                                --omit='*/migrations/*,*/tests/*,\
-*/external_migrations/*,*/manage.py,*/wsgi.py,*/*settings*.py' \
+*/manage.py,*/wsgi.py,*/*settings*.py' \
                                -m pytest -q $* >/dev/null;
                   coverage report -m" ;;
       shell)   with_db app_run_container "" sh ;;
@@ -475,5 +535,5 @@ case "${1:-}" in
       serve)   shift 2; exec "$REPO/dev/docs-serve" "$@" ;;
       *)       shift; "$REPO/dev/docs-build" "$@" ;;
     esac ;;
-  *) sed -n '2,22p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+  *) sed -n '2,23p' "${BASH_SOURCE[0]}" | cut -c3- ;;
 esac

@@ -27,6 +27,21 @@ Ansible instead and restore that file::
     $ ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml
     $ dev/kasvimuseo db restore /backup-dir/vps763955.ovh.net/tmp/backup.sql
 
+A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- needs one more
+command before the application will serve it, and so does any other database
+this project was running before that stage::
+
+    $ dev/kasvimuseo db upgrade-photologue
+
+It syncs the new ``django_site`` table, finishes the ``kasvimuseo`` migrations
+on the old photologue schema, fakes photologue's ``0002`` and migrates the rest
+forward, which is what renames ``title_slug`` to ``slug`` and puts every photo
+and gallery on the site. The order is not arbitrary and ``0002`` is not faked
+for convenience: the reasons are written above the function in
+``dev/kasvimuseo``, and this is the command production has to be given once,
+which is why it is a command rather than a paragraph. Running it on an
+already-current database does nothing.
+
 To work without any production data, build an empty database from the
 migrations instead, and give yourself an admin account::
 
@@ -84,6 +99,7 @@ Other commands::
     $ dev/kasvimuseo app run --publish        # a published port instead of the host's
     $ dev/kasvimuseo db start|stop|status     # PostgreSQL by hand
     $ dev/kasvimuseo db psql                  # psql on the local database
+    $ dev/kasvimuseo db upgrade-photologue    # an old database -> photologue 2.8.3
     $ dev/kasvimuseo media fetch              # photos the database references
     $ dev/kasvimuseo db reset                 # delete the cluster entirely
     $ dev/kasvimuseo app manage <args>        # any manage.py command

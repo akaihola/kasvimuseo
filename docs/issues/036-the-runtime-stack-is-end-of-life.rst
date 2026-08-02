@@ -58,6 +58,7 @@ Follow ``docs/upgrade-plan.rst``. Its structure, in brief:
 Stages 0-1   Dead weight and defensive settings; Django 1.5.12
              -- **both done**, see Progress
 Stages 2-4   photologue forward, still on Django 1.5/1.6
+             -- **2 done** (2.6.1 to 2.8.3), see Progress
 Stage 5      **South to Django migrations** -- the riskiest step
 Stages 6-9   Django 1.7 to 1.11 LTS, the staging point
 Stage 10     **Python 2.7 to 3.7** -- the irreversible one
@@ -76,10 +77,9 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-**Stage 0 is closed and Stage 1 has landed. This issue stays ``Open``:** two
-stages of twenty are done, the application is still Python 2.7 and still
-unpatched everywhere but Django, and nothing about that is finished. It closes
-when the programme does.
+**Stages 0, 1 and 2 are done. This issue stays ``Open``:** three stages of
+twenty, the application is still Python 2.7 and still unpatched everywhere but
+Django, and nothing about that is finished. It closes when the programme does.
 
 Stage 0 went in three changes. First, with 020, 021 and 033 ``Fixed``
 together, the dead weight it lists went -- ``django-indexer``,
@@ -105,7 +105,19 @@ repository names a Django version. The Problem section above still describes
 though 1.5 as a *series* has had no security support since 2014, which is
 what makes the rest of this plan necessary.
 
-Both stages were tested the way the caveat below asks for; see the next
+Stage 2 is **photologue 2.6.1 → 2.8.3**, moved alone and still on Django 1.5,
+because photologue owns database tables and must not move in the same step as
+the framework. It renames ``Photo.title_slug`` to ``Photo.slug``, gives
+``Photo`` and ``Gallery`` a ``sites`` many-to-many -- so
+``django.contrib.sites`` is installed and ``SITE_ID`` is 1 now, neither of
+which this project had -- and brings ``django-sortedm2m==0.7.0`` and
+``django-model-utils==2.3.1`` into the lock. ``SOUTH_MIGRATION_MODULES`` and
+``ylaneenkasvit/external_migrations/photologue/`` are gone with it: photologue
+runs its own migration history again, and the sequence that gets an existing
+database there is ``dev/kasvimuseo db upgrade-photologue``, written down as a
+command because it is what production will have to be given.
+
+All three stages were tested the way the caveat below asks for; see the next
 section for exactly what was run and what it found.
 
 Three further obstacles are out of the way: 019 is ``Fixed``, so
@@ -202,6 +214,83 @@ claim was rather than fixed quietly:
    admin chrome Finnish. 040's "option 3 -- wait for the upgrade" needed only
    one stage, not twenty. Its workaround stays in both image definitions as an
    assertion.
+
+Stage 2 has had the same test, and it is the first stage where the test
+changed the change. What was run:
+
+* ``dev/kasvimuseo app test`` -- **432 passed**: the 430 of Stage 1 plus the
+  two regression tests this stage needed. Four test modules and
+  ``browser_tests/seed.py`` moved from ``title_slug`` to ``slug`` with the
+  code.
+* ``dev/kasvimuseo app browser-test`` -- **29 passed**, the label editor and
+  the admin changelist in Chromium. The 25 recorded above is Stage 1's number
+  and neither of the four tests between them is this stage's: issue 013 added
+  ``browser_tests/test_admin_changelist.py`` and issue 056 added two to the
+  label editor.
+* ``dev/kasvimuseo app manage validate`` -- 0 errors, with
+  ``django.contrib.sites``, ``sortedm2m`` and photologue 2.8.3 installed.
+* Both images rebuilt from the changed lock: the development image
+  (``dev.txt``) and the production image (``Dockerfile``, ``production.txt``),
+  the latter carrying eleven runtime packages and, checked inside it, no
+  ``ylaneenkasvit/local_settings.py``.
+* ``.dev/backups/production.sql`` restored and ``dev/kasvimuseo db
+  upgrade-photologue`` run on it, then the same command's parts inspected in
+  ``psql``: 137 photos and one gallery on site 1, the four gallery photos
+  given sort values 0-3, every title unchanged, and ``photologue_photo.slug``
+  where ``title_slug`` was.
+* ``dev/kasvimuseo db bootstrap`` on an empty database as well, since this
+  stage changes what a fresh database is built from: photologue's own
+  ``0004_initial_photosizes`` now runs before ``initial_data.json``, and the
+  four photo sizes that come out are still the fixture's.
+* Pages rendered over HTTP against the restored database, logged in: the admin
+  index, the species and planting changelists, a species change form, the
+  photologue photo changelist **and a photo change form** -- which is where the
+  renamed field shows -- the photologue gallery admin, the public gallery
+  index, the label editor, the public planted-species list, the printable and
+  compact species reports and an observation page. All 200.
+* ``dev/kasvimuseo docs`` clean, and ``actionlint`` on
+  ``.github/workflows/tests.yml``, which is unchanged by this stage and does
+  cover the browser suite -- ``playwright`` is a job of its own beside
+  ``pytest``, ``sphinx`` and the Pages deploy.
+
+Four more things the reasoning had not predicted, all recorded where the wrong
+claim was:
+
+#. **photologue 2.8.3 does declare its new dependencies**, against what
+   ``requirements/production.txt`` said beside the absent package: its
+   ``requirements.txt`` is read into ``install_requires`` and asks for
+   ``django-sortedm2m>=0.6.1,<0.8`` and ``django-model-utils>=2.0.3``. The
+   plan asked for sortedm2m 1.1.1 or later; 1.5.0 was installed and run first,
+   and two things sent it back under the declared ceiling to 0.7.0. The
+   decisive one is that a declared requirement is enforced at *runtime* in the
+   production image: ``manage`` there is a setuptools console script, which
+   resolves every distribution's declared requirements through
+   ``pkg_resources`` before running, so ``manage validate`` and ``manage
+   migrate`` both died with ``ContextualVersionConflict``. The development
+   image cannot show this, because the same commands run as ``python
+   ylaneenkasvit/manage.py``, and neither can the suite.
+#. **``django-model-utils`` has a ceiling nobody declares.** photologue imports
+   ``model_utils.managers.PassThroughManager`` and 2.4 deleted the class, so
+   2.3.1 is the last usable release. That is issue 027's thesis arriving twice
+   in one stage.
+#. **The plan's migration recipe was wrong twice.** No ``--fake`` back to
+   ``0001`` is needed -- the local squashed migration *is* photologue's own
+   ``0001_initial`` -- while ``0002``, which the plan did not mention, must be
+   faked, because its data half renames every photo in the database rather
+   than only the ones with over-long titles. And ``kasvimuseo``'s own
+   migrations have to be finished first: ``kasvimuseo:0021`` reads
+   ``species.photo`` through a frozen ORM that still has ``title_slug``.
+#. **Three packages do not compose on Django 1.5**, which is the other reason
+   for that pin and the one that would have shipped a broken public page.
+   photologue 2.8's default manager (``django-model-utils``) and its
+   ``Gallery.photos`` field (``django-sortedm2m`` 1.x) together lose the filter
+   that makes a related manager related, so ``gallery.photos`` is every photo
+   in the database and ``/photologue/gallery/`` is a 500 -- on a database that
+   has one real gallery with four photos in it. sortedm2m 0.7.0 does not have
+   the branch that causes it. ``kasvimuseo/tests/test_photologue_galleries.py``
+   pins both symptoms, so raising the pin while this project is still on
+   Django 1.5 fails there; Stage 3 makes the branch correct and Stage 6 drops
+   ``django-model-utils``.
 
 One more thing the rendering turned up, which belongs to neither stage: in the
 production image ``/photologue/gallery/`` is a 500, because that image ships no

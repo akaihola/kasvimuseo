@@ -54,12 +54,20 @@ def remove_diacritics(text):
 class PhotoForm(forms.ModelForm):
     class Meta:
         model = Photo
-        exclude = []
+        # Everything except ``sites``, which photologue 2.8's own
+        # ``PhotoAdminForm`` excludes the same way whenever
+        # ``PHOTOLOGUE_MULTISITE`` is off -- and this form replaces that one.
+        # Not cosmetic: photologue's ``add_default_site`` receiver puts a newly
+        # saved photo on ``SITE_ID`` from ``post_save``, and the admin calls
+        # ``save_m2m()`` afterwards, so a form that carried an unticked
+        # ``sites`` widget would undo that on the way out and hide the photo
+        # from photologue's own gallery and photo views, which filter by site.
+        exclude = ['sites']
 
     def __init__(self, *args, **kwargs):
         super(PhotoForm, self).__init__(*args, **kwargs)
         self.fields['title'].required = False
-        self.fields['title_slug'].required = False
+        self.fields['slug'].required = False
         # The rules live in ``clean()`` below and in
         # ``models.autoconnect_photo_to_species``; this is where the person
         # uploading gets told about them (issue 037).
@@ -70,7 +78,7 @@ class PhotoForm(forms.ModelForm):
         # ``BaseModelForm.clean()`` does one thing -- it sets the flag that
         # makes ``_post_clean()`` call ``validate_unique()`` -- so an override
         # that does not call it silently turns off uniqueness checking for the
-        # whole form. ``Photo.title`` and ``Photo.title_slug`` are both unique,
+        # whole form. ``Photo.title`` and ``Photo.slug`` are both unique,
         # so without this the second photo to claim a title reaches the
         # database and comes back as an ``IntegrityError``: a 500 on an upload,
         # and the image file is already written by then, leaving a file on disk
@@ -82,8 +90,8 @@ class PhotoForm(forms.ModelForm):
             parts = [part for part in all_parts
                      if part.lower() not in (u'jpg', u'jpeg', u'jpe')]
             self.cleaned_data['title'] = u' '.join(parts)
-        if not self.cleaned_data.get('title_slug', u'').strip():
-            self.cleaned_data['title_slug'] = slugify(remove_diacritics(
+        if not self.cleaned_data.get('slug', u'').strip():
+            self.cleaned_data['slug'] = slugify(remove_diacritics(
                 self.cleaned_data.get('title', u'')))
         return self.cleaned_data
 
