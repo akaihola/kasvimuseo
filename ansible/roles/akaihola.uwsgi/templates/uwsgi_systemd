@@ -3,7 +3,7 @@ Description=uWSGI Instance to serve ylaneenkasvit
 After=syslog.target
 
 [Service]
-ExecStart=/usr/bin/uwsgi --ini /home/kasvimuseo/uwsgi.ini
+ExecStart=/usr/bin/uwsgi --ini {{ uwsgi_ini }}
 Restart=always
 RestartSec=5s
 KillSignal=SIGQUIT

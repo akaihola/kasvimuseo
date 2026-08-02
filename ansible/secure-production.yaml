@@ -1,0 +1,412 @@
+---
+# The security maintenance window: issues 049, 050 and 051 in one run.
+#
+#     $ export ANSIBLE_VAULT_PASS=...
+#     $ ansible-playbook ansible/secure-production.yaml
+#
+# Each of those three issues has a repository half that is done and a server
+# half that is not, and the server half of all three is one sequence with a
+# load-bearing order. This file is that sequence. README.rst, under "The
+# security maintenance window", is the runbook.
+#
+# What each play is for:
+#
+#   1. install.yaml, imported whole. This is 049: the database role sets the
+#      PostgreSQL password from the vault and the uWSGI role writes both
+#      secrets and KASVIMUSEO_ALLOWED_HOSTS into uwsgi.ini and restarts the
+#      service when that file changes. It is also step 1 of 051 -- the `code`
+#      tag installs the settings that read the environment, and the `uwsgi`
+#      tag writes the environment they refuse to start without. Nothing here
+#      reimplements any of it.
+#   2. The two acts install.yaml does not perform: rotating the admin password
+#      (050) and deleting the untracked local_settings.py that forces
+#      DEBUG = True (051), in that file's order and behind a gate.
+#   3. Verification, read-only, so it can also be run on its own afterwards.
+#
+# Tags. The existing vocabulary (code, static, python, database, restore,
+# backup, media, web, nginx, certbot, uwsgi) belongs to install.yaml and still
+# selects within it. This file adds `password` and `audit` for 050,
+# `localsettings` for 051, and `verify` for the last play.
+#
+# The one thing that must not be reachable by choosing a tag is 051's failure
+# mode: deleting local_settings.py before ALLOWED_HOSTS is deployed, which
+# turns every request into a 400. It is not reachable, because the gate that
+# reads the server carries the same `localsettings` tag as the deletion and
+# runs before it in the same play. `--tags localsettings` on a host that has
+# not had the deploy fails on the assertion, naming the issue, having changed
+# nothing.
+
+- name: Deploy the rotated secrets and the host names (049, and 051's step 1)
+  import_playbook: install.yaml
+
+- name: Rotate the admin password and turn production's DEBUG off
+  hosts: all
+  remote_user: "{{ app_user }}"
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    # ---------------------------------------------------------------- 050 ---
+    - name: Check that the new admin passwords are in the vault
+      tags:
+        - password
+      assert:
+        that:
+          - kasvimuseo_admin_passwords is defined
+          - kasvimuseo_admin_passwords | length > 0
+        msg: >-
+          kasvimuseo_admin_passwords must be defined in the vaulted host_vars
+          file for this host, as a mapping of user name to new password. Add it
+          with `ansible-vault edit ansible/host_vars/{{ inventory_hostname }}`.
+          It must include akaihola, whose password has been published in this
+          repository since 2020 -- see
+          docs/issues/050-the-production-admin-password-is-committed-and-in-use.rst.
+          The audit task lists every account it does not cover.
+
+    - name: Set the admin passwords from the vault
+      tags:
+        - password
+      # Not `manage.py changepassword`: that prompts, and cannot be driven from
+      # a playbook. Not `manage.py shell -c` either -- Django 1.5 has no -c.
+      # The script is fed to the interpreter on stdin, so no password reaches
+      # an argument list; `no_log` keeps the stdin out of the play's output and
+      # out of a failure's module_args; and the values themselves come from the
+      # vault, so none of them is in a tracked file. The reporting tasks below
+      # deliberately name result.rc/stdout/stderr rather than the whole result,
+      # which is what lets them run with no_log off.
+      command:
+        cmd: "{{ app_python }} -"
+        stdin: "{{ lookup('template', 'rotate_admin_passwords.py.j2') }}"
+      vars:
+        rotate_params:
+          settings_module: "{{ django_settings_module }}"
+          environment:
+            KASVIMUSEO_SECRET_KEY: "{{ kasvimuseo_secret_key }}"
+            KASVIMUSEO_DB_PASSWORD: "{{ kasvimuseo_db_password }}"
+            KASVIMUSEO_ALLOWED_HOSTS: "{{ kasvimuseo_allowed_hosts | join(',') }}"
+          passwords: "{{ kasvimuseo_admin_passwords }}"
+          # Under --check the script reports what it would do and writes
+          # nothing, so the task itself must run rather than be skipped.
+          dry_run: "{{ ansible_check_mode | bool }}"
+      register: rotate_result
+      no_log: true
+      check_mode: false
+      failed_when: false
+      # Reported changed only for what it actually set: an account already
+      # holding the vaulted password is `unchanged`, so a second run is green
+      # and quiet. Guarded on there being output at all, because a script that
+      # died before it reached the loop has nothing to parse -- and on the
+      # dry run, which reports what it would have done.
+      changed_when: >-
+        rotate_result.stdout | default('') | length > 0
+        and not ansible_check_mode
+        and (rotate_result.stdout | from_json).changed | length > 0
+
+    - name: Report what the password task did
+      tags:
+        - password
+      debug:
+        # stdout is the script's JSON summary -- user names only, never a
+        # password and never a hash -- so this task, unlike the one above,
+        # does not need no_log.
+        msg: >-
+          {{ rotate_result.stdout | default('', true)
+             or rotate_result.stderr | default('', true)
+             or '(no output)' }}
+
+    - name: Fail if the password task did not succeed
+      tags:
+        - password
+      assert:
+        that:
+          - rotate_result.rc == 0
+        msg: >-
+          Setting the admin passwords failed (rc={{ rotate_result.rc }}):
+          {{ rotate_result.stderr | default('') }}
+        quiet: true
+
+    - name: Look at every other account in auth_user
+      tags:
+        - password
+        - audit
+      # Issue 050's second and third points: the other four accounts, and the
+      # admin log that is the only record of whether the published password was
+      # ever used. Read-only, so it runs under --check as well.
+      command:
+        cmd: "{{ app_python }} -"
+        stdin: "{{ lookup('template', 'audit_admin_accounts.py.j2') }}"
+      vars:
+        audit_params:
+          settings_module: "{{ django_settings_module }}"
+          environment:
+            KASVIMUSEO_SECRET_KEY: "{{ kasvimuseo_secret_key }}"
+            KASVIMUSEO_DB_PASSWORD: "{{ kasvimuseo_db_password }}"
+            KASVIMUSEO_ALLOWED_HOSTS: "{{ kasvimuseo_allowed_hosts | join(',') }}"
+          covered: "{{ kasvimuseo_admin_passwords | default({}) | list }}"
+      register: audit_result
+      no_log: true
+      check_mode: false
+      changed_when: false
+      failed_when: false
+
+    - name: Report the accounts and their admin activity
+      tags:
+        - password
+        - audit
+      debug:
+        msg: >-
+          rc={{ audit_result.rc | default('?') }}
+          {{ audit_result.stdout | default('', true)
+             or audit_result.stderr | default('', true)
+             or '(no output)' }}
+
+    # ---------------------------------------------------------------- 051 ---
+    # The gate. Everything below carries the `localsettings` tag, so no tag
+    # selection reaches the deletion without first reaching these.
+    - name: Read the settings module installed on the server
+      tags:
+        - localsettings
+      slurp:
+        src: "{{ django_dir }}/common_settings.py"
+      register: installed_settings
+      no_log: true
+
+    - name: Read the uWSGI environment file on the server
+      tags:
+        - localsettings
+      slurp:
+        src: "{{ uwsgi_ini }}"
+      register: installed_uwsgi_ini
+      no_log: true
+
+    - name: Work out whether the deploy 051 depends on has landed
+      tags:
+        - localsettings
+      no_log: true
+      set_fact:
+        installed_code_reads_the_environment: >-
+          {{ 'hosts_from_env' in (installed_settings.content | b64decode)
+             and 'secret_from_env' in (installed_settings.content | b64decode) }}
+        deployed_uwsgi_ini_sets_allowed_hosts: >-
+          {{ 'env = KASVIMUSEO_ALLOWED_HOSTS='
+             ~ (kasvimuseo_allowed_hosts | join(','))
+             in (installed_uwsgi_ini.content | b64decode) }}
+
+    - name: Refuse to delete local_settings.py before ALLOWED_HOSTS is deployed
+      tags:
+        - localsettings
+      assert:
+        that:
+          - installed_code_reads_the_environment | bool
+          - deployed_uwsgi_ini_sets_allowed_hosts | bool
+        msg: >-
+          The deploy this step depends on has not landed on
+          {{ inventory_hostname }}: the installed common_settings.py does not
+          read the environment (issues 025 and 026), or {{ uwsgi_ini }} does not
+          carry KASVIMUSEO_ALLOWED_HOSTS={{ kasvimuseo_allowed_hosts | join(',') }}.
+          Deleting local_settings.py now would turn DEBUG off with no
+          ALLOWED_HOSTS in force and answer 400 to every request -- which is
+          exactly the ordering
+          docs/issues/051-production-serves-with-debug-on-behind-an-untracked-local-settings.rst
+          exists to prevent. Run the whole playbook
+          (`ansible-playbook ansible/secure-production.yaml`) rather than this
+          tag on its own; the `uwsgi` tag is not optional. Nothing has been
+          changed.
+        quiet: true
+
+    - name: Delete the untracked local_settings.py that forces DEBUG on
+      tags:
+        - localsettings
+      # Both the source and its bytecode: on Python 2 a stale .pyc with no .py
+      # beside it is still importable, so removing only the .py would leave
+      # DEBUG on and look like it had not.
+      file:
+        path: "{{ django_dir }}/{{ item }}"
+        state: absent
+      loop:
+        - local_settings.py
+        - local_settings.pyc
+        - local_settings.pyo
+      register: local_settings_removed
+
+    - name: Restart uWSGI so the settings change takes effect
+      tags:
+        - localsettings
+      # Only when something was actually removed. A second run finds the files
+      # gone, changes nothing and does not restart -- the site stays up.
+      become: true
+      service:
+        name: "{{ uwsgi_service }}"
+        state: restarted
+      # noqa: no-handler -- a handler fires at the end of the play, and the
+      # point of this one is that it fires here, between the deletion and the
+      # verification. The uWSGI role restarts the same service the same way,
+      # for the same reason.
+      when: local_settings_removed is changed
+
+- name: Verify what the maintenance window left behind
+  hosts: all
+  remote_user: "{{ app_user }}"
+  vars_files:
+    - vars/main.yml
+  tags:
+    - verify
+
+  # A play of its own, and read-only, for one reason: a check that can only run
+  # as part of the run that changes things cannot answer "is production still
+  # like that?" a week later. `ansible-playbook ansible/secure-production.yaml
+  # -t verify` asserts every post-condition of the three issues and touches
+  # nothing.
+  tasks:
+    - name: Read the uWSGI environment file on the server
+      slurp:
+        src: "{{ uwsgi_ini }}"
+      register: deployed_uwsgi_ini
+      no_log: true
+
+    - name: Compare it with the vault
+      no_log: true
+      set_fact:
+        uwsgi_ini_has_vault_secret_key: >-
+          {{ 'env = KASVIMUSEO_SECRET_KEY=' ~ kasvimuseo_secret_key
+             in (deployed_uwsgi_ini.content | b64decode) }}
+        uwsgi_ini_has_vault_db_password: >-
+          {{ 'env = KASVIMUSEO_DB_PASSWORD=' ~ kasvimuseo_db_password
+             in (deployed_uwsgi_ini.content | b64decode) }}
+        uwsgi_ini_has_allowed_hosts: >-
+          {{ 'env = KASVIMUSEO_ALLOWED_HOSTS='
+             ~ (kasvimuseo_allowed_hosts | join(','))
+             in (deployed_uwsgi_ini.content | b64decode) }}
+
+    - name: The deployed environment is the one in the vault (049, 026)
+      assert:
+        that:
+          - uwsgi_ini_has_vault_secret_key | bool
+          - uwsgi_ini_has_vault_db_password | bool
+          - uwsgi_ini_has_allowed_hosts | bool
+        msg: >-
+          {{ uwsgi_ini }} does not carry the values the vault holds. The
+          booleans are printed rather than the values: secret_key
+          {{ uwsgi_ini_has_vault_secret_key }}, db_password
+          {{ uwsgi_ini_has_vault_db_password }}, allowed_hosts
+          {{ uwsgi_ini_has_allowed_hosts }}.
+        quiet: true
+
+    - name: Find out when uWSGI started and when its environment was written
+      # Issue 049's own server-side check. uwsgi.ini holding the new key proves
+      # nothing on its own: uWSGI keeps the environment it started with, so the
+      # running process is only signing with the new key if it started after
+      # the file was written. Field 22 of /proc/PID/stat is the process start
+      # in clock ticks since boot, and /proc/stat's btime turns that into an
+      # epoch second.
+      become: true
+      shell: |
+        set -euo pipefail
+        pid=$(systemctl show -p MainPID --value {{ uwsgi_service }})
+        test "$pid" != 0 || { echo "{{ uwsgi_service }} is not running" >&2; exit 1; }
+        started=$(cut -d')' -f2- "/proc/$pid/stat" | awk '{print $20}')
+        boot=$(awk '/^btime /{print $2}' /proc/stat)
+        echo $((boot + started / $(getconf CLK_TCK)))
+        stat -c %Y "{{ uwsgi_ini }}"
+      args:
+        executable: /bin/bash
+      register: uwsgi_times
+      changed_when: false
+      check_mode: false
+
+    - name: Assert uWSGI is running with that environment, not an older one (049)
+      assert:
+        that:
+          - uwsgi_times.stdout_lines[0] | int >= uwsgi_times.stdout_lines[1] | int
+        msg: >-
+          {{ uwsgi_service }} started at epoch {{ uwsgi_times.stdout_lines[0] }},
+          before {{ uwsgi_ini }} was written at
+          {{ uwsgi_times.stdout_lines[1] }}. It is therefore still signing
+          cookies and password-reset tokens with the environment it was started
+          with -- the old SECRET_KEY, if this is the first run. Restart it.
+        quiet: true
+
+    - name: Look for the untracked local_settings.py and its bytecode
+      stat:
+        path: "{{ django_dir }}/{{ item }}"
+      loop:
+        - local_settings.py
+        - local_settings.pyc
+        - local_settings.pyo
+      register: local_settings_stat
+
+    - name: Nothing on the server turns DEBUG back on (051)
+      assert:
+        that:
+          - local_settings_stat.results | map(attribute='stat.exists') | select | list | length == 0
+        msg: >-
+          {{ django_dir }} still contains
+          {{ local_settings_stat.results | selectattr('stat.exists')
+             | map(attribute='item') | join(', ') }}.
+          On Python 2 a leftover .pyc is imported even with no .py beside it.
+        quiet: true
+
+    - name: Request an ordinary page the way a visitor does
+      uri:
+        url: "https://{{ kasvimuseo_allowed_hosts[0] }}/"
+        status_code: 200
+      check_mode: false
+
+    - name: Request the same page with a host name the site does not answer to
+      uri:
+        url: "https://{{ kasvimuseo_allowed_hosts[0] }}/"
+        headers:
+          Host: not-a-name-this-site-answers-to.invalid
+        status_code: 400
+        return_content: true
+      register: bad_host_response
+      check_mode: false
+
+    - name: A forged Host gets a 400, and not a debug page (051, 026)
+      assert:
+        that:
+          - "'Traceback' not in bad_host_response.content"
+          - "'DisallowedHost' not in bad_host_response.content"
+          - "'SECRET_KEY' not in bad_host_response.content"
+        msg: >-
+          The 400 for a forged Host header was rendered by Django's debug
+          handler: the response names the exception or the settings. DEBUG is
+          still on. Django 1.5 also switches ALLOWED_HOSTS off entirely while
+          DEBUG is on, so this page is not evidence the host check works.
+        quiet: true
+
+    - name: Check the admin passwords against the vault without changing them
+      # Same script, dry run. A Django password hash verifies exactly one
+      # plaintext, so "every account already matches the vault" is also the
+      # statement that the published password no longer signs anybody in --
+      # and it establishes that without this repository ever naming the old
+      # one.
+      command:
+        cmd: "{{ app_python }} -"
+        stdin: "{{ lookup('template', 'rotate_admin_passwords.py.j2') }}"
+      vars:
+        rotate_params:
+          settings_module: "{{ django_settings_module }}"
+          environment:
+            KASVIMUSEO_SECRET_KEY: "{{ kasvimuseo_secret_key }}"
+            KASVIMUSEO_DB_PASSWORD: "{{ kasvimuseo_db_password }}"
+            KASVIMUSEO_ALLOWED_HOSTS: "{{ kasvimuseo_allowed_hosts | join(',') }}"
+          passwords: "{{ kasvimuseo_admin_passwords | default({}) }}"
+          dry_run: true
+      register: verify_passwords
+      no_log: true
+      check_mode: false
+      changed_when: false
+      failed_when: false
+
+    - name: Every vaulted account has the vaulted password (050)
+      assert:
+        that:
+          - verify_passwords.rc == 0
+          - (verify_passwords.stdout | from_json).changed | length == 0
+          - (verify_passwords.stdout | from_json).missing | length == 0
+        msg: >-
+          rc={{ verify_passwords.rc }}
+          {{ verify_passwords.stdout | default('') }}
+          {{ verify_passwords.stderr | default('') }}
+        quiet: true

@@ -425,3 +425,150 @@ Updating code on the server
 ---------------------------
 
     ansible-playbook -t code ansible/install.yaml
+
+
+The security maintenance window
+===============================
+
+Three High-severity issues in ``docs/issues/`` -- 049's rotated ``SECRET_KEY``
+and database password, 050's published admin password, and 051's untracked
+``local_settings.py`` that forces ``DEBUG = True`` -- are each half done. The repository half of all three has landed; what is left is one act on
+the running server, and the three acts are one sequence whose order matters.
+That sequence is ``ansible/secure-production.yaml``. This is its runbook.
+
+One command::
+
+    export ANSIBLE_VAULT_PASS=***********
+    ansible-playbook ansible/secure-production.yaml
+
+Before running it
+-----------------
+
+* **Agree the time with the customer.** The cost lands on them, and issue 049's
+  ``Decision`` field says the timing is theirs. Everything under "What the
+  customer sees" below happens whenever this is run.
+* **Three variables have to be in the vault**
+  (``ansible-vault edit ansible/host_vars/vps763955.ovh.net``):
+  ``kasvimuseo_secret_key``, ``kasvimuseo_db_password`` and
+  ``kasvimuseo_admin_passwords``. The first two are the values the maintainer
+  has already rotated; the third is new, and is a mapping of user name to new
+  password::
+
+      kasvimuseo_admin_passwords:
+        akaihola: ...
+
+  It must name ``akaihola``, the account whose password this repository
+  published. Any other account named there is rotated with it; every privileged
+  account *not* named there is listed by the play's audit step, so the four
+  other accounts issue 050 asks about are visible either way. The playbook stops
+  before touching anything if any of the three is missing.
+* Nothing else. Do not put any of those values in a tracked file, a commit
+  message or a ticket: naming the commit that deployed them is what the issues'
+  ``Resolution`` field is for.
+
+What it does, in order
+----------------------
+
+#. ``ansible/install.yaml``, imported whole -- the ordinary deploy. It installs
+   the current code, sets the PostgreSQL password from the vault, writes
+   ``SECRET_KEY``, the database password and ``ALLOWED_HOSTS`` into
+   ``/home/kasvimuseo/uwsgi.ini`` and restarts uWSGI. That is issue 049 in its
+   entirety, and it is also the step 051 has to happen after. The two values
+   land together, which is why the whole playbook is the unit rather than
+   ``-t database`` or ``-t web`` on their own.
+#. The admin passwords, from the vault (050).
+#. A report of every account in ``auth_user`` and what the admin log says it
+   did (050 again -- see "What it leaves for you" below).
+#. The untracked ``local_settings.py`` and any ``.pyc`` beside it, deleted, and
+   uWSGI restarted so the deletion takes effect (051). This step refuses to run
+   unless it can see, on the server, that ``ALLOWED_HOSTS`` is already in
+   ``uwsgi.ini`` and that the installed settings read the environment. Deleting
+   the file before that turns every request into a 400, which is the one
+   ordering mistake this playbook exists to make unreachable.
+#. Verification, as a play of its own -- see below.
+
+What the customer sees
+----------------------
+
+The site is down for as long as one uWSGI restart takes, twice: once when the
+deploy rewrites ``uwsgi.ini``, once after ``local_settings.py`` goes. Seconds
+each, back to back, so plan for a minute rather than an hour and do it outside
+the garden's working day.
+
+Then, and these are consequences of a new ``SECRET_KEY``, not signs of a
+problem:
+
+* everybody who is logged in is logged out once, and logs back in normally;
+* password-reset links issued before the run stop working -- requesting a new
+  one works;
+* whoever uses the ``akaihola`` admin account needs the new password.
+
+What to check afterwards
+------------------------
+
+The playbook checks, and says so rather than leaving it to be checked by hand.
+The last play asserts, on the server:
+
+* ``uwsgi.ini`` carries the three values the vault holds -- printed as three
+  booleans, never as the values;
+* uWSGI *started after* that file was written, which is the only thing that
+  distinguishes a running process signing with the new key from one still
+  signing with the old one;
+* no ``local_settings.py`` and no ``local_settings.pyc`` is left in the
+  installed package (on Python 2 a leftover ``.pyc`` is imported even with no
+  ``.py`` beside it, and would turn ``DEBUG`` straight back on);
+* an ordinary page still answers 200;
+* a request with a host name the site does not answer to gets a 400, and one
+  that is not Django's debug page;
+* every account named in the vault has the vaulted password. A Django hash
+  verifies exactly one plaintext, so that is also the statement that the
+  password published in this repository no longer signs anybody in.
+
+It is a separate play so it can be run on its own, later, without changing
+anything::
+
+    ansible-playbook ansible/secure-production.yaml -t verify
+
+Running it twice
+----------------
+
+Safe. An account that already has the vaulted password is left alone, the
+deleted file is already gone, and uWSGI is restarted only if something actually
+changed -- so a second run reports no change and does not interrupt the site.
+The one exception is ``collectstatic``, which reports itself changed on every
+run of ``install.yaml`` and always has.
+
+If it stops half way
+--------------------
+
+Every step is safe to re-run, so the answer is almost always to fix what it
+named and run the same command again. Two failures have a specific meaning:
+
+* *"The deploy this step depends on has not landed"* -- the ``uwsgi`` tag has
+  not run, or the installed code predates issues 025 and 026. Nothing has been
+  deleted. Run the whole playbook rather than ``-t localsettings``.
+* *the database refuses the password from the vault* -- PostgreSQL still has
+  the old one, so the deploy has not run either. Same answer.
+
+What it leaves for you
+----------------------
+
+Three decisions the playbook deliberately does not make:
+
+* **when to run it** -- 049's, and the customer's;
+* **the other accounts** -- it rotates exactly the accounts the vault names,
+  and lists the privileged ones it does not, with their hash algorithm, their
+  last login and their admin activity. Choosing new passwords for them, or
+  deactivating them, is a judgement about who still needs an account;
+* **whether to treat the disclosure as exploited** -- the audit step prints the
+  ``LogEntry`` history because it is the only record there is, but reading it
+  is a person's job.
+
+Try it without running it
+-------------------------
+
+``--check`` is honest here: the password step reports what it *would* set
+without writing, the deletion reports the files it would remove without
+removing them, and the read-only checks run for real::
+
+    ansible-playbook ansible/secure-production.yaml --check

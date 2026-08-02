@@ -98,4 +98,26 @@ certbot_auto_renew_options: "--pre-hook \"systemctl stop nginx\" --post-hook \"s
 
 app_user: kasvimuseo
 django_dir: /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit
+django_settings_module: ylaneenkasvit.ylaneenkasvit_settings
+# The interpreter the application is installed for, and the one the little
+# scripts in ansible/templates/ are fed to on stdin.
+app_python: /usr/bin/python2.7
 uwsgi_socket: /home/kasvimuseo/wsgi.sock
+# Named here rather than repeated as literals, because ansible/secure-production.yaml
+# has to read the one file the uWSGI role writes and restart the one service that
+# reads it: a second spelling of either would be a way for that check to pass
+# while looking at something else.
+uwsgi_ini: /home/kasvimuseo/uwsgi.ini
+uwsgi_service: ylaneenkasvit-wsgi
+
+# The new admin passwords (issue 050) are **not** here and must not be: this
+# file is tracked. They live in the vaulted host_vars file for the host, as a
+# mapping of user name to new password, and only ansible/secure-production.yaml
+# reads them:
+#
+#     kasvimuseo_admin_passwords:
+#       akaihola: ...
+#
+# Every account named there is rotated; every privileged account not named
+# there is listed by that playbook's audit task, so the four other accounts
+# 050 asks about are visible whether or not they are being changed.

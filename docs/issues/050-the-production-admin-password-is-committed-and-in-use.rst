@@ -80,3 +80,37 @@ What is left, and it is not in this repository
 
 The cost is one round of logouts for that account, and it does not depend on
 049 or on anything else in this register.
+
+The playbook that does it exists now
+====================================
+
+``ansible/secure-production.yaml``, described in ``README.rst`` under "The
+security maintenance window". Point 1 above is a task in it, and the two
+sentences worth reading here are about what it does and does not settle:
+
+* ``manage.py changepassword`` is not what it uses, because that command
+  prompts and cannot be driven from a playbook. It feeds a short script to the
+  server's Python on **standard input**, so no password reaches an argument
+  list, a process environment or the play's output, and the new values come
+  from the vault -- ``kasvimuseo_admin_passwords``, a mapping of user name to
+  new password, in the encrypted ``host_vars`` file. None of them is in a
+  tracked file. It is idempotent: an account that already has the vaulted
+  password is left alone, so a second run rotates nothing.
+* **Point 2, the other four accounts: covered as far as a playbook can cover
+  them.** Every account the vault names is rotated, so adding the other four to
+  ``kasvimuseo_admin_passwords`` is all it takes to include them -- but
+  choosing whether they should keep an account at all is a judgement, not a
+  task, so the playbook does not decide it. What it does instead is print every
+  account in ``auth_user`` with its hash algorithm, its iteration count, its
+  last login and its admin activity, and name the privileged ones it is *not*
+  rotating. That is the "look at them while there" this issue asked for, in a
+  form that does not go stale.
+* **Point 3, whether to treat the disclosure as exploited: not covered, and it
+  cannot be.** The same report prints each account's ``LogEntry`` count and the
+  dates of its first and last admin action, because that table is the only
+  record there is. Reading it and ruling is a person's job; ``Decision`` is
+  still ``undecided`` for exactly that reason.
+
+``Status`` is unchanged. The password on the running server is still ``123``
+until somebody runs the playbook, and when to spend the logout is still the
+maintainer's call.
