@@ -1,5 +1,10 @@
 """Fixtures for the browser tests: the label editor, and the admin of 013.
 
+Every test runs twice, once per engine in ``ENGINES`` below -- Chromium and
+WebKit (issue 061). WebKit is here because this page's defects are reported
+from iOS Safari and WebKit is what Safari is built on; ``--engine`` narrows a
+run to one.
+
 These run on the **host's Python 3**, not in the application container: the
 application is Django 1.5 on Python 2.7, and nothing that drives a current
 browser supports that interpreter (issue 017). They talk to the server
@@ -73,9 +78,65 @@ IPAD_USER_AGENT = (
     ' (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1')
 
 
+# The engines every test runs in, unless told otherwise. Chromium is what this
+# suite was written against (issue 017); WebKit is here because every defect on
+# this page was reported from iOS Safari (issues 045, 046, 047 and 056) and
+# Playwright's WebKit is the only thing on this host that shares Safari's
+# engine. It is not Safari -- it is the same rendering and measurement code
+# with a different embedder, and none of iOS's own behaviour -- which is why an
+# ``@supports (-webkit-touch-callout: none)`` rule is false in it exactly as it
+# is in Chromium (issue 056). What it does share is the arithmetic: how text is
+# measured, and what ``getComputedStyle`` reports inside issue 046's ``zoom``.
+#
+# Both, by default, because a WebKit-only regression on this page is the class
+# of defect the register keeps re-filing, and one command has to be able to
+# catch it. Issue 061 argues that; ``--engine`` below is how a run picks one.
+ENGINES = ('chromium', 'webkit')
+
+
 def pytest_addoption(parser):
     parser.addoption('--headed', action='store_true',
                      help='show the browser instead of running it headless')
+    parser.addoption('--engine', action='append', dest='engines',
+                     choices=list(ENGINES), metavar='NAME',
+                     help='run in this engine only; repeat for more than one'
+                          ' (default: {0})'.format(', '.join(ENGINES)))
+
+
+def chosen_engines(config):
+    """Which engines this run uses: the option, the environment, or both.
+
+    ``KASVIMUSEO_BROWSER_ENGINES`` is a comma-separated list, so a run can be
+    narrowed without touching the command line -- which is what CI does when it
+    wants one engine per job.
+    """
+    if config.getoption('engines'):
+        return config.getoption('engines')
+    from_environment = os.environ.get('KASVIMUSEO_BROWSER_ENGINES', '').strip()
+    if not from_environment:
+        return list(ENGINES)
+    engines = [name.strip() for name in from_environment.split(',')
+               if name.strip()]
+    unknown = [name for name in engines if name not in ENGINES]
+    if unknown:
+        raise pytest.UsageError(
+            'KASVIMUSEO_BROWSER_ENGINES names {0}; this suite knows {1}'
+            .format(', '.join(unknown), ' and '.join(ENGINES)))
+    return engines
+
+
+def pytest_generate_tests(metafunc):
+    """Every test once per engine, as ``test_something[webkit]``.
+
+    Parametrised here rather than declared on the ``browser`` fixture because
+    the list comes from the command line. ``browser`` is session-scoped and so
+    is this, so each engine is launched once for the whole run rather than once
+    per test; the tests are grouped by engine in the order the run asked for
+    them.
+    """
+    if 'engine' in metafunc.fixturenames:
+        metafunc.parametrize('engine', chosen_engines(metafunc.config),
+                             scope='session')
 
 
 @pytest.fixture(scope='session')
@@ -107,14 +168,16 @@ def seeded():
 
 
 @pytest.fixture(scope='session')
-def browser(request):
-    """One Chromium for the whole session.
+def browser(request, engine):
+    """One browser of ``engine`` for the whole session.
 
     ``PLAYWRIGHT_BROWSERS_PATH`` decides where it comes from; nothing here ever
-    downloads one.
+    downloads one. A machine that has only one of the two engines installed
+    fails here with Playwright's own message, which names the missing build and
+    the command that fetches it.
     """
     with sync_playwright() as playwright:
-        instance = playwright.chromium.launch(
+        instance = getattr(playwright, engine).launch(
             headless=not request.config.getoption('--headed'))
         yield instance
         instance.close()
@@ -163,9 +226,12 @@ def anonymous_touch_page(browser):
     ``has_touch`` is what makes the browser deliver ``pointerdown`` with
     ``pointerType: 'touch'`` and honour ``touch-action``; ``is_mobile`` is what
     makes it obey the page's viewport tag the way a tablet does. It is
-    emulation, not the device: the engine is still Chromium, so this can show
-    that the editor works without a mouse, and cannot show that iOS Safari
-    agrees.
+    emulation, not the device: in WebKit the engine is at least Safari's own,
+    which is what issue 061 bought, but iOS is not, so this can show that the
+    editor works without a mouse and cannot show that iOS Safari agrees.
+
+    Both engines here honour ``is_mobile``; Playwright's Firefox does not,
+    which is one reason it is not in ``ENGINES``.
     """
     for page in offline_page(browser, viewport=IPAD_LANDSCAPE,
                              has_touch=True, is_mobile=True):
@@ -177,9 +243,9 @@ def anonymous_ipad_page(browser):
     """The tablet again, this time as the template's ``isIOS`` test sees it.
 
     Everything ``anonymous_touch_page`` emulates, plus ``IPAD_USER_AGENT``, so
-    the label fitter takes the branch the device takes (issue 056). Still
-    Chromium: the JavaScript half of that branch runs here, the CSS half
-    cannot -- see ``IPAD_USER_AGENT``.
+    the label fitter takes the branch the device takes (issue 056). Still not
+    the device in either engine: the JavaScript half of that branch runs here,
+    the CSS half cannot -- see ``IPAD_USER_AGENT``.
     """
     for page in offline_page(browser, viewport=IPAD_LANDSCAPE,
                              has_touch=True, is_mobile=True,
@@ -297,7 +363,18 @@ def touch_drag(page, source, target_x, target_y, release='touchEnd'):
     ``release`` is the event that ends it: ``'touchEnd'`` for a finger lifted,
     ``'touchCancel'`` for a gesture the system took away, or ``None`` to leave
     the finger down. Returns the function that ends it either way.
+
+    CDP is Chromium's, and WebKit speaks nothing like it (issue 045 said so
+    when the drag was written). The alternatives in WebKit are dispatching
+    ``TouchEvent`` objects from JavaScript, which is calling the handlers with
+    the browser's hit-testing and ``touch-action`` taken out -- the half worth
+    testing -- so a touch drag is skipped there rather than faked. Issue 061
+    lists it as the one thing WebKit here cannot do.
     """
+    if page.context.browser.browser_type.name != 'chromium':
+        pytest.skip('a touch drag needs Input.dispatchTouchEvent, which is a'
+                    ' Chrome DevTools Protocol call; WebKit has no CDP and'
+                    ' Playwright\'s touchscreen can only tap')
     session = page.context.new_cdp_session(page)
     x, y = centre(source)
 
