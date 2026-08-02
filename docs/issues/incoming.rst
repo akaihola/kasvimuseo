@@ -35,45 +35,26 @@ Waiting
   what a reader would reach for to see the application without a development
   checkout.
 
-* **Label text is about twice the size it should be, and on the labels whose
-  photo loads it grows until it disappears.** Reported from the iPad on
-  2026-07-31, while looking at :doc:`045
-  <045-the-label-editor-is-unusable-on-an-ipad>`'s cheap half. Two symptoms,
-  split by whether the photo arrives. On the majority, where it does not, the
-  text is simply too big and stays that way. On the seven top labels where it
-  does, the text starts at that same doubled size, grows every few seconds, and
-  eventually vanishes.
+* **The museum number is not visible while it is being dragged on the iPad.**
+  Reported on 2026-08-02, from the tablet, while checking :doc:`056
+  <056-ipad-label-text-is-doubled-and-grows-until-it-vanishes>`'s first half --
+  which is why it is here rather than in that file: it is the drag layer of
+  :doc:`045 <045-the-label-editor-is-unusable-on-an-ipad>` rather than the
+  fitter, and one report per file is the rule.
 
-  The first half has a cause in the template, and it is one line of control
-  flow: ``reports/planting-labels.html`` fits text to the label with fitty, and
-  the only thing that ever calls ``fitTextToSpace`` is the ``verticalPhotoWidth``
-  watcher. That property changes in ``setAspect``, which runs on the photo's
-  ``@load``. **No photo, no fit** -- the text keeps the declared ``30pt`` /
-  ``24pt``, which on a label drawn at 046's 50 % is about double what a fitted
-  label shows. Reproduced in emulated WebKit and Chromium: with half the labels'
-  photos 404ing, every one of them reports ``font-size: 40px`` and never changes.
+  Nothing is traced yet. What to look at first: ``#drag-number`` is the copy
+  that follows the pointer, it sits outside ``#labels`` so 046's ``zoom`` does
+  not apply to it, and ``dragStart`` gives it an inline ``font-size`` computed
+  as the number's ``getBoundingClientRect().width / offsetWidth`` times its
+  computed ``font-size``. Those are the two coordinate systems 746ce71 says
+  Safari reports differently inside a zoomed subtree, so a size of zero or of
+  something absurd is the first thing to measure. 045's own emulated touch
+  tests cover the drag itself and pass, so whatever this is, it is not the
+  gesture.
 
-  The second half is **not reproduced here**. In the same emulation the fitted
-  labels are stable across repeated fit passes, and nothing grows. One suspect
-  was tested and cleared: fitty measuring inside 046's ``zoom: 0.5`` returns the
-  same font size as without it (22.69px vs 22.67px in WebKit, 24.23 vs 24.18 in
-  Chromium, unchanged over three passes), so the zoom is not corrupting its
-  arithmetic -- do not re-test that. What is left to suspect is iOS text
-  autosizing (``-webkit-text-size-adjust``, which the page gets only from the
-  CDN copy of sanitize.css) and fitty's own resize observers on the device.
-  Settling it wants the device, or :doc:`017
-  <017-browser-suite-unrunnable-vue-editor-untested>`'s browser suite, which is
-  also the argument for not fixing it blind.
-
-  Worth asking before it is split: **why do the photos fail at all?** The report
-  says the majority do not load, and that is the trigger for the first half. If
-  the tablet cannot reach the media host, that is a serving question in the
-  neighbourhood of :doc:`048
-  <048-the-dev-server-loads-photos-from-the-production-media-host>` rather than
-  a template one, and it would be the more useful thing to fix first.
-
-  It's good to have iPad Safari debug capability before tackling this issue.
-  See ~/repos/nixos-config/ and Kandev task d7054db3-97e1-4650-98d7-11232e22c502.
+  It is not known whether the number still moves and is merely invisible, or
+  whether the gesture does nothing at all. The report says only that the number
+  is not visible, so ask before assuming either.
 
 Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
@@ -141,3 +122,34 @@ never did. It also repairs the databases that are already wrong, which the
 other two would not have, so nobody has to be told to rebuild anything. The
 iPad label text is once again the only report here, and it is still waiting on
 the device or on :doc:`017 <017-browser-suite-unrunnable-vue-editor-untested>`.
+
+Emptied of the last report it arrived with, on 2026-08-01: the iPad label text
+became :doc:`056 <056-ipad-label-text-is-doubled-and-grows-until-it-vanishes>`.
+That took this page to nothing waiting for the first time since it was written,
+and it stayed there for part of a day: the production image with no templates
+of its own, above, arrived from the upgrade plan's Stage 1 the same evening. It
+is the one report here that was overtaken while it waited: a commit landed on
+``master`` that says it fixes exactly this, so splitting it out was a
+verification before it was a filing, and the two halves came apart under it.
+The first -- a label whose photo never loads is never fitted -- is fixed and
+now has three browser tests that go red against the template as it was, which
+is the thing the commit message alone could not establish. The second, the text
+that grows until it vanishes, is where it was: never reproduced off the device,
+and now covered by a change that runs behind an ``@supports`` test neither of
+this host's Playwright engines implements, so nothing here can watch it work.
+That is why 056 is ``Accepted`` rather than ``Fixed`` and why its "What is
+left" is a list of things to look at rather than to write. The question the
+report parked -- why the photos fail at all -- went the same way: the page's
+URLs and :doc:`048 <048-the-dev-server-loads-photos-from-the-production-media-host>`
+narrow it to two things about the machine the development server runs on, and
+neither is a defect anybody here can show, so it is recorded in 056 rather than
+given a number of its own. It also stopped being the more urgent half: a label
+is fitted now whether its photo arrives or not.
+
+The next day the tablet answered, which is the one thing none of the above
+could do: the text is the right size and the names fit, so 056's first half is
+confirmed where it was reported. The same look put the second of the two
+reports above on this page -- the museum number that cannot be seen while it is
+dragged -- and left 056's photo question exactly where it was, since the photos
+are still not all there. A report that has been to the device once is cheaper
+to settle than one that has not, and both of these have now.

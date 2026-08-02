@@ -182,6 +182,18 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       of 017 first, since it rewrites the one part of the editor no test can
       see. **Fixed**, both halves: 017 landed, so the large half was taken
       after it and is covered by the suite 017 built.
+   056: Label text on the iPad is about twice the size it should be, and on
+      the labels whose photo loads it grows until it disappears. Here because
+      it is the same template as 045, 046, 047, 052 and 053 and was found
+      inside 045's own work, and ahead of 054 and 055 because a gardener
+      holding the tablet can see it -- which is what this group is for. Its
+      first half is fixed and pinned by the browser suite: the fitter ran only
+      from the photo's ``@load`` handler, so a label with no photo kept the
+      declared 30pt. The rest of it is the only thing on this page that no
+      test here can settle, because the fix runs behind ``@supports
+      (-webkit-touch-callout: none)`` and neither Playwright engine
+      implements it. **Accepted**, and what is left is five minutes with the
+      device rather than a change to the template.
    054: The mobile species list asks for a ``mobilethumbnail`` photo size that
       ``initial_data.json`` did not define, so every row of it is a broken
       image on any database built from the fixtures. Same shape as 004 and

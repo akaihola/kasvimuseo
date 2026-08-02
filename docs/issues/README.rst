@@ -423,10 +423,17 @@ Reported by the maintainer
  047 Medium   templates / labels UI   The label print toggle uses a glyph no font has
  048 Medium   dev environment / media Dev photos were loaded from the production host
  049 High     deployment / security   Production still runs the old SECRET_KEY and DB password
+ 056 Medium   templates / mobile      iPad label text is doubled, and grows until it vanishes
 ==== ======== ======================= ==================================================
 
 043-047 were split out of ``incoming.rst``, where they were written down as
-they were noticed; 048 and 049 were reported straight into a task and never
+they were noticed, and **056** was split out of it two days later, from the
+same tablet and the same page: it was noticed while looking at what 045's cheap
+half had done. It is the only one of these whose fix landed before it had a
+number, so filing it was a verification first -- and it came apart into a half
+that is fixed and pinned by the browser suite and a half that no browser on any
+machine here can watch, which is why it is ``Accepted`` and says so at length.
+048 and 049 were reported straight into a task and never
 passed through it. **050** came out of settling 017 and is below them, and
 **051** came out of settling 026 the same way -- from being told what is on the
 server, which is the one thing neither issue could find out here. Unlike
