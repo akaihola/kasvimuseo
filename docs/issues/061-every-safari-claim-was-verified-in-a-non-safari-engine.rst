@@ -40,7 +40,7 @@ Issue 061: Every Safari claim in the register was checked in Chromium
     of runner time and gives up most of what the split is for, since the
     engines differ in layout and text measurement and those are the tests that
     would have stayed Chromium-only
-:Resolution: 45567ff "test(browser): run the suite in WebKit as well as
+:Resolution: 924bd84 "test(browser): run the suite in WebKit as well as
     Chromium": ``browser_tests/conftest.py`` launches either engine,
     ``dev/kasvimuseo app browser-test`` runs both, and
     ``.github/workflows/tests.yml`` runs one per matrix leg. The finding the
