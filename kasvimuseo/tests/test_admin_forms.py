@@ -369,7 +369,7 @@ def test_photo_admin_upload_derives_title_and_connects_species(admin_client,
                                 content_type=str('image/jpeg'))
 
     response = post_add(admin_client, Photo,
-                        {'title': '', 'title_slug': '',
+                        {'title': '', 'slug': '',
                          # ``date_added`` is a DateTimeField, and the admin
                          # splits those into two widgets.
                          'date_added_0': '2020-05-01',
@@ -380,7 +380,7 @@ def test_photo_admin_upload_derives_title_and_connects_species(admin_client,
     assert response.status_code == 302, form_errors(response)
     photo = Photo.objects.get()
     assert photo.title == 'valkonarsissi kukassa'
-    assert photo.title_slug == 'valkonarsissi-kukassa'
+    assert photo.slug == 'valkonarsissi-kukassa'
     assert Species.objects.get(pk=species.pk).photo == photo
 
 

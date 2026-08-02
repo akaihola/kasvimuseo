@@ -18,7 +18,9 @@
 # declare lower bounds and nothing else -- so the ones that are known are
 # written beside the pin that implies them, with the issue that establishes
 # them. `setup.py` reads this file line by line into `install_requires`;
-# setuptools drops the comment lines, so what it declares is the nine pins.
+# setuptools drops the comment lines, so what it declares is the nine pins
+# below -- eleven since upgrade plan Stage 2 added photologue 2.8's own two
+# dependencies.
 #
 # Every one of them is a name and a version, resolvable from a package index
 # and nothing else. That is issue 031: `django-jqm` used to be here as a URL
@@ -46,7 +48,59 @@ django-grappelli==2.4.5
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
 south==0.8.1
-django-photologue==2.6.1
+# Upgrade plan Stage 2: 2.6.1 -> 2.8.3, moved alone and ahead of the framework
+# because photologue owns database tables. 2.7 prefixed every setting name with
+# `PHOTOLOGUE_` (this project sets none of them, so that half is a no-op) and
+# 2.8 renamed `title_slug` to `slug` on `Photo` and `Gallery`, gave both a
+# `sites` M2M -- which is why `django.contrib.sites` and `SITE_ID` are in
+# `common_settings.py` now -- and grew the two dependencies below. Its own
+# South migrations run this project's photologue tables forward:
+# `SOUTH_MIGRATION_MODULES` and the local squashed copy of its `0001_initial`
+# are gone with this pin.
+django-photologue==2.8.3
+# photologue 2.8's two new dependencies, both of which need an upper bound --
+# one of them declared and one of them nobody's, which is issue 027 twice over.
+# photologue 2.8.3's `requirements.txt`, which its `setup.py` reads into
+# `install_requires`, asks for `django-sortedm2m>=0.6.1,<0.8` and
+# `django-model-utils>=2.0.3`.
+#
+# `django-model-utils` has a hard ceiling: photologue imports
+# `model_utils.managers.PassThroughManager`, and 2.4 deleted that class
+# outright (it is in 2.0.3, 2.2 and 2.3.1 and in no release after them), so
+# anything from 2.4 up is an ImportError at startup. 2.3.1 is therefore the
+# last usable release rather than a preference, and it still branches on
+# `django.VERSION < (1, 6)` internally. photologue drops the dependency
+# entirely at 3.2 -- upgrade plan Stage 6 -- so this pin never has to move.
+#
+# `django-sortedm2m` is pinned *inside* photologue's declared range, and the
+# upgrade plan asked for 1.1.1 or later. 1.5.0 was tried first, on the reading
+# that the `<0.8` is stale metadata: the field API photologue uses does not
+# change across the 1.x line, the suite passes on it and both images install
+# it, because pip 20.0.2 resolves with the legacy resolver and only warns. What
+# it breaks is the production image at *runtime*. `manage` there is a
+# setuptools console script, and a console script resolves the declared
+# requirements of every installed distribution through `pkg_resources` before
+# it runs a line: with 1.5.0 installed, `manage validate` -- and `manage
+# migrate`, which is how this stage is deployed -- dies with
+# `ContextualVersionConflict: (django-sortedm2m 1.5.0, ...
+# Requirement.parse('django-sortedm2m<0.8,>=0.6.1'), set(['django-photologue']))`.
+# The development image never sees it, because there the same commands run as
+# `python ylaneenkasvit/manage.py`. So the declared ceiling is load-bearing
+# whether or not it is justified, and 0.7.0 is the newest release under it.
+#
+# It costs nothing here. photologue 2.8 uses `SortedManyToManyField` and the
+# `sort_value` column, both of which 0.7.0 has, and it is one release older
+# than the 1.1.1 the plan named. The next real floor is photologue 3.7, which
+# declares `django-sortedm2m>=1.3.3` -- upgrade plan Stage 7, where the pin
+# moves with the package that asks for it.
+#
+# The build-tool constraint is issue 030, and it is about the *builder* rather
+# than the version: every sortedm2m before 2.0.0 is sdist-only and its
+# `setup.py` fails under setuptools >= 82, so this pin can only be built in a
+# period-appropriate image. The Python 2.7 one here has setuptools 44.1.0, and
+# Stage 10's `python:3.7-alpine` has 57.5.0.
+django-sortedm2m==0.7.0
+django-model-utils==2.3.1
 # photologue's, not the application's: it declares `Pillow>=2.0.0` and nothing
 # above, which is issue 027 in one line -- a resolver free to read that picks
 # Pillow 12. Issue 028 is what that costs: photologue up to and including
@@ -79,13 +133,9 @@ Pillow==6.2.2
 # `dev.txt` instead, where the package that needs it is. The test stack pulls
 # its own (`pytest`, `mock`), which is why the suite is unaffected.
 #
-# Not here, deliberately: `django-sortedm2m`. `dev/Containerfile` installed it
-# beside Pillow and called both photologue's runtime dependencies; only Pillow
-# is. photologue 2.6.1 declares `Django>=1.4`, `South>=0.7.5` and
-# `Pillow>=2.0.0`, no file under `photologue/` mentions sortedm2m, nothing in
-# this repository imports it and it is not in `INSTALLED_APPS`. It becomes a
-# real dependency at photologue 2.8 -- upgrade plan Stage 2 -- which needs
-# 1.1.1 or later without declaring it; the declaration first appears at
-# photologue 3.4. The pin to reach for then is in `docs/upgrade-plan.rst`
-# Appendix A, and its build-tool constraint -- `setuptools<60`, on the machine
-# doing the build, not on any version a resolver can pick -- is issue 030.
+# `django-sortedm2m` used to be named here only to say it was absent:
+# `dev/Containerfile` installed it beside Pillow and called both photologue's
+# runtime dependencies, and photologue 2.6.1's were `Django>=1.4`,
+# `South>=0.7.5` and `Pillow>=2.0.0` alone. Stage 2 is where it becomes real,
+# so it is pinned above with the rest of the runtime -- and its metadata
+# declares it, which the plan predicted would not happen until photologue 3.4.

@@ -14,7 +14,7 @@ class FakeImage(object):
         self.name = name
 
 
-def clean(image_name, title='', title_slug=''):
+def clean(image_name, title='', slug=''):
     """Run ``PhotoForm.clean`` over a hand-built ``cleaned_data``.
 
     Constructing the form instantiates a photologue ``Photo``, whose
@@ -24,7 +24,7 @@ def clean(image_name, title='', title_slug=''):
     form = PhotoForm()
     form.cleaned_data = {'image': FakeImage(image_name),
                          'title': title,
-                         'title_slug': title_slug}
+                         'slug': slug}
     return form.clean()
 
 
@@ -50,7 +50,7 @@ def test_clean_derives_the_title_from_the_file_name(image_name,
 def test_clean_keeps_a_supplied_title():
     cleaned = clean('valkonarsissi.jpg', title='Mummon narsissi')
     assert cleaned['title'] == 'Mummon narsissi'
-    assert cleaned['title_slug'] == 'mummon-narsissi'
+    assert cleaned['slug'] == 'mummon-narsissi'
 
 
 @pytest.mark.django_db
@@ -60,14 +60,14 @@ def test_clean_treats_a_blank_title_as_missing():
 
 @pytest.mark.django_db
 def test_clean_slugifies_the_title_without_diacritics():
-    assert clean('Kevätesikko ähkyssä.jpg')['title_slug'] == \
+    assert clean('Kevätesikko ähkyssä.jpg')['slug'] == \
         'kevatesikko-ahkyssa'
 
 
 @pytest.mark.django_db
 def test_clean_keeps_a_supplied_slug():
-    cleaned = clean('valkonarsissi.jpg', title_slug='oma-slug')
-    assert cleaned['title_slug'] == 'oma-slug'
+    cleaned = clean('valkonarsissi.jpg', slug='oma-slug')
+    assert cleaned['slug'] == 'oma-slug'
 
 
 @pytest.mark.django_db
@@ -76,13 +76,13 @@ def test_clean_leaves_uniqueness_checking_switched_on():
 
     An override that forgets to call it switches off ``validate_unique()`` for
     the whole form, which is not a validation nicety here: ``Photo.title`` and
-    ``Photo.title_slug`` are unique, so the check is all that stands between a
+    ``Photo.slug`` are unique, so the check is all that stands between a
     duplicate title and an ``IntegrityError`` from PostgreSQL.
     """
     form = PhotoForm()
     form.cleaned_data = {'image': FakeImage('valkonarsissi.jpg'),
                          'title': '',
-                         'title_slug': ''}
+                         'slug': ''}
 
     form.clean()
 
@@ -98,12 +98,12 @@ def test_clean_survives_a_missing_image():
     and turning a form error into a 500.
     """
     form = PhotoForm()
-    form.cleaned_data = {'title': '', 'title_slug': ''}
+    form.cleaned_data = {'title': '', 'slug': ''}
 
     cleaned = form.clean()
 
     assert cleaned['title'] == ''
-    assert cleaned['title_slug'] == ''
+    assert cleaned['slug'] == ''
 
 
 @pytest.mark.django_db
@@ -123,7 +123,7 @@ def test_a_duplicate_title_is_a_form_error_not_a_database_error(photo_factory,
 
     form = PhotoForm(
         data={'title': 'valkonarsissi kukassa',
-              'title_slug': '',
+              'slug': '',
               'caption': '',
               'crop_from': 'center',
               'date_added': '2026-07-29 12:00:00',
@@ -134,7 +134,7 @@ def test_a_duplicate_title_is_a_form_error_not_a_database_error(photo_factory,
     assert not form.is_valid()
     # Both unique fields are reported: the slug is derived from the title, so a
     # duplicate title brings a duplicate slug with it.
-    assert sorted(form.errors) == ['title', 'title_slug'], form.errors
+    assert sorted(form.errors) == ['slug', 'title'], form.errors
 
 
 @pytest.mark.parametrize('text,expected', [
@@ -171,7 +171,7 @@ def test_a_saved_photo_gets_an_accent_free_slug(media_root):
 
     form = PhotoForm(
         data={'title': 'Kevätesikko ähkyssä',
-              'title_slug': '',
+              'slug': '',
               'caption': '',
               'crop_from': 'center',
               'date_added': '2026-07-29 12:00:00',
@@ -182,7 +182,7 @@ def test_a_saved_photo_gets_an_accent_free_slug(media_root):
     assert form.is_valid(), form.errors
     photo = form.save()
 
-    assert photo.title_slug == 'kevatesikko-ahkyssa'
+    assert photo.slug == 'kevatesikko-ahkyssa'
 
 
 # -- the instructions on the upload form (issue 037) --------------------------
