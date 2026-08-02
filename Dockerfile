@@ -53,6 +53,15 @@ RUN set -e; \
     done
 
 COPY setup.py /kasvimuseo/setup.py
+# `setup.py`'s `package_data` names `kasvimuseo`'s and `jqm`'s templates and
+# static files and nothing else; everything else non-Python this project ships
+# -- `ylaneenkasvit/templates/`, and both packages' `locale/` -- reaches an
+# install only through `include_package_data`, which reads this file. Without
+# it in the build context the installed package had no `base.html`, so every
+# page extending it was a 500 in this image, and no Finnish catalog of the
+# project's own either (issue 058). The Ansible install never saw this: it
+# builds from a git checkout, where the file is beside `setup.py`.
+COPY MANIFEST.in /kasvimuseo/MANIFEST.in
 COPY kasvimuseo /kasvimuseo/kasvimuseo
 COPY ylaneenkasvit /kasvimuseo/ylaneenkasvit
 # The vendored django-jqm (issue 031). It is a third package rather than part
@@ -61,6 +70,31 @@ COPY ylaneenkasvit /kasvimuseo/ylaneenkasvit
 # staticfiles finder look inside it.
 COPY jqm /kasvimuseo/jqm
 RUN pip install --install-option="--prefix=/install" /kasvimuseo
+
+# The same idiom as the Django block above, for this project's own files
+# (issue 058). Every path here arrives through MANIFEST.in rather than through
+# `package_data`, so nothing fails until a page is rendered: a missing
+# `base.html` is a 500 on every page that extends it, and a missing catalog is
+# an English string on a Finnish-only application. Reordering or trimming the
+# `COPY` lines above is what drops them, which is why this stands in the build
+# rather than in the suite -- the suite runs against the working tree, where
+# these files are always there.
+RUN set -e; \
+    site=/install/lib/python2.7/site-packages; \
+    for f in ylaneenkasvit/templates/base.html \
+             ylaneenkasvit/templates/404.html \
+             ylaneenkasvit/templates/500.html \
+             ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html \
+             ylaneenkasvit/locale/fi/LC_MESSAGES/django.mo \
+             kasvimuseo/locale/fi/LC_MESSAGES/django.mo; do \
+        test -r "$site/$f" || { \
+            echo "issue 058: $site/$f is missing from the installed package." \
+                 "MANIFEST.in is the only thing that puts it there, so check" \
+                 "that it is still COPYed into /kasvimuseo above and still" \
+                 "names this file" >&2; \
+            exit 1; \
+        }; \
+    done
 
 FROM python:2.7-alpine
 RUN apk add libjpeg-turbo libpq && rm -rf /var/cache/apk
