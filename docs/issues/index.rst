@@ -267,6 +267,22 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       for this group's own reason -- a gardener holding the tablet can see it.
       Its three options are ranked in its file rather than here, since two of
       them reach 046's rule and one of them reaches the printed sheet.
+   063: The museum number cannot be seen while it is dragged on the tablet.
+      Directly behind 056 because it is the same page, the same device and the
+      same afternoon -- it was reported *while* 056's first half was being
+      confirmed -- and because the two share a suspect: the coordinate systems
+      Safari is said to disagree about inside 046's ``zoom``. Behind rather
+      than ahead of it, because 056 is text on every label and this is
+      feedback during one gesture, and because 056 has a fix on the device
+      waiting to be confirmed while this has none to write. Ahead of 054 and
+      055 for this group's own reason: a gardener holding the tablet can see
+      it, and cannot see those. **Accepted**, and the reason is the opposite of
+      056's: not a fix no engine here can apply, but a report no engine here
+      can reproduce. The suspect it arrived with -- a ``font-size`` degenerated
+      by a rect-to-``offsetWidth`` ratio -- is measured out of the running
+      rather than left open, which is most of the value in the file; what is
+      left needs two minutes with the device to choose between a copy hidden
+      under the fingertip and an arithmetic only iOS Safari performs.
    054: The mobile species list asks for a ``mobilethumbnail`` photo size that
       ``initial_data.json`` did not define, so every row of it is a broken
       image on any database built from the fixtures. Same shape as 004 and
