@@ -302,7 +302,7 @@ def test_photologue_gallery_index_renders_on_an_empty_database(client, db):
 
 def test_photologue_gallery_index_lists_a_gallery(client, db):
     """The override changes nothing but the empty case."""
-    gallery = Gallery.objects.create(title='Kesä 2012', title_slug='kesa-2012')
+    gallery = Gallery.objects.create(title='Kesä 2012', slug='kesa-2012')
 
     response = client.get(reverse('pl-gallery-archive'))
 
