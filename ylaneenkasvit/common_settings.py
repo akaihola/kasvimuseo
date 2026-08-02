@@ -122,6 +122,18 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
+# JSON rather than the Django 1.5 default, which is
+# ``django.contrib.sessions.serializers.PickleSerializer`` (issue 057). A
+# session cookie's payload is unpickled once its HMAC verifies, and that HMAC is
+# keyed on ``SECRET_KEY`` -- which this repository disclosed (issue 025) and
+# which the running server has not been rotated off yet (issue 049). Under the
+# pickle default that disclosure is arbitrary code execution in the application
+# process; under JSON it is session forgery and nothing worse. Nothing this
+# project puts in a session needs pickle: the auth keys are an integer primary
+# key and a dotted path, and ``FallbackStorage`` hands the session an
+# already-JSON-encoded string of messages. Django 1.6 makes this the default.
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
+
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.core.context_processors.debug',
