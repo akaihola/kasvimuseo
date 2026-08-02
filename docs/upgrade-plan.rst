@@ -142,16 +142,22 @@ Runtime (``requirements/production.txt``, Python 2.7)
 ============================ ========= =========================================
 Package                      Pinned    Notes
 ============================ ========= =========================================
-``django``                   1.5.1     1.5.12 is the last 1.5 patch release
+``django``                   1.5.12    The last 1.5 patch release; 1.5.1 until
+                                       Stage 1
 ``django-photologue``        2.6.1     Owns database schema. The hard pacer.
 ``django-grappelli``         2.4.5     Admin skin. The other hard pacer.
-``django-extensions``        1.5.9     In ``INSTALLED_APPS``; nothing imports it
+``django-extensions``        1.5.9     Was in ``INSTALLED_APPS``; nothing
+                                       imports it. **Development only** since
+                                       Stage 0 -- ``dev.txt`` and
+                                       ``local_settings.development.py``
 ``django-jqm``               1.1.0.2   ``akaihola`` fork; was installed from
                                        GitHub, now vendored (issue 031)
 ``gunicorn``                 0.17.4    Production and, since issue 044,
                                        development server
 ``psycopg2-binary``          2.8.4     ``2.8.6`` is the last 2.8 patch
-``six``                      1.11.0    Nothing in this repo imports it
+``six``                      1.11.0    Nothing in this repo imports it -- it was
+                                       django-extensions', and left production
+                                       with it at Stage 0
 ``south``                    0.8.1     Pre-1.7 migrations. Dies at Django 1.7.
 ============================ ========= =========================================
 
@@ -176,9 +182,12 @@ is why ``--no-deps`` plus hand-picked extras was needed. It is not flat once
 they are built: issue 027 read the ``dist-info`` in the image and found
 photologue 2.6.1 declaring ``Django>=1.4``, ``South>=0.7.5`` and
 ``Pillow>=2.0.0``, and django-extensions declaring ``six>=1.2``. Those four are
-the whole implicit tree for this stage, all of them now pinned in
-``production.txt``, so ``--no-deps`` and a plain resolve produce the same ten
-packages and the extras are gone.
+the whole implicit tree for this stage, all of them pinned, so ``--no-deps``
+and a plain resolve produce the same set and the extras are gone. The tree is
+now split across two files rather than one: Stage 0 moved django-extensions --
+and therefore ``six``, its only consumer in the set -- into ``dev.txt``, so
+``production.txt`` is seven packages whose only implicit edge is photologue's
+``Pillow``, and ``dev.txt`` is that file plus three lines.
 
 Test and development
 --------------------
@@ -194,7 +203,13 @@ Test and development
     ``Fabric==1.6.0``, ``Werkzeug==0.8.3``. ``django-pserver`` was here too,
     and Stage 0 removed it (issue 033). ``flax`` and ``Fabric`` have gone the
     same way since, ahead of the Stage 10 this table put them in: they existed
-    only for ``fabfile.py``, which issue 032 deleted. Two lines are left.
+    only for ``fabfile.py``, which issue 032 deleted. Three pins are left --
+    ``django-extensions``, ``Werkzeug`` (what its ``runserver_plus`` imports,
+    undeclared) and ``six`` (what its metadata declares) -- on top of an
+    ``-r production.txt`` this file
+    did not have when the table was written. Since Stage 0 it is what
+    ``dev/Containerfile`` installs, so the development image is the runtime
+    set plus those three.
 
 ``requirements/integration-tests.txt`` — **deleted since**
     ``pytest==4.6.9``, ``selenium==3.141.0``, ``pytest-selenium==1.17.0``,
@@ -734,10 +749,14 @@ imports.
 Stage 0 — Dead weight and defensive settings (no version changes)
 -----------------------------------------------------------------
 
-Cheap, zero-risk, and it shortens every later stage. Seven of its eight items
-are done; what is left is taking ``django-extensions`` out of production. Not on this list, but done ahead of
+Cheap, zero-risk, and it shortens every later stage. **All eight items are
+done; this stage is closed.** Not on this list, but done ahead of
 its own stage for the same reasons: ``fabfile.py``, with ``Fabric`` and
 ``flax`` (issue 032), which Part 5 had scheduled for Stage 10.
+
+"Zero-risk" held, but "no version changes" was not the whole story: the last
+item took a package out of the production lock, and a package it had been
+carrying went with it. See that item for what the reasoning missed.
 
 #. Remove ``django-indexer`` and ``django-paging`` from ``production.txt`` and
    ``INSTALLED_APPS``. Nothing in the repo references ``indexer`` or ``paging``
@@ -784,11 +803,109 @@ its own stage for the same reasons: ``fabfile.py``, with ``Fabric`` and
    on ``{% url %}``, ``{% load %}`` and ``STATIC_URL`` lands.
 #. Move ``django-extensions`` out of ``production.txt`` into ``dev.txt`` only
    (it is already listed in both) and out of the production ``INSTALLED_APPS``.
+   **Done** -- no issue of its own; this stage is the record, and issue 036
+   tracks the stage. Three corrections to the two sentences above, all of them
+   found by doing it rather than by reading it:
+
+   - "out of the production ``INSTALLED_APPS``" is one list, not two:
+     ``common_settings.py`` is shared, and ``ylaneenkasvit_settings.py`` --
+     which production runs -- is built on it. The development entry therefore
+     had to go somewhere else, and the somewhere is
+     ``local_settings.development.py``, whose ``modify()`` is the last word on
+     the settings and which is development-only by construction (it is copied
+     to the untracked ``local_settings.py``). That is also where the
+     commented-out ``'pserver', 'django_extensions'`` line issue 033 deleted
+     used to be, so the app is back where it was, uncommented and one layer
+     down. The test settings are built on ``common_settings`` and do not read
+     it, so the suite now runs without ``django_extensions`` installed at all.
+   - ``dev/Containerfile`` installed ``production.txt``, not ``dev.txt``, so
+     removing the line from the lock would have removed the package from the
+     *development* image -- the one image that needs it -- and the development
+     server would have died on ``ImportError: No module named
+     django_extensions``. The development image now installs ``dev.txt``,
+     which is ``-r production.txt`` plus the two development tools.
+   - ``six`` had to move with it. Part 1 records that nothing in this
+     repository imports ``six`` and Part 5 schedules its removal for Stage 10
+     as "Python 3 only"; neither says what installed it. Measured in the built
+     image: ``django_extensions`` is the only distribution in the set that
+     declares ``six>=1.2``, and the only one with files importing it -- 22 of
+     them -- while ``django`` (which vendors ``django.utils.six``),
+     ``django-photologue``, ``django-grappelli``, ``south``, ``gunicorn``,
+     ``psycopg2-binary`` and ``Pillow`` neither declare nor import it. With
+     django-extensions out of production, ``six`` is a runtime dependency of
+     nothing, and ``production.txt`` cannot keep naming it and still be the
+     complete runtime lock issue 027 made it. It is pinned in ``dev.txt``
+     beside the package that needs it. The test stack pulls its own copy
+     (``pytest``, ``mock``), which is why the suite never noticed.
+
+   And one thing that is not a correction to the plan but was found by
+   executing it: the production ``Dockerfile`` does ``COPY ylaneenkasvit``,
+   and ``ylaneenkasvit/local_settings.py`` is untracked but *present* in any
+   working checkout, so an image built on a developer's machine baked that
+   file in -- ``DEBUG = True``, ``ALLOWED_HOSTS = ['*']`` and now an
+   ``INSTALLED_APPS`` entry for a package the production image does not
+   install. The first thing this change did to a production image built here
+   was turn it into ``ImportError: No module named django_extensions`` at
+   startup, which is the loud version of a fault that had been silent since
+   the file existed. ``.containerignore`` excludes it now, with the reason
+   written beside it.
 
 Stage 1 — Django 1.5.1 → 1.5.12
 -------------------------------
 
 Security patches only, no API change. Free.
+
+**Done** -- one line in ``requirements/production.txt``, and nothing else in
+the repository had a Django version of its own to move: neither ``Dockerfile``
+nor ``dev/Containerfile`` names one (both install the lock), and no other pin
+in the lock had to move with it -- ``south`` 0.8.1, ``django-grappelli``
+2.4.5, ``django-photologue`` 2.6.1 and ``Pillow`` 6.2.2 all declare lower
+bounds at or below 1.5 and no upper bound, and 1.5.12 is inside the same
+series each of them was chosen against.
+
+"No API change" is nearly right, and it was checked against this project
+rather than restated. Eleven releases, from the sdists and their own release
+notes:
+
+* **New setting, old default.** 1.5.3 added ``SESSION_SERIALIZER``, defaulting
+  to ``PickleSerializer`` -- the pre-1.5.3 behaviour. That is the only
+  difference between the two ``global_settings.py`` files, so no setting in
+  this repository has to change. (Switching to the JSON serializer is a
+  hardening step this project could take at any time; it is not part of this
+  stage.)
+* **Two removals, neither reachable from here.** 1.5.5 removed
+  ``django.core.servers.basehttp.WSGIServerException`` and 1.5.8 removed
+  ``fix_IE_for_attach``/``fix_IE_for_vary`` from ``django.http``. Nothing in
+  this repository imports any of the three.
+* **``reverse()`` stopped importing arbitrary dotted paths** (1.5.6). Every
+  ``reverse()`` call and every ``{% url %}`` here names a URL pattern name --
+  ``'planting-label'``, ``'admin:...'`` and so on -- so there is nothing to
+  fix. This is worth knowing for Stage 8 anyway, where dotted-path reversal
+  goes away for good.
+* **The admin ``to_field`` restriction** (1.5.9, with regression fixes in
+  1.5.10, 1.5.11 and 1.5.12 -- which is most of the reason to take 1.5.12
+  rather than 1.5.9). ``ChangeList`` now raises
+  ``DisallowedModelAdminToField`` unless ``ModelAdmin.to_field_allowed()``
+  passes, which it does for the primary key and for fields other admins point
+  at. No ``ModelAdmin`` in this repository sets ``raw_id_fields``, and the one
+  place that touches the value at all --
+  ``kasvimuseo/templatetags/kasvimuseo_admin_list.py``, which reads
+  ``cl.to_field`` to build the popup link -- only reads what the request
+  already carried. Confirmed on a running instance rather than by reading.
+* **The password length cap** added in 1.5.4 was reverted in 1.5.5, so the net
+  change over the eleven releases is none.
+* **And a bonus this document did not predict:** the packaging accident behind
+  issue 040 is *gone at 1.5.12*. 1.5.1's ``setup.py`` redirects the ``data``
+  install scheme to ``purelib`` and lists the locale catalogs, fixtures and
+  ``project_template`` in ``data_files``; 1.5.12's collects them into
+  ``package_data`` and has no scheme redirection at all, so they land inside
+  the package whichever way pip installs it. The image definitions keep their
+  assertion that ``conf/locale/fi`` and ``contrib/admin/locale/fi`` are
+  readable inside the package -- it now passes because Django packages them
+  correctly rather than because a ``cp`` moved them -- and the ``cp`` branch
+  is left in place as the thing that fires if a future stage ever reintroduces
+  the fault. 040's own "option 3", waiting for the upgrade to fix this, turns
+  out to have needed only Stage 1.
 
 Stage 2 — Photologue 2.6.1 → 2.8.3, still on Django 1.5
 --------------------------------------------------------
@@ -1121,7 +1238,14 @@ Package                             Dies at   Because
 ``django-model-utils``              Stage 6   Photologue 3.2: "Django can now natively chain
                                               custom manager filters"
 ``django-tagging`` shim             Stage 6   Photologue 3.2 removed tagging
-``six``                             Stage 10  Python 3 only
+``six``                             Stage 10  Python 3 only. **Out of production
+                                              already** -- Stage 0. "Python 3
+                                              only" was the wrong reason: it was
+                                              in the image because
+                                              django-extensions declares it, and
+                                              it followed that package into
+                                              ``dev.txt``. What Stage 10 deletes
+                                              is a development pin
 ``mock`` + ``pbr``                  Stage 10  ``unittest.mock`` since Python 3.3
 Python 2 backports [1]_             Stage 10  Pinned only to keep pytest 4.6.9 on Python 2.7
 ``Fabric`` + ``flax``               Stage 10  Fabric 1.x is Python 2 only, and
@@ -1170,7 +1294,10 @@ Measured while deciding this, rather than estimated:
 
 * A mechanical diff of the three forked functions against the installed Django
   1.5.1 copy is six hunks, ``-9 / +22`` lines; ``results`` is byte-identical.
-  Every difference is a CSS class. The rest of the file is Django's.
+  Every difference is a CSS class. The rest of the file is Django's. Still
+  true after Stage 1: ``contrib/admin/templatetags/admin_list.py`` is one of
+  the files that does *not* differ between the 1.5.1 and 1.5.12 sdists, so the
+  fork is no more and no less stale than it was.
 * Three selectors in the whole repository consume those classes, all in
   ``kasvimuseo/static/css/kasvimuseo.admin.css``, and only one of them —
   ``.fieldname_edit``, in ``@media print`` — is fully live. The

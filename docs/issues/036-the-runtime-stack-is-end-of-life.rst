@@ -24,8 +24,10 @@ The application runs on **Python 2.7** and **Django 1.5.1**.
 
 * Python 2.7 reached end of life on 1 January 2020.
 * Django 1.5 stopped receiving security support in 2014. The current release is
-  6.0.7; the pinned version is 1.5.1, and even 1.5.12 -- the last patch in that
-  series, with the security fixes -- was never applied.
+  6.0.7; the pinned version was 1.5.1, and even 1.5.12 -- the last patch in that
+  series, with the security fixes -- had never been applied. Stage 1 applied it,
+  so the pin is 1.5.12 now: the eleven patch releases are in, and the series is
+  still eleven years past its last security fix.
 * ``python:2.7-alpine``, the base image, has had no updates since 2020, which
   includes the C libraries it links against.
 * ``psycopg2-binary``, ``Pillow`` and the rest are pinned at similarly old
@@ -54,6 +56,7 @@ Follow ``docs/upgrade-plan.rst``. Its structure, in brief:
 
 ============ ======================================================
 Stages 0-1   Dead weight and defensive settings; Django 1.5.12
+             -- **both done**, see Progress
 Stages 2-4   photologue forward, still on Django 1.5/1.6
 Stage 5      **South to Django migrations** -- the riskiest step
 Stages 6-9   Django 1.7 to 1.11 LTS, the staging point
@@ -73,19 +76,37 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-No stage started, but Stage 0 is mostly done: with 020, 021 and 033 ``Fixed``
-in one change, the dead weight it lists is gone -- ``django-indexer``,
-``django-paging`` and ``django-pserver`` are uninstalled and ``gunicorn`` is no
-longer an app -- leaving the grappelli route (022), vendoring ``django-jqm``
-(031) and moving ``django-extensions`` out of production. That change is also
-the first evidence against this issue's own caveat below: the container was
-built, the suite run and the pages rendered.
+**Stage 0 is closed and Stage 1 has landed. This issue stays ``Open``:** two
+stages of twenty are done, the application is still Python 2.7 and still
+unpatched everywhere but Django, and nothing about that is finished. It closes
+when the programme does.
 
-Stage 0 is nearly closed since: 022's route is gone, and 031 is ``Fixed`` --
-``django-jqm`` is vendored into ``jqm/`` rather than fetched from a GitHub URL,
-so no build reaches anywhere but PyPI and the templates the later stages have
-to fix are in this repository. Moving ``django-extensions`` out of production
-is the one item of the eight left.
+Stage 0 went in three changes. First, with 020, 021 and 033 ``Fixed``
+together, the dead weight it lists went -- ``django-indexer``,
+``django-paging`` and ``django-pserver`` uninstalled, ``gunicorn`` no longer an
+app. That change is also the first evidence against this issue's own caveat
+below: the container was built, the suite run and the pages rendered. Then
+022's dead grappelli route went, and 031 vendored ``django-jqm`` into ``jqm/``
+rather than fetching it from a GitHub URL, so no build reaches anywhere but
+PyPI and the templates the later stages have to fix are in this repository.
+The eighth and last item was ``django-extensions``: it is in
+``requirements/dev.txt`` alone now, and ``local_settings.development.py``
+rather than the shared ``common_settings.py`` is what puts it into
+``INSTALLED_APPS``, so a production install has neither the package nor the
+app entry.
+
+Stage 1 is Django **1.5.1 → 1.5.12** -- the last release in the series, with
+eleven releases' worth of security fixes that had never been applied: the
+``reverse()`` code-execution fix, the ``contrib.admin`` ``to_field`` data
+leak, two ``is_safe_url`` redirect fixes, the session-serializer setting, the
+cache/``Vary`` fixes and the rest. One line in the lock; nothing else in the
+repository names a Django version. The Problem section above still describes
+1.5 as unpatched -- for the Django line specifically, it is not any more,
+though 1.5 as a *series* has had no security support since 2014, which is
+what makes the rest of this plan necessary.
+
+Both stages were tested the way the caveat below asks for; see the next
+section for exactly what was run and what it found.
 
 Three further obstacles are out of the way: 019 is ``Fixed``, so
 ``MIDDLEWARE_CLASSES`` is now written out in ``common_settings`` and Stage 11
@@ -131,3 +152,69 @@ over HTTP -- and the reasoning turned out to be wrong in one place. 020 claimed
 the two apps carried no models and no migrations; ``django-indexer`` carries
 both, and the table it created is in the production database. Harmless, and
 recorded in 020 rather than discovered later.
+
+Stage 0's last item and Stage 1 have had the same test, in one pull request.
+What was run, on both changes:
+
+* ``dev/kasvimuseo app test`` -- 430 passed, twice: once on the
+  django-extensions change alone and once on Django 1.5.12.
+* ``dev/kasvimuseo app browser-test`` -- 25 passed, the label editor in
+  Chromium against a gunicorn-served instance of both changes together.
+* ``dev/kasvimuseo app manage validate`` -- 0 errors (1.5's ``check``), with
+  ``django_extensions`` appended by the development settings and
+  ``runserver_plus`` still reachable through ``app manage``.
+* The development image rebuilt from the changed requirements, and the
+  production ``Dockerfile`` image built from the changed lock -- seven runtime
+  packages -- ``validate``\ d and then started under gunicorn against the
+  restored database, serving the public species list, the admin and the login
+  page.
+* ``.dev/backups/production.sql`` restored and ``migrate`` run forward on
+  1.5.12 -- three ``kasvimuseo`` migrations applied, initial data loaded,
+  photologue already current.
+* Pages rendered over HTTP against that restored database, logged in: the
+  admin index, the species and planting changelists, a species change form,
+  the photologue photo changelist, the user changelist, the label editor, the
+  public planted-species list, the printable and compact species reports and
+  an observation page. All 200, and the admin chrome Finnish.
+* ``dev/kasvimuseo docs`` clean.
+
+Four things the reasoning had not predicted, all recorded where the wrong
+claim was rather than fixed quietly:
+
+#. ``dev/Containerfile`` installed ``production.txt``, so taking a package out
+   of the production lock took it out of the *development* image. The
+   development image installs ``dev.txt`` now.
+#. ``six`` was in the production lock only because django-extensions declares
+   it -- measured in the built image, where django-extensions is the only
+   distribution that declares or imports it -- so it followed that package
+   into ``dev.txt``. The plan had ``six`` down as Stage 10 work for the wrong
+   reason.
+#. The production ``Dockerfile`` copies the untracked
+   ``ylaneenkasvit/local_settings.py`` of whatever checkout builds it into the
+   image -- ``DEBUG = True`` and an open ``ALLOWED_HOSTS`` in a production
+   image, silently, since that file has existed. Stage 0 turned it loud (an
+   ``ImportError`` for an app the production image no longer installs) and
+   ``.containerignore`` now excludes it.
+#. Issue 040's packaging accident **is fixed by Stage 1**. Django 1.5.12 ships
+   its locale catalogs as ``package_data``; 1.5.1 shipped them as
+   ``data_files``, which is the whole of 040. Verified on the rebuilt image:
+   no stray ``/usr/local/django``, both ``fi`` catalogs inside the package,
+   admin chrome Finnish. 040's "option 3 -- wait for the upgrade" needed only
+   one stage, not twenty. Its workaround stays in both image definitions as an
+   assertion.
+
+One more thing the rendering turned up, which belongs to neither stage: in the
+production image ``/photologue/gallery/`` is a 500, because that image ships no
+``ylaneenkasvit/templates/`` and the page extends ``base.html``. An image built
+from this repository before this branch has the same gap, so it is older than
+both changes and is reported in :doc:`incoming` rather than fixed here.
+
+And one thing that was predicted and held: Stage 1 really is "no API change"
+for this project. The only settings difference between 1.5.1 and 1.5.12 is a
+new ``SESSION_SERIALIZER`` that defaults to the old behaviour; the removals
+(``WSGIServerException``, ``fix_IE_for_*``) are not imported here; the
+``reverse()`` restriction does not bite because every reversal here names a
+URL pattern; and the ``to_field`` restriction was exercised on the running
+instance -- ``/admin/auth/user/?pop=1&t=password`` now raises
+``DisallowedModelAdminToField``, which is the point of the fix, while every
+admin page this application uses still renders.
