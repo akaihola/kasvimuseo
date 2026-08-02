@@ -101,7 +101,8 @@ The parser is ``docs/_ext/issue_register.py`` and the directives are in
 Open issues
 ===========
 
-All but 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 016, 017,
+All but 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 014,
+015, 016, 017,
 019, 020, 021, 022, 023, 024, 025, 026, 027, 031, 033, 034, 037, 038, 039, 040,
 041, 042, 043, 046, 047, 048, 053 and 054 are open: each one
 either changes
@@ -216,7 +217,8 @@ From the test coverage work
 ==== ======== ======================= ==================================================
 
 Suggested reading order for a first review: 001, 002 and 017 are the ones with
-real consequences. 013, 006 and 015 are cheap tidying; 006 is done, and its
+real consequences. 013, 006 and 015 were cheap tidying, and all three are off
+the list now, each ended a different way. 006 is done, and its
 ruling was to delete both of the dead templates it names. The work in it was
 not the deletion but the proof: a template can be reached by name from another
 template rather than from Python, and the app-directory loader means a
@@ -224,7 +226,19 @@ same-named file in an installed package would decide which copy the loader
 hands back, so both were checked before either was removed. It also left the
 suite able to notice: nothing had pinned which template file the compact report
 renders from, so the suite would have stayed green whichever of the two files
-had been deleted. 016 and 018 are about
+had been deleted. 013 is ``Fixed``: the five comments are gone, and the ruling
+took option 2's browser test as well as option 1's deletion, since driving the
+filter and the action in Chromium is what showed there was nothing behind them
+-- and showed where the complaint came from, which is that Grappelli deletes
+the admin's "Go" button and runs an action from the dropdown's ``change``
+event. 015 is the one that ended in ``Rejected``: the mixed ``6em`` and
+``2.0em`` is real and costs nothing, and the halves cannot be printed as
+integers without moving the shadow, so the tidy version is floats everywhere
+and reads worse than what is there. 014, the third of the ``Low`` three, is
+``Deferred`` rather than closed: 034 settled what to do with it -- nothing,
+until the file it lives in is deleted at upgrade Stage 5 -- and it was left
+``Open``, which put a ruled-and-untouchable issue on :doc:`next`'s ready
+queue. 016 and 018 are about
 the future rather than today; 016 is fixed, since the construct that is correct
 on both interpreters costs nothing to adopt now and Python 2's behaviour is
 unchanged by it.

@@ -414,14 +414,22 @@ which is still not tested directly by design.
 Two stale comments
 ------------------
 
-Both standing ``# FIXME`` comments in ``admin.py`` are wrong, and tests now
-prove it:
+Both standing ``# FIXME`` comments in ``admin.py`` were wrong, and tests prove
+it:
 
 * ``# FIXME: action selection doesn't work`` -- "Create Species Sheets" driven
   through the changelist POST returns a 302 to ``/planted-species/22,11/``.
 * ``# FIXME: filtering doesn't work`` (on SpeciesAdmin, ObservationAdmin and
   CareAdmin) -- every documented ``list_filter`` narrows the rows correctly,
   and the Grappelli filter pulldown renders working links.
+
+All five of them -- the two texts appear on five lines -- are now deleted, and
+``browser_tests/test_admin_changelist.py`` checks the two features in a real
+browser as well, which is what a test client could not do. The browser is also
+where the original complaint came from: Grappelli's own ``actions.js`` deletes
+the admin's "Go" button and submits the changelist from the action dropdown's
+``change`` event, so an action runs the instant it is chosen. See
+``docs/issues/013``.
 
 Where the findings live
 -----------------------
