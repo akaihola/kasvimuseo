@@ -93,7 +93,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.staticfiles',
 
-    'django_extensions',
+    # ``django_extensions`` is deliberately not here: it is a development tool
+    # -- ``runserver_plus``, ``shell_plus`` -- that nothing in this repository
+    # imports, and these settings are the ones production runs on (upgrade plan
+    # Stage 0). ``local_settings.development.py`` appends it, so a development
+    # checkout still has it and a production install does not have to install
+    # it.
     'south',
 
     'jqm',

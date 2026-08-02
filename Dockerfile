@@ -21,15 +21,19 @@ COPY requirements /kasvimuseo/requirements
 # the file now, so this image stops depending on that accident.
 RUN pip install --install-option="--prefix=/install" -r /kasvimuseo/requirements/production.txt
 
-# Django 1.5.1 lists its locale catalogs, fixtures and project_template in
-# setup.py's `data_files` rather than `package_data`, and where those end up
-# depends on how pip installs it (issue 040). `--install-option` above makes pip
-# run the sdist's `setup.py install`, and that setup.py redirects the `data`
-# install scheme to `purelib`, so here they land inside the package and the
-# admin is Finnish. A wheel ignores that redirection and drops them in
-# $prefix/django instead, which is what happens in dev/Containerfile. Handle
-# both, in the builder stage so it survives the COPY --from=builder below, and
-# fail the build rather than shipping an English admin if neither holds.
+# Django 1.5.1 listed its locale catalogs, fixtures and project_template in
+# setup.py's `data_files` rather than `package_data`, and where those ended up
+# depended on how pip installed it (issue 040). `--install-option` above makes
+# pip run the sdist's `setup.py install`, and 1.5.1's setup.py redirected the
+# `data` install scheme to `purelib`, so they landed inside the package here
+# and the admin was Finnish; a wheel ignored that redirection and dropped them
+# in $prefix/django, which is what used to happen in dev/Containerfile.
+#
+# Django 1.5.12 -- upgrade plan Stage 1 -- makes both paths the same: it
+# collects them as `package_data` and redirects nothing, so they are inside
+# the package however pip is invoked. This block keeps handling both, in the
+# builder stage so it survives the COPY --from=builder below, and still fails
+# the build rather than shipping an English admin if neither holds.
 RUN set -e; \
     prefix=/install; \
     pkg=$prefix/lib/python2.7/site-packages/django; \

@@ -42,6 +42,16 @@ Runtime dependencies
 
 django
 ------
+The pin is **1.5.12** since Stage 1 of the upgrade plan; it was 1.5.1 when this
+inventory was generated. Both are inside the first band below, which is exactly
+the point: the metadata is identical across all 25 of those releases, so
+nothing here distinguishes them and nothing here could have shown what the bump
+is for. What it is for is eleven releases of security fixes, and one packaging
+change the metadata does not carry either -- 1.5.1's ``setup.py`` ships the
+locale catalogs as ``data_files``, 1.5.12's as ``package_data``, which is the
+cause of issue 040 disappearing. Read the sdists, not this table, when the
+question is what changed inside a band.
+
 * **1.5 – 1.6.11 (25 releases)**
     :Python: ``clf:2.6,2.7,3.2,3.3``
     :Requires: nothing declared
@@ -452,6 +462,12 @@ gunicorn
 
 six
 ---
+No longer a runtime requirement: ``six==1.11.0`` was in
+``requirements/production.txt``, and Stage 0 of the upgrade plan moved it to
+``requirements/dev.txt`` along with ``django-extensions``, the only
+distribution in the installed set that declares it (``six>=1.2``) or imports
+it. The pin and the version are unchanged; only the file it lives in is.
+
 * **1.9.0 – 1.11.0 (3 releases)**
     :Python: ``-``
     :Requires: nothing declared
@@ -563,6 +579,21 @@ asgiref
 
 django-extensions
 -----------------
+No longer a runtime requirement either: ``django-extensions==1.5.9`` was in
+both ``requirements/production.txt`` and ``requirements/dev.txt``, and Stage 0
+of the upgrade plan left it in the second alone -- it is ``runserver_plus`` and
+``shell_plus``, nothing in this repository imports it, and
+``ylaneenkasvit/local_settings.development.py`` rather than
+``common_settings.py`` is now what puts it into ``INSTALLED_APPS``. The
+versions below still matter: the upgrade ladder in ``upgrade-plan.rst`` Part 2
+moves this package at almost every stage, development-only or not.
+
+Note what the PyPI metadata below does **not** say. 1.5.9 is in the
+"1.5.0 – 1.6.7" band, whose ``:Requires:`` reads "nothing declared" -- but the
+``dist-info`` of the *built* package in the image declares ``six>=1.2``, and 22
+of its modules import it. Where a release predates reliable metadata, the
+built distribution is the primary source, not this table.
+
 * **1.5.0 – 1.6.7 (16 releases)**
     :Python: ``-``
     :Requires: nothing declared

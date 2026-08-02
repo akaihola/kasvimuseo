@@ -189,6 +189,29 @@ poistu`` because the project catalog's own ``Save`` msgid outranks it. Issue 044
 quotes the two English labels in its report; they are Finnish from now on, while
 what 044 is about -- the row not arriving at all -- is untouched.
 
+Option 3 was closer than it looked
+==================================
+
+Rejecting option 3 -- "do nothing until the upgrade plan retires Django 1.5"
+-- rested on "036 is not close". That was right about 036 and wrong about this
+cause: it did not need modern Django, only the **next patch release**. Django
+1.5.12, landed as Stage 1 of the upgrade plan, collects the locale catalogs,
+fixtures and ``project_template`` into ``package_data`` and drops 1.5.1's
+redirection of the ``data`` install scheme, so they are inside the package
+however pip installs them. Verified on the rebuilt development image: no
+``/usr/local/django`` at all, ``conf/locale/fi`` and
+``contrib/admin/locale/fi`` both readable inside the package, admin chrome
+Finnish.
+
+Nothing here changes: the fix was already in and cost one line each, the
+decision between the options was made on the evidence available at the time,
+and the two image definitions keep the step -- the ``cp`` as the repair if a
+future stage ever meets a Django that scatters them again, and the ``test -f``
+as the assertion that they are readable, which now checks Django's packaging
+rather than this repository's ``cp``. What would have gone differently is
+nothing, since option 3 alone would have left the admin English until Stage 1
+shipped. Recorded because the reasoning, not the outcome, was off.
+
 See also
 ========
 
