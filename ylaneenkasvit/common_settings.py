@@ -180,19 +180,22 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 # ``CSRF_COOKIE_HTTPONLY`` is deliberately absent, and this is the note that
-# says so rather than an omission (issue 059). Two reasons, either of which is
-# enough. Django 1.5 has no such setting -- ``global_settings`` does not define
-# it and ``CsrfViewMiddleware.process_response`` passes no ``httponly`` to
-# ``set_cookie`` -- so setting it here would be a setting Django ignores, which
-# is the same silence issue 019 is about. And when the upgrade reaches Django
-# 1.6, which adds it, it still must not be turned on blind: the label editor's
-# save reads the token out of ``document.cookie``
+# says so rather than an omission (issue 059). It had two reasons and has one
+# left. The first is spent: Django 1.5 had no such setting, so writing it here
+# would have been a setting Django ignores -- the silence issue 019 is about --
+# and Django 1.6 defines it, defaulting to ``False`` (upgrade plan Stage 3).
+# The second is the one that decides it now that the setting is live: the label
+# editor's save reads the token out of ``document.cookie``
 # (``kasvimuseo/templates/kasvimuseo/reports/planting-labels.html``), so an
 # HttpOnly cookie would break Save for everyone. Moving that page to the
 # ``{% csrf_token %}`` input it already renders is the prerequisite, and it is
 # not this issue's change to make.
+# ``kasvimuseo/tests/test_settings_cookie_security.py`` asserts both halves --
+# the default, and that the issued cookie is one the page's JavaScript can
+# read.
 
-# JSON rather than the Django 1.5 default, which is
+# JSON, which is what Django defaults to since 1.6 (upgrade plan Stage 3) and
+# was not the default when this line was written: 1.5 serialized a session with
 # ``django.contrib.sessions.serializers.PickleSerializer`` (issue 057). A
 # session cookie's payload is unpickled once its HMAC verifies, and that HMAC is
 # keyed on ``SECRET_KEY`` -- which this repository disclosed (issue 025) and
@@ -201,7 +204,10 @@ CSRF_COOKIE_SECURE = True
 # process; under JSON it is session forgery and nothing worse. Nothing this
 # project puts in a session needs pickle: the auth keys are an integer primary
 # key and a dotted path, and ``FallbackStorage`` hands the session an
-# already-JSON-encoded string of messages. Django 1.6 makes this the default.
+# already-JSON-encoded string of messages. The line stays although it now
+# names the default: 057's argument is about what this application must not
+# serialize with, and a default is not a decision -- the same reason 019 writes
+# out ``MIDDLEWARE_CLASSES`` and 059 writes out ``X_FRAME_OPTIONS``.
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 TEMPLATE_CONTEXT_PROCESSORS = (

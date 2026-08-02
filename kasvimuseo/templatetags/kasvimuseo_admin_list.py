@@ -1,8 +1,35 @@
+"""Django's ``admin_list``, with the field name in each cell's ``class``.
+
+A copy-and-modify fork of ``django/contrib/admin/templatetags/admin_list.py``
+carrying the patch from Django ticket #11195, which Django closed itself in
+1.7 -- so this file is deleted at upgrade plan Stage 5, which is the ruling on
+issue 034. Until then it is re-synced against Django's own copy at every stage
+that moves the framework, because the delta below is small and everything
+around it is Django's.
+
+Synced against **Django 1.6** at Stage 3. What that stage brought, both in
+``items_for_result`` and neither of them this project's idea:
+
+* ``add_preserved_filters`` on the link out of each row. 1.6 introduced the
+  ``_changelist_filters`` parameter that takes a changelist's filters through
+  a change form and back; without this line the fork's changelists are the
+  only ones in the admin that lose them.
+* ``escapejs`` and explicit quotes in the ``dismissRelatedLookupPopup`` call,
+  replacing ``repr(force_text(value))[1:]``. Only reachable from a raw-id
+  popup, which no ``ModelAdmin`` here opens, but it is Django's fix rather
+  than an option.
+
+1.6 also started putting a ``column-<field>`` class on each header; it is kept
+beside this fork's ``fieldname_<field>`` rather than replaced by it, so a
+changelist rendered through this tag carries everything an unforked one does.
+"""
+
 from __future__ import unicode_literals
 
 import datetime
 from django.contrib.admin.templatetags.admin_list import (
     result_hidden_fields, result_headers, ResultList)
+from django.contrib.admin.templatetags.admin_urls import add_preserved_filters
 from django.contrib.admin.util import (
     lookup_field, display_for_field, display_for_value, label_for_field)
 from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE, ORDER_VAR
@@ -10,7 +37,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template import Library
 from django.utils.encoding import smart_str, force_text, force_unicode
-from django.utils.html import format_html
+from django.utils.html import escapejs, format_html
 from django.utils.safestring import mark_safe
 
 
@@ -77,16 +104,18 @@ def result_headers(cl):
                 # Not sortable
                 yield {"text": text,
                        "sortable": False,
-                       "class_attrib": mark_safe(
-                           ' class="fieldname_{0}"'.format(
-                               identifier_for_field(
-                                   field_name,
-                                   cl.model,
-                                   model_admin=cl.model_admin)))}
+                       "class_attrib": format_html(
+                           ' class="column-{0} fieldname_{1}"',
+                           field_name,
+                           identifier_for_field(
+                               field_name,
+                               cl.model,
+                               model_admin=cl.model_admin))}
                 continue
 
         # OK, it is sortable if we got this far
         th_classes = ['sortable',
+                      'column-{0}'.format(field_name),
                       'fieldname_{0}'.format(
                           identifier_for_field(field_name,
                                                cl.model,
@@ -191,6 +220,7 @@ def items_for_result(cl, result, form):
             table_tag = {True:'th', False:'td'}[first]
             first = False
             url = cl.url_for_result(result)
+            url = add_preserved_filters({'preserved_filters': cl.preserved_filters, 'opts': cl.opts}, url)
             # Convert the pk to something that can be used in Javascript.
             # Problem cases are long ints (23L) and non-ASCII strings.
             if cl.to_field:
@@ -198,12 +228,12 @@ def items_for_result(cl, result, form):
             else:
                 attr = pk
             value = result.serializable_value(attr)
-            result_id = repr(force_text(value))[1:]
+            result_id = escapejs(value)
             yield format_html('<{0}{1}><a href="{2}"{3}>{4}</a></{5}>',
                               table_tag,
                               row_class,
                               url,
-                              format_html(' onclick="opener.dismissRelatedLookupPopup(window, {0}); return false;"', result_id)
+                              format_html(' onclick="opener.dismissRelatedLookupPopup(window, &#39;{0}&#39;); return false;"', result_id)
                                 if cl.is_popup else '',
                               result_repr,
                               table_tag)

@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.clickjacking import xframe_options_exempt
 

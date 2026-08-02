@@ -588,6 +588,18 @@ every request
 ``media_root`` test fixture did not actually   1e3f7fb
 redirect file storage, so uploads leaked
 between tests
+Grappelli 2.5 renders a ``<script>`` for      (this branch)
+``grappelli/jquery/i18n/ui.datepicker-fi.js``
+on every admin page and ships only ``de``
+and ``fr``, so the admin fetched a 404 per
+page and every ``DateField``'s picker stayed
+English. The file is in
+``kasvimuseo/static/`` under grappelli's own
+name now. Found by the browser suite's
+``assert page.console_errors == []`` at
+upgrade plan Stage 3, which is the only
+check here that can see a 404 on a
+subresource
 ``PhotoForm.clean()`` did not call             01db2fc
 ``super()``, and ``BaseModelForm.clean()``
 is what switches ``validate_unique()`` on,

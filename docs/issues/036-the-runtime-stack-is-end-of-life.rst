@@ -77,7 +77,7 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-**Stages 0, 1 and 2 are done. This issue stays ``Open``:** three stages of
+**Stages 0, 1, 2 and 3 are done. This issue stays ``Open``:** four stages of
 twenty, the application is still Python 2.7 and still unpatched everywhere but
 Django, and nothing about that is finished. It closes when the programme does.
 
@@ -117,7 +117,19 @@ runs its own migration history again, and the sequence that gets an existing
 database there is ``dev/kasvimuseo db upgrade-photologue``, written down as a
 command because it is what production will have to be given.
 
-All three stages were tested the way the caveat below asks for; see the next
+Stage 3 is **Django 1.5.12 → 1.6.11**, with the three pins that cannot move
+separately from it: ``south`` 1.0.2 (its last release, and the version whose
+``LoadInitialDataMigrator`` still loads ``initial_data.json`` after ``migrate``
+on 1.6 -- issue 055's arrangement), ``django-grappelli`` 2.5.7 (the 1.6 series;
+issue 035) and, in ``dev.txt``, ``django-extensions`` 1.6.7. Both ``urls.py``
+files import from ``django.conf.urls`` now. The stage's cost was not in that
+list: the one place this project asks for a transaction moved from
+``commit_on_success`` to ``atomic``, the ``admin_list`` fork took its first
+re-sync (issue 034's predicted recurring cost, arriving), issue 059's parked
+tripwire fired because 1.6 defines ``CSRF_COOKIE_HTTPONLY``, and grappelli 2.5
+turned out to request a Finnish date-picker file it does not ship.
+
+All four stages were tested the way the caveat below asks for; see the next
 section for exactly what was run and what it found.
 
 Three further obstacles are out of the way: 019 is ``Fixed``, so
@@ -296,7 +308,117 @@ One more thing the rendering turned up, which belongs to neither stage: in the
 production image ``/photologue/gallery/`` is a 500, because that image ships no
 ``ylaneenkasvit/templates/`` and the page extends ``base.html``. An image built
 from this repository before this branch has the same gap, so it is older than
-both changes and is reported in :doc:`incoming` rather than fixed here.
+both changes and is reported in :doc:`incoming` rather than fixed here. Issue
+058 has since fixed it -- ``MANIFEST.in`` is in the build context now -- and
+Stage 3's run of the same check confirms it: that page is a 200 in the
+production image.
+
+Stage 3 has had the same test, and it is the first stage where the *browser*
+suite is what caught the defect. What was run:
+
+* ``dev/kasvimuseo app test`` -- **455 passed**. The suite was 449 before this
+  branch; one test was rewritten rather than added (issue 059's tripwire, which
+  failed on the first run under 1.6 and is the first thing this stage found),
+  and six are new: one pinning the ``admin_list`` fork's re-sync, one that the
+  ``csrftoken`` cookie is still readable by the label editor's JavaScript, and
+  four about the date-picker file below.
+* ``dev/kasvimuseo app browser-test`` -- **54 passed, 6 skipped**, in Chromium
+  and in WebKit, the six being the touch-drag tests WebKit cannot run (issue
+  061). It was **2 failed** before the last fix, the same test in both engines:
+  ``assert page.console_errors == []`` on the admin changelist. Grappelli 2.5
+  renders an unconditional ``<script>`` for
+  ``grappelli/jquery/i18n/ui.datepicker-<LANGUAGE_CODE>.js`` and ships only
+  ``de`` and ``fr``, so with ``LANGUAGE_CODE = 'fi'`` every admin page fetched
+  a 404 and every ``DateField``'s picker was English. The file is in
+  ``kasvimuseo/static/`` under grappelli's own name now, which the
+  app-directories finder answers with because ``kasvimuseo`` precedes
+  ``grappelli`` in ``INSTALLED_APPS``.
+* ``dev/kasvimuseo app manage validate`` -- 0 errors, in both images. 1.6 does
+  **not** rename it; that is 1.7. 1.6 does add a separate ``check`` command,
+  and the one thing it says here is that ``TEST_RUNNER`` is unset while 1.6's
+  default is now ``DiscoverRunner`` -- which changes nothing, because the suite
+  is pytest through ``pytest-django`` and ``manage test`` is not how it is run.
+* Both images rebuilt: the development one (``dev.txt``: the runtime set plus
+  ``django-extensions==1.6.7``, ``Werkzeug`` and ``six``, neither of whose pins
+  1.6.7 moves) and the production one (``Dockerfile``, ``production.txt``:
+  eleven runtime packages). ``manage validate`` and ``manage migrate --list``
+  were both run **inside the production image**, because that is the only place
+  the ``pkg_resources`` resolution of every distribution's declared
+  requirements happens -- Stage 2's half-day. Nothing conflicts: grappelli
+  2.5.7 and south 1.0.2 declare no requirements at all, and photologue 2.8.3's
+  three are still satisfied.
+* ``.dev/backups/production.sql`` restored and migrated forward on 1.6 with
+  south 1.0.2, on top of the photologue history Stage 2 left: ``dev/kasvimuseo
+  db upgrade-photologue`` runs clean, ``kasvimuseo:0022`` applies,
+  ``initial_data.json`` loads after ``migrate`` as issue 055 arranged -- which
+  is the specific thing south 1.0.2 keeps working on 1.6, since 0.8.1 does it
+  by a trick 1.6's ``loaddata`` no longer notices -- and ``migrate --list``
+  from the production image shows every migration applied.
+* Pages rendered over HTTP against that restored database, logged in: the admin
+  index, the species and planting changelists, a species change form, the
+  photologue photo changelist and a photo change form, the user changelist, the
+  label editor and its data endpoint, the public planted-species list, the
+  printable and compact species reports, an observation page and the photologue
+  gallery index. All 200, and the admin chrome Finnish. The production image
+  was then served under gunicorn against the same database: the public list,
+  the admin, the login page, the species changelist and the gallery index, all
+  200.
+* ``dev/kasvimuseo docs`` clean, and ``actionlint`` on
+  ``.github/workflows/tests.yml``, which this stage does not change -- it names
+  no Django version and calls ``dev/kasvimuseo`` for everything. Its two
+  ``SC2012`` informational notes are the ones it had before.
+
+Six things the reasoning had not predicted:
+
+#. **A test written months ago to fail here did.** Issue 059 declined to set
+   ``CSRF_COOKIE_HTTPONLY`` partly because Django 1.5 has no such setting, and
+   left ``test_csrf_cookie_httponly_is_not_a_setting_this_django_has`` saying
+   in its docstring that it would fail when the upgrade reached 1.6. It was the
+   first failure of this stage. The ruling is unchanged -- the label editor
+   reads the token out of ``document.cookie`` -- and the assertion moved to the
+   half that is now live, with a behavioural test beside it. 059's own text
+   said the setting arrives at Stage 2; corrected to Stage 3.
+#. **The ``admin_list`` fork's first re-sync was behavioural, not cosmetic.**
+   Django 1.6 added ``add_preserved_filters`` to ``items_for_result``, which is
+   how a filtered changelist survives a trip through a change form
+   (``_changelist_filters``). A fork carried unchanged renders perfect markup
+   and silently drops that, on this project's changelists only -- which is
+   exactly the failure mode issue 034 describes and the reason it is being
+   retired at Stage 5. Also ``escapejs`` in the raw-id popup, and 1.6's new
+   ``column-<field>`` header class, which the fork now carries beside its own.
+#. **grappelli 2.5 requests a file it does not ship**, above. Worth its own
+   line because of what found it: a 404 on a subresource is invisible to the
+   pytest suite, to ``manage validate`` and to a ``curl`` of the page. Only the
+   browser suite sees it, and only because issue 017 wrote
+   ``assert page.console_errors == []``.
+#. **``setup.py``'s ``package_data`` globs are one segment deep.** ``**`` is
+   not recursive in either mechanism that reads them, so the date-picker file
+   -- one level deeper than anything already there -- would have been in the
+   development image and missing from the production one. That is issue 058's
+   fault line again, three weeks later, and it has an assertion in
+   ``Dockerfile`` now.
+#. **Stage 4's sortedm2m pin is forced, and Stage 3 is its hard prerequisite.**
+   photologue 3.0.2 declares ``Django>=1.6``, ``django-sortedm2m>=0.8.1`` and
+   ``django-model-utils>=2.2``. So the ``<0.8`` ceiling that pins sortedm2m at
+   0.7.0 today is not merely lifted at Stage 4, it is inverted, and by Stage
+   2's ``pkg_resources`` rule the pin has to move in the same change or
+   ``manage`` in the production image dies before running a line. Recorded in
+   ``docs/upgrade-plan.rst`` under Stage 4.
+#. **One visible change to a page nobody predicted, and nothing to do about
+   it.** 1.6's ``BoundField.label_tag`` includes ``label_suffix``, and
+   ``jqm/templates/jqm/formfields.html`` renders ``{{ field.label_tag }}``, so
+   ``/accounts/login/`` now labels its fields ``Käyttäjätunnus:`` and
+   ``Salasana:``. The template supplies no separator of its own, so nothing is
+   doubled.
+
+And three things checked because a stage should not assume them. Django 1.6's
+four documented transaction incompatibilities all miss this project: there is
+no ``TransactionMiddleware``, no ``TRANSACTIONS_MANAGED``, no
+``cursor.execute`` and no ``select_for_update`` anywhere in it, and PostgreSQL
+runs at the "read committed" level the remaining case says is unaffected. The
+admin's login gate still answers 200 with a form rather than redirecting, so
+the observation recorded in ``docs/issues/README.rst`` survives 1.6.
+``/photologue/`` is still a 301.
 
 And one thing that was predicted and held: Stage 1 really is "no API change"
 for this project. The only settings difference between 1.5.1 and 1.5.12 is a
