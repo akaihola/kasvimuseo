@@ -27,7 +27,15 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     017 -- the browser suite that carries the evidence below
     048 -- where the photos come from, which is the question this report parks
     039 -- the per-label photo choice, whose chevrons re-fit a label
-:Decision: Ruled on 2026-08-01 on the evidence, not by the maintainer: the
+:Decision: **Updated on 2026-08-02 by the device.** The maintainer opened this
+    branch's editor on the iPad and reports that the label text is the right
+    size and the species names fit, which is the first half confirmed where it
+    was reported rather than in emulation. What that sighting does not settle
+    is the growth over time, since it is a look rather than a minute's watch,
+    and it does not settle the printed sheet. So the ruling below stands and
+    the list under "What is left" is shorter: items 1 and 5 are done, and 2, 3
+    and 4 are not.
+    Ruled on 2026-08-01 on the evidence, not by the maintainer: the
     first half is fixed by 746ce71 and is now pinned by three browser tests
     that go red without it, so nothing is left to decide there. The second
     half stays open and this issue stays actionable, because the change 746ce71
@@ -163,6 +171,33 @@ This is the same discipline 045 wrote down: its cheap half was measured in
 headless WebKit and Chromium and its file lists what still wants the device,
 rather than asserting the device agrees.
 
+What the device said
+====================
+
+On 2026-08-02 the maintainer ran this branch on the iPad -- the first time
+anything in this file was checked on the machine it was reported from -- and
+reported three things:
+
+* **The label font sizes look right, and the species names fit.** That is the
+  first half, confirmed on the device. Everything above it is emulation; this
+  line is not.
+* **Not all photos are visible.** So the trigger is still there, and it is
+  still the question below rather than a template one. It costs a picture now
+  instead of the text on every label, which is the whole of what 746ce71
+  changed about it.
+* **The number does not show while it is being dragged.** That is 045's drag
+  layer rather than this issue's fitter -- ``#drag-number`` sits outside
+  ``#labels``, takes none of the rules this issue is about, and is sized from
+  an inline ``font-size`` computed in ``dragStart`` from ``getBoundingClientRect``
+  against ``offsetWidth``. Those are the two coordinate systems 746ce71 says
+  Safari disagrees about, so it is worth suspecting the same cause; it is a
+  different symptom on a different feature, so it is written into
+  :doc:`incoming` rather than folded in here.
+
+What is **not** established by that look: whether the text still grows over
+seconds, and what the printed sheet does. Both want the tablet again, and both
+are in "What is left".
+
 Why do the photos fail at all?
 ==============================
 
@@ -208,11 +243,14 @@ the text.
 What is left
 ============
 
-For whoever has the iPad. All of it is looking, not changing:
+For whoever has the iPad. All of it is looking, not changing. Items 1 and 5
+were done on 2026-08-02 -- see "What the device said" -- and 2, 3 and 4 are
+what is actually left:
 
-1. **Open the label editor on the tablet** and read the species name on a label
-   whose photo did not load. It should be the same size as one whose photo did.
-   That is the first half, and it is the one this file claims is fixed.
+1. **Done.** Open the label editor on the tablet and read the species name on a
+   label whose photo did not load. It should be the same size as one whose
+   photo did. That is the first half, and it is the one this file claims is
+   fixed; the maintainer reports that it is.
 2. **Watch a label whose photo did load** for a minute. If the text still grows
    every few seconds, the second half is not fixed and the suspect list above
    is where to start -- with ``-webkit-text-size-adjust`` first, since the fix
@@ -225,11 +263,12 @@ For whoever has the iPad. All of it is looking, not changing:
    inside the zoomed box, and the two disagree by about a sixth on the same
    label. Which is right depends on the coordinate system the device actually
    reports, which is the premise above.
-5. **Answer the photo question while the tablet is out**: whether a label photo
-   is a local 200 or a redirect to ``media.kasvit.ambitone.com``.
+5. **Half done.** Answer the photo question while the tablet is out: the
+   maintainer confirms photos are still missing, so what is left of this one is
+   *which* -- a local 200 or a redirect to ``media.kasvit.ambitone.com``.
 
-If 1 and 2 hold, this becomes ``Fixed`` with 746ce71 in ``Resolution`` and
-nothing else changes.
+With 1 done, this becomes ``Fixed`` with 746ce71 in ``Resolution`` as soon as 2
+holds, and nothing else changes.
 
 The report added one note about how to do 2 and 4 with more than eyes: an iPad
 Safari debugging setup is being put together outside this repository, in
