@@ -588,7 +588,7 @@ every request
 ``media_root`` test fixture did not actually   1e3f7fb
 redirect file storage, so uploads leaked
 between tests
-Grappelli 2.5 renders a ``<script>`` for      (this branch)
+Grappelli 2.5 renders a ``<script>`` for      defdc28
 ``grappelli/jquery/i18n/ui.datepicker-fi.js``
 on every admin page and ships only ``de``
 and ``fr``, so the admin fetched a 404 per
