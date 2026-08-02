@@ -72,13 +72,18 @@ COPY jqm /kasvimuseo/jqm
 RUN pip install --install-option="--prefix=/install" /kasvimuseo
 
 # The same idiom as the Django block above, for this project's own files
-# (issue 058). Every path here arrives through MANIFEST.in rather than through
-# `package_data`, so nothing fails until a page is rendered: a missing
-# `base.html` is a 500 on every page that extends it, and a missing catalog is
-# an English string on a Finnish-only application. Reordering or trimming the
-# `COPY` lines above is what drops them, which is why this stands in the build
-# rather than in the suite -- the suite runs against the working tree, where
-# these files are always there.
+# (issue 058). Nothing fails until a page is rendered: a missing `base.html` is
+# a 500 on every page that extends it, and a missing catalog is an English
+# string on a Finnish-only application. Reordering or trimming the `COPY` lines
+# above is what drops them, which is why this stands in the build rather than
+# in the suite -- the suite runs against the working tree, where these files
+# are always there.
+#
+# All but the last arrive through MANIFEST.in. The last arrives through
+# `setup.py`'s `package_data`, whose globs match one path segment each, so a
+# file a level deeper than the existing entries is silently not installed --
+# and it is one grappelli 2.5 requests on every admin page (upgrade plan Stage
+# 3), so dropping it is a 404 per page and an English date picker.
 RUN set -e; \
     site=/install/lib/python2.7/site-packages; \
     for f in ylaneenkasvit/templates/base.html \
@@ -86,7 +91,8 @@ RUN set -e; \
              ylaneenkasvit/templates/500.html \
              ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html \
              ylaneenkasvit/locale/fi/LC_MESSAGES/django.mo \
-             kasvimuseo/locale/fi/LC_MESSAGES/django.mo; do \
+             kasvimuseo/locale/fi/LC_MESSAGES/django.mo \
+             kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js; do \
         test -r "$site/$f" || { \
             echo "issue 058: $site/$f is missing from the installed package." \
                  "MANIFEST.in is the only thing that puts it there, so check" \

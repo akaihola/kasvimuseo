@@ -167,13 +167,21 @@ class PlantedSpeciesLabelsApi(View):
                             **kwargs)
 
     # noinspection PyUnusedLocal
-    @transaction.commit_on_success
+    @transaction.atomic
     def post(self, request, *args, **kwargs):
         """Replace every label with the submitted set and re-link the plantings.
 
         The whole replacement is one transaction: the old labels are deleted
         first, so a failure part way through used to leave the table empty
         (issue 010).
+
+        ``atomic`` rather than ``commit_on_success``, which is what issue 010
+        wrote here: Django 1.6 turned database-level autocommit on and
+        deprecated the whole managed-mode API this decorator came from
+        (upgrade plan Stage 3). The old name still works on 1.6 and 1.7 and is
+        deleted in 1.8, so this is the same transaction under the name that
+        survives the rest of the plan -- and it is the only place in this
+        repository that asked for one.
 
         The labels are created one at a time and mapped to the item that asked
         for each as they are created. Pairing the items to the new rows by

@@ -169,15 +169,34 @@ def test_the_embedded_reports_are_exempt(client, db, name, kwargs):
     assert 'X-Frame-Options' not in response
 
 
-def test_csrf_cookie_httponly_is_not_a_setting_this_django_has():
-    """Why ``CSRF_COOKIE_HTTPONLY`` is left unset (issue 059).
+def test_csrf_cookie_httponly_is_a_live_setting_now_and_stays_off():
+    """Why ``CSRF_COOKIE_HTTPONLY`` is still left unset (issue 059).
 
-    Django 1.5 has no such setting: ``CsrfViewMiddleware`` passes no
-    ``httponly`` to ``set_cookie``, so writing it in ``common_settings`` would
-    be a setting Django ignores -- issue 019's mistake, in a different field.
-    This is expected to fail deliberately when the upgrade reaches Django 1.6,
-    which adds it: the answer then is still not to turn it on until the label
-    editor stops reading the token out of ``document.cookie``.
+    Its predecessor asserted that Django had no such setting, which was true of
+    1.5 and is the reason 059 declined to write one Django would ignore. It
+    said in as many words that it would fail on the day the upgrade reached
+    Django 1.6, and it did -- upgrade plan Stage 3, the first thing that stage's
+    suite run found. So the assertion moves to the other half of 059's ruling,
+    which the arriving setting turns from a nicety into a live decision: the
+    default is ``False``, the label editor's save still reads the token out of
+    ``document.cookie``, and turning it on would give every gardener the "this
+    browser has no csrftoken cookie" alert instead of a working Save. Reading
+    the ``{% csrf_token %}`` input that page already renders is the prerequisite
+    and is a change to the editor, not to the settings.
     """
-    assert not hasattr(global_settings, 'CSRF_COOKIE_HTTPONLY')
+    assert global_settings.CSRF_COOKIE_HTTPONLY is False
     assert not hasattr(common_settings, 'CSRF_COOKIE_HTTPONLY')
+
+
+def test_the_csrf_cookie_is_readable_by_the_label_editors_javascript(client,
+                                                                    db):
+    """The behavioural half of the assertion above, which the settings cannot
+    make on their own: Django 1.6's ``CsrfViewMiddleware`` now passes
+    ``httponly`` to ``set_cookie``, so what is being pinned is that the cookie
+    it issues is still one ``document.cookie`` can see."""
+    log_in_as_staff(client)
+
+    response = client.get(reverse('planting-label'))
+
+    assert response.status_code == 200
+    assert response.cookies['csrftoken']['httponly'] == ''

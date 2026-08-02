@@ -11,7 +11,7 @@
 # `django-pserver` (issue 033) -- reach it with
 # `dev/kasvimuseo app manage runserver_plus`; `app run` serves with gunicorn
 # (issue 044).
-django-extensions==1.5.9
+django-extensions==1.6.7
 Werkzeug==0.8.3
 
 # django-extensions' own dependency -- `six>=1.2` in its metadata, imported by
