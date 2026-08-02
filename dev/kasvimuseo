@@ -13,7 +13,7 @@
 #   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
 #   app manage <args...>                run a manage.py command
 #   app test [args]                     run the test suite
-#   app browser-test [args]             run the label editor's browser tests
+#   app browser-test [args]             the label editor, in Chromium and WebKit
 #   app browser-seed                    reset their data (they call this)
 #   app coverage [args]                 run the test suite and report coverage
 #   app shell                           shell inside the app container
@@ -364,6 +364,15 @@ app_serve() {
 # not one a 2020 Chromium can stand in for. So the server is the real
 # application in its own container and the tests are Python 3 on the host,
 # through uv, talking to it over HTTP -- the same split `docs` already uses.
+#
+# Two engines as well as two interpreters, since issue 061: every test runs in
+# Chromium and again in Playwright's WebKit, which is the engine iOS Safari is
+# built on and the one every defect this page has been reported for came from
+# (issues 045, 046, 047 and 056). `--engine chromium` or `--engine webkit`
+# narrows a run to one, and so does KASVIMUSEO_BROWSER_ENGINES; CI runs one per
+# job. WebKit skips the six touch-drag tests, which need a Chrome DevTools
+# Protocol call it does not have -- browser_tests/conftest.py says so where it
+# skips them.
 #
 # Everything it touches is thrown away: its own database, seeded from
 # browser_tests/seed.py, and its own MEDIA_ROOT under .dev/. The developer's
