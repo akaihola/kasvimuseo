@@ -8,33 +8,6 @@ traced as far as they go.
 Waiting
 -------
 
-* **The production image ships no** ``ylaneenkasvit/templates/``, **so every
-  page that extends** ``base.html`` **is a 500 in it.** Found on 2026-08-01
-  while verifying Stage 1 of the upgrade plan, which is how a page got
-  rendered from the production ``Dockerfile`` image at all. ``/admin/``,
-  ``/accounts/login/`` and ``/kasvimuseo/planted-species/`` answer 200;
-  ``/photologue/gallery/`` answers 500, and with ``DEBUG`` forced on it is
-  ``TemplateDoesNotExist: base.html``.
-
-  Not caused by that stage, and not by the ``django-extensions`` change beside
-  it: the same directory is missing from ``kasvi-027-prod``, an image built
-  from this repository before either. The cause is one missing line rather
-  than anything subtle. ``setup.py`` names ``kasvimuseo`` and ``jqm``
-  templates in ``package_data`` explicitly, and those are in the image;
-  ``ylaneenkasvit/templates/*.html`` -- ``base.html``, ``404.html``,
-  ``500.html`` and ``grappelli/`` -- comes only from ``MANIFEST.in`` plus
-  ``include_package_data``, and ``Dockerfile`` never copies ``MANIFEST.in``
-  into the build context it installs from. ``COPY MANIFEST.in`` is the
-  suspected whole of it, unverified.
-
-  Worth settling before it is split: **is this image deployed anywhere?**
-  Production is installed by ``ansible/install.yaml`` from a checkout, not
-  from a container, and nothing in this repository builds or pushes this
-  image, so the fault may have no user. That answer decides whether this is a
-  defect or a definition of a thing nobody runs -- and either way the image is
-  what a reader would reach for to see the application without a development
-  checkout.
-
 * **The museum number is not visible while it is being dragged on the iPad.**
   Reported on 2026-08-02, from the tablet, while checking :doc:`056
   <056-ipad-label-text-is-doubled-and-grows-until-it-vanishes>`'s first half --
@@ -153,3 +126,25 @@ reports above on this page -- the museum number that cannot be seen while it is
 dragged -- and left 056's photo question exactly where it was, since the photos
 are still not all there. A report that has been to the device once is cheaper
 to settle than one that has not, and both of these have now.
+
+Emptied of the templateless production image on 2026-08-02: it became
+:doc:`058 <058-the-production-image-ships-none-of-the-projects-own-data-files>`,
+and it is fixed. The report guessed its own cause and named it unverified, and
+the guess was right down to the line -- ``COPY MANIFEST.in`` -- so what the
+split was actually for was the two things a guess cannot do. The first is that
+the fault is bigger than the report: the manifest carries ``*/locale`` as well
+as ``ylaneenkasvit/templates``, so the image was missing both of this project's
+own Finnish catalogs too, and the admin the running image showed spoke English
+in exactly the strings :doc:`040
+<040-django-ships-no-translations-so-the-admin-chrome-is-english>` was written
+about. Nobody had looked, because nobody renders a page in order to read its
+headings. The second is the question the report parked, and it was answered by
+reading rather than by asking: ``ansible/install.yaml`` installs production
+with ``pip`` from a git URL and ``.github/workflows/tests.yml`` builds the
+development image twice and this one never, so no deployment and no pipeline
+has ever built this file. That makes the defect one with no user -- which is
+its rank and its ``Medium``, and not a reason to leave it, since an image
+nobody deploys is exactly what somebody with no development checkout reaches
+for. The fix carries the assertion that makes the next reorganised ``COPY``
+fail the build instead of the gallery page. That leaves the iPad drag number as
+the only report here.

@@ -230,6 +230,18 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       application before this was visible at all. **Fixed**: the fixture moves
       to ``kasvimuseo``, which has migrations, so South loads it after
       ``migrate`` -- which also repairs the databases that are already wrong.
+   058: The production image installed none of the files ``MANIFEST.in``
+      names, so ``base.html`` was not in it and every page extending it was a
+      500 there, and both of this project's own Finnish catalogs were missing
+      too. Here rather than in group 2 for 040's reason -- it is a packaging
+      change rather than a code one, and it is the same ``Dockerfile`` and the
+      same kind of assertion -- and last in this group because it is the one
+      item on this page whose breakage nobody is served: the image is deployed
+      nowhere, production being an Ansible install from a git checkout where
+      the manifest is present. That is an argument for its rank and not
+      against fixing it, since a reader with no development checkout has
+      nothing else to reach for. **Fixed**: one ``COPY`` line, plus a build
+      step that fails if any of the six files is missing again.
 
 4. The photo path
 -----------------
