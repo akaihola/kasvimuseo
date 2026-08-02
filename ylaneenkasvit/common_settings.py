@@ -119,20 +119,78 @@ INSTALLED_APPS = (
     # TODO: configure raven
 )
 
-# A verbatim copy of the Django 1.5 default, which the site has been running on
-# implicitly. Spelled out because that default is withdrawn at Django 2.0 --
+# The Django 1.5 default, which the site has been running on implicitly, plus
+# one entry. Spelled out because that default is withdrawn at Django 2.0 --
 # ``MIDDLEWARE_CLASSES`` is gone from ``global_settings`` and ``MIDDLEWARE``
 # defaults to ``[]``, so a project that never names its own middleware would
 # quietly start with none: no sessions, no authentication, no CSRF (issue 019).
 # Later stages of ``docs/upgrade-plan.rst`` edit this list, and it stays under
 # the old name until Stage 8 (Django 1.10), where both spellings are honoured.
+#
+# ``XFrameOptionsMiddleware`` is the one entry that is not in that default. It
+# is what sets ``X-Frame-Options`` at all -- ``X_FRAME_OPTIONS`` below is read
+# by nothing else -- and without it every page here, the admin and the label
+# editor included, could be framed by any site and clicked through blind
+# (issue 059). Last, so that it sees the finished response of everything above
+# it, which is where Django's own ordering documentation puts it.
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
+
+# Written out although it is also the Django 1.5 default, for the reason 019
+# spells out about ``MIDDLEWARE_CLASSES``: the default is not stable. Django
+# 3.0 changes it to ``DENY``, so a project that leaves it unset gets a
+# behaviour change out of an upgrade rather than out of a decision.
+#
+# ``SAMEORIGIN`` rather than ``DENY`` deliberately. The attack is a *foreign*
+# page framing this one, and ``SAMEORIGIN`` refuses exactly that; ``DENY``
+# additionally refuses this site framing itself, which buys no security and
+# can break a widget -- the installed grappelli ships TinyMCE, whose editor is
+# an iframe. The two public reports that *are* meant to be framed from another
+# origin are exempted one by one in ``kasvimuseo/urls.py`` rather than by
+# weakening this (issue 059).
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# The deployment is TLS-only -- ``ansible/templates/nginx-site.conf.j2`` listens
+# on 443 and answers port 80 with a 301 -- but a browser that reaches
+# ``http://`` first sends its cookies *with the request that gets redirected*,
+# so a typed address or an old bookmark leaks the logged-in session in
+# cleartext before the 301 arrives. Django 1.5 defaults both of these to
+# ``False``, which is the setting for a site that also serves plain HTTP; this
+# one does not (issue 059).
+#
+# Development and the test suite do serve plain HTTP, so both override these to
+# ``False``: ``local_settings.development.py`` for the development server and
+# ``test_settings.py`` for the suite and the browser tests. Neither override is
+# precautionary; both were measured, and what they prevent differs (issue 059).
+# A client reaching this application by a name that is not loopback keeps no
+# cookie at all over ``http://`` and simply cannot log in -- which is the
+# development case, since the browser is often on another machine (issue 044).
+# A client on ``127.0.0.1`` mostly can, because current browsers treat a
+# loopback origin as trustworthy, but only mostly: without the override in
+# ``test_settings`` one browser test fails, on a request Playwright makes
+# outside the page. The production value is the one that lives here, so a
+# deployment that has no override is secure rather than the other way round.
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# ``CSRF_COOKIE_HTTPONLY`` is deliberately absent, and this is the note that
+# says so rather than an omission (issue 059). Two reasons, either of which is
+# enough. Django 1.5 has no such setting -- ``global_settings`` does not define
+# it and ``CsrfViewMiddleware.process_response`` passes no ``httponly`` to
+# ``set_cookie`` -- so setting it here would be a setting Django ignores, which
+# is the same silence issue 019 is about. And when the upgrade reaches Django
+# 1.6, which adds it, it still must not be turned on blind: the label editor's
+# save reads the token out of ``document.cookie``
+# (``kasvimuseo/templates/kasvimuseo/reports/planting-labels.html``), so an
+# HttpOnly cookie would break Save for everyone. Moving that page to the
+# ``{% csrf_token %}`` input it already renders is the prerequisite, and it is
+# not this issue's change to make.
 
 # JSON rather than the Django 1.5 default, which is
 # ``django.contrib.sessions.serializers.PickleSerializer`` (issue 057). A

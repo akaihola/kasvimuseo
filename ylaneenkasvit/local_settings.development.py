@@ -13,6 +13,20 @@ def modify(settings):
     # what replaced `django-pserver` (issue 033).
     settings['INSTALLED_APPS'] += ('django_extensions',)
 
+    # Production is TLS-only, so `common_settings` marks the session and CSRF
+    # cookies `Secure` (issue 059). This server is plain HTTP, and a browser
+    # keeps a secure cookie from a plain-HTTP response only when the origin is
+    # loopback, which it treats as trustworthy anyway. `http://localhost:8000`
+    # is therefore the case that would *hide* this; the case that does not is
+    # the one this project actually has, a browser on another machine reaching
+    # the server by name (issue 044). Measured with the overrides removed: such
+    # a client stores no cookie at all, gets no CSRF token, and the admin login
+    # form comes back instead of the dashboard, with nothing on screen to say
+    # why. Relaxed here, in the file that already knows it is development,
+    # rather than by weakening the value production inherits.
+    settings['SESSION_COOKIE_SECURE'] = False
+    settings['CSRF_COOKIE_SECURE'] = False
+
     # The defaults match dev/kasvimuseo, which passes these through to the app
     # container as environment variables.
     db = settings['DATABASES']['default']

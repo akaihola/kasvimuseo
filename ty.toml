@@ -5,3 +5,9 @@
 [rules]
 unresolved-import = "ignore"
 unresolved-attribute = "ignore"
+# The settings modules are layered by ``from .common_settings import *`` and
+# then overriding, which is Django's own idiom: ``test_settings`` turning
+# ``SESSION_COOKIE_SECURE`` back off for a suite that speaks plain HTTP (issue
+# 059) reads as "``Literal[False]`` assigned to ``Literal[True]``" to a checker
+# that saw the star import.
+invalid-assignment = "ignore"
