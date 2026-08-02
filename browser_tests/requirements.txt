@@ -2,10 +2,11 @@
 # container, so nothing here is installed anywhere near the application. uv
 # resolves this file per run; see `dev/kasvimuseo app browser-test`.
 #
-# playwright is pinned loosely on purpose: the browser build it downloads has
-# to match the library, so the pair must be free to move together. The browsers
+# playwright is pinned loosely on purpose: the browser builds it downloads have
+# to match the library, so they must be free to move together. The browsers
 # themselves are never installed by the script -- CI runs `playwright install
-# chromium`, and a development machine points PLAYWRIGHT_BROWSERS_PATH at the
-# copy it already has.
+# <engine>` once per matrix leg, and a development machine points
+# PLAYWRIGHT_BROWSERS_PATH at the copies it already has. Two engines since
+# issue 061: chromium and webkit.
 playwright~=1.61.0
 pytest~=8.4
