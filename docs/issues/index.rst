@@ -89,8 +89,8 @@ prerequisite for 051.
    025: Rotating the ``SECRET_KEY`` and the database password costs one round
       of logouts. It depends on nothing and it is in the file the upgrade will
       edit repeatedly.
-   057: The one item in this group that is finished here rather than on the
-      server, and the reason it is in this group at all is 049: while the
+   057: One of the two items in this group that are finished here rather than
+      on the server, and the reason it is in this group at all is 049: while the
       committed key is the key production signs with, Django 1.5's pickle
       session serializer turns that disclosure from "forge a superuser cookie"
       into "run code as the uWSGI user". Last of the five because it does not
@@ -100,6 +100,31 @@ prerequisite for 051.
       key leaks, whether or not this one is ever rotated. **Fixed**, and its
       only cost, one round of logouts, is 049's cost already, so it should be
       deployed in the same maintenance window.
+   059: The other one finished here. The session and CSRF cookies carried no
+      ``Secure`` attribute on a deployment that is TLS-only, so every request
+      that reaches ``http://`` before nginx's 301 -- a typed address, an old
+      bookmark -- put a logged-in gardener's session cookie on the wire in
+      cleartext; and with no ``XFrameOptionsMiddleware`` every page, the admin
+      included, could be framed. It is in this group because it is the same
+      kind of live exposure as 049 and 025 rather than the same kind of work as
+      the settings hardening in group 6, whose items are all no-ops today and
+      this one is not. Ranked behind 057 because 057 caps what a stolen or
+      forged session is *worth* -- code execution against session forgery --
+      while this closes one more way to get one; ahead of everything below
+      because it is three settings in a file this repository owns and it costs
+      nothing at all, not even the round of logouts 049 and 057 share. That is
+      also why it need not wait for the security maintenance window: unlike the
+      two above it, any ordinary deploy will do. **Fixed**; it takes effect
+      when uWSGI next restarts.
+   060: The other end of 059, and the one act in this group still to be
+      performed on the server: with no ``Strict-Transport-Security`` header
+      from nginx, the cleartext request 059 emptied of cookies is still made,
+      once per browser that has not been redirected recently. Last of the
+      group because it is the smallest remaining exposure of the six and the
+      only one that is a promise rather than a change -- ``max-age`` commits
+      the domain to HTTPS for its duration and cannot be taken back early --
+      so it needs the maintainer's ruling on that duration before it is
+      configuration at all.
 
 2. Broken on real data
 -----------------------

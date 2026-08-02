@@ -44,6 +44,24 @@ DATABASES['default'].update({  # noqa: F405
         os.environ.get('KASVIMUSEO_TEST_SUFFIX', '')),
 })
 
+# ``common_settings`` marks both cookies ``Secure``, because production is
+# TLS-only (issue 059). Nothing here is: the suite's own client speaks to
+# ``http://testserver`` and the browser tests serve these same settings from
+# gunicorn on ``http://127.0.0.1`` and log into the admin. Chromium treats that
+# loopback origin as trustworthy and keeps the cookies anyway, so most of the
+# browser suite survives the production value -- but not all of it, and the
+# exception was measured rather than guessed: with these two lines removed,
+# ``test_the_editor_and_its_endpoint_are_staff_only`` fails, because the
+# request Playwright makes outside the page sends no secure cookie and the
+# endpoint answers with a CSRF failure instead of the staff refusal the test is
+# about. Turned off here rather than in ``common_settings``, so that the value
+# a deployment inherits is the safe one;
+# ``kasvimuseo/tests/test_settings_cookie_security.py`` asserts the production
+# value by reading ``common_settings`` directly and switching it back on for
+# the tests that need it.
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
 # The default hasher is deliberately slow; tests create users constantly.
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 
