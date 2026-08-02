@@ -55,7 +55,7 @@ def create_photo(title, width, height, color):
     last is the one the species points at (issue 042).
     """
     name = '{0}.jpg'.format(title.replace(' ', '-'))
-    photo = Photo(title=title, title_slug=title.replace(' ', '-'))
+    photo = Photo(title=title, slug=title.replace(' ', '-'))
     photo.image.save(name,
                      SimpleUploadedFile(name,
                                         jpeg_bytes(width, height, color),

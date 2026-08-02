@@ -130,7 +130,7 @@ def photo_factory(media_root):
         read by different code: the title chooses the species, the file name
         tells namesakes apart. Tests that care about the difference pass both.
         """
-        photo = Photo(title=title, title_slug=title.replace(' ', '-'))
+        photo = Photo(title=title, slug=title.replace(' ', '-'))
         name = '{0}.jpg'.format(filename or title.replace(' ', '-'))
         photo.image.save(
             name,

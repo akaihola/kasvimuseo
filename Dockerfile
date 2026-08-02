@@ -12,7 +12,9 @@ COPY requirements /kasvimuseo/requirements
 # This resolves rather than passing --no-deps, unlike dev/Containerfile, and
 # since issue 027 that no longer decides anything: production.txt names every
 # runtime package including Pillow, and the two mechanisms were measured to
-# install the same nine packages -- ten until issue 031 vendored `django-jqm`
+# install the same set -- nine packages when that was measured, ten until issue
+# 031 vendored `django-jqm`, and eleven since upgrade plan Stage 2 added
+# photologue 2.8's own two. The vendored `django-jqm` goes
 # into `jqm/`, which this image now gets from the COPY below rather than from a
 # GitHub URL, so this is the last pip line here that ever reached the network
 # for anything but PyPI. Pillow used to be chosen here by whatever pip

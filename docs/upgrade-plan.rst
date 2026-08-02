@@ -166,11 +166,13 @@ runs on Python 2.7. It was installed by ``dev/Containerfile`` and therefore
 invisible to ``production.txt`` when this was written; issue 027 has since
 moved it into the file, which now names the whole runtime set.
 
-``django-sortedm2m==1.5.0`` was installed alongside it and is gone: the
-suspicion recorded here — that photologue 2.6.1 does not actually need it —
+``django-sortedm2m==1.5.0`` was installed alongside it and left with issue 027:
+the suspicion recorded here — that photologue 2.6.1 does not actually need it —
 was confirmed by reading the installed metadata and grepping the package, and
-the image builds and the suite passes without it. It becomes a real dependency
-at photologue 2.8, which is Stage 2 below.
+the image builds and the suite passes without it. It came back with photologue
+2.8, which is Stage 2 below -- at **0.7.0**, not at the version that used to be
+here, and in ``requirements/production.txt`` rather than in an image
+definition.
 
 ``django-indexer==0.3.0`` and ``django-paging==0.2.4`` were in this list when it
 was written, referenced by nothing; Stage 0 has since removed them (issue 020),
@@ -401,7 +403,10 @@ psycopg2 2.9 stopped forcing the session to UTC, so with ``USE_TZ = True``
 ============================ =========================================================
 Package                      Ladder
 ============================ =========================================================
-``django-sortedm2m``         1.1.1 (Dj 1.5–1.8) → 1.5.0 (–1.9) → 2.0.0 (1.11–2.2)
+``django-sortedm2m``         **0.7.0** at Stage 2 — photologue 2.8.3 declares
+                             ``<0.8`` and the production image's ``manage``
+                             enforces it — then 1.3.3 at Stage 7 (photologue 3.7's
+                             floor) → 1.5.0 (Dj ≤1.9) → 2.0.0 (1.11–2.2)
                              → 3.0.0 (2.2–3.0) → 3.1.1 (2.2–3.2) → 4.0.0 (4.2–5.1)
 ``Pillow``                   6.2.2 last on py2.7 · 7.0 needs 3.5 · 9.0 → 3.7 ·
                              10.0 → 3.8 · 12.0 → 3.10. **Also capped from above
@@ -410,7 +415,10 @@ Package                      Ladder
 ``ExifRead``                 2.1.2+ needed by photologue 3.4–3.19; 3.x needs py≥3.7;
                              not needed at all from photologue 3.20. API stable
                              throughout — see 3b.4.
-``django-model-utils``       needed only by photologue 2.8 – 3.1
+``django-model-utils``       needed only by photologue 2.8 – 3.1, and **≤ 2.3.1**:
+                             2.4 deleted ``PassThroughManager``, which is the one
+                             thing photologue imports from it. Measured at Stage 2;
+                             nothing declares this bound.
 ``gunicorn``                 0.17.4 → 19.6.0 still ship the ``run_gunicorn`` Django
                              command; **19.7.1 removed it**. 20.0 needs py3.4,
                              24.0 needs py3.10. **≤20.1.0 imports ``pkg_resources``
@@ -700,6 +708,13 @@ setuptools is the one that decides. The Stage 10 image was checked too:
 ``python:3.7-alpine`` ships setuptools 57.5.0 and installs sortedm2m 1.5.0
 without complaint. Issue 030 has the numbers.
 
+**And the version is 0.7.0 rather than a 1.x from Stage 2 onwards**, for
+reasons that have nothing to do with the builder -- see Stage 2 -- so read
+"1.1.1 through 1.5.0" above as this section's own title reads: everything
+below 2.0.0. 0.7.0 is sdist-only as well, with the same ``UltraMagicString``
+in the same ``setup.py``, so the constraint is unchanged and so is the way
+out.
+
 3b.4 What is *not* a problem
 -----------------------------
 
@@ -912,27 +927,141 @@ Stage 2 — Photologue 2.6.1 → 2.8.3, still on Django 1.5
 
 Photologue moves *first* and alone, because it owns tables.
 
+**Done.** The four items below all held in outline and three of them were
+wrong in a detail that only running them showed -- the migration path, the
+dependency metadata and one three-package incompatibility that makes a public
+page a 500. What was actually run is in issue 036; what it found is here.
+
 * ``2.7``: prefixes every setting with ``PHOTOLOGUE_``. This project sets none,
-  so it is a no-op.
+  so it is a no-op. **Checked rather than assumed**: no settings module,
+  template, ansible variable or ``uwsgi.ini`` in this repository names any of
+  the settings photologue reads under either spelling -- neither the two that
+  2.7 renamed (``GALLERY_SAMPLE_SIZE``, ``SAMPLE_IMAGE_PATH``) nor the
+  already-prefixed ones. The only occurrences of ``PHOTOLOGUE_`` anywhere in
+  the tree are two comments.
 * ``2.8``: the expensive one.
 
   - ``Photo.title_slug`` becomes ``Photo.slug``. ``kasvimuseo/forms.py``
     manipulates ``self.fields['title_slug']`` and will raise ``KeyError``.
     (2.8 keeps a ``title_slug`` *property* that warns, but the form field is
-    gone.)
+    gone.) **Done**, and the readers were fewer than expected: ``forms.py``
+    (the field, the derived value in ``clean()`` and the comment about the two
+    unique columns), four test modules, and ``browser_tests/seed.py``. No
+    template, no ``ModelAdmin`` and neither ``kasvimuseo/photos.py`` nor
+    ``kasvimuseo/models.py`` mentions the field at all -- they read ``title``
+    and ``image``, which is what the species matching is built on. The admin
+    change list and change form for a photo were rendered against the restored
+    production database to confirm it, since ``PhotoAdmin`` inherits
+    photologue's ``prepopulated_fields``, which now names ``slug``.
   - ``Photo`` and ``Gallery`` gain a ``sites`` M2M → add
     ``'django.contrib.sites'`` to ``INSTALLED_APPS`` and set ``SITE_ID``.
-    Neither exists in the project today.
+    Neither exists in the project today. **Done** in
+    ``ylaneenkasvit/common_settings.py``, which is the module production runs
+    on by way of ``ylaneenkasvit_settings.py``, with ``SITE_ID = 1``: there is
+    no ``django_site`` table in the production dump at all, so the row that
+    exists after this stage is the one ``syncdb`` writes, and Django's
+    ``create_default_site`` writes it at pk 1. Its ``domain`` is Django's
+    ``example.com`` placeholder and stays that way, because nothing in this
+    project renders a ``Site``: photologue uses the relation to filter its own
+    gallery and photo views, and that is all. Two consequences the item did
+    not mention. ``'sortedm2m'`` has to be an installed application as well,
+    for the gallery admin's widget template and stylesheet. And
+    ``kasvimuseo.forms.PhotoForm`` has to exclude ``sites``, as photologue's
+    own ``PhotoAdminForm`` does when ``PHOTOLOGUE_MULTISITE`` is off: the
+    receiver that puts a new photo on the current site runs at ``post_save``
+    and the admin calls ``save_m2m()`` after that, so a form carrying an
+    unticked ``sites`` widget would take every uploaded photo straight back
+    off the site.
   - New dependencies: ``django-sortedm2m`` (1.1.1+) and ``django-model-utils``.
     Both go into ``requirements/production.txt``, which is a complete lock as
     of issue 027 and no longer has a second install to hide them in. sortedm2m
     was in the image before this stage needed it and is not any more; its
-    build-tool constraint is 3b.3.
+    build-tool constraint is 3b.3. **Done** -- ``django-sortedm2m==0.7.0`` and
+    ``django-model-utils==2.3.1`` -- and "1.1.1+" is wrong, in three ways that
+    only appeared once 1.5.0 had been installed and run:
+
+    * photologue 2.8.3 **does** declare both dependencies, against what
+      ``requirements/production.txt`` said beside the absent package ("the
+      declaration first appears at photologue 3.4"). Its ``requirements.txt``,
+      which its ``setup.py`` reads into ``install_requires``, asks for
+      ``django-sortedm2m>=0.6.1,<0.8`` and ``django-model-utils>=2.0.3``.
+    * That ``<0.8`` is load-bearing whether or not it is justified. pip 20.0.2
+      -- what both images have -- installs 1.5.0 over it with nothing worse
+      than a ``pip check`` warning, and the suite passes; but ``manage`` in the
+      production image is a setuptools console script, and a console script
+      resolves every installed distribution's declared requirements through
+      ``pkg_resources`` before it runs a line. So ``manage validate`` -- and
+      ``manage migrate``, which is how this stage is deployed -- dies there
+      with ``ContextualVersionConflict``. The development image never shows it,
+      because ``dev/kasvimuseo`` runs ``python ylaneenkasvit/manage.py``
+      instead. 0.7.0 is the newest release under the ceiling, it has the
+      ``SortedManyToManyField`` and the ``sort_value`` column that photologue
+      2.8 uses, and the next real floor is photologue 3.7's
+      ``django-sortedm2m>=1.3.3`` at Stage 7.
+    * ``django-model-utils`` needs an upper bound that its own metadata does
+      not give: photologue imports
+      ``model_utils.managers.PassThroughManager``, and 2.4 deleted that class.
+      2.3.1 is therefore the last usable release, not a preference. The bound
+      is recorded beside the pin, which is what issue 027 asks of every one of
+      them.
+
   - Run photologue's South migrations. **This requires dropping**
     ``SOUTH_MIGRATION_MODULES`` and ``ylaneenkasvit/external_migrations/photologue/``,
     which currently override photologue's migration history with a single local
     squashed ``0001_initial``. Fake photologue back to its own ``0001`` and then
-    migrate forward.
+    migrate forward. **Done**, and the recipe in that last sentence is wrong
+    twice over. The sequence that actually works is in ``dev/kasvimuseo db
+    upgrade-photologue``, which is a runnable command rather than a paragraph,
+    with the reasoning beside it:
+
+    * There is nothing to fake back to. The local squashed migration *is*
+      photologue's own ``0001_initial``, identical but for whitespace and a
+      redundant ``db_index=True`` on the two slug columns, so the
+      ``south_migrationhistory`` row already in the production database means
+      what the package means by it.
+    * ``0002`` must be faked, and it is the one migration in this history that
+      must not run here. Its data half truncates every photo title to 50
+      characters and then tests
+      ``Photo.objects.filter(title=<the truncated title>).exists()`` -- true of
+      the photo it is looking at -- so it appends a digit to escape a
+      collision with itself. On this database, where the longest title is 41
+      characters and most of them end in a number already, that renumbers all
+      137 photos, and a photo's title is what attaches it to a species. Faking
+      it leaves three ``title`` columns at ``varchar(100)`` where the model
+      says 50, which is a wider column than declared and harmless.
+    * ``kasvimuseo`` has to be migrated to the end *before* photologue moves.
+      ``kasvimuseo:0021`` is a data migration that reaches ``species.photo``
+      through South's frozen ORM, and that frozen copy of ``photologue.Photo``
+      still has ``title_slug``; run it after the rename and it stops with
+      ``column photologue_photo.title_slug does not exist``. Every later stage
+      that renames a photologue column has the same shape of problem waiting
+      for it.
+    * ``0003`` to ``0006`` then run for real, and ``0006`` is what needs the
+      ``Site`` row: it puts every existing gallery and photo on it, which is
+      what keeps them visible in photologue's own views.
+
+* **Not in the plan at all, and the second reason the pin is 0.7.0:**
+  photologue 2.8 uses ``django-model-utils``' ``PassThroughManager`` as the
+  default manager of ``Photo`` and ``Gallery`` *and* ``django-sortedm2m`` for
+  ``Gallery.photos``, and on Django 1.5 those three do not compose from
+  sortedm2m 1.x onwards. sortedm2m 1.x decides which query-set accessor to
+  override with ``hasattr(RelatedManager, 'get_queryset')``, meaning it to
+  distinguish Django ≥ 1.6 from 1.5; ``PassThroughManagerMixin`` defines
+  ``get_queryset`` on Django 1.5 too, so the test answers wrongly, and the
+  method it then calls resolves past Django's ``ManyRelatedManager`` to the
+  mixin -- stepping over the one method that limits a related manager to its
+  own instance's rows. The visible results, measured on 1.5.0, are that
+  ``gallery.photos`` is every photo in the database and that
+  ``/photologue/gallery/`` is a 500: ``Gallery.sample()`` builds a second join
+  onto a query set whose ``ORDER BY`` still names the join table the lost
+  filter would have brought, and PostgreSQL rejects it. The production database
+  has one gallery with four photos in it, so that is a live page. 0.7.0 has no
+  such branch and is correct here, which is the happy half of the ceiling
+  above; ``kasvimuseo/tests/test_photologue_galleries.py`` pins both symptoms,
+  so the day someone raises the pin while this project is still on Django 1.5
+  it fails here rather than in the garden. Stage 3 (Django 1.6) makes
+  sortedm2m's test correct again and Stage 6 drops ``django-model-utils``
+  altogether, so the constraint is on Stages 2 to 5.
 
 Stage 3 — Django 1.5.12 → 1.6.11
 --------------------------------

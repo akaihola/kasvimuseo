@@ -135,6 +135,24 @@ ever has to be built on a current toolchain, is sortedm2m 2.0.0 -- the first
 release with a wheel, and a Django 1.11 floor, so not available before
 Stage 9.
 
+Where the pin is now, and why the range above is wider than it says
+===================================================================
+
+Upgrade plan Stage 2 has landed, so ``django-sortedm2m`` is installed again --
+in ``requirements/production.txt``, at **0.7.0**, not at one of the 1.x
+versions this issue and the plan both expected. The reason is photologue's own
+metadata (``django-sortedm2m>=0.6.1,<0.8``) and the fact that the production
+image's ``manage`` is a setuptools console script, which refuses to run when an
+installed distribution's declared requirement is unsatisfied; Stage 2 in
+``docs/upgrade-plan.rst`` has the traceback and the second reason.
+
+Nothing here changes except the numbers: 0.7.0 is sdist-only too, and its
+``setup.py`` has the same ``UltraMagicString`` in the same place, so it fails
+under a current setuptools exactly as 1.5.0 does. The range in "What 027 has to
+carry" above should be read as this issue's title reads -- everything below
+2.0.0 -- rather than as 1.1.1 to 1.5.0. The bound is recorded beside the pin in
+``requirements/production.txt``, which is where the version is set now.
+
 See also
 ========
 
