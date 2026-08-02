@@ -467,6 +467,17 @@ Updating code on the server
 
     ansible-playbook -t code ansible/install.yaml
 
+Updating the nginx configuration
+--------------------------------
+
+    ansible-playbook -t nginx ansible/install.yaml
+
+``-t code`` above does not touch it: the site configuration is rendered from
+``ansible/templates/nginx-site.conf.j2`` by the ``nginx`` tag, and a change to
+that template is on the server only after this command or a whole run. The
+``Strict-Transport-Security`` header (issue 060) is one such change -- see
+"What the HSTS header commits you to" below before you run it the first time.
+
 
 The security maintenance window
 ===============================
@@ -516,7 +527,11 @@ What it does, in order
    ``/home/kasvimuseo/uwsgi.ini`` and restarts uWSGI. That is issue 049 in its
    entirety, and it is also the step 051 has to happen after. The two values
    land together, which is why the whole playbook is the unit rather than
-   ``-t database`` or ``-t web`` on their own.
+   ``-t database`` or ``-t web`` on their own. The same step re-renders the
+   nginx site configuration, so it also carries the
+   ``Strict-Transport-Security`` header of issue 060 -- see "What the HSTS
+   header commits you to" below, which is the one thing in this run that
+   outlives it.
 #. The admin passwords, from the vault (050).
 #. A report of every account in ``auth_user`` and what the admin log says it
    did (050 again -- see "What it leaves for you" below).
@@ -543,6 +558,41 @@ problem:
 * password-reset links issued before the run stop working -- requesting a new
   one works;
 * whoever uses the ``akaihola`` admin account needs the new password.
+
+What the HSTS header commits you to
+-----------------------------------
+
+Any run of ``install.yaml`` -- this playbook, or ``-t nginx`` on its own --
+deploys ``Strict-Transport-Security: max-age=300`` on all three sites (issue
+060). A browser that has seen it will not make a plain ``http://`` request to
+that name for five minutes, which is the point: it closes the cleartext window
+issue 059 emptied of cookies.
+
+The consequence to know about before you run it is that **the certificate
+renewal becomes load-bearing**. Renewal is the root cron job at 03:30 that
+``geerlingguy.certbot`` installs; nothing here monitors it, and its output goes
+to ``root``'s mail on the host. While the promise lasts five minutes, an
+expired certificate is what it has always been -- a warning a visitor can click
+through. It stops being that if the value is ever raised, so:
+
+* **After the first run**, read the header back from outside the host::
+
+      curl -sI https://kasvit.ambitone.com/ | grep -i strict-transport
+      curl -sI https://static.kasvit.ambitone.com/ | grep -i strict-transport
+      curl -sI https://media.kasvit.ambitone.com/ | grep -i strict-transport
+
+  Three ``max-age=300`` lines. A missing one is a site that would break under a
+  longer value, and is worth fixing before anybody raises it.
+* **Raising it to a year** (``max-age=31536000``) is a deliberate one-line
+  commit against issue 060, not something a deploy does by itself, and that
+  issue lists what has to be true first -- including that a failed renewal
+  reaches a person. Until then the deployed configuration says which stage it
+  is on, in a comment beside the directive.
+* **Backing it out** is deleting the ``add_header`` line and running
+  ``-t nginx``; browsers forget the promise five minutes later.
+
+``includeSubDomains`` and ``preload`` are deliberately not sent. Issue 060 says
+why, and ``preload`` in particular is not this repository's to add.
 
 What to check afterwards
 ------------------------
