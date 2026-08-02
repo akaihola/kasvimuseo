@@ -8,26 +8,7 @@ traced as far as they go.
 Waiting
 -------
 
-* **The museum number is not visible while it is being dragged on the iPad.**
-  Reported on 2026-08-02, from the tablet, while checking :doc:`056
-  <056-ipad-label-text-is-doubled-and-grows-until-it-vanishes>`'s first half --
-  which is why it is here rather than in that file: it is the drag layer of
-  :doc:`045 <045-the-label-editor-is-unusable-on-an-ipad>` rather than the
-  fitter, and one report per file is the rule.
-
-  Nothing is traced yet. What to look at first: ``#drag-number`` is the copy
-  that follows the pointer, it sits outside ``#labels`` so 046's ``zoom`` does
-  not apply to it, and ``dragStart`` gives it an inline ``font-size`` computed
-  as the number's ``getBoundingClientRect().width / offsetWidth`` times its
-  computed ``font-size``. Those are the two coordinate systems 746ce71 says
-  Safari reports differently inside a zoomed subtree, so a size of zero or of
-  something absurd is the first thing to measure. 045's own emulated touch
-  tests cover the drag itself and pass, so whatever this is, it is not the
-  gesture.
-
-  It is not known whether the number still moves and is merely invisible, or
-  whether the gesture does nothing at all. The report says only that the number
-  is not visible, so ask before assuming either.
+Nothing. Both of the reports this page was holding have numbers now.
 
 Last emptied on 2026-07-29: the five reports that were here became issues
 :doc:`043 <043-photos-cannot-be-sorted-by-file-name>`,
@@ -163,3 +144,34 @@ request rather than a question -- a ``development.sql`` whose logins are known
 050's password change finally happens on the server, every dump fetched
 afterwards will be one nobody here can sign into. The iPad drag number is still
 the only report on this page.
+
+Emptied of the last one the same day, and of everything: the museum number
+that cannot be seen while it is dragged became :doc:`063
+<063-the-dragged-museum-number-cannot-be-seen-on-the-ipad>`. It is the first
+report on this page that a browser here could not make happen at all. Both
+suspects it named were followed to the end and neither survived: the copy sits
+outside ``#labels`` exactly as the report says, and the ratio ``dragStart``
+computes from it is the ``zoom`` itself -- 0.50856 against 0.5, the difference
+being the three degrees the number is rotated by -- so the copy is drawn at
+half the number's own font size, opaque, above the sheet, on the screen and
+under the pointer, in both of this host's engines, by mouse and by finger, on a
+scrolled page and an unscrolled one. The ``font-size`` of zero the report asked
+to be measured first cannot happen at all: ``|| 1`` catches the falsy ratios
+and an infinite one is dropped as an invalid declaration, leaving the page's
+own ``24pt``, and the whole range of ratios a 50 % zoom could produce draws the
+number between 8px and 128px. That guard is now a test of its own, because
+deleting it produces the reported symptom exactly -- ``font-size: 0`` in a
+0 x 0 box, opaque and correctly positioned -- and nothing had held it. The
+question the report parked -- whether the number still moves -- was put to the
+maintainer and got no answer, so 063 rules without one and says so in its
+``Decision``: what is left is a choice between a copy 4 mm wide underneath a
+fingertip twice that and an arithmetic only iOS Safari performs, and it is two
+minutes with the tablet rather than a change to the template. That is why it is
+``Accepted``, and the reason is the mirror of 056's: 056 has a fix no engine
+here can apply, and this has a report no engine here can reproduce. It also
+cost the suite nothing to say so in the other engine, because :doc:`061
+<061-every-safari-claim-was-verified-in-a-non-safari-engine>` had just made every test run in
+WebKit too. That takes this page to nothing waiting for the second time since
+it was written -- the entry two above emptied it of the other one the same day,
+and neither of the two had to touch the other's report to do it. The entry
+between them is a third of the same day that never added a line here at all.
