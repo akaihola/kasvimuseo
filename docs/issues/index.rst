@@ -89,6 +89,17 @@ prerequisite for 051.
    025: Rotating the ``SECRET_KEY`` and the database password costs one round
       of logouts. It depends on nothing and it is in the file the upgrade will
       edit repeatedly.
+   057: The one item in this group that is finished here rather than on the
+      server, and the reason it is in this group at all is 049: while the
+      committed key is the key production signs with, Django 1.5's pickle
+      session serializer turns that disclosure from "forge a superuser cookie"
+      into "run code as the uWSGI user". Last of the five because it does not
+      end anything -- 049 does -- but ahead of every group below it, because
+      it caps what the open window is worth and it is one line that depends on
+      nothing. Deliberately not ranked behind 049: it holds whenever the next
+      key leaks, whether or not this one is ever rotated. **Fixed**, and its
+      only cost, one round of logouts, is 049's cost already, so it should be
+      deployed in the same maintenance window.
 
 2. Broken on real data
 -----------------------
