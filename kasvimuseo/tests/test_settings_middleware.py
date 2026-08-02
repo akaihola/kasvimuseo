@@ -12,20 +12,31 @@ The second assertion is expected to be *deliberately* changed, not to keep
 passing for ever: from Stage 5 of ``docs/upgrade-plan.rst`` onwards the list
 grows entries Django's own default does not have, and at Stage 8 it is renamed
 to ``MIDDLEWARE``.
+
+The first such deliberate change has already happened, before the upgrade got
+there: ``XFrameOptionsMiddleware`` was added for issue 059, so the list is now
+the 1.5 default *plus* that one entry, and it is spelled out that way here
+rather than by loosening the comparison. What is pinned is unchanged -- that
+nothing has drifted out of the default, and that nothing has drifted in
+unnoticed.
 """
 
 from __future__ import unicode_literals
 
 from django.conf import global_settings, settings
 
+# Added deliberately, and the only entry here that Django's own default does
+# not have (issue 059).
+ADDED = ('django.middleware.clickjacking.XFrameOptionsMiddleware',)
 
-def test_middleware_is_the_installed_django_default():
-    assert tuple(settings.MIDDLEWARE_CLASSES) == tuple(
-        global_settings.MIDDLEWARE_CLASSES)
+EXPECTED = tuple(global_settings.MIDDLEWARE_CLASSES) + ADDED
+
+
+def test_middleware_is_the_installed_django_default_plus_clickjacking():
+    assert tuple(settings.MIDDLEWARE_CLASSES) == EXPECTED
 
 
 def test_middleware_is_defined_by_the_project_not_inherited():
     from ylaneenkasvit import common_settings
 
-    assert tuple(common_settings.MIDDLEWARE_CLASSES) == tuple(
-        global_settings.MIDDLEWARE_CLASSES)
+    assert tuple(common_settings.MIDDLEWARE_CLASSES) == EXPECTED
