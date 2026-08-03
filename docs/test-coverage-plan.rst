@@ -337,6 +337,14 @@ Targets and definition of done
 There is no CI yet, so the gate is the dev script, not a build server. Adding
 CI is a natural follow-up once the suite needs a database.
 
+.. note::
+
+   That last sentence was true when it was written and has not been since
+   issue 018: there is CI, and since issue 064 it runs
+   ``dev/kasvimuseo app coverage`` with a floor. The sentence is left as
+   written, because this section records what the plan aimed at; what is true
+   today is in `Where coverage stands`_ at the end of this page.
+
 
 Outcome
 =======
@@ -364,6 +372,13 @@ views.py                                   98      0    100%
 
 ``kasvimuseo_admin_list.py`` reached 86 % incidentally through the admin
 changelist smoke tests, without being tested directly -- as intended.
+
+.. note::
+
+   The table above is this plan's result, measured when the five packages
+   landed, and is **not** maintained afterwards: the tree has moved on, and so
+   have the numbers. Today's are in `Where coverage stands`_, dated, and they
+   are the ones the gate enforces.
 
 Defects 1--4 are fixed. Three further findings came out of writing the tests
 and are **not** fixed, because each changes behaviour that is visible in
@@ -474,3 +489,87 @@ Step 0 is a prerequisite for everything and is small -- one settings module,
 one ``pytest.ini`` move, one factories module and two changes to
 ``dev/kasvimuseo``. It should land together with, or straight after, the
 ``dev-environment`` merge.
+
+
+Where coverage stands
+=====================
+
+Everything above is the plan and its result. This section is the current
+state, kept separately so that neither has to be edited to keep the other
+honest. It is dated, and a date is the whole point: it is a measurement, not a
+target, and the gate described at the end is what keeps it from drifting far
+from the truth between measurements.
+
+**Measured 2026-08-03**, on ``master`` at ``aa4c39a``, with::
+
+    $ dev/kasvimuseo app coverage
+
+449 tests, all passing:
+
+================================================= ======= ====== =======
+Module                                              Stmts   Miss   Cover
+================================================= ======= ====== =======
+kasvimuseo/admin.py                                   137      0    100%
+kasvimuseo/forms.py                                    44      0    100%
+kasvimuseo/models.py                                  305      5     98%
+kasvimuseo/photo_matching.py                           95      2     98%
+kasvimuseo/photos.py                                   31      0    100%
+kasvimuseo/templatetags/bush.py                         5      0    100%
+kasvimuseo/templatetags/kasvimuseo_admin_list.py      139     13     91%
+kasvimuseo/templatetags/kasvimuseo_model_tags.py        6      0    100%
+kasvimuseo/templatetags/kasvimuseo_photo_tags.py        7      0    100%
+kasvimuseo/templatetags/lightings.py                    7      0    100%
+kasvimuseo/templatetags/months.py                       7      0    100%
+kasvimuseo/urls.py                                      5      0    100%
+kasvimuseo/views.py                                   114      0    100%
+ylaneenkasvit/dashboard.py                             14      0    100%
+ylaneenkasvit/media.py                                 12      0    100%
+ylaneenkasvit/urls.py                                  12      0    100%
+**TOTAL**                                             940     20     98%
+================================================= ======= ====== =======
+
+The total is 97.87 % exactly -- 920 of 940 statements. Four empty
+``__init__.py``/``models.py`` files are left out of the table above and counted
+in the total, where they contribute nothing either way.
+
+It is a bigger tree than the `Outcome`_ one: 940 statements against 722,
+because Stage 2 of :doc:`upgrade-plan` added code and tests, ``forms.py`` grew,
+``photo_matching.py`` is new since issues 002 and 003, and issues 055, 057, 058
+and 059 have all landed. **The plan's own tables are the record of the plan and
+are not maintained**; this one is the record of the tree.
+
+Where the twenty missing statements are:
+
+* ``kasvimuseo_admin_list.py`` -- 13 of them, in the vendored fork of Django's
+  ``admin_list``. Deliberately not chased (`Out of scope`_), covered
+  incidentally, and scheduled for deletion at upgrade Stage 5 by issue 034.
+* ``models.py`` -- 5: the ``except NameError: unicode = str`` Python 3
+  fallback, which cannot run on 2.7 (lines 16--17); the
+  ``except (IOError, OSError, ValueError)`` arm of the photo-orientation
+  helper (69--72); and ``PlantingPhoto.__unicode__`` (674), which nothing in
+  the suite or the admin calls and which reads ``self.observation``, a field
+  that model does not have. Noted rather than fixed: this change deliberately
+  adds no tests.
+* ``photo_matching.py`` -- 2 defensive early returns, for an empty filename
+  and for a narrowing that matches nothing.
+
+So the seven statements outside the vendored fork are the whole of what this
+repository's own code does not execute under test. The 97 % of the `Outcome`_
+table and the 98 % here are not the same suite measured twice: this one
+measures more files.
+
+The gate
+--------
+
+Since issue 064, ``dev/kasvimuseo app coverage`` **fails** when the total falls
+below 97 %, and ``.github/workflows/tests.yml`` runs that same command on every
+pull request. The floor, what is measured and what is left out are all in
+``.coveragerc`` at the repository root, argued beside each setting; the reason
+it is a floor just under today's number rather than at it, the reason it is one
+total rather than a minimum per file, and the fact that coverage 4.5.4 compares
+the *rounded* percentage -- so 97 refuses anything below 96.5 -- are there too.
+
+A number in this document was only ever a claim about the past. The floor is
+the part that holds while the seventeen remaining stages of :doc:`upgrade-plan`
+rewrite the dependencies, the settings and eventually the Python version
+underneath it.

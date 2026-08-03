@@ -15,7 +15,7 @@
 #   app test [args]                     run the test suite
 #   app browser-test [args]             the label editor, in Chromium and WebKit
 #   app browser-seed                    reset their data (they call this)
-#   app coverage [args]                 run the test suite and report coverage
+#   app coverage [args]                 the suite again, with the coverage gate
 #   app shell                           shell inside the app container
 #   docs [--open] [--clean]             build the Sphinx docs (on the host)
 #   docs serve [--port N]               serve every checkout's docs on the tailnet
@@ -529,12 +529,26 @@ case "${1:-}" in
                shift 2; browser_test "$@" ;;
       browser-seed)
                browser_seed ;;
+      # Runs the same suite as `app test`, and additionally fails when the
+      # total drops below the floor in .coveragerc -- which is where what is
+      # measured, what is left out and why 97 are all argued (issue 064). What
+      # is measured is not repeated here on purpose: this command and the CI
+      # step that calls it must read one definition, not two.
+      #
+      # The suite is silent while it passes, because the table is what this
+      # command is for; if it fails, its output is printed and no coverage is
+      # reported, since the number would then be measuring a broken run.
+      # Reporting it anyway is what the `;` here used to do, and it turned a
+      # red suite into a green-looking table.
+      #
+      # It costs about a quarter longer than `app test` -- 44 seconds against
+      # 35 on a warm cluster here, the tracer being on every line of every
+      # request -- which is why it is a second command rather than what
+      # `app test` does.
       coverage)
                shift 2; with_db app_run_container "$TEST_ENV" sh -c \
-                 "coverage run --source=kasvimuseo,ylaneenkasvit \
-                               --omit='*/migrations/*,*/tests/*,\
-*/manage.py,*/wsgi.py,*/*settings*.py' \
-                               -m pytest -q $* >/dev/null;
+                 "out=\$(coverage run -m pytest -q $* 2>&1) ||
+                      { printf '%s\n' \"\$out\" >&2; exit 1; }
                   coverage report -m" ;;
       shell)   with_db app_run_container "" sh ;;
       *)       die "usage: dev/kasvimuseo app build|run|manage|test|browser-test|browser-seed|coverage|shell" ;;
