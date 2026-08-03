@@ -280,9 +280,13 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       056's: not a fix no engine here can apply, but a report no engine here
       can reproduce. The suspect it arrived with -- a ``font-size`` degenerated
       by a rect-to-``offsetWidth`` ratio -- is measured out of the running
-      rather than left open, which is most of the value in the file; what is
-      left needs two minutes with the device to choose between a copy hidden
-      under the fingertip and an arithmetic only iOS Safari performs.
+      rather than left open, which is most of the value in the file. The two
+      minutes with the device were spent on 2026-08-03 and eliminated both
+      remaining candidates rather than choosing between them: the sheet
+      rearranges, so the gesture arrives, and there is nothing beside the
+      finger either, so the copy is not merely covered by it. What is left is a
+      single reading from Safari's Web Inspector on the tablet, which is the
+      second issue now waiting on that setup.
    054: The mobile species list asks for a ``mobilethumbnail`` photo size that
       ``initial_data.json`` did not define, so every row of it is a broken
       image on any database built from the fixtures. Same shape as 004 and
