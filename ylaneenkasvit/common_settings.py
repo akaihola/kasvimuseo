@@ -395,3 +395,16 @@ LOGGING = {
 
 DEBUG = bool(os.environ.get('KASVIMUSEO_DEBUG'))
 TEMPLATE_DEBUG = DEBUG
+
+# The password-free ``/dev-login/<username>/`` route, off unless something asks
+# for it (issue 068). ``dev/kasvimuseo`` sets the variable for the containers it
+# starts and nothing else does, so a deployment -- which gets its environment
+# from ``uwsgi.ini``, written by Ansible -- never registers the route at all.
+#
+# Read from the environment rather than set in ``local_settings.development.py``
+# for two reasons. That file is copied once into an untracked
+# ``local_settings.py`` and then belongs to whoever copied it, so a value added
+# there today reaches nobody who already has one; and an untracked settings file
+# is exactly how production ended up with ``DEBUG`` on (issue 051), which is
+# also why this gate is its own variable rather than a reading of ``DEBUG``.
+DEV_LOGIN = bool(os.environ.get('KASVIMUSEO_DEV_LOGIN'))
