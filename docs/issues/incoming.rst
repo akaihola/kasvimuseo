@@ -148,3 +148,18 @@ nobody deploys is exactly what somebody with no development checkout reaches
 for. The fix carries the assertion that makes the next reorganised ``COPY``
 fail the build instead of the gallery page. That leaves the iPad drag number as
 the only report here.
+
+Emptied of one that never sat here on 2026-08-03: a login that stopped working
+locally, reported as "where do I get the new password", became :doc:`067
+<067-db-bootstrap-ignores-the-dump-it-is-given>` and is fixed. It went straight
+to a number because the command was in the report and running it settled the
+question in one go -- ``db bootstrap`` had been handed a dump path, which it
+accepts and discards, so the database had no accounts at all and no password
+would have worked. There is no new password: the hash in the dump is still the
+one :doc:`050 <050-the-production-admin-password-is-committed-and-in-use>`
+recorded, which recomputing it confirmed. The half of the report that was a
+request rather than a question -- a ``development.sql`` whose logins are known
+-- is the more useful half, and it is why the issue is not just a guard: after
+050's password change finally happens on the server, every dump fetched
+afterwards will be one nobody here can sign into. The iPad drag number is still
+the only report on this page.

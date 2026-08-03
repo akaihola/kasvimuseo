@@ -27,6 +27,22 @@ Ansible instead and restore that file::
     $ ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml
     $ dev/kasvimuseo db restore /backup-dir/vps763955.ovh.net/tmp/backup.sql
 
+A restored dump is a database nobody can sign into: the passwords in it are
+production's, they are hashes, and a hash cannot be reversed. ``db
+development`` writes the same dump beside the original with every account's
+password replaced by one that is known, and that copy is the one to restore::
+
+    $ dev/kasvimuseo db development                  # -> .dev/backups/development.sql
+    $ dev/kasvimuseo db restore .dev/backups/development.sql
+
+Every account, not just yours, so the derived file also carries no production
+password hash at all -- which matters, because ``.dev/backups/`` is where dumps
+sit around and one of those hashes is a three-digit password (issue 050). The
+password is ``development``, hashed by the application's own hasher inside the
+container; ``KASVIMUSEO_DEV_PASSWORD`` changes it. It touches the ``auth_user``
+password column and nothing else, so the names, the addresses and every plant
+record are still the real ones.
+
 A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- needs one more
 command before the application will serve it, and so does any other database
 this project was running before that stage::
@@ -47,6 +63,10 @@ migrations instead, and give yourself an admin account::
 
     $ dev/kasvimuseo db bootstrap
     $ dev/kasvimuseo app manage createsuperuser
+
+``db bootstrap`` takes no dump -- it is the command for having none. Given one
+anyway it says so and stops, rather than building the empty database and
+leaving you at a login screen with no account behind it (issue 067).
 
 Run the site at http://localhost:8000/ ::
 
@@ -99,6 +119,7 @@ Other commands::
     $ dev/kasvimuseo app run --publish        # a published port instead of the host's
     $ dev/kasvimuseo db start|stop|status     # PostgreSQL by hand
     $ dev/kasvimuseo db psql                  # psql on the local database
+    $ dev/kasvimuseo db development           # a dump whose passwords are known
     $ dev/kasvimuseo db upgrade-photologue    # an old database -> photologue 2.8.3
     $ dev/kasvimuseo media fetch              # photos the database references
     $ dev/kasvimuseo db reset                 # delete the cluster entirely
