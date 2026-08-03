@@ -62,6 +62,15 @@ DATABASES['default'].update({  # noqa: F405
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
+# Off here whatever the environment says, so the suite's URLconf is the one a
+# deployment has (issue 068). ``dev/kasvimuseo`` exports
+# ``KASVIMUSEO_DEV_LOGIN`` to every container it starts, this suite's included,
+# and ``common_settings`` would otherwise read it and add the route -- which
+# would make the tests below assert the development server's URL list while
+# claiming to assert Django's. The dev-login tests reload
+# ``ylaneenkasvit.urls`` with the setting on instead, one test at a time.
+DEV_LOGIN = False
+
 # The default hasher is deliberately slow; tests create users constantly.
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 

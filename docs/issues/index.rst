@@ -489,6 +489,18 @@ makes the rest of this page hold.
       now derives a dump whose passwords are known, so a restored copy can be
       signed into without knowing production's -- which is what 050's pending
       password change will make impossible.
+   068: Every ``db restore`` logs the developer out, because the dump brings
+      production's ``django_session`` with it, and one restored as it came has
+      no password anybody here knows either. Directly after 067, which is the
+      other half of the same detour and was fixed first: ``db development``
+      made the passwords knowable, and this makes the form unnecessary. In
+      this group rather than in 7 for the same reason 067 is -- nothing a
+      visitor can reach is involved, it is the loop in which everything above
+      gets checked. Last, because it is the smallest of them and depends on
+      nothing. **Fixed**: a ``/dev-login/<username>/`` route that exists only
+      where ``KASVIMUSEO_DEV_LOGIN`` is set -- which is ``dev/kasvimuseo`` and
+      nowhere else -- so one ``xdg-open`` replaces the detour and a deployment
+      has no such URL.
 
 9. The upgrade programme
 ------------------------
