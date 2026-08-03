@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.http import HttpResponseRedirect
 from photologue.views import GalleryArchiveIndexView
+from ylaneenkasvit.dev_login import dev_login
 import re
 
 admin.autodiscover()
@@ -32,6 +33,20 @@ urlpatterns = patterns(
 
     (r'^$', lambda request: HttpResponseRedirect('/admin/')),
 )
+
+# Password-free login for a development browser, and only where something has
+# asked for it: ``settings.DEV_LOGIN`` comes from ``KASVIMUSEO_DEV_LOGIN``,
+# which ``dev/kasvimuseo`` sets for the containers it starts and no deployment
+# sets at all (issue 068). Without it this list has no such route and the path
+# 404s like any other unknown one -- the gate is the absence of the URL, not a
+# check inside the view, although ``ylaneenkasvit.dev_login`` makes that check
+# too. The callable is imported rather than named as a string, because a string
+# view is what Django 1.10 stops accepting (issue 022).
+if settings.DEV_LOGIN:
+    urlpatterns += patterns(
+        '',
+        url(r'^dev-login/(?P<username>[^/]+)/$', dev_login, name='dev-login'),
+    )
 
 # ``manage.py runserver`` serves ``STATIC_URL`` out of the staticfiles finders
 # by itself, and nothing else does -- so under the gunicorn that

@@ -132,6 +132,40 @@ Other commands::
 when they exit, so the cluster only runs while it is needed. Started by hand
 with ``db start``, it keeps running until ``db stop``.
 
+Logging in after a restore
+--------------------------
+
+``db restore`` brings production's ``django_session`` with it, so whatever
+session the browser was carrying no longer names a row: every restore logs the
+developer out, and a restored dump that has not been through ``db development``
+above has no password anybody here knows either. Getting back in needs no
+password and no login form (issue 068)::
+
+    $ xdg-open http://localhost:8000/dev-login/akaihola/
+
+Any existing, active username works in place of ``akaihola``. The route logs
+that user in, hands the browser a ``sessionid`` cookie and redirects to
+``/admin/``, which is where the site's root sends you anyway -- so from then on
+``http://localhost:8000/`` is a logged-in page and the admin is open. It is the
+whole answer on a dump restored as it came, and it saves the form on a
+``db development`` one.
+
+Django ships no management command that could do this, and none could: what
+logs a browser in is a cookie *in that browser*, and a process inside the
+container has no way to put one there. What a command can do is make the form
+usable -- ``db development``, or ``dev/kasvimuseo app manage changepassword
+akaihola`` -- and those are what to reach for when the route is turned off.
+
+Turned off is the other half. The route exists only where
+``KASVIMUSEO_DEV_LOGIN`` is set, ``dev/kasvimuseo`` sets it for the containers
+it starts, and nothing else does: a deployment takes its environment from
+``uwsgi.ini`` and the test settings turn it off by hand, so neither has the URL
+at all. For a session that should not have it either -- the development server
+answers on whatever interface it is published on, and this is a password-free
+admin login for anyone who can reach the port -- pass the variable empty::
+
+    $ KASVIMUSEO_DEV_LOGIN= dev/kasvimuseo app run
+
 Production still runs PostgreSQL 10, so ``db restore`` adapts the dump to a
 current server: it drops the PostGIS extension when PostGIS is not installed
 locally (no table uses a spatial type) and the one index over ``abstime``, a
