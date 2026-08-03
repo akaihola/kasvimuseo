@@ -163,12 +163,15 @@ number between 8px and 128px. That guard is now a test of its own, because
 deleting it produces the reported symptom exactly -- ``font-size: 0`` in a
 0 x 0 box, opaque and correctly positioned -- and nothing had held it. The
 question the report parked -- whether the number still moves -- was put to the
-maintainer and got no answer, so 063 rules without one and says so in its
-``Decision``: what is left is a choice between a copy 4 mm wide underneath a
-fingertip twice that and an arithmetic only iOS Safari performs, and it is two
-minutes with the tablet rather than a change to the template. That is why it is
-``Accepted``, and the reason is the mirror of 056's: 056 has a fix no engine
-here can apply, and this has a report no engine here can reproduce. It also
+maintainer and answered from the tablet the next day: it does, and there is
+nothing beside the finger either. Those two looks cost 063 both of the
+candidates it had ranked first, which is worth more than confirming one would
+have been -- the gesture arrives, so 045 is not reopened, and the copy is not a
+correctly drawn 4 mm number hidden under a contact patch twice its width. What
+is left is one reading from Safari's Web Inspector on the device rather than a
+change to the template. That is why it stays ``Accepted``, and the reason is
+the mirror of 056's: 056 has a fix no engine here can apply, and this has a
+report no engine here can reproduce. It also
 cost the suite nothing to say so in the other engine, because :doc:`061
 <061-every-safari-claim-was-verified-in-a-non-safari-engine>` had just made every test run in
 WebKit too. That takes this page to nothing waiting for the second time since
