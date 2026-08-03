@@ -52,6 +52,17 @@ SECRET_KEY=${KASVIMUSEO_SECRET_KEY:-development-only-not-a-production-key}
 # published it -- localhost, a container IP, a tailnet name. Production's list
 # comes from ansible/vars/main.yml and is never this.
 ALLOWED_HOSTS=${KASVIMUSEO_ALLOWED_HOSTS:-*}
+# On for every container this script starts, which is what puts
+# `/dev-login/<username>/` on the development server (issue 068): after a
+# `db restore` the local passwords are production's and nobody here has them,
+# so the alternative is `changepassword` and the login form, every time. Set
+# KASVIMUSEO_DEV_LOGIN= (empty) for a session that should not have the route --
+# it is a password-free admin login for anyone who can reach the port, and this
+# server is published on whatever interface ALLOWED_HOSTS above implies. Only
+# `dev/kasvimuseo` sets this: a deployment's environment comes from uwsgi.ini,
+# and `ylaneenkasvit/test_settings.py` turns it off for the suite whatever is
+# exported here.
+DEV_LOGIN=${KASVIMUSEO_DEV_LOGIN-1}
 IMAGE=${KASVIMUSEO_IMAGE:-kasvimuseo-dev}
 PROD_SSH=${KASVIMUSEO_PROD_SSH:-kasvimuseo@kasvit.ambitone.com}
 
@@ -379,6 +390,7 @@ It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
         -e "KASVIMUSEO_SECRET_KEY=$SECRET_KEY" \
         -e "KASVIMUSEO_ALLOWED_HOSTS=$ALLOWED_HOSTS" \
         -e "KASVIMUSEO_TEST_SUFFIX=${KASVIMUSEO_TEST_SUFFIX:-}" \
+        -e "KASVIMUSEO_DEV_LOGIN=$DEV_LOGIN" \
         $extra "$IMAGE" "$@"
 }
 

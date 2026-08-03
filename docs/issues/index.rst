@@ -489,6 +489,17 @@ makes the rest of this page hold.
       now derives a dump whose passwords are known, so a restored copy can be
       signed into without knowing production's -- which is what 050's pending
       password change will make impossible.
+   068: Every ``db restore`` logged the developer out and left them holding
+      production's password hashes, so getting back in meant
+      ``changepassword`` and the admin's login form -- on a throwaway database
+      with a development secret key. In this group rather than in 7 because it
+      is the same kind of thing as 018 and 064: it does not fix anything a
+      visitor can see, it makes the loop in which everything above is checked
+      cheaper. Last, because it is the smallest of them and depends on
+      nothing. **Fixed**: a ``/dev-login/<username>/`` route that exists only
+      where ``KASVIMUSEO_DEV_LOGIN`` is set -- which is ``dev/kasvimuseo`` and
+      nowhere else -- so one ``xdg-open`` replaces the detour and a deployment
+      has no such URL.
 
 9. The upgrade programme
 ------------------------
