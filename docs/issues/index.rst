@@ -75,6 +75,16 @@ prerequisite for 051.
       not in use, so the disclosure 025 describes is still live. One playbook
       run ends it, and it is the only item on this page whose timing belongs to
       somebody outside the project.
+   065: With ``DEBUG`` off, a 500's traceback was written nowhere at all: the
+      stock ``LOGGING`` block had one handler, it mails a port no MTA listens
+      on, and Django swallows the failure. Ahead of 051 rather than beside 057
+      and 059, although all three are settings this repository owns, because it
+      is the only one of them that is a precondition for the act below it:
+      051 trades a traceback on the visitor's screen for a traceback nowhere,
+      and this is what makes that trade safe to make. Latent until then, which
+      is why its ``Severity`` is ``Medium`` on a page whose ``High`` entries
+      are live disclosures. **Fixed**; it takes effect when uWSGI next
+      restarts, and it needs no maintenance window of its own.
    051: Production serves with ``DEBUG`` on, from an untracked file on the
       server -- so settings, SQL and full tracebacks are on every error page.
       This is 026's answer, and it is the same deploy as 049: one playbook run
@@ -130,6 +140,16 @@ prerequisite for 051.
       next deploy. It stays open for the second half -- the year-long value --
       which its file gates on a failed certificate renewal being visible to
       somebody, since that cron job is unwatched.
+   066: The other half of 065, and the smallest thing in this group: the
+      ``mail_admins`` handler is kept although nothing on the host can deliver
+      what it sends, so an operator is never told about a 500 -- only able to
+      find it. Last because 065 already wrote the traceback down, which makes
+      this an improvement rather than a gap, and because the three ways to take
+      it are different sizes: a new daemon, one environment variable pointing
+      at a relay that has to exist, or deciding the log file is enough and
+      deleting the handler. Like 060 it is a ruling before it is
+      configuration, and unlike 060 the ruling is about what the maintainer
+      wants rather than about a promise that cannot be withdrawn.
 
 2. Broken on real data
 -----------------------

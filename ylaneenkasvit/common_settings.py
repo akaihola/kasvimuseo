@@ -274,6 +274,37 @@ SITE_ID = 1
 # in that history this project must not run, and why.
 
 
+# Django's stock block, plus the one handler it leaves out: a stream handler,
+# so that an unhandled exception is written down somewhere (issue 065).
+#
+# What the stock block does on its own is send a 500's traceback to
+# ``mail_admins`` and nowhere else. Django's own ``DEFAULT_LOGGING`` is applied
+# first and puts a console handler on the ``django`` logger, but filtered by
+# ``RequireDebugTrue`` -- so with ``DEBUG`` on, as production still runs
+# (issue 051), the traceback does reach stderr and this looks fine. Turn
+# ``DEBUG`` off, which is the whole of 051, and it stops: the filter drops the
+# console copy, ``AdminEmailHandler`` mails ``localhost:25``, no MTA is
+# installed by ``ansible/`` and no ``EMAIL_*`` setting points anywhere else,
+# and ``mail.mail_admins(..., fail_silently=True)`` swallows the refused
+# connection.
+# The visitor gets ``templates/500.html`` and the traceback exists nowhere at
+# all -- not in the response, not on stderr, not in a file. Measured, not
+# reasoned: see the issue.
+#
+# So ``console`` is unconditional -- no ``RequireDebugTrue`` -- and goes on
+# stderr, which is where both of this project's servers keep it: uWSGI writes
+# it to ``/home/<app_user>/uwsgi.error.log`` (``logger = file:`` in
+# ``ansible/roles/akaihola.uwsgi/templates/uwsgi.ini``) and the development
+# gunicorn writes it to the container's output.
+#
+# ``mail_admins`` stays although nothing can deliver it today, and that is a
+# decision rather than an oversight: it is inert, not broken. It costs one
+# refused connection to ``localhost:25`` per 500 and cannot lose the traceback,
+# because ``console`` now has it either way; and it is the only handler here
+# that reaches a person who is not reading a log file, so the day the server
+# gets an MTA or an ``EMAIL_HOST`` -- issue 066 -- it starts working with no
+# change to this file. Removing it and adding it back then was the alternative,
+# and it buys nothing but this comment.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -282,7 +313,20 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        # uWSGI writes what a worker puts on stderr through verbatim, so the
+        # timestamp and the logger name have to come from here or they are not
+        # in ``uwsgi.error.log`` at all.
+        'stderr': {
+            'format': '%(asctime)s %(levelname)s %(name)s: %(message)s',
+        },
+    },
     'handlers': {
+        'console': {
+            'level': 'WARNING',
+            'class': 'logging.StreamHandler',
+            'formatter': 'stderr',
+        },
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -291,11 +335,61 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['console', 'mail_admins'],
             'level': 'ERROR',
+            # ``False`` where the stock block says ``True``, which is also what
+            # Django's own ``DEFAULT_LOGGING`` says. With ``console`` named
+            # here, propagating would hand the same record to the ``django``
+            # logger's console handler and then to ``root`` below, and a
+            # traceback would be printed two or three times under ``DEBUG``.
+            # Nothing else is listening for these records.
+            'propagate': False,
+        },
+        # The same treatment for the logger Django 1.6 added (upgrade plan
+        # Stage 3), and it arrived with the same defect for the same reason:
+        # ``DEFAULT_LOGGING`` gives ``django.security`` ``mail_admins`` alone
+        # and ``propagate: False``, so a ``SuspiciousOperation`` -- a bad
+        # ``Host`` header against the ``ALLOWED_HOSTS`` 026 supplies, a
+        # tampered signed cookie -- was mailed nowhere and written nowhere.
+        # Named here rather than left to inherit, because what it inherits
+        # depends on the ``django`` entry below: remove that and this logger
+        # silently goes back to mailing ``localhost:25`` and nothing else.
+        'django.security': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Django's ``DEFAULT_LOGGING`` -- applied before this dictionary, and
+        # left in place by ``disable_existing_loggers: False`` -- puts a
+        # console handler filtered by ``RequireDebugTrue`` on both of these.
+        # Naming ``django`` also resets the loggers under it that this
+        # dictionary does not name: ``dictConfig`` gives an existing child of a
+        # configured logger back its defaults, so ``django.db.backends`` and
+        # the rest reach ``root`` below rather than keeping handlers from a
+        # pass this file cannot see.
+        # With a root handler below, that handler is a second copy of every
+        # warning whenever ``DEBUG`` is on: measured, and it is why the
+        # ``django.conf.urls.defaults`` deprecation appeared twice on the
+        # development server's output. Taking them off leaves ``root`` to print
+        # each record once, the same way with ``DEBUG`` on or off.
+        'django': {
+            'handlers': [],
             'propagate': True,
         },
-    }
+        'py.warnings': {
+            'handlers': [],
+            'propagate': True,
+        },
+    },
+    # Everything that is not a request: management commands, the migration
+    # tooling, a third-party package's own logger. ``WARNING`` rather than
+    # ``INFO`` because this is a log nobody reads until something is wrong, and
+    # ``django.request`` -- which logs every 404 at ``WARNING`` -- is handled
+    # above at ``ERROR`` and does not reach here.
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
 }
 
 
