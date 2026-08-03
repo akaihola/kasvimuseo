@@ -403,7 +403,7 @@ TEMPLATE_DEBUG = DEBUG
 #
 # An environment variable rather than a line in
 # ``ylaneenkasvit/development_settings.py``, which is where a development-only
-# value has belonged since issue 067, because this one has to be switchable
+# value has belonged since issue 069, because this one has to be switchable
 # without editing a tracked file: it is a password-free admin login for anyone
 # who can reach the port, so a session that should not offer it is
 # ``KASVIMUSEO_DEV_LOGIN= dev/kasvimuseo app run``. The variable also reaches

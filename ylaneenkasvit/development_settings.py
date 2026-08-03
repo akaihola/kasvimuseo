@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""Settings for the development server (issue 067).
+"""Settings for the development server (issue 069).
 
 The site settings module ``dev/kasvimuseo`` runs the application on, and the
 counterpart of ``ylaneenkasvit_settings`` for production and ``test_settings``
@@ -15,7 +15,7 @@ from the running application which of them a copy was missing. Twice that was
 found from the outside instead -- photos loaded from the production media host
 (issue 048), and then a development server issuing ``Secure`` cookies over
 plain HTTP, where a correct password returns the login form and nothing on
-screen says why (issue 067). These settings are tracked, so they arrive with a
+screen says why (issue 069). These settings are tracked, so they arrive with a
 ``git pull`` and are reviewable in a diff.
 
 ``local_settings.py`` still exists and is still applied, last and on top of
@@ -54,7 +54,7 @@ INSTALLED_APPS += ('django_extensions',)  # noqa: F405
 # 044). Measured with these two lines removed: such a client keeps no session
 # cookie, so the admin login form comes back instead of the dashboard however
 # right the password is, with nothing on screen to say why -- which is issue
-# 067, reported after the same two lines sat unreachable in a template for two
+# 069, reported after the same two lines sat unreachable in a template for two
 # weeks. Relaxed here, in the file that already knows it is development, rather
 # than by weakening the value production inherits.
 SESSION_COOKIE_SECURE = False
@@ -66,7 +66,7 @@ CSRF_COOKIE_SECURE = False
 # A new dictionary rather than ``DATABASES['default'].update(...)``, which is
 # how ``ylaneenkasvit_settings`` and ``test_settings`` do it. Those are only
 # ever the settings in force, and this module is also *imported* -- by
-# ``kasvimuseo/tests/test_settings_cookie_security.py``, which is the test 067
+# ``kasvimuseo/tests/test_settings_cookie_security.py``, which is the test 069
 # added to look at what the development server actually loads. ``import *``
 # binds ``common_settings``'s own dictionary, not a copy, so updating it in
 # place would repoint the running suite's database at the development one:
