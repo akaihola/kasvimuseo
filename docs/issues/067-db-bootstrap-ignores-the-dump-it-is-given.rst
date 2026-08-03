@@ -40,7 +40,7 @@ Issue 067: ``db bootstrap`` ignores the dump it is given
     than asked about, and both are argued below: every account's password is
     replaced rather than ``akaihola``'s alone, and the hash is made by the
     application's own hasher in the container rather than by this script
-:Resolution: (pending) -- the guard in ``db bootstrap``'s ``case`` arm, the new
+:Resolution: 9fa70bf -- the guard in ``db bootstrap``'s ``case`` arm, the new
     ``db_development`` beside ``db_restore``, and the two paragraphs of
     ``README.rst`` that document both. Nothing outside ``dev/kasvimuseo`` and
     the documentation changed, and 050 is untouched: the password on the server
