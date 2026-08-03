@@ -84,7 +84,9 @@ class SpeciesManager(models.Manager):
         NB! This evaluates the queryset!
 
         """
-        base_qs = super(SpeciesManager, self).get_query_set()
+        # ``get_queryset`` since upgrade plan Stage 3: Django 1.6 renamed it
+        # and keeps the old name working, with a warning, until 1.8.
+        base_qs = super(SpeciesManager, self).get_queryset()
         all_species = (base_qs
                        .filter(observation__planting__isnull=False,
                                observation__planting__bed__public=True)

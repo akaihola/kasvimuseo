@@ -13,8 +13,14 @@ setup(
     # templates and static files listed here, so an install that dropped them
     # would install an empty package and break the login page. See
     # `jqm/README.rst`.
+    # These are globs, and `**` is not recursive in either of the mechanisms
+    # that read them -- each one matches exactly one path segment. So a file
+    # one level deeper needs a line of its own, which is what the fourth entry
+    # is: `static/grappelli/jquery/i18n/ui.datepicker-fi.js`, the Finnish date
+    # picker grappelli 2.5 asks for and does not ship (upgrade plan Stage 3).
     package_data={'kasvimuseo': ['static/**/*',
                                  'static/**/**/*',
+                                 'static/**/**/**/*',
                                  'templates/**/*',
                                  'templates/**/**/*'],
                   'jqm': ['README.rst',

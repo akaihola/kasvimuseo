@@ -440,10 +440,18 @@ def test_labels_api_post_keeps_the_old_labels_when_the_save_fails(client,
     The handler deletes every label before writing the replacements, so a
     failure part way through used to leave the table empty.
 
-    ``transaction=True`` is what makes this observable: under the ordinary
-    ``django_db`` mark ``commit_on_success`` is inert, because Django 1.5's
-    ``TestCase`` replaces ``transaction.rollback`` with a no-op for the length
-    of the test.
+    ``transaction=True`` is what makes this a test of the real thing rather
+    than of a savepoint: it gives the view a connection nobody else has a
+    transaction open on, so the rollback it asks for is the database's.
+
+    It used to be the only thing that made the test observable at all. The
+    handler was decorated with ``commit_on_success``, and Django's ``TestCase``
+    nops ``transaction.commit`` and ``transaction.rollback`` for the length of
+    a test -- 1.5 did, and 1.6 still does, under a comment saying it goes when
+    the legacy transaction management does -- so under the ordinary
+    ``django_db`` mark the decorator did nothing. ``atomic`` is not nopped
+    (upgrade plan Stage 3), so it would now nest as a savepoint and this would
+    pass either way.
     """
     staff_client = log_in_as_staff(client)
     planting = create_planted(name_fi='valkonarsissi', external_id=3)
