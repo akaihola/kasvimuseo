@@ -1,3 +1,43 @@
+{#-
+  Strict-Transport-Security, and why it says what it says (issue 060).
+
+  Every server below is TLS with a Let's Encrypt certificate and port 80 does
+  nothing but redirect, so the site is already HTTPS-only -- but a browser only
+  learns that by being redirected, one request at a time, for ever. Issue 059
+  emptied that first cleartext request of cookies; the header is what stops it
+  being made. It goes on the TLS server only: a browser is required to ignore
+  Strict-Transport-Security on a cleartext response, and anybody able to answer
+  port 80 instead of nginx could send it just as easily.
+
+  It is deliberately staged, and the deployed configuration says which
+  stage it is on, because the header is a promise with a duration and cannot be
+  withdrawn faster than it expires. What it makes load-bearing is the certbot
+  renewal cron configured in vars/main.yml: root, 03:30, `certbot renew` with
+  nginx stopped and started around it, whose failures go to cron's mail on the
+  host and are read by nobody. Today an expired certificate is a warning a
+  visitor can click through; under a year-long max-age it is a page no browser
+  will open. So stage 1 is 300 seconds -- long enough for one deploy to prove
+  all three names are genuinely HTTPS-only, short enough that backing out costs
+  a playbook run and five minutes -- and stage 2, max-age=31536000, is a commit
+  of its own. What has to be true before that commit is made is written down in
+  docs/issues/060-nginx-sends-no-strict-transport-security-header.rst, and the
+  deploy that carries either stage is in README.rst under "The security
+  maintenance window".
+
+  Two directives are deliberately absent, as rulings rather than omissions;
+  060 argues both. `includeSubDomains` would commit every future name under
+  each of these three, and there is no such name today -- the three sites are
+  siblings, so none of them is covered by another's header in any case.
+  `preload` is irreversible in practice and is a promise about the whole of
+  ambitone.com, which is not this project's to make.
+
+  `always` is there so nginx's own error responses carry the header too: a 502
+  while uWSGI restarts is exactly a moment at which a browser should stay
+  pinned. One add_header on the server is enough only while no location block
+  adds one of its own -- nginx drops every inherited add_header from a block
+  that does -- so a location that ever grows a header has to repeat this line.
+  None of the ones below has one.
+-#}
 upstream django {
     server unix:/{{ uwsgi_socket }};
 }
@@ -8,6 +48,16 @@ server {
     server_name {{ server.domain }};
     ssl_certificate /etc/letsencrypt/live/{{ server.domain }}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{{ server.domain }}/privkey.pem;
+
+    # HSTS stage 1 of two (issue 060): five minutes, not a year. This promise
+    # cannot be withdrawn faster than it expires, and it makes the certbot
+    # renewal cron load-bearing for the site opening at all -- a certificate
+    # that silently fails to renew stops being a warning a visitor can click
+    # through. Five minutes is the value you can back out of. Advancing it to
+    # 31536000 is a deliberate commit against issue 060, which says what has to
+    # be true first; the reasoning, includeSubDomains and preload included, is
+    # in the template this file is rendered from.
+    add_header Strict-Transport-Security "max-age=300" always;
 
 {% for path, alias in (server.static_paths|default({})).items() %}
     location {{ path }} {
@@ -26,6 +76,9 @@ server {
 server {
     listen 80;
     server_name {{ server.domain }};
+    # No Strict-Transport-Security here, deliberately: a browser is required to
+    # ignore it on a cleartext response, and whoever could answer this port
+    # instead of nginx could send it just as easily.
     return 301 https://{{ server.domain }}$request_uri;
 }
 {% endfor %}

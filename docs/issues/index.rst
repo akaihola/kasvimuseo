@@ -123,8 +123,13 @@ prerequisite for 051.
       group because it is the smallest remaining exposure of the six and the
       only one that is a promise rather than a change -- ``max-age`` commits
       the domain to HTTPS for its duration and cannot be taken back early --
-      so it needs the maintainer's ruling on that duration before it is
-      configuration at all.
+      so it needed a ruling on that duration before it was configuration at
+      all. It has one, taken on the evidence rather than waited for, and it is
+      half done: the header is in the template at ``max-age=300``, the value
+      that can be backed out of in five minutes, and it becomes real on the
+      next deploy. It stays open for the second half -- the year-long value --
+      which its file gates on a failed certificate renewal being visible to
+      somebody, since that cron job is unwatched.
 
 2. Broken on real data
 -----------------------
