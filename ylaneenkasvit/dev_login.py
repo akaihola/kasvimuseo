@@ -5,9 +5,11 @@
 and that includes ``auth_user`` and ``django_session``: every password becomes
 production's, which nobody here is supposed to know (issues 049 and 050), and
 the session the browser was carrying is gone with the rows it pointed at. So
-the first thing after a restore is always the same detour -- ``changepassword``
-in the container, then the admin's login form -- and it happens again after
-every restore.
+the first thing after a restore was always the same detour -- ``changepassword``
+in the container, then the admin's login form -- and it happened again after
+every restore. ``db development`` (issue 067) removes the first half by
+rewriting the dump's passwords to a known one; the form, and a dump restored as
+it came, are what is left.
 
 Django ships no management command for this and no command could be the whole
 answer: what logs a browser in is a ``sessionid`` cookie *in that browser*, and
