@@ -407,8 +407,10 @@ that 032 comes before 031, which it partly resolves.
 8. Make the work verifiable
 ---------------------------
 
-These do not fix anything. They decide how often everything above is checked,
-which is what makes the rest of this page hold.
+These do not fix anything -- 067 excepted, and it is here because the subject
+is the same: the tooling this work is done with rather than the site it
+produces. The rest decide how often everything above is checked, which is what
+makes the rest of this page hold.
 
 .. issue-rank::
 
@@ -446,6 +448,18 @@ which is what makes the rest of this page hold.
       and a floor that arrives after them protects nothing. **Fixed**: one
       floor on the total, at 97 % against a real 97.87 %, in a ``.coveragerc``
       that argues for itself, enforced by the same command CI runs.
+   067: ``dev/kasvimuseo db bootstrap`` accepted a dump path, dropped it, and
+      built the empty database it always builds, so the developer who typed it
+      met a login screen with no account behind it and went looking for a
+      changed password that does not exist. Last in this group because it
+      arrived last and was fixed the day it arrived; its rank is a formality
+      among four items that are all done. It belongs to this group rather than
+      to 2 or 3 because nothing a visitor can reach is involved -- it is the
+      development setup, which is what 018, 017 and 064 are as well. **Fixed**:
+      the argument is refused and names ``db restore``, and ``db development``
+      now derives a dump whose passwords are known, so a restored copy can be
+      signed into without knowing production's -- which is what 050's pending
+      password change will make impossible.
 
 9. The upgrade programme
 ------------------------

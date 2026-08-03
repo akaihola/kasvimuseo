@@ -5,6 +5,7 @@
 # Usage: dev/kasvimuseo <command> [args]
 #   db start|stop|status|psql|reset     local PostgreSQL cluster
 #   db fetch [file]                     dump the production database over SSH
+#   db development [in] [out]           a dump with every password set to a known one
 #   db restore <file>                   load a dump into the local database
 #   db bootstrap                        empty database from the migrations
 #   db upgrade-photologue               existing database -> photologue 2.8.3
@@ -38,6 +39,10 @@ DB_USER=${KASVIMUSEO_DB_USER:-ylaneenkasvit}
 # it is not any more (issue 025). `db fetch`, the one command that talks to
 # production, insists on being given the real one.
 DB_PASSWORD=${KASVIMUSEO_DB_PASSWORD:-development}
+# The site password `db development` puts on every account of the dump it
+# derives. Local-only by construction: it is written into a file under .dev/
+# and no command here sends that file anywhere.
+DEV_PASSWORD=${KASVIMUSEO_DEV_PASSWORD:-development}
 # Development key for a development server. The production key comes from
 # Ansible Vault and is never in this repository; the settings refuse to start
 # without KASVIMUSEO_SECRET_KEY, so something has to be passed here.
@@ -151,6 +156,63 @@ db_restore() {
              -v ON_ERROR_STOP=1 -q -o /dev/null
     echo "Restored $file into $DB_NAME" >&2
     [ "$started" = 1 ] && db_stop || true
+}
+
+# A production dump with every `auth_user` password replaced by one the person
+# restoring it knows, written beside the original as `development.sql`.
+#
+# It exists because a password hash cannot be reversed. A fetched dump is a
+# database nobody can sign into unless they already know an account's
+# production password -- and after issue 050's change on the server, nobody
+# developing here will. Rewriting the column is the only way back in that does
+# not involve the production password at all.
+#
+# Every row, not just the one account: the derived dump then carries no
+# production password hash whatsoever, and that is the second reason for it.
+# The hashes in the dump are real credentials -- one of them is `123` (issue
+# 050) -- and this is the file that gets restored, opened in psql and copied
+# between machines.
+db_development() {
+    local src=${1:-$DEV/backups/production.sql}
+    local out=${2:-$DEV/backups/development.sql}
+    [ -f "$src" ] || die "usage: dev/kasvimuseo db development [dump.sql] [out.sql]
+$src does not exist. Take a dump first:
+  dev/kasvimuseo db fetch"
+    # Django's own hasher rather than this script's idea of the format: the
+    # algorithm and the iteration count belong to the application and move with
+    # the Django it runs. -t would put a carriage return in the captured hash.
+    local hash TTY_FLAGS=''
+    hash=$(app_run_container "" python -c '
+import sys
+from django.contrib.auth.hashers import make_password
+print(make_password(sys.argv[1]))' "$DEV_PASSWORD")
+    mkdir -p "$(dirname "$out")"
+    awk -v hash="$hash" -v src="$src" '
+        BEGIN { FS = OFS = "\t" }
+        # Which column holds the password is read from the COPY header, since
+        # the dump states it and a position would have to be trusted.
+        /^COPY public\.auth_user \(/ {
+            header = $0
+            sub(/^[^(]*\(/, "", header)
+            sub(/\).*$/, "", header)
+            fields = split(header, columns, ", ")
+            for (i = 1; i <= fields; i++)
+                if (columns[i] == "password") column = i
+            in_users = 1
+            print; next
+        }
+        in_users && $0 == "\\." { in_users = 0; print; next }
+        in_users && column { $column = hash; users++; print; next }
+        { print }
+        END { if (!users) {
+                  print src " has no auth_user rows with a password column" \
+                        " -- is it a dump of this database?" > "/dev/stderr"
+                  exit 1
+              }
+              print "Replaced " users " passwords." > "/dev/stderr" }
+    ' < "$src" > "$out" || { rm -f "$out"; die "$out was not written."; }
+    echo "Wrote $out. Every account in it now has the password '$DEV_PASSWORD':
+  dev/kasvimuseo db restore $out" >&2
 }
 
 # Take an existing database -- a restored production dump, or any database this
@@ -487,6 +549,14 @@ case "${1:-}" in
       psql)    shift 2; with_db psql -h "$PGSOCK" -p "$PGPORT" -U "$DB_USER" -d "$DB_NAME" "$@" ;;
       fetch)   db_fetch "${3:-}" ;;
       bootstrap)
+               # It takes no dump, and being handed one used to be silent: the
+               # argument was dropped and the empty database that came out had
+               # no accounts, so the next thing that happened was a login that
+               # would not work, with nothing anywhere saying why (issue 067).
+               [ $# -le 2 ] || die \
+                 "db bootstrap takes no arguments: it builds an empty database from
+the migrations. To load the dump instead:
+  dev/kasvimuseo db restore $3"
                # Empty database from the migrations, for working without a
                # production dump. photologue must go first: kasvimuseo:0014
                # references photologue_photo.
@@ -502,11 +572,13 @@ case "${1:-}" in
                  'python ylaneenkasvit/manage.py syncdb --noinput &&
                   python ylaneenkasvit/manage.py migrate photologue --noinput &&
                   python ylaneenkasvit/manage.py migrate --noinput' ;;
+      development)
+               db_development "${3:-}" "${4:-}" ;;
       restore) db_restore "${3:-}" ;;
       upgrade-photologue)
                photologue_upgrade ;;
       reset)   db_stop; rm -rf "$PGDATA"; echo "Cluster deleted" ;;
-      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|restore|bootstrap|upgrade-photologue|reset" ;;
+      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|development|restore|bootstrap|upgrade-photologue|reset" ;;
     esac ;;
   media)
     case "${2:-}" in
