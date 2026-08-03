@@ -23,7 +23,6 @@ the override instead of the thing the override exists to relax.
 
 from __future__ import unicode_literals
 
-import imp
 import os
 
 import pytest
@@ -36,6 +35,8 @@ from kasvimuseo.tests.factories import create_planted
 from ylaneenkasvit import common_settings
 
 PASSWORD = 'salasana'
+REPO_ROOT = os.path.dirname(
+    os.path.dirname(os.path.abspath(common_settings.__file__)))
 
 
 @pytest.fixture
@@ -45,19 +46,16 @@ def user(db):
 
 
 def development_settings():
-    """Run ``local_settings.development.py``'s ``modify()`` over a dictionary.
+    """Import ``ylaneenkasvit.development_settings`` and hand back the module.
 
-    The file cannot be imported by name -- there is a dot in it, because
-    ``dev/kasvimuseo`` copies it to ``local_settings.py`` -- so it is loaded by
-    path, the way a settings module never is and a test has to be.
+    It is a settings module like any other since issue 067, so it is imported
+    rather than loaded by path -- which is what its predecessor,
+    ``local_settings.development.py``, had to be: a template with a dot in its
+    name, holding a ``modify()`` function run over a dictionary. Being a module
+    is the fix, so this is also the assertion that it is one.
     """
-    path = os.path.join(os.path.dirname(common_settings.__file__),
-                        'local_settings.development.py')
-    module = imp.load_source(str('local_settings_development'), path)
-    values = {'INSTALLED_APPS': (),
-              'DATABASES': {'default': {}}}
-    module.modify(values)
-    return values
+    from ylaneenkasvit import development_settings
+    return development_settings
 
 
 # What production gets.
@@ -112,9 +110,42 @@ def test_the_suite_serves_plain_http():
 
 
 def test_the_development_server_serves_plain_http():
-    values = development_settings()
-    assert values['SESSION_COOKIE_SECURE'] is False
-    assert values['CSRF_COOKIE_SECURE'] is False
+    settings_module = development_settings()
+    assert settings_module.SESSION_COOKIE_SECURE is False
+    assert settings_module.CSRF_COOKIE_SECURE is False
+
+
+def test_the_development_relaxation_is_in_a_tracked_file():
+    """Issue 067, and the whole of what it changed.
+
+    The two lines above were right before 067 as well, and the development
+    server still served ``Secure`` cookies over plain HTTP, because they were in
+    ``local_settings.development.py`` -- a template copied to the untracked
+    ``local_settings.py`` when a checkout has none and never again, so a
+    checkout older than issue 059 never received them. Asserting the values is
+    therefore not enough: what a browser gets depends on the file being one
+    ``git pull`` delivers.
+    """
+    path = development_settings().__file__
+    assert os.path.basename(path).startswith('development_settings')
+
+    with open(os.path.join(REPO_ROOT, '.gitignore')) as ignores:
+        ignored = ignores.read()
+
+    # The one settings file that is still untracked, and the line that says so:
+    # if this ever stops matching, read the rest of this assertion again.
+    assert '/ylaneenkasvit/local_settings.py' in ignored
+    assert 'development_settings' not in ignored, (
+        'the development settings are excluded from the repository, which is'
+        ' the shape of issue 067')
+
+
+def test_the_superseded_template_is_gone():
+    """Nothing copies a settings file into place any more, so a leftover
+    template would be a second, stale statement of the same settings -- and the
+    copies it already made are what 067 is about."""
+    assert not os.path.exists(os.path.join(
+        REPO_ROOT, 'ylaneenkasvit', 'local_settings.development.py'))
 
 
 # Framing.

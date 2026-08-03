@@ -9,8 +9,8 @@ COPY requirements /tmp/requirements
 # development-only tools. It used to be production.txt alone, which was the
 # same set until upgrade plan Stage 0 moved `django-extensions` out of
 # production: this is a development image, and
-# `local_settings.development.py` puts that app into INSTALLED_APPS, so the
-# image has to have it. production.txt names every *runtime* package at an
+# `ylaneenkasvit/development_settings.py` puts that app into INSTALLED_APPS, so
+# the image has to have it. production.txt names every *runtime* package at an
 # exact version, Pillow included, so the second `pip install` this line used to
 # carry is gone -- that was issue 027, and the bounds it explained are beside
 # the pins they belong to. `--no-deps` no longer changes what lands here:
@@ -61,6 +61,6 @@ RUN pip install --no-cache-dir 'pytest==3.5.0' 'pytest-django==2.9.1' \
 
 ENV PYTHONPATH=/src \
     PYTHONUNBUFFERED=1 \
-    DJANGO_SETTINGS_MODULE=ylaneenkasvit.ylaneenkasvit_settings \
+    DJANGO_SETTINGS_MODULE=ylaneenkasvit.development_settings \
     KASVIMUSEO_DEBUG=1
 WORKDIR /src

@@ -137,12 +137,13 @@ current server: it drops the PostGIS extension when PostGIS is not installed
 locally (no table uses a spatial type) and the one index over ``abstime``, a
 type removed in PostgreSQL 12. Both are reported as they are skipped.
 
-Local settings live in ``ylaneenkasvit/local_settings.py``. It is untracked, so
-``dev/kasvimuseo`` copies it from ``local_settings.development.py`` the first
-time it runs the app; edit your copy freely. Without it the app falls back to
-production's static URL and ignores the database environment variables. A copy
-made earlier is never overwritten, so when the template gains a setting, add it
-by hand -- ``dev/kasvimuseo`` says so for the newest one, ``MEDIA_FALLBACK_URL``.
+Development settings are tracked, in ``ylaneenkasvit/development_settings.py``:
+``dev/kasvimuseo`` runs the application on them, so a ``git pull`` is the whole
+of getting a change to them (issue 067). ``ylaneenkasvit/local_settings.py`` is
+still read, last and over the top, for whatever is particular to one machine --
+it is untracked, there is no longer a template to copy it from, and a checkout
+needs none. A copy left over from before 067 shadows the tracked values with the
+ones it was copied with; ``dev/kasvimuseo`` says so when it sees one.
 
 Secrets come from the environment and are in no tracked file (issue 025). The
 site settings read ``KASVIMUSEO_SECRET_KEY`` and ``KASVIMUSEO_DB_PASSWORD`` and
