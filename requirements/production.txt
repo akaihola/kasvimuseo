@@ -28,16 +28,25 @@
 # to answer, and there was no version history behind it to reason about. It is
 # vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
 # build reaches nothing but PyPI.
-# 1.5.12 is the last release in the 1.5 series and carries the security fixes
-# 1.5.1 never had (upgrade plan Stage 1). It is also where Django's own
-# packaging accident stops: 1.5.1 lists its locale catalogs, fixtures and
-# project_template in `data_files`, which is issue 040; 1.5.12's `setup.py`
-# collects them as `package_data` instead, so they land inside the package
-# whichever way pip installs it. Both image definitions keep the assertion
-# that they are readable there -- see the comment beside it in
+# 1.6.11 is the last release in the 1.6 series (upgrade plan Stage 3). What it
+# costs this project is one import -- `django.conf.urls.defaults` is gone, and
+# both `urls.py` files import from `django.conf.urls` now -- and three pins
+# that have to move with it, below. Django's own packaging accident stopped at
+# 1.5.12 and stays stopped: 1.6.11 collects the locale catalogs, fixtures and
+# `project_template` as `package_data`, so they land inside the package
+# whichever way pip installs it (issue 040). Both image definitions keep the
+# assertion that they are readable there -- see the comment beside it in
 # `dev/Containerfile`.
-django==1.5.12
-django-grappelli==2.4.5
+#
+# The next stage that touches this line is Stage 5, and it is the expensive
+# one: 1.7 takes South away.
+django==1.6.11
+# Grappelli ships exactly one series per Django release and says so in its own
+# README -- 2.4.x for Django 1.4/1.5, 2.5.x for 1.6, 2.6.x for 1.7 -- so this
+# pin is not a preference and cannot be skipped or deferred a stage; it moves
+# whenever the line above does (issue 035). 2.5.7 is the last 2.5 release on
+# PyPI, and it is the one this project ran the admin on.
+django-grappelli==2.5.7
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
 # constraints picks exactly that pair, a gunicorn that cannot import. This pin
@@ -47,7 +56,26 @@ django-grappelli==2.4.5
 # and 20.x, so no `setuptools<82` has to be carried through eight stages.
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
-south==0.8.1
+# 1.0.2 is South's last release. It supports Django 1.6 and never 1.7, which is
+# the whole shape of upgrade plan Stage 5: the framework cannot move again until
+# this package is gone. Nothing declares an upper bound on it because there is
+# no release above it to bound.
+#
+# 0.8.1, which this was, predates 1.6 and branches on it in two places that
+# matter here -- both added in 1.0 and neither reachable by a version test in
+# this repository:
+#
+# * `LoadInitialDataMigrator` is what loads `kasvimuseo/fixtures/
+#   initial_data.json` after `migrate` rather than during `syncdb` (issue 055).
+#   0.8.1 does it by swapping `django.db.models.get_apps` out from under
+#   `loaddata`; 1.0.2 has a separate `post_1_6` path that builds a fresh
+#   `AppCache` instead, because 1.6's `loaddata` no longer reads the module
+#   attribute the old trick replaced.
+# * `south.hacks.django_1_0.Hacks.repopulate_app_cache` writes
+#   `cache.handled = set()` on 1.6 and `{}` below it -- 1.6 changed that
+#   attribute's type, and South goes through this every time it puts
+#   INSTALLED_APPS back, which `syncdb` and every test-database build do.
+south==1.0.2
 # Upgrade plan Stage 2: 2.6.1 -> 2.8.3, moved alone and ahead of the framework
 # because photologue owns database tables. 2.7 prefixed every setting name with
 # `PHOTOLOGUE_` (this project sets none of them, so that half is a no-op) and

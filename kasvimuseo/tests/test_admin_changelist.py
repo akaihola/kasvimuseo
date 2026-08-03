@@ -156,8 +156,13 @@ def test_changelist_sorting_marks_the_sorted_header(admin_client, species):
 
     header = search(r'<th[^>]*class="([^"]*fieldname_name_fi[^"]*)"(.*?)</th>',
                     thead(html))
+    # ``column-name_fi`` is Django's own, added in 1.6 and kept by the fork's
+    # Stage 3 re-sync rather than replaced by ``fieldname_`` -- so a forked
+    # changelist's markup is an unforked one's plus a class, which is all the
+    # fork is for (issue 034).
     assert set(header.group(1).split()) == set(
-        ['sortable', 'fieldname_name_fi', 'sorted', 'ascending'])
+        ['sortable', 'column-name_fi', 'fieldname_name_fi',
+         'sorted', 'ascending'])
     # the toggle flips to descending and a remove link appears
     assert 'grp-toggle grp-ascending' in header.group(2)
     assert 'o=-{0}'.format(index) in header.group(2)   # url_toggle
@@ -179,6 +184,28 @@ def test_changelist_sorting_orders_the_rows(admin_client, db):
 
     assert column_values(html, 'name_fi') == [
         'akileija', 'kissankello', 'valkonarsissi']
+
+
+def test_changelist_rows_carry_the_filters_into_the_change_form(admin_client,
+                                                                species):
+    """Django 1.6's ``_changelist_filters``, through the fork (issue 034).
+
+    1.6 made the change form remember which filtered or sorted changelist it
+    was opened from, by hanging the changelist's query string off the row's
+    link; the admin then sends Save back to that list rather than to an
+    unfiltered one. It is one ``add_preserved_filters`` line in Django's
+    ``items_for_result``, and a fork of that function which is not re-synced
+    silently becomes the only changelist in the admin without it -- markup
+    that renders perfectly and behaves differently, which is what issue 034
+    says the recurring cost of this file looks like.
+    """
+    index = sortable_column_index(admin.SpeciesAdmin, 'name_fi')
+
+    html = get(admin_client, Species, query='?o={0}'.format(index))
+
+    link = search(r'<th class="[^"]*fieldname_edit[^"]*"><a href="([^"]*)"',
+                  html).group(1)
+    assert '_changelist_filters=o%3D{0}'.format(index) in link
 
 
 # ---------------------------------------------------------------------------

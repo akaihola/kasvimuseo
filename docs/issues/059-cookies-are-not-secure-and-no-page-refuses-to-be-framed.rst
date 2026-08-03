@@ -156,7 +156,10 @@ with ``domain``, ``path``, ``max_age`` and ``secure`` and no ``httponly``
 argument at all. Writing it into ``common_settings`` would be a setting Django
 silently ignores, which is exactly the failure issue 019 is about, in a
 different field. It arrives in Django 1.6, which the upgrade plan reaches at
-Stage 2.
+**Stage 3** -- this said Stage 2, which is the photologue step; corrected when
+Stage 3 ran. **That half of the argument is spent now.** 1.6 defines the
+setting, defaulting to ``False``, so leaving it unset is a decision rather than
+a non-event, and the reason below is the whole of it.
 
 **And when it arrives it still must not be turned on blind.** The label editor's
 Save reads the token out of ``document.cookie``::
@@ -179,6 +182,18 @@ not need it: the setting does nothing in Django 1.5 either way. So it is left
 unset, with the reason in the file, and
 ``test_csrf_cookie_httponly_is_not_a_setting_this_django_has`` fails on the day
 the upgrade makes it a real question.
+
+That day was upgrade plan Stage 3, and the test failed on that stage's first
+suite run -- which is the only thing this issue asked of it. The answer is the
+one written above: the setting stays unset until the label editor reads the
+token from the ``{% csrf_token %}`` input rather than from ``document.cookie``.
+The test is
+``test_csrf_cookie_httponly_is_a_live_setting_now_and_stays_off`` now, asserting
+the default Django supplies and that ``common_settings`` still overrides
+nothing, and
+``test_the_csrf_cookie_is_readable_by_the_label_editors_javascript`` beside it
+asserts the behaviour the ruling rests on: the ``csrftoken`` cookie the label
+editor's page issues carries no ``HttpOnly``.
 
 Development must keep working over plain HTTP
 =============================================

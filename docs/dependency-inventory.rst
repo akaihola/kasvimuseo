@@ -42,11 +42,13 @@ Runtime dependencies
 
 django
 ------
-The pin is **1.5.12** since Stage 1 of the upgrade plan; it was 1.5.1 when this
-inventory was generated. Both are inside the first band below, which is exactly
-the point: the metadata is identical across all 25 of those releases, so
-nothing here distinguishes them and nothing here could have shown what the bump
-is for. What it is for is eleven releases of security fixes, and one packaging
+The pin is **1.6.11** since Stage 3 of the upgrade plan; it was 1.5.12 from
+Stage 1 and 1.5.1 when this inventory was generated. All three are inside the
+first band below, which is exactly the point: the metadata is identical across
+all 25 of those releases, so nothing here distinguishes them and nothing here
+could have shown what either bump is for. Stage 3's is a whole major step --
+autocommit, ``django.conf.urls.defaults`` gone, a renamed manager method -- and
+this table is as silent about it as about Stage 1's. What it is for is eleven releases of security fixes, and one packaging
 change the metadata does not carry either -- 1.5.1's ``setup.py`` ships the
 locale catalogs as ``data_files``, 1.5.12's as ``package_data``, which is the
 cause of issue 040 disappearing. Read the sdists, not this table, when the
@@ -179,6 +181,14 @@ django-photologue
 
 django-grappelli
 ----------------
+The pin is **2.5.7** since Stage 3, up from 2.4.5 -- and, unusually for this
+document, the two are in the *same* band below, "2.4.5 – 2.5.2". The band is
+therefore actively misleading about the only thing that matters here: grappelli
+ships one series per Django release (issue 035), 2.4.x for Django 1.4/1.5 and
+2.5.x for 1.6, and the package says so in its own ``README.rst`` and nowhere in
+its metadata. 2.5.7 is outside the band and 2.4.5 is inside it; they differ by
+a Django version, not by a classifier.
+
 * **2.4.0 – 2.4.4 (5 releases)**
     :Python: ``-``
     :Requires: nothing declared
@@ -586,7 +596,11 @@ of the upgrade plan left it in the second alone -- it is ``runserver_plus`` and
 ``ylaneenkasvit/local_settings.development.py`` rather than
 ``common_settings.py`` is now what puts it into ``INSTALLED_APPS``. The
 versions below still matter: the upgrade ladder in ``upgrade-plan.rst`` Part 2
-moves this package at almost every stage, development-only or not.
+moves this package at almost every stage, development-only or not. It is at
+**1.6.7** since Stage 3 -- the top of the same band 1.5.9 sits in, so once
+again the table cannot tell them apart. Read from the built sdist instead:
+1.6.7's ``install_requires`` is still exactly ``six>=1.2``, so neither the
+``six`` pin nor the undeclared ``Werkzeug`` one has to move with it.
 
 Note what the PyPI metadata below does **not** say. 1.5.9 is in the
 "1.5.0 – 1.6.7" band, whose ``:Requires:`` reads "nothing declared" -- but the
@@ -684,6 +698,13 @@ built distribution is the primary source, not this table.
 
 south
 -----
+The pin is **1.0.2** since Stage 3, up from 0.8.1, and both are in the second
+band below -- the same silence as ``django`` above. What separates them is not
+in any metadata: 1.0 is where ``LoadInitialDataMigrator`` grew a Django-1.6
+path, which is what keeps ``initial_data.json`` loading after ``migrate``
+(issue 055). 1.0.2 is the last release there will ever be, which is why
+upgrade plan Stage 5 is shaped the way it is.
+
 * **0.7 – 0.7.6 (7 releases)**
     :Python: ``-``
     :Requires: nothing declared
