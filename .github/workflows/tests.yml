@@ -54,6 +54,42 @@ jobs:
       - name: Run the suite
         run: dev/kasvimuseo app test
 
+      # The coverage gate (issue 064). docs/test-coverage-plan.rst took the
+      # suite to 97% and then said "there is no CI yet, so the gate is the dev
+      # script" -- and CI has existed since 018 without ever running this
+      # command, so the number was a claim about the past rather than a
+      # property of the repository. This is the line that makes it one.
+      #
+      # What is measured, what is left out and why the floor is 97 are all in
+      # .coveragerc, and deliberately not repeated here: this file's opening
+      # rule is that it calls dev/kasvimuseo rather than re-expressing what it
+      # does, and a floor written in two places is a floor that can disagree
+      # with itself.
+      #
+      # **A step in this job, not a job of its own** -- the opposite of the
+      # choice made for `browser` below, and for the same reason read the
+      # other way. That split exists because those are different suites: a
+      # drag-and-drop regression and a model regression are different
+      # findings, so they deserve different red lights. This is the *same*
+      # suite, run a second time with the tracer on. A red here can only ever
+      # mean "the tests that just passed reach less of the code than they
+      # did"; it cannot be an independent regression, because any regression
+      # it could see would have failed the step above first. Two red lights
+      # for one finding is not information. A separate job would also pay 80
+      # seconds to build the image again on a second machine, since jobs share
+      # none, and it would have to run the suite anyway to measure it.
+      #
+      # Two steps rather than one, though, so the failing one names itself:
+      # the plain suite is the fast, unambiguous signal and stays first, and a
+      # test failure never arrives dressed as a coverage failure.
+      #
+      # Cost: about a quarter longer than the plain suite -- 44 seconds
+      # against 35 on the development machine -- so this job goes from roughly
+      # one minute to under two, and stays the fastest of the three. That is
+      # the whole price, and it is the price of running the suite twice.
+      - name: Check the coverage floor
+        run: dev/kasvimuseo app coverage
+
   # The label editor's behaviour, which only exists in a browser (issue 017).
   # Its own job rather than a step in the one above, so a drag-and-drop
   # regression and a model regression arrive as two different red lights, and
