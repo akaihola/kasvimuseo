@@ -161,7 +161,7 @@ repair. It has that ruling, and the fix.
 
 .. issue-rank::
 
-   067: The development server could not log anybody in: a correct password
+   069: The development server could not log anybody in: a correct password
       brought the login form back, on every ``/admin/`` address, for a browser
       that was not on loopback. First, ahead even of 044 -- 044 stops six
       change forms, this stopped the admin. It is also the second time a

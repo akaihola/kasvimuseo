@@ -48,7 +48,7 @@ def user(db):
 def development_settings():
     """Import ``ylaneenkasvit.development_settings`` and hand back the module.
 
-    It is a settings module like any other since issue 067, so it is imported
+    It is a settings module like any other since issue 069, so it is imported
     rather than loaded by path -- which is what its predecessor,
     ``local_settings.development.py``, had to be: a template with a dot in its
     name, holding a ``modify()`` function run over a dictionary. Being a module
@@ -116,9 +116,9 @@ def test_the_development_server_serves_plain_http():
 
 
 def test_the_development_relaxation_is_in_a_tracked_file():
-    """Issue 067, and the whole of what it changed.
+    """Issue 069, and the whole of what it changed.
 
-    The two lines above were right before 067 as well, and the development
+    The two lines above were right before 069 as well, and the development
     server still served ``Secure`` cookies over plain HTTP, because they were in
     ``local_settings.development.py`` -- a template copied to the untracked
     ``local_settings.py`` when a checkout has none and never again, so a
@@ -137,13 +137,13 @@ def test_the_development_relaxation_is_in_a_tracked_file():
     assert '/ylaneenkasvit/local_settings.py' in ignored
     assert 'development_settings' not in ignored, (
         'the development settings are excluded from the repository, which is'
-        ' the shape of issue 067')
+        ' the shape of issue 069')
 
 
 def test_the_superseded_template_is_gone():
     """Nothing copies a settings file into place any more, so a leftover
     template would be a second, stale statement of the same settings -- and the
-    copies it already made are what 067 is about."""
+    copies it already made are what 069 is about."""
     assert not os.path.exists(os.path.join(
         REPO_ROOT, 'ylaneenkasvit', 'local_settings.development.py'))
 
