@@ -21,7 +21,15 @@ Issue 068: Logging in after a restore needs a password nobody has
     anyway
 :Depends on: (none)
 :Blocks: (none)
-:Related: 049 and 050 -- why the restored passwords are unusable here. 050 is
+:Related: 067, ``db bootstrap`` ignores the dump it is given -- the closest
+    neighbour, and it narrowed this issue rather than closing it. Its fix added
+    ``db development``, which rewrites every password in a dump to a known one,
+    so a derived dump can be signed into; what is left after it is the login
+    form itself, and a dump restored as it came, which is what this issue is
+    about. Its own reason for existing survives too: those hashes should stop
+    being circulated at all (050), and a route that needs no password does not
+    circulate one
+    049 and 050 -- why the restored passwords are unusable here. 050 is
     the one committed password that does work, and it is production's admin
     account, which is precisely the credential this repository should stop
     circulating rather than type into a development form
@@ -51,7 +59,7 @@ Issue 068: Logging in after a restore needs a password nobody has
     not a check on the client address: the development browser is often on
     another machine, which is what 044 is about, so a loopback-only rule would
     refuse exactly the case that needs it most
-:Resolution: bbbb4b8
+:Resolution: f44adf0
 
 Problem
 =======
@@ -81,6 +89,17 @@ therefore logs the developer out, and the way back in was::
 for a server whose database is a throwaway copy, whose ``ALLOWED_HOSTS`` is
 ``*`` and whose secret key is the string ``development-only-not-a-production-key``.
 
+Issue 067 -- ``db bootstrap`` ignores the dump it is given -- has since made
+that first line unnecessary for anybody who takes the extra step it added:
+``db development`` writes a copy of the dump with every account's password set
+to ``development``, and restoring that copy leaves a database that can be
+signed into. It is the better answer to the "nobody has it" half, and it
+deliberately does not touch the other two. A dump restored as it came -- which
+is what happens whenever the derived copy was not made, or the database came
+from somewhere else -- still has no usable password; and either way the browser
+still meets the login form after every restore, having been logged out by the
+session table that came with the dump.
+
 What Django offers
 ==================
 
@@ -88,7 +107,11 @@ Nothing that does this. ``createsuperuser`` and ``changepassword`` are the two
 auth commands, and both end at the same login form. ``django-extensions`` --
 which is installed here, for ``runserver_plus`` and ``shell_plus`` -- adds
 ``set_fake_passwords``, which sets every account's password to a known string;
-that removes the "nobody has it" half of the problem and leaves the form.
+that removes the "nobody has it" half of the problem and leaves the form. This
+project's own ``db development`` (issue 067) is the same shape and a better
+version of it: it rewrites the passwords in the dump rather than in a database,
+so no hash of production's is restored at all. All three stop in front of the
+form.
 
 The Python API is no shorter, and for a reason that is not about the API.
 ``django.contrib.auth.login(request, user)`` writes the two auth keys into

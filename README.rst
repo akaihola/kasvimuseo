@@ -135,10 +135,10 @@ with ``db start``, it keeps running until ``db stop``.
 Logging in after a restore
 --------------------------
 
-``db restore`` brings production's ``auth_user`` with it, so every local
-password is one nobody here is meant to know (issues 049 and 050), and it
-brings production's ``django_session`` too, so whatever the browser was
-carrying no longer names a row. The way back in is one command, and it needs no
+``db restore`` brings production's ``django_session`` with it, so whatever
+session the browser was carrying no longer names a row: every restore logs the
+developer out, and a restored dump that has not been through ``db development``
+above has no password anybody here knows either. Getting back in needs no
 password and no login form (issue 068)::
 
     $ xdg-open http://localhost:8000/dev-login/akaihola/
@@ -146,13 +146,15 @@ password and no login form (issue 068)::
 Any existing, active username works in place of ``akaihola``. The route logs
 that user in, hands the browser a ``sessionid`` cookie and redirects to
 ``/admin/``, which is where the site's root sends you anyway -- so from then on
-``http://localhost:8000/`` is a logged-in page and the admin is open.
+``http://localhost:8000/`` is a logged-in page and the admin is open. It is the
+whole answer on a dump restored as it came, and it saves the form on a
+``db development`` one.
 
 Django ships no management command that could do this, and none could: what
 logs a browser in is a cookie *in that browser*, and a process inside the
 container has no way to put one there. What a command can do is make the form
-cheap -- ``dev/kasvimuseo app manage changepassword akaihola`` is the older
-answer, and it is still the one to use if the route is turned off.
+usable -- ``db development``, or ``dev/kasvimuseo app manage changepassword
+akaihola`` -- and those are what to reach for when the route is turned off.
 
 Turned off is the other half. The route exists only where
 ``KASVIMUSEO_DEV_LOGIN`` is set, ``dev/kasvimuseo`` sets it for the containers

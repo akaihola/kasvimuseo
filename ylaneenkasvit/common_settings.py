@@ -401,10 +401,16 @@ TEMPLATE_DEBUG = DEBUG
 # starts and nothing else does, so a deployment -- which gets its environment
 # from ``uwsgi.ini``, written by Ansible -- never registers the route at all.
 #
-# Read from the environment rather than set in ``local_settings.development.py``
-# for two reasons. That file is copied once into an untracked
-# ``local_settings.py`` and then belongs to whoever copied it, so a value added
-# there today reaches nobody who already has one; and an untracked settings file
-# is exactly how production ended up with ``DEBUG`` on (issue 051), which is
-# also why this gate is its own variable rather than a reading of ``DEBUG``.
+# An environment variable rather than a line in
+# ``ylaneenkasvit/development_settings.py``, which is where a development-only
+# value has belonged since issue 067, because this one has to be switchable
+# without editing a tracked file: it is a password-free admin login for anyone
+# who can reach the port, so a session that should not offer it is
+# ``KASVIMUSEO_DEV_LOGIN= dev/kasvimuseo app run``. The variable also reaches
+# whichever settings module the harness runs, which is why ``test_settings``
+# turns it off by hand rather than inheriting it.
+#
+# What it is deliberately not is a reading of ``DEBUG``. Production ran with
+# ``DEBUG`` on behind an untracked ``local_settings.py`` for an unknown length
+# of time (issue 051), so a gate that trusted it would have been open there.
 DEV_LOGIN = bool(os.environ.get('KASVIMUSEO_DEV_LOGIN'))
