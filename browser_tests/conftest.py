@@ -313,6 +313,12 @@ def touch_editor(touch_page, base_url):
     return open_editor(touch_page, base_url)
 
 
+@pytest.fixture
+def ipad_editor(ipad_page, base_url):
+    """The editor with the template's iOS branch selected (issue 063)."""
+    return open_editor(ipad_page, base_url)
+
+
 def labels(page):
     """The sheet as the tests talk about it: one entry per label, in order."""
     return page.evaluate("""() => Array.from(
