@@ -435,6 +435,151 @@ def test_the_dragged_number_follows_the_mouse(editor):
     assert editor.locator('#drag-number').is_hidden()
 
 
+# What "not visible while it is being dragged" would look like if a browser
+# here could see it (issue 063): the copy missing, transparent, behind the
+# sheet, drawn at no size at all or at an absurd one, or drawn off the screen.
+# The report named those possibilities and asked for measurement rather than
+# reasoning, so this is the measurement, kept.
+DRAWN_NUMBER = """() => {
+    const el = document.querySelector('#drag-number');
+    const style = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return {fontSize: parseFloat(style.fontSize),
+            opacity: parseFloat(style.opacity),
+            visibility: style.visibility,
+            zIndex: style.zIndex,
+            box: [rect.x, rect.y, rect.width, rect.height],
+            onScreen: rect.x >= 0 && rect.y >= 0
+                      && rect.x + rect.width <= window.innerWidth
+                      && rect.y + rect.height <= window.innerHeight,
+            text: el.textContent.trim()};
+}"""
+
+
+def assert_the_number_is_drawn(page, x, y):
+    """The copy is there, at a size a person could read, where the pointer is.
+
+    The bounds are wide on purpose. This is not a test of *which* size the copy
+    is drawn at -- ``test_the_dragged_number_follows_the_finger`` above holds
+    that against the number on the sheet -- but of the range outside which it
+    would not be visible at all: the inline ``font-size`` ``dragStart``
+    computes is a measured ratio, and issue 063 is a report that on the device
+    the result cannot be seen.
+    """
+    drawn = page.evaluate(DRAWN_NUMBER)
+    assert drawn['text'] == '11'
+    assert drawn['visibility'] == 'visible'
+    assert drawn['opacity'] == 1
+    assert int(drawn['zIndex']) > 0
+    assert 4 <= drawn['fontSize'] <= 100, drawn
+    assert drawn['box'][2] > 0 and drawn['box'][3] > 0, drawn
+    assert drawn['onScreen'], drawn
+    assert holds({'x': drawn['box'][0], 'y': drawn['box'][1],
+                  'width': drawn['box'][2], 'height': drawn['box'][3]}, x, y), \
+        drawn
+    return drawn
+
+
+def test_the_dragged_number_is_drawn_at_a_visible_size_on_the_ipad(
+        ipad_editor):
+    """Issue 063, as far as an emulated browser can take it.
+
+    The drag tests above run on ``touch_editor``, which is the finger without
+    the user agent, so until this one nothing had dragged a number with the
+    template's iOS branch selected. It does not reproduce the report: the copy
+    is drawn, opaque, above the sheet, on the screen and under the finger. What
+    that establishes is a negative -- the JavaScript half of the iOS branch is
+    not what makes the number invisible -- and it is the guard for whatever the
+    device eventually says is. The mouse half below is what carries the
+    measurement into WebKit, where a touch drag skips (issue 061).
+    """
+    target = ipad_editor.locator('#labels li').nth(1).bounding_box()
+    x, y = target['x'] + target['width'] / 2, target['y'] + 20
+    end = touch_drag(ipad_editor, number(ipad_editor, 11), x, y, release=None)
+    ipad_editor.wait_for_timeout(100)
+
+    assert_the_number_is_drawn(ipad_editor, x, y)
+
+    end('touchEnd')
+    assert ipad_editor.locator('#drag-number').is_hidden()
+
+
+def test_the_dragged_number_is_drawn_at_a_visible_size_by_mouse(ipad_editor):
+    """The same measurement without the finger, so both engines take it.
+
+    The reported browser is iOS Safari, and since issue 061 this runs in
+    WebKit as well as Chromium -- the nearest engine to the device that runs
+    here. A touch drag cannot go to WebKit (no CDP), and this is why that
+    costs the measurement nothing: a mouse and a finger meet in the same
+    ``dragStart``, which is where the size the report is about is computed.
+    What the WebKit run cannot show is the touch half of the gesture, not the
+    arithmetic.
+    """
+    target = ipad_editor.locator('#labels li').nth(1).bounding_box()
+    x, y = target['x'] + target['width'] / 2, target['y'] + 20
+    drag(ipad_editor, number(ipad_editor, 11), x, y, release=False)
+    ipad_editor.wait_for_timeout(100)
+
+    assert_the_number_is_drawn(ipad_editor, x, y)
+
+    ipad_editor.mouse.up()
+    assert ipad_editor.locator('#drag-number').is_hidden()
+
+
+# A museum number that measures no width at all. ``dragStart`` divides the
+# client rectangle by ``offsetWidth`` to find what the ``zoom`` did to the
+# element it is copying, and issue 063 rules on the report of an invisible copy
+# partly on the strength of what that division does when the measurement is
+# degenerate. This is that case, produced rather than argued: patched on the
+# numbers only, and only their width, so hit-testing, the grab offsets and
+# everything Playwright measures over the protocol are untouched.
+ZERO_WIDTH_NUMBERS = """
+    const real = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function() {
+        const rect = real.call(this);
+        if (this.id !== 'drag-number' && this.classList
+                && this.classList.contains('observation-id')) {
+            return new DOMRect(rect.x, rect.y, 0, rect.height);
+        }
+        return rect;
+    };
+"""
+
+
+def test_a_number_that_measures_no_width_is_still_drawn_when_dragged(
+        page, base_url):
+    """The ``|| 1`` in ``dragStart``, which issue 063's ruling rests on.
+
+    ``drawn = rect.width / el.offsetWidth || 1`` is the guard that keeps a zero
+    measurement from becoming ``font-size: 0`` -- the first thing 063's report
+    asked to be measured, and the thing that would make the dragged number
+    genuinely invisible rather than merely mis-sized. Nothing pinned it, so
+    deleting the ``|| 1`` would take the copy away on any engine that ever
+    reports a zero width inside issue 046's ``zoom`` *and* leave 063's file
+    asserting something that had stopped being true.
+
+    With the guard the copy falls back to the number's own computed size, which
+    is bigger than it should be and visible, which is the point.
+    """
+    page.add_init_script(ZERO_WIDTH_NUMBERS)
+    page.goto(base_url + LABELS_URL)
+    page.wait_for_selector('#labels li')
+    assert page.evaluate("""() => document.querySelector(
+        '#labels li .observation-id').getBoundingClientRect().width""") == 0
+
+    target = page.locator('#labels li').nth(1).bounding_box()
+    x, y = target['x'] + target['width'] / 2, target['y'] + 20
+    drag(page, number(page, 11), x, y, release=False)
+    page.wait_for_timeout(100)
+
+    drawn = assert_the_number_is_drawn(page, x, y)
+    # The fallback is 1, so the copy is drawn at the number's own font size --
+    # the page's ``p { font-size: 24pt }``, which is 32px.
+    assert drawn['fontSize'] == pytest.approx(32, abs=0.5), drawn
+
+    page.mouse.up()
+
+
 def test_the_drag_preview_is_drawn_only_over_the_empty_sheet(touch_editor):
     """It is the "this becomes a new label" indicator, not a cursor.
 
