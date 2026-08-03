@@ -593,8 +593,9 @@ No longer a runtime requirement either: ``django-extensions==1.5.9`` was in
 both ``requirements/production.txt`` and ``requirements/dev.txt``, and Stage 0
 of the upgrade plan left it in the second alone -- it is ``runserver_plus`` and
 ``shell_plus``, nothing in this repository imports it, and
-``ylaneenkasvit/local_settings.development.py`` rather than
-``common_settings.py`` is now what puts it into ``INSTALLED_APPS``. The
+``ylaneenkasvit/development_settings.py`` rather than ``common_settings.py`` is
+now what puts it into ``INSTALLED_APPS`` (issue 067; before that it was the
+``local_settings.development.py`` template). The
 versions below still matter: the upgrade ladder in ``upgrade-plan.rst`` Part 2
 moves this package at almost every stage, development-only or not. It is at
 **1.6.7** since Stage 3 -- the top of the same band 1.5.9 sits in, so once

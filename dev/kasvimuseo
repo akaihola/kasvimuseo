@@ -319,26 +319,34 @@ print("{0} fetched, {1} failed, {2} already present".format(
 CONTAINER=kasvimuseo-dev-$$
 TEST_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
 
-# local_settings.py is untracked, so a fresh clone has none, and the app would
-# silently fall back to production's static URL and ignore the database
-# environment variables below.
-#
-# A copy made before a change to the template keeps its old contents forever,
-# since nothing here overwrites an existing one; MEDIA_FALLBACK_URL is the
-# newest setting the template gained, so say so rather than serve photos from
-# production and let it be rediscovered (issue 048).
-ensure_local_settings() {
+# Everything a development checkout needs is in the tracked
+# `ylaneenkasvit/development_settings.py` since issue 067. `local_settings.py`
+# is untracked, optional, and applied on top of it, so this no longer writes
+# one -- but a checkout made before 067 still has the copy this script used to
+# make from `local_settings.development.py`, and that copy sets STATIC_URL,
+# MEDIA_URL and the rest over the top of the tracked values. It is only a
+# shadow, not a breakage, and the shadowed values are the same ones for anybody
+# who never edited it; say so once rather than let a divergence be found from a
+# browser, which is how both 048 and 067 arrived.
+warn_about_local_settings() {
     local settings=$REPO/ylaneenkasvit/local_settings.py
-    if [ ! -f "$settings" ]; then
-        cp "$REPO/ylaneenkasvit/local_settings.development.py" "$settings"
-        echo "Created ylaneenkasvit/local_settings.py from local_settings.development.py" >&2
-        return
+    # Python 2.7 imports a .pyc that has no .py beside it, so deleting only the
+    # source leaves the old settings in force -- which is why the production
+    # playbook deletes both (ansible/secure-production.yaml, issue 050), and why
+    # the note below would otherwise be advice that does not work.
+    if [ ! -f "$settings" ] && [ -f "$settings"c ]; then
+        echo "Note: ylaneenkasvit/local_settings.pyc has no .py beside it and" >&2
+        echo "Python 2.7 imports it anyway, so whatever it says is still applied" >&2
+        echo "over ylaneenkasvit/development_settings.py. Delete it." >&2
+        return 0
     fi
-    if ! grep -q MEDIA_FALLBACK_URL "$settings"; then
-        echo "Note: your ylaneenkasvit/local_settings.py predates MEDIA_FALLBACK_URL," >&2
-        echo "so photos are still loaded from the production media host. Copy the" >&2
-        echo "MEDIA_* lines from ylaneenkasvit/local_settings.development.py." >&2
-    fi
+    [ -f "$settings" ] || return 0
+    grep -q 'MEDIA_URL\|STATIC_URL' "$settings" || return 0
+    echo "Note: ylaneenkasvit/local_settings.py is a copy of the old" >&2
+    echo "local_settings.development.py template, and its settings are applied" >&2
+    echo "over ylaneenkasvit/development_settings.py, which is tracked and now" >&2
+    echo "holds all of them (issue 067). Delete it and its .pyc, or cut it down" >&2
+    echo "to whatever is particular to this machine." >&2
 }
 
 app_run_container() {
@@ -351,13 +359,19 @@ app_run_container() {
         "The development image $IMAGE is not built on this machine. Build it:
   dev/kasvimuseo app build
 It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
-    ensure_local_settings
+    warn_about_local_settings
     local extra=$1; shift
     # Named so the exit trap can reap it: podman leaves the container running if
     # its client process is killed rather than interrupted.
+    #
+    # DJANGO_SETTINGS_MODULE is passed rather than left to the image's own ENV,
+    # so that a change to it takes effect without `app build` (issue 067). The
+    # suite and the browser tests name `test_settings` in $extra, which podman
+    # applies after this and which therefore wins.
     podman run --rm --name "$CONTAINER" ${TTY_FLAGS:-} \
         -v "$REPO:/src" \
         -v "$PGSOCK:/var/run/postgresql" \
+        -e "DJANGO_SETTINGS_MODULE=ylaneenkasvit.development_settings" \
         -e "KASVIMUSEO_DB_PORT=$PGPORT" \
         -e "KASVIMUSEO_DB_NAME=$DB_NAME" \
         -e "KASVIMUSEO_DB_USER=$DB_USER" \
@@ -592,7 +606,7 @@ the migrations. To load the dump instead:
       manage)  shift 2; with_db app_run_container "" python ylaneenkasvit/manage.py "$@" ;;
       # Most tests build their own data in a test database, so unlike the app
       # itself they need the cluster but never a production dump or media.
-      # The image sets DJANGO_SETTINGS_MODULE for the app, and pytest-django
+      # The container gets DJANGO_SETTINGS_MODULE for the app, and pytest-django
       # lets the environment outrank pytest.ini, so point it at the test
       # settings explicitly.
       test)    shift 2; with_db app_run_container "$TEST_ENV" \
