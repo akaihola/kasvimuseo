@@ -18,8 +18,11 @@ it, highest-ranked first. Take the top row that is not already claimed.
   something there is not free work: read that branch first, and expect the
   issue's ``Status`` to be ahead of what this page says.
 * **Decision** ``needed`` means ``:Decision: undecided`` -- the maintainer has
-  not ruled, so the work includes asking. ``ruled`` means the issue file
-  already says what to do.
+  not ruled, so the work includes asking. Ask once and carry on: a question is
+  not a wait. If no answer has come by the time the rest of the work is done,
+  rule on the evidence, record both the question and the ruling in
+  ``:Decision:``, and finish. ``ruled`` means the issue file already says what
+  to do.
 * There is no unmet-dependency column here, because "ready" is defined as
   having none. The issues that have one are in the next table, with the
   dependency and its status named.
@@ -73,6 +76,15 @@ left to do.
 **One issue per file, numbers never reused.** New reports land in
 :doc:`incoming` in whatever shape they arrive and are split into numbered files
 from there.
+
+**Never end a turn waiting for a person.** Nothing here runs attended: an agent
+picking this page up may be the only thing awake. Asking the maintainer is
+allowed and often right, but the answer may never come, and a turn that ends
+waiting for one has not ended -- it has stalled a task nobody is watching. Ask,
+then keep working on everything the answer does not decide. Land what you can
+and say plainly in the issue file what is still owed and who owes it: an
+``Accepted`` issue with a "What is left" section is a finished piece of work,
+not an unfinished one. 056 is the shape to copy.
 
 How this page stays honest
 ==========================
