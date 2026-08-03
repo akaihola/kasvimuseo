@@ -173,10 +173,10 @@ type removed in PostgreSQL 12. Both are reported as they are skipped.
 
 Development settings are tracked, in ``ylaneenkasvit/development_settings.py``:
 ``dev/kasvimuseo`` runs the application on them, so a ``git pull`` is the whole
-of getting a change to them (issue 067). ``ylaneenkasvit/local_settings.py`` is
+of getting a change to them (issue 069). ``ylaneenkasvit/local_settings.py`` is
 still read, last and over the top, for whatever is particular to one machine --
 it is untracked, there is no longer a template to copy it from, and a checkout
-needs none. A copy left over from before 067 shadows the tracked values with the
+needs none. A copy left over from before 069 shadows the tracked values with the
 ones it was copied with; ``dev/kasvimuseo`` says so when it sees one.
 
 Secrets come from the environment and are in no tracked file (issue 025). The

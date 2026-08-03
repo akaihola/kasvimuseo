@@ -1,5 +1,5 @@
 ==============================================================================
-Issue 067: A correct password brings back the login form
+Issue 069: A correct password brings back the login form
 ==============================================================================
 
 :Status: Fixed
@@ -43,11 +43,13 @@ Issue 067: A correct password brings back the login form
     for what is particular to one machine. The first two leave the settings
     where they are and report on them; the third fixes these two settings and
     not the class; the fourth removes the class, and was chosen for that
-:Resolution: Fixed in 6469403, as ruled. ``ylaneenkasvit/development_settings.py``
+:Resolution: Fixed in c37eb1f, as ruled. ``ylaneenkasvit/development_settings.py``
     is tracked and holds everything ``local_settings.development.py`` held;
     ``dev/kasvimuseo`` runs the application on it, the template is deleted, and
     ``local_settings.py`` is optional and applied last. See "How it was fixed"
-    below.
+    below. Filed as 067 on a branch cut while another branch was filing 067 as
+    well, and renumbered to 069 when the two met on ``master`` -- which is why
+    c37eb1f and its own prose say 067
 
 Problem
 =======
@@ -116,7 +118,7 @@ one setting that had gone stale before::
         echo "Note: your ylaneenkasvit/local_settings.py predates MEDIA_FALLBACK_URL," >&2
 
 -- one literal, for the setting that was last to be noticed, added after that
-one was found from a browser too. What 048 and 067 have in common is not the
+one was found from a browser too. What 048 and 069 have in common is not the
 setting; it is that a template cannot deliver anything to a checkout that
 already exists.
 
