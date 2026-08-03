@@ -161,6 +161,15 @@ repair. It has that ruling, and the fix.
 
 .. issue-rank::
 
+   067: The development server could not log anybody in: a correct password
+      brought the login form back, on every ``/admin/`` address, for a browser
+      that was not on loopback. First, ahead even of 044 -- 044 stops six
+      change forms, this stopped the admin. It is also the second time a
+      setting added to the ``local_settings.development.py`` template never
+      reached an existing checkout, 048 being the first, which is why the fix
+      is the mechanism rather than the two lines. **Fixed**: option 4, a
+      tracked ``development_settings`` module; the template and the copying
+      are gone.
    044: Six of the admin's change forms are cut off mid-response for a browser
       on another machine, taking the submit row with them, so those models
       cannot be edited at all. Everything over roughly 43 KB is affected. The
