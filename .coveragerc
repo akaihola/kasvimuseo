@@ -1,0 +1,88 @@
+# What `dev/kasvimuseo app coverage` measures, and the floor it refuses to fall
+# below (issue 064).
+#
+# In a file rather than as flags inside `dev/kasvimuseo`, because the number is
+# an argument and an argument wants somewhere to be written down. Both halves
+# of the gate -- the developer's command and the CI step in
+# .github/workflows/tests.yml -- run `coverage` from the repository root, so
+# both read this and neither can measure something the other does not.
+
+[run]
+# The two Python packages this repository owns. `ylaneenkasvit` is in the list
+# because leaving it out is how ylaneenkasvit/dashboard.py sat at 0% unnoticed
+# (docs/test-coverage-plan.rst, "Second round").
+source = kasvimuseo,ylaneenkasvit
+
+# Four kinds of file, and a reason each:
+#
+#   migrations/  A 2013-era South chain that the tests do not replay at all --
+#                SOUTH_TESTS_MIGRATE = False, so syncdb builds the test
+#                database from the models. Measuring code no test can reach
+#                would put a permanent, meaningless 0% in the total.
+#   tests/       Measuring the tests measures whether the tests ran, which the
+#                suite already reports, and inflates the total with a thousand
+#                statements that are covered by construction.
+#   manage.py    Entry points and configuration. They are executed to import
+#   wsgi.py      the settings under test, so they would score high while
+#   *settings*   asserting nothing; test_settings.py in particular would be
+#                measuring the measurement.
+#
+# Deliberately **not** omitted: kasvimuseo/templatetags/kasvimuseo_admin_list.py.
+# docs/test-coverage-plan.rst excludes that vendored fork of Django's
+# admin_list from its coverage *target*, and this file does not contradict it:
+# nothing here asks anybody to raise the fork's 91%. But a target and a floor
+# are different instruments. Dropping 139 statements out of the measurement to
+# protect the number is the opposite of a gate, the fork is covered
+# incidentally by the admin changelist smoke tests and so moves with them, and
+# issue 034 has already scheduled the file for deletion at upgrade Stage 5 --
+# at which point the total rises rather than needing to be renegotiated.
+omit =
+    */migrations/*
+    */tests/*
+    */manage.py
+    */wsgi.py
+    */*settings*.py
+
+[report]
+# The gate: one floor on the total, not a per-file minimum.
+#
+# Today's total is 97.87% -- 920 of 940 statements, measured on 2026-08-03 and
+# written out in docs/test-coverage-plan.rst under "Where coverage stands".
+# 97 is deliberately just under that, and both neighbouring choices were
+# considered and rejected:
+#
+#   * A floor **at** today's number turns every unrelated pull request into a
+#     coverage negotiation: one defensive `except` branch nobody can trigger
+#     is enough to go red.
+#   * A floor far below it -- the plan's own "≥ 80% overall" target -- gates
+#     nothing. The suite could lose a sixth of its reach and stay green.
+#
+# What that headroom buys, measured rather than guessed (issue 064 has the
+# runs): this suite overlaps heavily, so deleting any one test module costs
+# only about six statements and stays green -- test_templatetags.py,
+# test_admin_changelist.py and test_project_urls.py each cost exactly six.
+# Three of them together cost 18, reach 95.96 % and fail. So the floor is not a
+# tripwire on one test file; it catches a module dropping out of the suite
+# altogether, and new code arriving with no tests. Tightening it to 98 would
+# make it a tripwire and make it 0.37 points from today, which is the
+# negotiation this floor exists to avoid. Raise it when the total has been
+# comfortably above the next integer for a while; do not raise it in the same
+# pull request that earns the increase.
+#
+# One property of the installed coverage worth knowing rather than
+# rediscovering: **4.5.4 compares the rounded percentage**, not the exact one.
+# Measured, not assumed -- `coverage report --fail-under=98` passes today at
+# 97.87%, and --fail-under=99 fails. So this floor is in practice 96.5%, about
+# thirteen statements below today, and half a point looser than it reads.
+# There is no `precision` setting to tighten it with before coverage 5.0, which
+# needs Python 3 and so arrives with upgrade Stage 10; a half-integer here
+# (97.5) would be exact, and is not used because a floor should be legible at a
+# glance and this one has room to spare either way.
+#
+# Per-file minimums were the other candidate and were rejected. Twenty-one
+# files each with a number is twenty-one numbers to maintain, coverage 4.5.4
+# cannot express them anyway (no per-file thresholds before 5.0), and the one
+# file whose number genuinely differs from the rest -- the vendored fork above
+# -- is the one file nobody intends to change.
+fail_under = 97
+show_missing = True
