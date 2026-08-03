@@ -71,6 +71,13 @@ Metadata fields
     Left as ``undecided`` until the maintainer rules on it. This is the field to
     fill in when reviewing the list.
 
+    An agent that needs a ruling asks for one, but does not wait for it. If the
+    work reaches the point where only the ruling is missing, decide on the
+    evidence and write both halves here -- what was asked, what came back or
+    that nothing did, and what was therefore chosen. 031 is the shape: it
+    records that the maintainer was asked, what was chosen, and that the
+    evidence would have carried the same ruling alone.
+
 ``Resolution``
     Commit, or the reason for rejecting.
 
