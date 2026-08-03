@@ -75,5 +75,31 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.environ.get('KASVIMUSEO_MEDIA_ROOT',
                             '/tmp/kasvimuseo-test-media')
 
-# Don't try to mail admins about exceptions raised inside tests.
-LOGGING = dict(LOGGING, loggers={})  # noqa: F405
+# The suite writes no log. ``common_settings`` puts every ``WARNING`` and above
+# on stderr and gives ``django.request`` a console handler as well, so that a
+# 500 leaves a traceback behind on the server (issue 065) -- but the suite
+# breaks requests on purpose, pytest reports each one as a failure with the
+# traceback attached, and a second copy on stderr would bury the report it
+# duplicates.
+#
+# Written out as two empty handler lists rather than the ``loggers={}`` this
+# line used to be, which reads as "nothing is configured" and is not the same
+# thing. Django applies its own ``DEFAULT_LOGGING`` before the project's
+# ``LOGGING``, and ``disable_existing_loggers: False`` means a logger this
+# dictionary does not name keeps whatever that pass gave it: ``loggers={}``
+# left ``django.request`` holding ``DEFAULT_LOGGING``'s ``AdminEmailHandler``
+# through every run of this suite, and the only reason it never opened a
+# connection to ``localhost:25`` is that the test runner swaps in the locmem
+# email backend. Naming them says what is meant and does not depend on that.
+LOGGING = dict(  # noqa: F405
+    LOGGING,  # noqa: F405
+    loggers={
+        'django.request': {
+            'handlers': [], 'level': 'ERROR', 'propagate': False,
+        },
+        'django.security': {
+            'handlers': [], 'level': 'ERROR', 'propagate': False,
+        },
+    },
+    root={'handlers': [], 'level': 'ERROR'},
+)
