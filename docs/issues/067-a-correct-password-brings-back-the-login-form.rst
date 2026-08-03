@@ -43,7 +43,7 @@ Issue 067: A correct password brings back the login form
     for what is particular to one machine. The first two leave the settings
     where they are and report on them; the third fixes these two settings and
     not the class; the fourth removes the class, and was chosen for that
-:Resolution: Fixed in (this commit), as ruled. ``ylaneenkasvit/development_settings.py``
+:Resolution: Fixed in 6469403, as ruled. ``ylaneenkasvit/development_settings.py``
     is tracked and holds everything ``local_settings.development.py`` held;
     ``dev/kasvimuseo`` runs the application on it, the template is deleted, and
     ``local_settings.py`` is optional and applied last. See "How it was fixed"
