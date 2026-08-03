@@ -415,6 +415,17 @@ which is what makes the rest of this page hold.
       both engines by default, a matrix leg each in CI, six touch drags
       skipped in WebKit for want of a Chrome DevTools Protocol, and one
       product finding -- 062 -- that no Chromium run could have produced.
+   064: The 97 % in :doc:`../test-coverage-plan` was a number in a document:
+      CI has existed since 018 and never ran ``app coverage``, and that
+      command had no threshold and reported a table even when the suite had
+      failed. Last in this group for the same reason 061 is second-to-last --
+      it is the group's own work made honest rather than new ground, and it
+      could only be done after 018 built the runner it hangs on. Ahead of
+      group 9 rather than inside it, though, and that is the point of its
+      position: the seventeen remaining upgrade stages are what it protects,
+      and a floor that arrives after them protects nothing. **Fixed**: one
+      floor on the total, at 97 % against a real 97.87 %, in a ``.coveragerc``
+      that argues for itself, enforced by the same command CI runs.
 
 9. The upgrade programme
 ------------------------
