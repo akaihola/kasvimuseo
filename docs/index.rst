@@ -77,12 +77,15 @@ problem, each with a status.
 To pick up work rather than read about it, start at
 :doc:`issues/next`: the ranked queue of what is actionable today, generated
 from those statuses, with the few facts about branch, tests and documentation
-build that a fresh session needs.
+build that a fresh session needs. If this is your first change here,
+:doc:`your-first-change` is that queue with the surrounding sequence spelled
+out -- what the words mean, what to run, and what a finished change looks like.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents
 
+   your-first-change
    development
    user-guide
    issues/index
