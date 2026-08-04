@@ -100,3 +100,4 @@ build that a fresh session needs.
    :caption: Reference
 
    api
+   archive
