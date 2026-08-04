@@ -566,9 +566,22 @@ it disagreed about two measurements no assertion was tight enough to notice.
 One of those is **062**: inside 046's ``zoom: 0.5`` WebKit will not draw text
 below nine used pixels, so a name fitted under 18px is drawn at 18px -- the
 size fitty computes is not the size drawn, on the engine every report about
-that page came from. 062 is a measurement waiting for a ruling between three
-answers, and the one thing it cannot establish here is whether iOS Safari has
-the same floor.
+that page came from. 062 is ``Rejected``, and it is the one issue here that was
+closed by the device rather than by a change. Option 2 -- fit no smaller than
+the floor -- was built on the evidence and was green in both engines; the
+maintainer ruled option 1, wait for the tablet, and it was withdrawn to the tag
+``interim-062-option-2``. The tablet then said the sheet looks right, which is
+the condition option 1 named for there being nothing to repair. Its file keeps
+all of it: what the withdrawn change measured, so reopening is a cherry-pick;
+what the device report does *not* establish, since it is a look rather than the
+Web Inspector reading; and the ruling's own history, because the first answer
+was misread as agreeing with the work already done and was corrected by asking
+again with cards whose labels carried no numbers to confuse with the options'
+own. Working on it corrected the report as well: the floor bites over a
+two-pixel window rather than the doubling the issue described, because fitty's
+default ``minSize`` of 16 -- which the template never overrode -- has been the
+real minimum all along. The measurement that started it stands, and it is now
+a fact about Playwright's WebKit rather than about this page.
 
 
 Already fixed
