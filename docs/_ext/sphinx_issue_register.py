@@ -62,6 +62,24 @@ class Register(object):
                                                              self.ranking)
         self.archive_path = os.path.join(srcdir, ARCHIVE_NAME)
         self.archive = self._read_archive()
+        self.plan_paths = [os.path.join(srcdir, name)
+                           for name in issue_register.PLANS]
+        self.stages = self._read_stages(srcdir)
+
+    def _read_stages(self, srcdir):
+        """Each plan's ladder, in the order the plan puts it."""
+        stages = []
+        for name in issue_register.PLANS:
+            source = 'docs/' + name
+            with io.open(os.path.join(srcdir, name), encoding='utf-8') as handle:
+                plan = issue_register.parse_stages(handle.read(), source)
+            issue_register.check_stages(plan, source)
+            stages.extend(plan)
+        return stages
+
+    def plan_stages(self, name):
+        """One plan's stages, by file name."""
+        return [stage for stage in self.stages if stage.source == 'docs/' + name]
 
     def _read_archive(self):
         """The archive page, or nothing if it is not there yet.
@@ -81,6 +99,7 @@ class Register(object):
         paths = [self.index_path] + [
             os.path.join(self.issues_dir, issue.docname + '.rst')
             for issue in self.issues.values()]
+        paths.extend(self.plan_paths)
         if os.path.exists(self.archive_path):
             paths.append(self.archive_path)
         return paths
@@ -93,7 +112,8 @@ def load_register(app):
         _register = Register(app.srcdir)
         verify_commits(os.path.dirname(str(app.srcdir)),
                        issue_register.commit_references(_register.issues,
-                                                        _register.archive))
+                                                        _register.archive,
+                                                        _register.stages))
     except IssueRegisterError as error:
         raise ExtensionError('issue register: {0}'.format(error))
 
@@ -254,6 +274,41 @@ class IssueParkedDirective(_IssueTableDirective):
                      rows, [7, 13, 18, 62])
 
 
+class StageQueueDirective(_IssueTableDirective):
+    """A plan's ladder: where it has got to, and which step is next.
+
+    With an argument -- the plan's file name -- it is that plan's own table.
+    Without one it is every plan at once, which is what :doc:`../issues/next`
+    wants: the programme work beside the issue queue.
+    """
+
+    optional_arguments = 1
+
+    def build(self, register):
+        if self.arguments:
+            name = self.arguments[0]
+            if name not in issue_register.PLANS:
+                raise IssueRegisterError(
+                    'stage-queue: {0} is not a plan. The plans are {1}'
+                    .format(name, ', '.join(issue_register.PLANS)))
+            stages = register.plan_stages(name)
+            headers = ['Stage', 'Status', 'What it is', 'Landed in']
+            widths = [12, 10, 60, 18]
+        else:
+            stages = register.stages
+            headers = ['Plan', 'Stage', 'Status', 'What it is', 'Landed in']
+            widths = [20, 12, 10, 48, 18]
+        rows = []
+        for stage in stages:
+            row = [stage.label, stage.status, stage.title,
+                   ', '.join(issue_register.commits_in(stage.resolution)) or '--']
+            if not self.arguments:
+                plan = stage.source[len('docs/'):-len('.rst')]
+                row.insert(0, ':doc:`{0} </{0}>`'.format(plan))
+            rows.append(row)
+        return table(headers, rows, widths)
+
+
 def claim_cell(issue):
     return issue.claimed.replace('\n', ' ') if issue.claimed else '--'
 
@@ -293,5 +348,6 @@ def setup(app):
     app.add_directive('issue-rank', IssueRankDirective)
     app.add_directive('issue-queue', IssueQueueDirective)
     app.add_directive('issue-parked', IssueParkedDirective)
+    app.add_directive('stage-queue', StageQueueDirective)
     return {'version': '1.0', 'parallel_read_safe': True,
             'parallel_write_safe': True}

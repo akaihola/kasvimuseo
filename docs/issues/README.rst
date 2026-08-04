@@ -85,6 +85,35 @@ Metadata fields
     named here, so this is caught rather than believed.
 
 
+Stages, in the plans
+====================
+
+An issue is one problem. A *stage* is one step of a programme that was planned
+as a whole: :doc:`../upgrade-plan`'s twenty, and :doc:`../test-coverage-plan`'s
+packages. They are not issues -- there is nothing to decide about them and
+nothing to rank, because the plan already argued for the order -- but "what is
+next" has to be answerable without reading a hundred kilobytes of reasoning.
+
+So each stage heading carries a field list of its own::
+
+    Stage 4 — Photologue 2.8.3 → 3.0.2, still on Django 1.6
+    --------------------------------------------------------
+
+    :Status: Next
+
+``Status`` is ``Done``, ``Next`` or ``Planned``, and the three read as a ladder:
+everything above ``Next`` is done, everything below it is not, and exactly one
+stage is ``Next`` until the plan is finished, at which point none is and the
+plan stops asking to be read. ``Done`` also carries ``Resolution`` -- the commit
+that landed it, or the issues that did -- and those commits are checked like an
+issue's. ``Stage`` names the step where the heading does not, as
+``test-coverage-plan``'s infrastructure section does.
+
+The prose around a stage is unchanged: it is the argument for doing it that
+way and the record of what it cost. The field is the one line a machine reads,
+and "Where this plan has got to" at the top of each plan is generated from it.
+
+
 Removed documents, and the archive
 ==================================
 
@@ -127,7 +156,11 @@ about a status is written down twice, so nothing about a status can drift.
   that does not name it back. Both halves matter: an edge pointing at nothing
   used to be *dropped* from the queue, so a mistyped number read as "ready
   now", and an edge recorded at one end only cannot be read from the other,
-* a commit named in a ``Resolution`` field, or in an archive entry, is not in
+* a plan's stages do not read as a ladder: two are ``Next``, a ``Done`` one sits
+  below an unfinished one, work is left and nothing says which piece is next, or
+  a ``Done`` stage does not say what landed it,
+* a commit named in a ``Resolution`` field, whether an issue's or a stage's, or
+  in an archive entry, is not in
   this repository -- which is what a pointer written before a rebase becomes.
   A checkout that cannot answer, such as a shallow clone or one without
   ``git``, reports that it skipped the check and does not fail.

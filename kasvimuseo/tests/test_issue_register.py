@@ -14,6 +14,7 @@ anything if it can read the register as it actually is.
 
 from __future__ import unicode_literals
 
+import io
 import os
 import sys
 
@@ -292,6 +293,110 @@ def test_an_archive_reference_carries_the_path_the_commit_must_hold():
     references = issue_register.commit_references({}, entries)
     assert references[0] == ('docs/archive.rst', '88455a0',
                              'docs/issues/incoming.rst')
+
+
+TABLE = """\
+A table whose header row is not a heading:
+
+============ =========
+Stage        Django
+============ =========
+Stage 3      1.6.11
+============ =========
+"""
+
+COMMITS = {0: '2d01cde', 1: '48fda0e', 2: 'f539523'}
+
+
+def plan(*statuses):
+    """A three-stage plan with these statuses; a ``Done`` one names a commit."""
+    parts = ['=========\n A plan\n=========\n']
+    for number, status in enumerate(statuses):
+        heading = 'Stage {0} -- Step {0}'.format(number)
+        block = [heading, '-' * len(heading), '', ':Status: ' + status]
+        if status == 'Done':
+            block.append(':Resolution: ' + COMMITS[number])
+        parts.append('\n'.join(block) + '\n\nProse about stage {0}.\n'.format(number))
+    parts.append(TABLE)
+    return '\n'.join(parts)
+
+
+PLAN = plan('Done', 'Next', 'Planned')
+
+
+def stages_of(text):
+    return issue_register.parse_stages(text, 'docs/a-plan.rst')
+
+
+def check(text):
+    issue_register.check_stages(stages_of(text), 'docs/a-plan.rst')
+
+
+def test_a_plan_reads_its_stages_in_the_order_it_puts_them():
+    stages = stages_of(PLAN)
+    assert [(s.label, s.status) for s in stages] == [
+        ('Stage 0', 'Done'), ('Stage 1', 'Next'), ('Stage 2', 'Planned')]
+    assert stages[0].title == 'Step 0'
+    assert stages[0].resolution == '2d01cde'
+
+
+def test_a_simple_table_row_is_not_a_stage():
+    assert 'Stage 3' not in [stage.label for stage in stages_of(PLAN)]
+
+
+def test_a_stage_that_is_done_says_what_landed_it():
+    with pytest.raises(IssueRegisterError) as error:
+        stages_of(PLAN.replace(':Resolution: 2d01cde\n', ''))
+    assert 'is ``Done`` with no ``:Resolution:``' in str(error.value)
+
+
+def test_a_heading_that_does_not_name_a_stage_has_to_be_named():
+    with pytest.raises(IssueRegisterError) as error:
+        stages_of(PLAN.replace('Stage 0 -- Step 0', 'Get ready first'))
+    assert 'Add ``:Stage:``' in str(error.value)
+
+
+def test_a_stage_named_by_its_field_needs_no_stage_heading():
+    text = PLAN.replace('Stage 0 -- Step 0\n', 'Get ready first  \n').replace(
+        ':Status: Done', ':Stage: Step 0\n:Status: Done', 1)
+    assert stages_of(text)[0].label == 'Step 0'
+
+
+def test_a_ladder_is_climbed_in_order():
+    with pytest.raises(IssueRegisterError) as error:
+        check(plan('Done', 'Planned', 'Done'))
+    assert 'is ``Done`` but a stage above it is not' in str(error.value)
+
+
+def test_only_one_stage_is_next():
+    with pytest.raises(IssueRegisterError) as error:
+        check(plan('Done', 'Next', 'Next'))
+    assert 'are both ``Next``' in str(error.value)
+
+
+def test_a_plan_with_work_left_says_which_piece_is_next():
+    with pytest.raises(IssueRegisterError) as error:
+        check(plan('Done', 'Planned', 'Planned'))
+    assert 'nothing is ``Next``' in str(error.value)
+
+
+def test_a_finished_plan_stops_asking_to_be_read():
+    text = plan('Done', 'Done', 'Done')
+    check(text)
+    assert all(stage.is_done for stage in stages_of(text))
+
+
+def test_a_stage_resolution_is_checked_like_an_issue_resolution():
+    assert issue_register.commit_references({}, (), stages_of(PLAN)) == [
+        ('docs/a-plan.rst Stage 0 ``:Resolution:``', '2d01cde', None)]
+
+
+def test_the_real_plans_read_and_climb_in_order():
+    for name in issue_register.PLANS:
+        with io.open(os.path.join(DOCS, name), encoding='utf-8') as handle:
+            stages = issue_register.parse_stages(handle.read(), 'docs/' + name)
+        issue_register.check_stages(stages, 'docs/' + name)
+        assert stages, name
 
 
 def test_the_real_register_graph_agrees_with_itself_in_both_directions():
