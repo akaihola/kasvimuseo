@@ -79,7 +79,31 @@ Metadata fields
     evidence would have carried the same ruling alone.
 
 ``Resolution``
-    Commit, or the reason for rejecting.
+    Commit, or the reason for rejecting. Written after the branch has landed on
+    ``master``: a commit named before the rebase does not exist afterwards, and
+    a dead pointer reads exactly like a live one. The build checks every commit
+    named here, so this is caught rather than believed.
+
+
+Removed documents, and the archive
+==================================
+
+Text this project no longer wants is removed with ``git rm`` rather than left
+in place with a note saying it is out of date. Git keeps the content; the
+pointer to it goes in ``docs/archive.rst``, one bullet per removed document::
+
+    * ``docs/issues/incoming.rst`` @ ``88455a0`` -- the "Emptied on ..."
+      entries, removed 2026-08-04. Why they went, in as many lines as it takes.
+
+The path and the commit are literals, separated by ``@``, and the reason
+follows ``--`` and wraps onto indented lines. **The commit is one that is
+already on** ``master``, and never one the removing branch makes itself: that
+commit is rewritten when the branch is rebased, and the pointer dies with it.
+Any older commit that still holds the file will do; the head of ``master`` at
+the time of writing is the obvious one.
+
+The build reads that page and asks ``git`` whether each pointer resolves, so an
+archive entry is a promise the documentation keeps rather than one it makes.
 
 
 What the build checks
@@ -98,7 +122,15 @@ about a status is written down twice, so nothing about a status can drift.
 * an issue file is missing from :doc:`index`'s suggested order, or appears in
   it twice -- the promise that "every issue appears exactly once" is enforced
   rather than hoped for,
-* that order names an issue with no file.
+* that order names an issue with no file,
+* a ``Depends on`` or ``Blocks`` field names an issue that has no file, or one
+  that does not name it back. Both halves matter: an edge pointing at nothing
+  used to be *dropped* from the queue, so a mistyped number read as "ready
+  now", and an edge recorded at one end only cannot be read from the other,
+* a commit named in a ``Resolution`` field, or in an archive entry, is not in
+  this repository -- which is what a pointer written before a rebase becomes.
+  A checkout that cannot answer, such as a shallow clone or one without
+  ``git``, reports that it skipped the check and does not fail.
 
 The parser is ``docs/_ext/issue_register.py`` and the directives are in
 ``docs/_ext/sphinx_issue_register.py``; both are covered by

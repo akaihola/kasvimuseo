@@ -207,6 +207,97 @@ def test_the_queue_keeps_the_ranked_order_and_drops_the_rest():
     ]
 
 
+def linked(number, depends=(), blocks=(), resolution='(none)'):
+    """A fake issue that carries both halves of the graph, and a resolution."""
+    return issue_register.Issue(number, number + '-x', 'Issue ' + number, {
+        'Status': 'Open',
+        'Severity': 'Low',
+        'Decision': 'undecided',
+        'Resolution': resolution,
+        'Depends on': '\n'.join(n + ' -- because' for n in depends) or '(none)',
+        'Blocks': '\n'.join(n + ' -- because' for n in blocks) or '(none)',
+    })
+
+
+def test_a_graph_that_agrees_with_itself_passes():
+    issue_register.check_graph({'001': linked('001', blocks=['002']),
+                                '002': linked('002', depends=['001'])})
+
+
+def test_a_dependency_on_an_issue_with_no_file_is_an_error():
+    with pytest.raises(IssueRegisterError) as error:
+        issue_register.check_graph({'001': linked('001', depends=['099'])})
+    assert 'names issue 099, which has no file' in str(error.value)
+
+
+def test_a_dependency_the_other_end_does_not_mirror_is_an_error():
+    with pytest.raises(IssueRegisterError) as error:
+        issue_register.check_graph({'001': linked('001', depends=['002']),
+                                    '002': linked('002')})
+    assert 'does not name 001 in its ``:Blocks:``' in str(error.value)
+
+
+def test_an_issue_that_depends_on_itself_is_an_error():
+    with pytest.raises(IssueRegisterError) as error:
+        issue_register.check_graph({'001': linked('001', depends=['001'])})
+    assert 'names 001 itself' in str(error.value)
+
+
+ARCHIVE = """\
+Removed
+=======
+
+* ``docs/issues/incoming.rst`` @ ``88455a0`` -- the "Emptied on ..." entries,
+  removed 2026-08-04. Each report is a numbered issue file now.
+* ``docs/old-plan.rst`` @ ``abc1234`` -- superseded.
+
+Not an entry:
+
+* just a bullet of prose, which the archive is allowed to contain.
+"""
+
+
+def test_an_archive_entry_is_a_path_a_commit_and_a_reason():
+    entries = issue_register.parse_archive(ARCHIVE)
+    assert [(path, commit) for path, commit, _why in entries] == [
+        ('docs/issues/incoming.rst', '88455a0'),
+        ('docs/old-plan.rst', 'abc1234'),
+    ]
+    assert entries[0][2].endswith('numbered issue file now.')
+
+
+def test_a_bullet_that_opens_with_a_literal_has_to_be_an_entry():
+    with pytest.raises(IssueRegisterError) as error:
+        issue_register.parse_archive('* ``docs/gone.rst`` -- no commit\n')
+    assert 'cannot read this as an archive entry' in str(error.value)
+
+
+def test_a_resolution_names_the_commits_it_points_at():
+    issues = {'001': linked('001', resolution='Fixed in 170412f.'),
+              '002': linked('002', resolution='6bbd199, refined in 96fe07d')}
+    assert issue_register.commit_references(issues) == [
+        ('docs/issues/001-x.rst ``:Resolution:``', '170412f', None),
+        ('docs/issues/002-x.rst ``:Resolution:``', '6bbd199', None),
+        ('docs/issues/002-x.rst ``:Resolution:``', '96fe07d', None),
+    ]
+
+
+def test_a_number_that_is_only_a_number_is_not_a_commit():
+    issues = {'060': linked('060', resolution='stage 2 is max-age=31536000')}
+    assert issue_register.commit_references(issues) == []
+
+
+def test_an_archive_reference_carries_the_path_the_commit_must_hold():
+    entries = issue_register.parse_archive(ARCHIVE)
+    references = issue_register.commit_references({}, entries)
+    assert references[0] == ('docs/archive.rst', '88455a0',
+                             'docs/issues/incoming.rst')
+
+
+def test_the_real_register_graph_agrees_with_itself_in_both_directions():
+    issue_register.check_graph(issue_register.load_issues(ISSUES))
+
+
 def test_the_real_register_parses_and_is_ranked_exactly_once():
     issues = issue_register.load_issues(ISSUES)
     with open(os.path.join(ISSUES, 'index.rst')) as handle:

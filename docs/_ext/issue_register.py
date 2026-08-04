@@ -45,6 +45,17 @@ LEADING_IDS_RE = re.compile(r'^\s*(\d{3}(?:\s*,\s*\d{3})*)')
 RANK_ENTRY_RE = re.compile(r'^(\d{3}):[ \t]*(.*)$')
 RANK_DIRECTIVE_RE = re.compile(r'^([ \t]*)\.\.[ \t]+issue-rank::[ \t]*$')
 
+#: One ``docs/archive.rst`` bullet: ``* ``path`` @ ``commit`` -- why it went``.
+ARCHIVE_ENTRY_RE = re.compile(
+    r'^\*[ \t]+``([^`]+)``[ \t]+@[ \t]+``([0-9a-fA-F]+)``[ \t]+--[ \t]*(.+)$')
+#: A bullet that opens with a literal is meant to be one, whatever it says.
+ARCHIVE_BULLET_RE = re.compile(r'^\*[ \t]+``')
+
+#: A commit named in prose: a bare hex run, not part of a longer word and not
+#: inside a path. ``git`` accepts any unambiguous prefix, so the length is not
+#: fixed at seven.
+COMMIT_RE = re.compile(r'(?<![0-9A-Za-z`_/-])([0-9a-f]{7,40})(?![0-9A-Za-z])')
+
 
 class IssueRegisterError(Exception):
     """A malformed issue file, or a ranking that does not match the files.
@@ -246,6 +257,92 @@ def check_ranking(issues, ranking, source='docs/issues/index.rst'):
                     'it' if len(unranked) == 1 else 'them'))
 
 
+def check_graph(issues):
+    """Enforce that ``Depends on`` and ``Blocks`` name real issues, both ways.
+
+    ``docs/issues/README.rst`` says the two are kept consistent in both
+    directions, so that the graph can be read from either file. Nothing checked
+    it until this did, and a dependency naming an issue that does not exist was
+    worse than unchecked: :func:`build_queue` skipped it, so a typo in a
+    ``Depends on`` line read as "ready now".
+    """
+    for number in sorted(issues):
+        issue = issues[number]
+        path = 'docs/issues/{0}.rst'.format(issue.docname)
+        for field, mirror in (('Depends on', 'Blocks'),
+                              ('Blocks', 'Depends on')):
+            for other in _referenced_ids(issue.fields[field]):
+                if other == number:
+                    raise IssueRegisterError(
+                        '{0}: ``:{1}:`` names {2} itself'
+                        .format(path, field, number))
+                if other not in issues:
+                    raise IssueRegisterError(
+                        '{0}: ``:{1}:`` names issue {2}, which has no file. '
+                        'Either docs/issues/{2}-*.rst is missing or the number '
+                        'is a typo -- an unreadable edge is dropped from the '
+                        'queue, so this cannot be left as it is'
+                        .format(path, field, other))
+                if number not in _referenced_ids(issues[other].fields[mirror]):
+                    raise IssueRegisterError(
+                        '{0}: ``:{1}:`` names {2}, but docs/issues/{3}.rst does '
+                        'not name {4} in its ``:{5}:``. The two are kept '
+                        'consistent in both directions, so the graph can be '
+                        'read from either file: add {4} there, or drop it here'
+                        .format(path, field, other, issues[other].docname,
+                                number, mirror))
+
+
+def parse_archive(text, source='docs/archive.rst'):
+    """Read the archive page into ``[(path, commit, why it went)]``.
+
+    One bullet per removed document, ``* ``path`` @ ``commit`` -- why``, with
+    the prose wrapping onto indented lines. The format is fixed because
+    :func:`commit_references` hands every pointer to ``git``; it is written
+    down in ``docs/issues/README.rst``.
+    """
+    entries = []
+    for number, line in enumerate(text.split('\n'), start=1):
+        if entries and line[:1].isspace() and line.strip():
+            entries[-1][2] = (entries[-1][2] + ' ' + line.strip()).strip()
+            continue
+        if not ARCHIVE_BULLET_RE.match(line):
+            continue
+        match = ARCHIVE_ENTRY_RE.match(line)
+        if not match:
+            raise IssueRegisterError(
+                '{0} line {1}: cannot read this as an archive entry. Each one '
+                'is ``* ``path`` @ ``commit`` -- why it went``, with the commit '
+                'already on master: {2}'.format(source, number, line.strip()))
+        entries.append([match.group(1), match.group(2), match.group(3).strip()])
+    return [tuple(entry) for entry in entries]
+
+
+def commit_references(issues, archive=()):
+    """Every commit the documentation points at, as ``[(source, commit, path)]``.
+
+    ``path`` is the file the commit has to contain -- the archive's whole
+    purpose -- or ``None`` when only the commit itself is claimed to exist,
+    which is what a ``:Resolution:`` claims.
+
+    A ``:Resolution:`` names its commits in prose, so they are picked out by
+    shape: a bare hex run of at least seven characters with both a digit and a
+    letter in it. That last rule is what keeps ``max-age=31536000`` in issue 060
+    out, and it is deliberately a shape rather than a syntax -- the fields were
+    written for people first, and a commit this misses is unchecked rather than
+    wrongly reported.
+    """
+    references = []
+    for number in sorted(issues):
+        issue = issues[number]
+        source = 'docs/issues/{0}.rst'.format(issue.docname)
+        for commit in _commits_in(issue.fields['Resolution']):
+            references.append((source + ' ``:Resolution:``', commit, None))
+    for path, commit, _why in archive:
+        references.append(('docs/archive.rst', commit, path))
+    return references
+
+
 class QueueEntry(object):
     """One row of either generated table: an issue, its rank and its reason."""
 
@@ -310,6 +407,19 @@ def _referenced_ids(value):
             if number not in numbers:
                 numbers.append(number)
     return numbers
+
+
+def _commits_in(value):
+    """The commits a prose field names, deduplicated and in order."""
+    commits = []
+    for candidate in COMMIT_RE.findall(value):
+        if not any(char.isdigit() for char in candidate):
+            continue
+        if not any(char in 'abcdef' for char in candidate):
+            continue
+        if candidate not in commits:
+            commits.append(candidate)
+    return commits
 
 
 def _title(text):
