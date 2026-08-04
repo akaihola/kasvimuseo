@@ -56,6 +56,23 @@ ARCHIVE_BULLET_RE = re.compile(r'^\*[ \t]+``')
 #: fixed at seven.
 COMMIT_RE = re.compile(r'(?<![0-9A-Za-z`_/-])([0-9a-f]{7,40})(?![0-9A-Za-z])')
 
+#: The plans, whose stages are a second queue beside the issues. Named here
+#: rather than discovered: a plan is a document somebody decided to run, and
+#: there are two of them.
+PLANS = ('upgrade-plan.rst', 'test-coverage-plan.rst')
+
+#: What a stage's ``Status`` may say. There is no ``In progress``: a stage is
+#: not claimed, it is next, and ``docs/issues/NNN``'s ``Claimed`` is where the
+#: branch doing it says so.
+STAGE_STATUSES = ('Done', 'Next', 'Planned')
+
+#: ``Stage 3 -- Django 1.5.12 -> 1.6.11``, ``P1 -- Public-visibility logic``.
+STAGE_HEADING_RE = re.compile(
+    r'^(Stage|Step|P)[ \t]*(\d+)[ \t]*(?:[-–—]+[ \t]*)?(.*)$')
+#: A section underline: one punctuation character, repeated, and nothing else.
+#: A simple-table rule has spaces in it, which is what keeps its header row out.
+UNDERLINE_RE = re.compile(r'^([-=~^"*+#`\'])\1{2,}$')
+
 
 class IssueRegisterError(Exception):
     """A malformed issue file, or a ranking that does not match the files.
@@ -318,7 +335,138 @@ def parse_archive(text, source='docs/archive.rst'):
     return [tuple(entry) for entry in entries]
 
 
-def commit_references(issues, archive=()):
+class Stage(object):
+    """One step of a plan, as the field list under its heading describes it."""
+
+    def __init__(self, label, title, fields, source, lineno):
+        self.label = label
+        self.title = title
+        self.fields = fields
+        self.source = source
+        self.lineno = lineno
+        self.status = fields['Status']
+        self.resolution = fields.get('Resolution', '')
+
+    @property
+    def is_done(self):
+        return self.status == 'Done'
+
+    def __repr__(self):
+        return str('<Stage {0} {1}>').format(self.label, self.status)
+
+
+def parse_stages(text, source):
+    """Read one plan's stages, in the order the document puts them.
+
+    A stage is a section whose first content is a field list carrying
+    ``Status``. The heading normally names it -- ``Stage 4``, ``P1`` -- and
+    ``:Stage:`` says so explicitly where the heading does not.
+
+    The prose around each stage stays what it always was: the argument for
+    doing it that way, and the record of what it cost. This reads the one line
+    that says where the work has got to, so that :doc:`../issues/next` can show
+    it without anybody maintaining a second copy of it.
+    """
+    stages = []
+    lines = text.split('\n')
+    for index in range(len(lines) - 1):
+        heading = lines[index].strip()
+        if not heading or not UNDERLINE_RE.match(lines[index + 1].strip()):
+            continue
+        if len(lines[index + 1].strip()) < len(heading):
+            continue
+        fields = _fields_after(lines, index + 2)
+        if 'Status' not in fields:
+            continue
+        lineno = index + 1
+        label, title = _stage_label(heading, fields, source, lineno)
+        _check_value('{0} line {1}'.format(source, lineno), fields, 'Status',
+                     STAGE_STATUSES)
+        if fields['Status'] == 'Done' and not fields.get('Resolution', '').strip():
+            raise IssueRegisterError(
+                '{0} line {1}: {2} is ``Done`` with no ``:Resolution:``. Name '
+                'the commit that landed it, or the issues that did'
+                .format(source, lineno, label))
+        stages.append(Stage(label, title, fields, source, lineno))
+    if not stages:
+        raise IssueRegisterError(
+            '{0}: no stages. A plan says where it has got to in a ``:Status:`` '
+            'field under each stage heading, one of {1}'
+            .format(source, ', '.join('``{0}``'.format(value)
+                                      for value in STAGE_STATUSES)))
+    return stages
+
+
+def check_stages(stages, source):
+    """A ladder is climbed in order, so its statuses have to read like one.
+
+    ``Done`` stages first, then at most one ``Next``, then ``Planned``. A plan
+    with work left says which piece is next -- that is the whole point of
+    reading it -- and a plan with none left says so by having no ``Next`` at
+    all, which is how a finished plan stops asking to be read.
+    """
+    remaining = [stage for stage in stages if not stage.is_done]
+    for stage in stages[len(stages) - len(remaining):]:
+        if stage.is_done:
+            raise IssueRegisterError(
+                '{0} line {1}: {2} is ``Done`` but a stage above it is not. '
+                'A stage that was taken out of order is still out of order in '
+                'the plan: move it, or say in its prose why it could jump'
+                .format(source, stage.lineno, stage.label))
+    nexts = [stage for stage in stages if stage.status == 'Next']
+    if len(nexts) > 1:
+        raise IssueRegisterError(
+            '{0}: {1} are both ``Next``. One of them is'
+            .format(source, ' and '.join(stage.label for stage in nexts)))
+    if remaining and not nexts:
+        raise IssueRegisterError(
+            '{0} line {1}: nothing is ``Next``, but {2} is not done. Mark the '
+            'one to do next, so that the queue can name it'
+            .format(source, remaining[0].lineno, remaining[0].label))
+    if nexts and nexts[0] is not remaining[0]:
+        raise IssueRegisterError(
+            '{0} line {1}: {2} is ``Next``, but {3} above it is not done '
+            'either'.format(source, nexts[0].lineno, nexts[0].label,
+                            remaining[0].label))
+
+
+def _fields_after(lines, start):
+    """The field list that opens a section, or ``{}`` if it does not."""
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+    fields = {}
+    current = None
+    for line in lines[start:]:
+        match = FIELD_RE.match(line)
+        if match:
+            current = match.group(1)
+            fields[current] = (match.group(2) or '').strip()
+            continue
+        if not line.strip():
+            break
+        if current is not None and line[:1].isspace():
+            fields[current] = (fields[current] + ' ' + line.strip()).strip()
+            continue
+        break
+    return fields
+
+
+def _stage_label(heading, fields, source, lineno):
+    """What to call this stage, and what the heading says it is."""
+    match = STAGE_HEADING_RE.match(heading)
+    if 'Stage' in fields:
+        return fields['Stage'], heading
+    if not match:
+        raise IssueRegisterError(
+            '{0} line {1}: ``{2}`` carries a stage ``:Status:`` but its '
+            'heading does not name a stage. Add ``:Stage:`` saying what to '
+            'call it'.format(source, lineno, heading))
+    prefix, number, title = match.groups()
+    label = '{0} {1}'.format(prefix, number) if prefix != 'P' else prefix + number
+    return label, title.strip() or heading
+
+
+def commit_references(issues, archive=(), stages=()):
     """Every commit the documentation points at, as ``[(source, commit, path)]``.
 
     ``path`` is the file the commit has to contain -- the archive's whole
@@ -336,10 +484,15 @@ def commit_references(issues, archive=()):
     for number in sorted(issues):
         issue = issues[number]
         source = 'docs/issues/{0}.rst'.format(issue.docname)
-        for commit in _commits_in(issue.fields['Resolution']):
+        for commit in commits_in(issue.fields['Resolution']):
             references.append((source + ' ``:Resolution:``', commit, None))
     for path, commit, _why in archive:
         references.append(('docs/archive.rst', commit, path))
+    for stage in stages:
+        for commit in commits_in(stage.resolution):
+            references.append(
+                ('{0} {1} ``:Resolution:``'.format(stage.source, stage.label),
+                 commit, None))
     return references
 
 
@@ -409,7 +562,7 @@ def _referenced_ids(value):
     return numbers
 
 
-def _commits_in(value):
+def commits_in(value):
     """The commits a prose field names, deduplicated and in order."""
     commits = []
     for candidate in COMMIT_RE.findall(value):
