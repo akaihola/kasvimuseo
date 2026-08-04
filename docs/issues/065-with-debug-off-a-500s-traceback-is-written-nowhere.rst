@@ -46,8 +46,12 @@ Issue 065: With ``DEBUG`` off, a 500's traceback is written nowhere
     is wrong for this deployment
     059 -- likewise, and the issue whose own server-side complement (060) was
     filed separately rather than grown into it, which is what 066 is here
-    066 -- the deployment half: nothing on the server can deliver the mail this
-    configuration still tries to send
+    066 -- the deployment half: nothing on the server could deliver the mail
+    this configuration used to try to send. It is ``Rejected``, and it is what
+    overturned the one judgement in this issue: the maintainer ruled that
+    ``uwsgi.error.log`` is enough, so ``mail_admins`` does not stay after all.
+    See "Why ``mail_admins`` stays" below, which is kept as it was written with
+    a note on the front
     036 -- the upgrade programme. Stage 3 landed Django 1.6.11 while this was
     being written, and it brought a second logger with the same defect --
     ``django.security`` -- which is why the fix names two
@@ -229,6 +233,18 @@ On the production host that stream is ``/home/<app_user>/uwsgi.error.log``.
 Why ``mail_admins`` stays
 =========================
 
+.. note::
+
+   **Overturned by issue 066 on 2026-08-04, and kept as it was written.** The
+   maintainer was asked whether they wanted to be told about a 500 or were
+   content to look, and answered the second: ``uwsgi.error.log`` is enough. So
+   the handler is gone, and this section is the argument that lost rather than
+   a description of the code. It is kept because it is still the reasoning that
+   has to be answered if anybody proposes putting the handler back, and because
+   the thing it got wrong is worth seeing -- the argument below is sound except
+   for its last paragraph, which assumed the server would one day be able to
+   deliver. That was the assumption 066 tested, and it did not hold.
+
 Nothing can deliver it, and a handler that fails silently is its own defect --
 that is the argument for deleting it, and it was taken seriously rather than
 waved away. Three things answered it.
@@ -328,4 +344,8 @@ See also
 off is a server-side act on the maintainer's timetable, and this issue only
 changes what the server will do afterwards.
 :doc:`066 <066-nothing-on-the-production-host-can-deliver-mail_admins>` -- the
-deployment half, filed separately and still open.
+deployment half, filed separately and now ``Rejected``: the maintainer ruled
+that ``uwsgi.error.log`` is enough, so the ``mail_admins`` handler this issue
+kept was deleted rather than given something that could deliver it. The
+traceback this issue is about is unaffected -- it goes to stderr either way,
+which is exactly what made deleting the handler cheap.
