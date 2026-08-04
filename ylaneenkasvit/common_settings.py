@@ -274,8 +274,10 @@ SITE_ID = 1
 # in that history this project must not run, and why.
 
 
-# Django's stock block, plus the one handler it leaves out: a stream handler,
-# so that an unhandled exception is written down somewhere (issue 065).
+# Django's stock block with one handler added and one taken away: a stream
+# handler, so that an unhandled exception is written down somewhere (issue
+# 065), and no ``mail_admins``, because nothing was ever able to deliver what
+# it sent (issue 066).
 #
 # What the stock block does on its own is send a 500's traceback to
 # ``mail_admins`` and nowhere else. Django's own ``DEFAULT_LOGGING`` is applied
@@ -297,22 +299,34 @@ SITE_ID = 1
 # ``ansible/roles/akaihola.uwsgi/templates/uwsgi.ini``) and the development
 # gunicorn writes it to the container's output.
 #
-# ``mail_admins`` stays although nothing can deliver it today, and that is a
-# decision rather than an oversight: it is inert, not broken. It costs one
-# refused connection to ``localhost:25`` per 500 and cannot lose the traceback,
-# because ``console`` now has it either way; and it is the only handler here
-# that reaches a person who is not reading a log file, so the day the server
-# gets an MTA or an ``EMAIL_HOST`` -- issue 066 -- it starts working with no
-# change to this file. Removing it and adding it back then was the alternative,
-# and it buys nothing but this comment.
+# There is deliberately no ``mail_admins`` handler, and this comment is the
+# decision rather than the absence being an oversight (issue 066). Django's
+# stock block has one -- ``AdminEmailHandler``, behind a ``RequireDebugFalse``
+# filter -- and this project carried it until the maintainer ruled that
+# ``uwsgi.error.log`` is enough: they are content to *look* at a 500 rather
+# than be *told* about one.
+#
+# What it was doing until then was nothing, silently. Django's default is the
+# SMTP backend on ``localhost:25``; nothing in ``ansible/`` installs an MTA, so
+# the connection was refused, and ``AdminEmailHandler.emit`` passes
+# ``fail_silently=True``, which swallows the refusal without an exception,
+# without ``handleError`` and without a line in any log saying a handler had
+# failed. The two alternatives to deleting it were an MTA on a host whose whole
+# point is that it is small, and an ``EMAIL_HOST`` pointing at a relay that
+# would have had to exist; both were declined.
+#
+# So stderr is the only place a production error is recorded, which is a
+# smaller promise than the one this block used to make and a true one. If a
+# notification is ever wanted, the handler comes back with an ``EMAIL_HOST``
+# beside it -- and ``kasvimuseo/tests/test_settings_logging.py`` asserts the
+# absence, so putting it back is a decision somebody takes rather than a
+# default that creeps in.
+#
+# ``RequireDebugFalse`` goes with it: that filter existed only to keep the mail
+# from being sent while ``DEBUG`` was on, and nothing else here uses it.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
     'formatters': {
         # uWSGI writes what a worker puts on stderr through verbatim, so the
         # timestamp and the logger name have to come from here or they are not
@@ -327,15 +341,10 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'stderr',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
     },
     'loggers': {
         'django.request': {
-            'handlers': ['console', 'mail_admins'],
+            'handlers': ['console'],
             'level': 'ERROR',
             # ``False`` where the stock block says ``True``, which is also what
             # Django's own ``DEFAULT_LOGGING`` says. With ``console`` named
@@ -347,15 +356,15 @@ LOGGING = {
         },
         # The same treatment for the logger Django 1.6 added (upgrade plan
         # Stage 3), and it arrived with the same defect for the same reason:
-        # ``DEFAULT_LOGGING`` gives ``django.security`` ``mail_admins`` alone
-        # and ``propagate: False``, so a ``SuspiciousOperation`` -- a bad
+        # ``DEFAULT_LOGGING`` gives ``django.security`` ``AdminEmailHandler``
+        # alone and ``propagate: False``, so a ``SuspiciousOperation`` -- a bad
         # ``Host`` header against the ``ALLOWED_HOSTS`` 026 supplies, a
         # tampered signed cookie -- was mailed nowhere and written nowhere.
         # Named here rather than left to inherit, because what it inherits
         # depends on the ``django`` entry below: remove that and this logger
         # silently goes back to mailing ``localhost:25`` and nothing else.
         'django.security': {
-            'handlers': ['console', 'mail_admins'],
+            'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
         },
