@@ -2,7 +2,7 @@
 Issue 062: WebKit draws fitted label text at a nine-pixel floor
 ===============================================================
 
-:Status: Deferred
+:Status: Rejected
 :Severity: Medium
 :Area: templates / labels UI
 :Reported: 2026-08-02
@@ -10,37 +10,36 @@ Issue 062: WebKit draws fitted label text at a nine-pixel floor
     (issue 061)
 :Evidence: ``browser_tests/test_label_editor.py`` --
     ``test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to`` pins what each
-    engine does today: in Chromium the drawn size equals the inline size fitty
-    wrote, in WebKit it is strictly larger. It is unchanged by this ruling and
-    is what will fail the day the floor moves in either engine. The sweep
-    behind it is in "Measured" below
-:Depends on: (none -- no issue blocks it. What it waits for is a measurement
-    on the iPad, which is in "What is left" and is the maintainer's to make)
+    engine does: in Chromium the drawn size equals the inline size fitty wrote,
+    in WebKit it is strictly larger. It stays, and it is what will notice if
+    the floor ever moves in either engine. The sweep behind it is in "Measured"
+    below
+:Depends on: (none)
 :Blocks: (none)
 :Related: 046 -- the ``zoom: 0.5`` this is entirely a consequence of
     056 -- the same page, the same symptom family, and the report that says
     Safari's measurements are the load-bearing question
     045 -- the tablet the symptom was reported from
     061 -- the engine parametrisation that found this
-:Decision: Option 1 -- change nothing until the device says so. The maintainer
-    was asked which of the three options to take and, with it, "how small may
-    a species name be drawn on the sheet?", and answered both: wait for the
-    iPad, and 18px. The second answer is the product question settled -- the
-    smallest a name may be drawn is the floor -- and it is recorded for
-    whoever implements this, not a decision to implement it now. Option 2 was
-    built before the answers arrived, on the evidence and against this file's
-    own ranking, and it is not kept: "The ruling" records what it measured, so
-    taking it later costs a diff rather than an investigation. This ruling was
-    confirmed rather than inferred, and the file said so before it was: an
-    earlier reading of the first answer took it for option 2, was wrong, and
-    was corrected by asking one question whose two answers could not be
-    confused with the options' own numbers
-:Resolution: Ruled and recorded; no code change. The option-2 change that had
-    been built before the ruling is withdrawn, and kept on the tag
-    ``interim-062-option-2`` rather than in the history of any branch. It
-    closes as ``Fixed`` when the iPad reading in
-    "What is left" comes back showing the floor, by the change "The ruling"
-    describes; and as ``Rejected`` if it comes back showing no floor
+:Decision: Option 1 -- change nothing until the device says so -- and then the
+    device said so. The maintainer was asked which of the three options to take
+    and, with it, "how small may a species name be drawn on the sheet?", and
+    answered both: wait for the iPad, and 18px. Option 2 had been built before
+    those answers arrived, on the evidence and against this file's own ranking,
+    and it was withdrawn to obey the ruling. The wait then ended the way option
+    1 said it might: on 2026-08-04 the maintainer reported from the tablet that
+    every species title on the sheet looks right in iOS Safari. That is the
+    condition option 1 was waiting on -- "if iOS Safari has no such floor there
+    is nothing here to repair" -- so this is rejected rather than deferred. The
+    18px answer is not discarded: it is the product question settled, and it is
+    the number to use if this is ever reopened. See "Why this is Rejected and
+    not Fixed" for what the report does and does not establish
+:Resolution: Rejected on the device report of 2026-08-04, recorded in
+    "Why this is Rejected and not Fixed": no user-visible defect on the machine
+    every report about this page came from, so there is nothing to repair. No
+    code changed. The option-2 implementation, green in both engines, is kept
+    on the tag ``interim-062-option-2`` (commit ``55ce0a8``) and costed out
+    below, so reopening this is a cherry-pick rather than an investigation
 
 Problem
 =======
@@ -175,8 +174,17 @@ The ruling
 **Option 1: change nothing until the device says so.** The maintainer was asked
 which option to take and how small a name may be drawn, and answered both. The
 second answer -- 18px, the floor -- settles the product question for whoever
-implements this; it is not an instruction to implement it now, and this file
-does not treat it as one.
+implements this; it was not an instruction to implement it then, and this file
+did not treat it as one.
+
+The wait was short: the device answered two days later and answered against
+doing anything, which is "Why this is Rejected and not Fixed" below. So option
+1 was not only the ruling, it was the right ruling -- the evidence this file
+was built on came from an engine standing in for a device, and the device did
+not agree that anything was wrong. What that cost was a day's work withdrawn;
+what it bought was not shipping a change to a printed artefact nobody needed.
+That is a trade worth remembering the next time a measurement here disagrees
+with a machine nothing here can reach.
 
 How that ruling was arrived at is worth recording, because it was got wrong
 first. The option answer named the second of three cards, and the cards were
@@ -233,37 +241,56 @@ _fitted_to`` asserts a different thing per engine today, and under option 2 it
 asserts the one thing both must agree on, that the fit lands on the floor, and
 that the name wraps there.
 
-What is left
-============
+Why this is Rejected and not Fixed
+==================================
 
-**This issue is now waiting on one measurement, and it is the maintainer's.**
-That is what option 1 means: nothing here moves until the device is read. It is
-a reading rather than a change, and it decides between two endings -- the
-option-2 change written out above, or ``Rejected``.
+On 2026-08-04 the maintainer looked at the label editor on the iPad and
+reported that every species title on the sheet looks right in iOS Safari. That
+ends the wait option 1 imposed, and it ends it on the side that repairs
+nothing: the sheet is correct on the machine every report about this page came
+from, so there is no defect here to fix.
 
-* Open the label editor on the tablet, on a label whose name is long enough to
-  be fitted small, and read the computed ``font-size`` of its ``h1`` in
-  Safari's Web Inspector against the size the element carries -- on the device
-  that is ``--fit-screen-size``, since iOS takes the branch that writes that
-  property rather than fitty's. **Larger** means iOS Safari applies the floor
-  and this is a real defect on the machine it was reported from: take option 2,
-  and note that the iPad branch then needs the clamp that "What option 2 costs"
-  says must be kept off the desktop-only version, together with a better answer
-  than a clamp for
-  ``test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed``.
-  **Equal** means the floor is Playwright's WebKit and not Safari, and this
-  closes as ``Rejected`` with the reading recorded -- which is a real outcome,
-  not a wasted issue: it would be the first thing 061's second engine has
-  claimed that the device did not confirm.
-* 056 lists a Safari debugging setup for the tablet as being put together
-  outside this repository; this measurement is one more thing for the same
-  session, and it is the same computed-``font-size`` reading its own item 2
-  wants.
+**What the report establishes**, and it is the thing that matters: no gardener
+is looking at an overflowing label. That was the whole of "Why it matters", and
+it is the symptom 045 and 056 were reported as.
 
-Until then the register's position is that the size fitty computes is not
-necessarily the size drawn on an engine of Safari's family, that the exposure
-is two pixels rather than the doubling first reported, and that the change
-which would close it is written down and costed.
+**What it does not establish**, said plainly so that nobody later reads this
+file as having measured something it did not:
+
+* it is a look, not the Web Inspector reading this file asked for -- computed
+  ``font-size`` against the size the element carries. So it does not say
+  whether iOS Safari applies the floor; it says that if it does, nothing
+  visible follows;
+* and the two are easy to confuse here, because the effect is small. The
+  exposure is 12.5 % -- see "Why it matters" -- and only on a name long enough
+  to be fitted below 18px in the first place. A sheet of ordinary Finnish
+  species names may simply never reach that, in which case "looks right" is
+  what both answers would look like.
+
+Neither reservation changes the decision. An issue exists to describe something
+wrong with the product, and the product is not wrong; a floor that produces no
+visible effect is a fact about WebKit, and this file is where it is written
+down. The cost of being wrong is also known rather than guessed: reopening is
+the tag ``interim-062-option-2``, one ``minSize`` argument, and the test
+change described above.
+
+If it is ever reopened
+----------------------
+
+Two triggers, and the second is cheaper than it looks:
+
+* a report of a label whose name does not fit -- the same symptom family as 045
+  and 056. Then take the reading below before taking the change, because a name
+  that overflows at 18px is a different defect from one that overflows because
+  it was drawn at 18px when it was fitted to 16;
+* the reading itself, if anyone is in Safari's Web Inspector on the tablet for
+  another reason: computed ``font-size`` of a fitted ``h1`` against the
+  ``--fit-screen-size`` it carries, on a label whose name is long enough to be
+  fitted small. Equal means the floor is Playwright's WebKit and not Safari,
+  and this file's central measurement is about a test engine rather than a
+  device -- worth knowing, since 061 rests on that engine standing in for this
+  one. 056 lists a Safari debugging setup for the tablet being put together
+  outside this repository, and this is one more reading for that session.
 
 See also
 ========

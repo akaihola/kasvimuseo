@@ -566,21 +566,22 @@ it disagreed about two measurements no assertion was tight enough to notice.
 One of those is **062**: inside 046's ``zoom: 0.5`` WebKit will not draw text
 below nine used pixels, so a name fitted under 18px is drawn at 18px -- the
 size fitty computes is not the size drawn, on the engine every report about
-that page came from. 062 is ``Deferred``, and it is the one issue here whose
-ruling went *against* the work that had been done for it. Option 2 -- fit no
-smaller than the floor -- was built on the evidence and was green in both
-engines; the maintainer ruled option 1, wait for the device, and it was
-reverted. The file keeps what the reverted change measured, so taking it later
-is a diff rather than an investigation, and it keeps the ruling's own history:
-the first answer was read as agreeing with what had been built, that reading
-was argued from the other answer and was wrong, and what corrected it was
-asking again with cards whose labels carried no numbers to confuse with the
-options' own. Working on it corrected the report as well. The floor bites over
-a two-pixel window rather than the doubling the issue described, because
-fitty's default ``minSize`` of 16 -- which the template never overrode -- has
-been the real minimum all along. So this is a smaller defect than it was filed
-as, and whether it is a defect on the iPad at all is the measurement its file
-says is owed, and by whom.
+that page came from. 062 is ``Rejected``, and it is the one issue here that was
+closed by the device rather than by a change. Option 2 -- fit no smaller than
+the floor -- was built on the evidence and was green in both engines; the
+maintainer ruled option 1, wait for the tablet, and it was withdrawn to the tag
+``interim-062-option-2``. The tablet then said the sheet looks right, which is
+the condition option 1 named for there being nothing to repair. Its file keeps
+all of it: what the withdrawn change measured, so reopening is a cherry-pick;
+what the device report does *not* establish, since it is a look rather than the
+Web Inspector reading; and the ruling's own history, because the first answer
+was misread as agreeing with the work already done and was corrected by asking
+again with cards whose labels carried no numbers to confuse with the options'
+own. Working on it corrected the report as well: the floor bites over a
+two-pixel window rather than the doubling the issue described, because fitty's
+default ``minSize`` of 16 -- which the template never overrode -- has been the
+real minimum all along. The measurement that started it stands, and it is now
+a fact about Playwright's WebKit rather than about this page.
 
 
 Already fixed
