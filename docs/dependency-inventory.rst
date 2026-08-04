@@ -2,8 +2,7 @@
  Complete dependency version inventory (generated)
 =====================================================
 
-:Generated: 2026-07-28 from PyPI JSON metadata (2371 individual release records,
-            49 packages)
+:Generated: 2026-08-05 from PyPI JSON metadata (505 bands, 49 packages)
 :Companion to: ``upgrade-plan.rst`` — that document explains *what to do*; this
                one is the raw evidence it was derived from.
 
@@ -120,10 +119,10 @@ question is what changed inside a band.
 * **5.1 – 5.1.15 (16 releases)**
     :Python: ``>=3.10``
     :Requires: ``asgiref<4,>=3.8.1; sqlparse>=0.3.1; tzdata;sys_platform=="win32"``
-* **5.2 – 5.2.16 (17 releases)**
+* **5.2 – 5.2.17 (18 releases)**
     :Python: ``>=3.10``
     :Requires: ``asgiref>=3.8.1; sqlparse>=0.3.1; tzdata;sys_platform=="win32"``
-* **6.0 – 6.0.7 (8 releases)**
+* **6.0 – 6.0.8 (9 releases)**
     :Python: ``>=3.12``
     :Requires: ``asgiref>=3.9.1; sqlparse>=0.5.0; tzdata;sys_platform=="win32"``
 
@@ -961,7 +960,7 @@ coverage
 * **7.6.2 – 7.10.7 (27 releases)**
     :Python: ``>=3.9``
     :Requires: nothing declared
-* **7.11.0 – 7.15.2 (18 releases)**
+* **7.11.0 – 7.15.3 (19 releases)**
     :Python: ``>=3.10``
     :Requires: nothing declared
 
@@ -1427,6 +1426,9 @@ packaging
     :Requires: nothing declared
 * **24.1 – 26.2 (6 releases)**
     :Python: ``>=3.8``
+    :Requires: nothing declared
+* **26.3**
+    :Python: ``>=3.9``
     :Requires: nothing declared
 
 pluggy

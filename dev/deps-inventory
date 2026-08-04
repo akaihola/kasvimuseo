@@ -1,0 +1,245 @@
+#!/usr/bin/env -S uv run --no-project --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["packaging"]
+# ///
+"""Regenerate the release bands in docs/dependency-inventory.rst from PyPI.
+
+Usage: dev/deps-inventory [--check] [package ...]
+
+The inventory is two things in one file. The prose under each package heading
+is analysis -- what a band means for this project, which upgrade stage moved
+the pin, what the metadata cannot tell you -- and it is written by hand. The
+bullet list under that prose is the metadata itself, one entry per run of
+consecutive releases that declare the same Python requirement and the same
+dependencies. Only the bullet lists are generated, and only they are replaced:
+this script never touches a line of the prose.
+
+Until it existed the file said "(generated)" and nothing in the repository
+could generate it, so the only way to find out whether it had gone stale was
+to read it against PyPI by hand. --check answers that question with an exit
+status, which is what the weekly workflow runs.
+
+Every package's lower bound is the first version already in its list, so what
+to cover is a decision the document keeps making for itself: the floor was
+chosen when the package was added and does not want re-deriving here.
+
+One HTTP request per release, because a release's classifiers are only in its
+own record -- roughly 2400 of them for the whole file, which is why this is a
+weekly job and not a build step.
+"""
+
+import argparse
+import concurrent.futures
+import datetime
+import json
+import re
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+from packaging.version import InvalidVersion, Version
+
+REPO = Path(__file__).resolve().parent.parent
+INVENTORY = REPO / 'docs' / 'dependency-inventory.rst'
+PYPI = 'https://pypi.org/pypi/{0}/json'
+RELEASE = 'https://pypi.org/pypi/{0}/{1}/json'
+
+#: ``* **1.5 – 1.6.11 (25 releases)**`` -- the first version is the band's floor.
+BAND_RE = re.compile(r'^\* \*\*([^ *]+)')
+HEADING_RE = re.compile(r'^([a-z0-9][a-z0-9._-]*)$')
+GENERATED_RE = re.compile(r'^:Generated: [0-9-]+ from')
+
+
+class Section:
+    """One package's heading, its prose, and the band list under it."""
+
+    def __init__(self, name, start, end, bands):
+        self.name = name
+        self.start = start          # index of the first band line
+        self.end = end              # index after the last band line
+        self.bands = bands          # the floor version, for the fetch
+
+    def __repr__(self):
+        return f'<Section {self.name}>'
+
+
+def sections(lines):
+    """Every package section that has a band list, in file order."""
+    found = []
+    for index, line in enumerate(lines[:-1]):
+        if not HEADING_RE.match(line) or set(lines[index + 1]) != {'-'}:
+            continue
+        start = end = None
+        for offset in range(index + 2, len(lines)):
+            if BAND_RE.match(lines[offset]):
+                if start is None:
+                    start = offset
+                end = offset
+            elif start is not None and not lines[offset][:1].isspace() \
+                    and lines[offset].strip():
+                break
+            elif start is not None and lines[offset].strip():
+                end = offset
+        if start is None:
+            continue
+        floor = BAND_RE.match(lines[start]).group(1)
+        found.append(Section(line, start, end + 1, floor))
+    return found
+
+
+def fetch(url):
+    with urllib.request.urlopen(url, timeout=60) as response:
+        return json.load(response)
+
+
+def releases(package, floor):
+    """``[(version, python, django, requires)]`` from ``floor``, oldest first."""
+    index = fetch(PYPI.format(package))
+    wanted = []
+    for raw in index['releases']:
+        try:
+            version = Version(raw)
+        except InvalidVersion:
+            continue
+        # A pre-release is not a release anybody upgrades to, and a post
+        # release carries the same metadata as the release it follows: both
+        # would add rows that say nothing.
+        if version.is_prerelease or version.is_postrelease:
+            continue
+        if version < Version(floor):
+            continue
+        wanted.append((version, raw))
+    wanted.sort()
+
+    def one(item):
+        version, raw = item
+        try:
+            info = fetch(RELEASE.format(package, raw))['info']
+        except urllib.error.HTTPError:
+            return None
+        return (raw, python_of(info), django_of(info), requires_of(info))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        return [row for row in pool.map(one, wanted) if row]
+
+
+def python_of(info):
+    """What the release says about Python: metadata, classifiers, or nothing."""
+    if info.get('requires_python'):
+        # PyPI keeps the author's spacing; the inventory does not.
+        return re.sub(r'\s+', '', info['requires_python'])
+    # ``Python :: 3`` alone says nothing a band could be cut on: only the
+    # X.Y classifiers are evidence, which is what "clf:" means in the file.
+    versions = [line.rsplit(' :: ', 1)[1]
+                for line in info.get('classifiers') or []
+                if line.startswith('Programming Language :: Python :: ')
+                and re.match(r'^\d+\.\d+$', line.rsplit(' :: ', 1)[1])]
+    # PyPI lists classifiers as strings, where 3.10 sorts before 3.2.
+    versions.sort(key=lambda value: tuple(int(part) for part in value.split('.')))
+    return 'clf:' + ','.join(versions) if versions else '-'
+
+
+def django_of(info):
+    """The Django versions the release claims to support, or ``''``.
+
+    Only ``django-*`` packages carry these, and for them it is the fact the
+    whole upgrade plan turns on: which Django a release can be installed
+    beside.
+    """
+    versions = [line.rsplit(' :: ', 1)[1]
+                for line in info.get('classifiers') or []
+                if line.startswith('Framework :: Django :: ')
+                and re.match(r'^\d+\.\d+$', line.rsplit(' :: ', 1)[1])]
+    versions.sort(key=lambda value: tuple(int(part) for part in value.split('.')))
+    return ','.join(versions)
+
+
+def requires_of(info):
+    """What installing the release actually pulls in, alphabetically.
+
+    Requirements behind an ``extra ==`` marker are the package's own test and
+    documentation tooling; nothing that installs this project asks for them,
+    and listing them would make a band change on a release that changed
+    nothing anybody here installs.
+    """
+    requires = [entry for entry in info.get('requires_dist') or []
+                if 'extra ==' not in entry and 'extra==' not in entry]
+    # Metadata written before PEP 508 brackets the specifier:
+    # ``async-timeout (~=2.0)``. The inventory writes them all one way.
+    plain = [re.sub(r'^(\S+)\s*\(([^)]*)\)', r'\1\2', entry).replace(' ', '')
+             for entry in requires]
+    return '; '.join(sorted(plain))
+
+
+def bands(rows):
+    """Collapse consecutive releases that declare exactly the same thing."""
+    collapsed = []
+    for version, python, django, requires in rows:
+        if collapsed and collapsed[-1][2:5] == [python, django, requires]:
+            collapsed[-1][1] = version
+            collapsed[-1][5] += 1
+            continue
+        collapsed.append([version, version, python, django, requires, 1])
+    lines = []
+    for first, last, python, django, requires, count in collapsed:
+        label = first if count == 1 else f'{first} – {last} ({count} releases)'
+        lines.append(f'* **{label}**')
+        lines.append(f'    :Python: ``{python}``')
+        if django:
+            lines.append(f'    :Django: {django}')
+        lines.append('    :Requires: ' +
+                     (f'``{requires}``' if requires else 'nothing declared'))
+    return lines
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true',
+                        help='report drift and exit 1; write nothing')
+    parser.add_argument('packages', nargs='*',
+                        help='only these packages (default: all of them)')
+    args = parser.parse_args()
+
+    lines = INVENTORY.read_text(encoding='utf-8').split('\n')
+    wanted = [section for section in sections(lines)
+              if not args.packages or section.name in args.packages]
+    if not wanted:
+        sys.exit('dependency-inventory: no such package in ' + str(INVENTORY))
+
+    stale = []
+    for section in reversed(wanted):        # bottom up: earlier indexes hold
+        fresh = bands(releases(section.name, section.bands))
+        if fresh != lines[section.start:section.end]:
+            stale.append(section.name)
+            lines[section.start:section.end] = fresh
+        print(f'{section.name}: {sum(1 for line in fresh if BAND_RE.match(line))} bands'
+              f'{" (changed)" if section.name in stale else ""}',
+              file=sys.stderr)
+
+    if not stale:
+        print('dependency-inventory: up to date', file=sys.stderr)
+        return
+    if args.check:
+        sys.exit('dependency-inventory: stale for {0}. Run dev/deps-inventory'
+                 .format(', '.join(sorted(stale))))
+    today = datetime.date.today().isoformat()
+    for index, line in enumerate(lines):
+        if not GENERATED_RE.match(line):
+            continue
+        end = index + 1
+        while lines[end][:1].isspace() and lines[end].strip():
+            end += 1                     # the field wraps; replace all of it
+        bandcount = sum(1 for line in lines if BAND_RE.match(line))
+        lines[index:end] = [
+            ':Generated: {0} from PyPI JSON metadata ({1} bands, {2} packages)'
+            .format(today, bandcount, len(sections(lines)))]
+        break
+    INVENTORY.write_text('\n'.join(lines), encoding='utf-8')
+    print('dependency-inventory: rewrote ' + ', '.join(sorted(stale)),
+          file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()
