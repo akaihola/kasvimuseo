@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Tests for an unhandled exception being written down somewhere (issue 065).
+"""Tests for an unhandled exception being written down somewhere (issue 065),
+and for it being written down *only* there (issue 066).
 
 Django's stock ``LOGGING`` block sends a 500's traceback to
 ``AdminEmailHandler`` and nowhere else. Nothing installs an MTA on the server
@@ -9,6 +10,13 @@ production runs with ``DEBUG`` on (issue 051) this is invisible, because
 Django's own ``DEFAULT_LOGGING`` puts a ``RequireDebugTrue``-filtered console
 handler on the ``django`` logger; the day 051 is acted on, the traceback stops
 existing.
+
+That mail handler is gone now. 065 added the stream handler, which made the
+mail a second copy of something already written down; 066 asked whether the
+second copy was worth having and the maintainer ruled that it was not --
+``uwsgi.error.log`` is enough. So two of the tests below pin an absence rather
+than a presence, which is the same job in reverse: Django's stock block has an
+``AdminEmailHandler`` in it, and a copy-paste would put one back silently.
 
 Django 1.6 (upgrade plan Stage 3) added a second logger with the same defect,
 ``django.security``, so the same thing holds for a ``Host`` header that
@@ -90,22 +98,36 @@ def test_the_console_handler_is_not_filtered_by_debug():
     assert LOGGING['handlers']['console'].get('filters', []) == []
 
 
-def test_mail_admins_is_still_configured():
-    """It cannot deliver until the server has an MTA or an ``EMAIL_HOST``
-    (issue 066), and it is kept deliberately: it loses nothing, because the
-    console handler has the traceback either way, and it starts working with no
-    change here. Asserted so that removing it is a decision rather than a
-    tidy-up."""
-    handler = LOGGING['handlers']['mail_admins']
+def test_nothing_here_mails_an_error():
+    """The reverse of what this file asserted until issue 066 was ruled on.
 
-    assert handler['class'] == 'django.utils.log.AdminEmailHandler'
-    assert 'mail_admins' in LOGGING['loggers']['django.request']['handlers']
+    It used to pin that ``mail_admins`` was still configured, so that removing
+    it would be a decision rather than a tidy-up. The decision was taken -- the
+    maintainer ruled that ``uwsgi.error.log`` is enough -- so the assertion is
+    turned around and pins the absence for the same reason: Django's stock
+    block has an ``AdminEmailHandler`` and a copy-paste of it would put one
+    back silently.
+
+    Every handler is checked rather than only the two loggers', because a
+    mailing handler defined and left unreferenced is the same defect one edit
+    later.
+    """
+    mailing = [name for name, handler in LOGGING['handlers'].items()
+               if 'EmailHandler' in handler.get('class', '')]
+
+    assert mailing == [], (
+        'issue 066 deleted the mail path deliberately; these are back: %r'
+        % (mailing,))
 
 
-def test_nothing_here_relies_on_a_deliverable_mail_setup():
-    """The thing that makes ``mail_admins`` inert rather than working. If a
-    settings module ever does point the mail backend somewhere real, this fails
-    and the comment beside ``mail_admins`` needs rewriting."""
+def test_no_settings_module_points_the_mail_anywhere():
+    """The other half of 066's ruling: there is no relay either.
+
+    Django's defaults are ``localhost:25`` over SMTP, which nothing on the
+    production host listens on -- that is what made the deleted handler inert
+    rather than merely unused. Asserted so that a later change which points the
+    mail somewhere real has to notice that nothing is left to send it.
+    """
     assert settings.EMAIL_HOST == 'localhost'
     assert settings.EMAIL_PORT == 25
 
