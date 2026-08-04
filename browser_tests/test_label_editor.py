@@ -76,6 +76,11 @@ def test_a_species_planted_only_in_a_private_bed_gets_no_label(editor):
 
 LONG_NAME = 'A name long enough that fitty must make it substantially smaller'
 
+# The smallest text WebKit will draw inside issue 046's ``zoom``, in drawn
+# pixels. The engine's number, not the template's, which is why it is written
+# here rather than read from the page: see issue 062.
+MIN_DRAWN_FONT_SIZE = 9
+
 
 def make_names_need_fitting(route):
     """Answer the data endpoint with a name no label holds at its declared size.
@@ -134,15 +139,26 @@ def test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to(page, engine,
     """Issue 062, which is what running this suite in WebKit found.
 
     fitty writes an inline ``font-size``; inside issue 046's ``zoom: 0.5``
-    WebKit refuses to draw text smaller than 9 used pixels, so a name fitted
-    anywhere between 9px and 18px is drawn at 18px -- as much as twice the size
-    it was fitted to, on the engine every report about this page came from.
-    Chromium draws what fitty asked for.
+    WebKit refuses to draw text smaller than ``MIN_DRAWN_FONT_SIZE`` used
+    pixels, so a name fitted below that was drawn larger than the size computed
+    to make it fit -- in the direction that makes it overflow the label -- on
+    the engine every report about this page came from. Chromium drew what fitty
+    asked for, so the two engines drew different sheets from the same
+    arithmetic. ``fitTextToSpace`` fits no smaller than the floor now, and that
+    is the assertion in the middle: one drawn size, whichever engine is
+    running.
 
-    This pins what each engine does *today*, so 062 cannot be fixed without
-    coming back here. It is deliberately a comparison rather than a number: the
-    floor is a WebKit setting and could move, while "drawn larger than fitted"
-    is the defect either way.
+    The name is one no label holds even at the floor, so the fit lands exactly
+    on it -- which is the case that used to be wrong, and is what the first
+    assertion checks the test is still looking at. What such a name does
+    instead of shrinking further is wrap, which is fitty's own behaviour at
+    ``minSize`` and is issue 062's option 2 answered deliberately rather than
+    by a browser setting.
+
+    ``--screen-scale`` is read from the page, since the floor is in drawn
+    pixels and the fit is in the sheet's own; the nine is not, because it is
+    the engine's number and a test that took it from the template would pass
+    whatever the template said.
     """
     page.route(re.compile(r'/media/'), lambda route: route.abort())
     page.route('**' + DATA_URL, make_names_need_fitting)
@@ -152,18 +168,22 @@ def test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to(page, engine,
         document.querySelector('#labels li h1').style.fontSize
     """)
 
-    fitted, drawn = page.evaluate("""() => {
+    scale, fitted, drawn, white_space = page.evaluate("""() => {
         const el = document.querySelector('#labels li h1');
-        return [parseFloat(el.style.fontSize),
-                parseFloat(getComputedStyle(el).fontSize)];
+        return [parseFloat(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--screen-scale')),
+                parseFloat(el.style.fontSize),
+                parseFloat(getComputedStyle(el).fontSize),
+                getComputedStyle(el).whiteSpace];
     }""")
 
-    assert fitted < 18, 'this test says nothing unless the fit is under the' \
-        ' floor: {0}'.format(fitted)
-    if engine == 'webkit':
-        assert drawn > fitted, (fitted, drawn)
-    else:
-        assert drawn == fitted, (fitted, drawn)
+    assert fitted * scale == MIN_DRAWN_FONT_SIZE, (
+        'this test says nothing unless the fit lands on the floor: {0} at {1}'
+        .format(fitted, scale))
+    assert drawn == fitted, (engine, fitted, drawn)
+    assert white_space == 'normal', (
+        'a name that does not fit at the floor wraps rather than being clipped'
+        ' by the label: {0}'.format(white_space))
 
 
 def test_the_ipad_fits_a_label_whose_photo_never_loads(ipad_page, base_url):

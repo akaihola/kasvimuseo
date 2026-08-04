@@ -566,9 +566,16 @@ it disagreed about two measurements no assertion was tight enough to notice.
 One of those is **062**: inside 046's ``zoom: 0.5`` WebKit will not draw text
 below nine used pixels, so a name fitted under 18px is drawn at 18px -- the
 size fitty computes is not the size drawn, on the engine every report about
-that page came from. 062 is a measurement waiting for a ruling between three
-answers, and the one thing it cannot establish here is whether iOS Safari has
-the same floor.
+that page came from. 062 is ``Fixed``: of its three answers the ruling took the
+middle one, fitting no smaller than the floor so that both engines draw the
+size that was computed, and the maintainer having been asked and not answered,
+the file records the question as well as the ruling. Fixing it also corrected
+it. The floor bit over a two-pixel window rather than the doubling the issue
+described, because fitty's own default ``minSize`` of 16 -- which the template
+never overrode -- had been the real minimum all along; the fix is that number
+given the value the engine actually needs. The one thing it still cannot
+establish here is whether iOS Safari has the same floor, and its file says
+whose measurement that is.
 
 
 Already fixed

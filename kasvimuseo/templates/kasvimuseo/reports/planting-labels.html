@@ -404,6 +404,22 @@
             return parseFloat(value) || 1;
         }
 
+        // The smallest a name is ever drawn on screen, in drawn pixels.
+        // WebKit -- the engine every report about this page came from --
+        // refuses to draw text below nine used pixels, so inside issue 046's
+        // ``zoom`` a name fitted under that is drawn *larger* than it was
+        // fitted to, overflowing the label the fit existed to make it fit
+        // (issue 062). Fitting no smaller than the floor makes both engines
+        // draw the same sheet; a name that still does not fit wraps, which
+        // fitty does for us at ``minSize``.
+        const MIN_DRAWN_FONT_SIZE = 9;
+
+        function minFitSize() {
+            // The floor in the sheet's own coordinates: the labels are laid
+            // out at print size and drawn at ``--screen-scale``.
+            return MIN_DRAWN_FONT_SIZE / screenScale();
+        }
+
         // How far the pointer has to travel before the gesture counts as a
         // drag rather than a tap. A finger never holds still, so without this
         // every tap on a number would start one (issue 045).
@@ -479,6 +495,13 @@
                             `font-size:${printMaxSize}px;width:100%;`;
                         measureWrapper.appendChild(measure);
                         document.body.appendChild(measureWrapper);
+                        // No floor here, unlike the fitty branch below: this
+                        // one writes the screen size itself rather than a
+                        // print size the ``zoom`` shrinks, and WebKit's
+                        // minimum exempts text whose own size is already
+                        // under it -- issue 062 measured 4px and 8px drawn
+                        // untouched. Flooring it would only make the label's
+                        // text stop following the label's width.
                         const printSize = Math.min(
                             printMaxSize,
                             printMaxSize * availableWidth / measure.scrollWidth);
@@ -487,7 +510,8 @@
                             '--fit-screen-size', `${printSize * scale}px`);
                         el.style.setProperty('--fit-print-size', `${printSize}px`);
                     } else {
-                        this.fit = fitty(el, {maxSize: fontSize});
+                        this.fit = fitty(
+                            el, {maxSize: fontSize, minSize: minFitSize()});
                     }
                 }
             }

@@ -2,29 +2,44 @@
 Issue 062: WebKit draws fitted label text at a nine-pixel floor
 ===============================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: Medium
 :Area: templates / labels UI
 :Reported: 2026-08-02
 :Source: Measured while running the browser suite in WebKit for the first time
     (issue 061)
 :Evidence: ``browser_tests/test_label_editor.py`` --
-    ``test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to`` pins what each
-    engine does today: in Chromium the drawn size equals the inline size fitty
-    wrote, in WebKit it is strictly larger. The sweep behind it is in
-    "Measured" below
-:Depends on: (none -- it is measurable and reproducible here, and what it is
-    waiting for is a ruling between three answers)
+    ``test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to``. It pinned
+    what each engine did before the fix -- in Chromium the drawn size equalled
+    the inline size fitty wrote, in WebKit it was strictly larger -- and now
+    asserts the one thing both engines have to agree on: the name is drawn at
+    the size it was fitted to. The sweep behind it is in "Measured" below
+:Depends on: (none -- it was measurable and reproducible here, and the ruling
+    it waited for is in ``Decision``)
 :Blocks: (none)
 :Related: 046 -- the ``zoom: 0.5`` this is entirely a consequence of
     056 -- the same page, the same symptom family, and the report that says
     Safari's measurements are the load-bearing question
     045 -- the tablet the symptom was reported from
     061 -- the engine parametrisation that found this
-:Decision: undecided -- three options below, and the ruling wants an answer to
-    "how small may a species name be drawn on the sheet?", which is a question
-    about the printed and on-screen product rather than about the template
-:Resolution: (none yet)
+:Decision: Option 2 -- never fit below the floor. The question put to the
+    maintainer was which of the three options to take, and with it the product
+    question the ruling wanted: "how small may a species name be drawn on the
+    sheet?", offering the floor itself, 20px and 24px. It was asked twice and
+    did not get through -- the ask was refused by the harness both times, so
+    this is a question that was never delivered rather than one that went
+    unanswered, and either way the rule is the same: rule on the evidence and
+    write down what was asked (see "The ruling"). Option 1 is not safe: the floor is reproducible in
+    Safari's own engine on this machine, and the reading that would clear it is
+    on a tablet nothing here can reach. Option 3 is not this issue's to take:
+    it would need a print-layout check no engine here can do, and it is
+    available unchanged if the maintainer later wants it. The minimum is the
+    floor itself -- nine drawn pixels, 18 specified -- because that is the
+    smallest size the two engines agree on, and choosing anything larger is a
+    legibility judgement nobody here is entitled to make
+:Resolution: 64bd4e3 -- ``fitTextToSpace`` fits no smaller than
+    ``MIN_DRAWN_FONT_SIZE / screenScale()``, and a name that does not fit at
+    that size wraps
 
 Problem
 =======
@@ -38,7 +53,9 @@ this page has come from -- text inside that zoomed subtree is never drawn
 smaller than 9 used pixels. At ``zoom: 0.5`` that is a floor of 18 specified
 pixels, so **a name fitty fits to anything between 9px and 18px is drawn at
 18px**: up to twice the size it was fitted to, in the direction that makes it
-not fit.
+not fit. (That last clause is this report's own arithmetic and it overstates
+the exposure -- fitty was never asked for anything below 16px. "Why it matters"
+carries the correction, which fixing this is what found.)
 
 Chromium draws what fitty asked for, which is why nothing here was visible
 before 061 ran this suite in a second engine.
@@ -112,13 +129,19 @@ Why it matters
 ==============
 
 The whole point of fitting is that a long name fits its label. Where WebKit
-applies the floor the name is drawn 12 % to 100 % larger than the size that was
-computed to make it fit, so it can overflow the label it was fitted into --
-which is what a gardener sees, and it is the family of symptom 045 and 056 were
-both reported as. On this data the effect is 16px drawn at 18px; on a longer
-name -- and the register's own test data uses one -- the gap is larger, and it
-closes only when the fit lands at 18px or above, or below 9px where the floor
-stops applying.
+applies the floor the name is drawn larger than the size that was computed to
+make it fit, so it can overflow the label it was fitted into -- which is what a
+gardener sees, and it is the family of symptom 045 and 056 were both reported
+as. On this data the effect is 16px drawn at 18px.
+
+**The "up to twice" in "Problem" was wrong**, and fixing this is what found
+it. The window where the floor bites is 9px to 18px, but nothing on this page
+was ever fitted below **16px**: that is fitty's own default ``minSize``, which
+``fitTextToSpace`` never overrode, so the 16px in "Measured" is not a fit at
+all -- it is the clamp fitty had already applied. The real exposure was
+therefore the two pixels between 16 and 18, a name drawn 12.5 % too large, and
+never more. That makes this smaller than it was filed as, and it makes the fix
+smaller too: the floor was already there and had the wrong value in it.
 
 Three options
 =============
@@ -143,16 +166,61 @@ Three options
    be checked, on paper as well as on screen. Not to be taken without the
    printing check that 046 and 047 both turned on.
 
+The ruling
+==========
+
+Option 2 was taken, with the minimum set to the floor itself. The question that
+would have decided it -- which option, and how small a name may be drawn -- was
+put to the maintainer twice and did not reach them; ``Decision`` above records
+it and the reasoning that settled it without an answer.
+
+What the change is, in ``fitTextToSpace``:
+
+* the desktop branch hands fitty ``minSize: MIN_DRAWN_FONT_SIZE /
+  screenScale()`` -- nine drawn pixels expressed in the sheet's own
+  coordinates, which is 18 specified pixels at 046's 50 %. If 046's scale ever
+  moves, the floor moves with it rather than going stale;
+* the iPad branch is **deliberately not** floored, and the measurements above
+  are why. That branch does not write a print size for the ``zoom`` to shrink;
+  it writes the screen size itself, and WebKit's minimum exempts text whose
+  own size is already below it -- 4px and 8px are drawn at 4px and 8px in the
+  sweep. So there is nothing there for a floor to prevent, and adding one has
+  a cost that was measured rather than argued: clamped, the label's text
+  stopped following the label's width, and
+  ``test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed``
+  failed in both engines. That test is 056's, and it is right;
+* a name that does not fit at the floor **wraps**. That is option 2's "handled
+  deliberately", and it needed no new code: fitty already switches
+  ``white-space`` from ``nowrap`` to ``normal`` exactly when it lands on
+  ``minSize``. Wrapping is what happened before this change too, at 16px
+  instead of 18px -- so nothing about a very long name is new except two
+  pixels.
+
+What it costs on paper: the fitted size is the printed size -- the ``zoom`` is
+``@media screen`` only -- so the floor is also the smallest a name is printed,
+18px, about 13.5pt on a 14 cm label. That is *larger* than what printed before,
+never smaller, because 16px was already the smallest fitty would produce. So
+this change cannot shrink anything on paper, and the printing check option 3
+would have needed is not needed here.
+
 What is left
 ============
 
-For whoever has the iPad, and it is one measurement rather than a change:
+For whoever has the iPad, and it is one measurement rather than a change. The
+fix does not depend on it -- flooring the fit is right in either answer, since
+Chromium and WebKit now draw the same sheet either way -- but it is what says
+whether the *symptom* was ever visible on the device:
 
 * Open the label editor on the tablet, on a label whose name is long enough to
-  be fitted well under 18px, and read the computed ``font-size`` of its ``h1``
-  in Safari's Web Inspector against the inline one the element carries. Equal
-  means iOS Safari has no such floor and option 1 closes this. Larger means it
-  does, and the ruling is between 2 and 3.
+  be fitted small, and read the computed ``font-size`` of its ``h1`` in
+  Safari's Web Inspector against the ``--fit-screen-size`` the element carries
+  -- the device takes the branch that writes that property, not fitty's.
+  Equal is the answer this fix expects, and means the exemption above holds on
+  the device as it does here. Larger means iOS Safari floors that branch too,
+  and then the iPad branch wants the clamp this change deliberately left out
+  of it, together with something better than a clamp for
+  ``test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed``,
+  which is the test that says a label's text follows its width.
 * 056 lists a Safari debugging setup for the tablet as being put together
   outside this repository; this measurement is one more thing for the same
   session, and it is the same computed-``font-size`` reading its own item 2
