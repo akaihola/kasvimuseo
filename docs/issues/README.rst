@@ -566,9 +566,21 @@ it disagreed about two measurements no assertion was tight enough to notice.
 One of those is **062**: inside 046's ``zoom: 0.5`` WebKit will not draw text
 below nine used pixels, so a name fitted under 18px is drawn at 18px -- the
 size fitty computes is not the size drawn, on the engine every report about
-that page came from. 062 is a measurement waiting for a ruling between three
-answers, and the one thing it cannot establish here is whether iOS Safari has
-the same floor.
+that page came from. 062 is ``Deferred``, and it is the one issue here whose
+ruling went *against* the work that had been done for it. Option 2 -- fit no
+smaller than the floor -- was built on the evidence and was green in both
+engines; the maintainer ruled option 1, wait for the device, and it was
+reverted. The file keeps what the reverted change measured, so taking it later
+is a diff rather than an investigation, and it keeps the ruling's own history:
+the first answer was read as agreeing with what had been built, that reading
+was argued from the other answer and was wrong, and what corrected it was
+asking again with cards whose labels carried no numbers to confuse with the
+options' own. Working on it corrected the report as well. The floor bites over
+a two-pixel window rather than the doubling the issue described, because
+fitty's default ``minSize`` of 16 -- which the template never overrode -- has
+been the real minimum all along. So this is a smaller defect than it was filed
+as, and whether it is a defect on the iPad at all is the measurement its file
+says is owed, and by whom.
 
 
 Already fixed
