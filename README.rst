@@ -1,6 +1,9 @@
 Development setup
 =================
 
+Before you change anything here, read ``AGENTS.md``. It holds the rules this
+repository writes and works by, for people and for agents.
+
 The app is Django 1.5 on Python 2.7, which no longer exists in current
 distributions, so it runs in a container. The database runs natively as a
 throwaway PostgreSQL cluster inside the working copy. Everything is driven by
