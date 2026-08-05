@@ -77,6 +77,14 @@ left to do.
 :doc:`incoming` in whatever shape they arrive and are split into numbered files
 from there.
 
+**Refill this queue before it empties.** When fewer than three rows in "Ready
+now" are free to start, file new issues first, from :doc:`incoming`, then
+:doc:`../test-coverage-plan`, then :doc:`../upgrade-plan`. ``AGENTS.md`` gives
+the counting rule, the order and the steps.
+
+**Write the way this repository writes.** Short sentences, active voice, one
+fact in one place, a pointer everywhere else. The rules are in ``AGENTS.md``.
+
 **Never end a turn waiting for a person.** Nothing here runs attended: an agent
 picking this page up may be the only thing awake. Asking the maintainer is
 allowed and often right, but the answer may never come, and a turn that ends
