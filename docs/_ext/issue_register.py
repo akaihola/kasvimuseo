@@ -45,6 +45,34 @@ LEADING_IDS_RE = re.compile(r'^\s*(\d{3}(?:\s*,\s*\d{3})*)')
 RANK_ENTRY_RE = re.compile(r'^(\d{3}):[ \t]*(.*)$')
 RANK_DIRECTIVE_RE = re.compile(r'^([ \t]*)\.\.[ \t]+issue-rank::[ \t]*$')
 
+#: One ``docs/archive.rst`` bullet: ``* ``path`` @ ``commit`` -- why it went``.
+ARCHIVE_ENTRY_RE = re.compile(
+    r'^\*[ \t]+``([^`]+)``[ \t]+@[ \t]+``([0-9a-fA-F]+)``[ \t]+--[ \t]*(.+)$')
+#: A bullet that opens with a literal is meant to be one, whatever it says.
+ARCHIVE_BULLET_RE = re.compile(r'^\*[ \t]+``')
+
+#: A commit named in prose: a bare hex run, not part of a longer word and not
+#: inside a path. ``git`` accepts any unambiguous prefix, so the length is not
+#: fixed at seven.
+COMMIT_RE = re.compile(r'(?<![0-9A-Za-z`_/-])([0-9a-f]{7,40})(?![0-9A-Za-z])')
+
+#: The plans, whose stages are a second queue beside the issues. Named here
+#: rather than discovered: a plan is a document somebody decided to run, and
+#: there are two of them.
+PLANS = ('upgrade-plan.rst', 'test-coverage-plan.rst')
+
+#: What a stage's ``Status`` may say. There is no ``In progress``: a stage is
+#: not claimed, it is next, and ``docs/issues/NNN``'s ``Claimed`` is where the
+#: branch doing it says so.
+STAGE_STATUSES = ('Done', 'Next', 'Planned')
+
+#: ``Stage 3 -- Django 1.5.12 -> 1.6.11``, ``P1 -- Public-visibility logic``.
+STAGE_HEADING_RE = re.compile(
+    r'^(Stage|Step|P)[ \t]*(\d+)[ \t]*(?:[-–—]+[ \t]*)?(.*)$')
+#: A section underline: one punctuation character, repeated, and nothing else.
+#: A simple-table rule has spaces in it, which is what keeps its header row out.
+UNDERLINE_RE = re.compile(r'^([-=~^"*+#`\'])\1{2,}$')
+
 
 class IssueRegisterError(Exception):
     """A malformed issue file, or a ranking that does not match the files.
@@ -246,6 +274,228 @@ def check_ranking(issues, ranking, source='docs/issues/index.rst'):
                     'it' if len(unranked) == 1 else 'them'))
 
 
+def check_graph(issues):
+    """Enforce that ``Depends on`` and ``Blocks`` name real issues, both ways.
+
+    ``docs/issues/README.rst`` says the two are kept consistent in both
+    directions, so that the graph can be read from either file. Nothing checked
+    it until this did, and a dependency naming an issue that does not exist was
+    worse than unchecked: :func:`build_queue` skipped it, so a typo in a
+    ``Depends on`` line read as "ready now".
+    """
+    for number in sorted(issues):
+        issue = issues[number]
+        path = 'docs/issues/{0}.rst'.format(issue.docname)
+        for field, mirror in (('Depends on', 'Blocks'),
+                              ('Blocks', 'Depends on')):
+            for other in _referenced_ids(issue.fields[field]):
+                if other == number:
+                    raise IssueRegisterError(
+                        '{0}: ``:{1}:`` names {2} itself'
+                        .format(path, field, number))
+                if other not in issues:
+                    raise IssueRegisterError(
+                        '{0}: ``:{1}:`` names issue {2}, which has no file. '
+                        'Either docs/issues/{2}-*.rst is missing or the number '
+                        'is a typo -- an unreadable edge is dropped from the '
+                        'queue, so this cannot be left as it is'
+                        .format(path, field, other))
+                if number not in _referenced_ids(issues[other].fields[mirror]):
+                    raise IssueRegisterError(
+                        '{0}: ``:{1}:`` names {2}, but docs/issues/{3}.rst does '
+                        'not name {4} in its ``:{5}:``. The two are kept '
+                        'consistent in both directions, so the graph can be '
+                        'read from either file: add {4} there, or drop it here'
+                        .format(path, field, other, issues[other].docname,
+                                number, mirror))
+
+
+def parse_archive(text, source='docs/archive.rst'):
+    """Read the archive page into ``[(path, commit, why it went)]``.
+
+    One bullet per removed document, ``* ``path`` @ ``commit`` -- why``, with
+    the prose wrapping onto indented lines. The format is fixed because
+    :func:`commit_references` hands every pointer to ``git``; it is written
+    down in ``docs/issues/README.rst``.
+    """
+    entries = []
+    for number, line in enumerate(text.split('\n'), start=1):
+        if entries and line[:1].isspace() and line.strip():
+            entries[-1][2] = (entries[-1][2] + ' ' + line.strip()).strip()
+            continue
+        if not ARCHIVE_BULLET_RE.match(line):
+            continue
+        match = ARCHIVE_ENTRY_RE.match(line)
+        if not match:
+            raise IssueRegisterError(
+                '{0} line {1}: cannot read this as an archive entry. Each one '
+                'is ``* ``path`` @ ``commit`` -- why it went``, with the commit '
+                'already on master: {2}'.format(source, number, line.strip()))
+        entries.append([match.group(1), match.group(2), match.group(3).strip()])
+    return [tuple(entry) for entry in entries]
+
+
+class Stage(object):
+    """One step of a plan, as the field list under its heading describes it."""
+
+    def __init__(self, label, title, fields, source, lineno):
+        self.label = label
+        self.title = title
+        self.fields = fields
+        self.source = source
+        self.lineno = lineno
+        self.status = fields['Status']
+        self.resolution = fields.get('Resolution', '')
+
+    @property
+    def is_done(self):
+        return self.status == 'Done'
+
+    def __repr__(self):
+        return str('<Stage {0} {1}>').format(self.label, self.status)
+
+
+def parse_stages(text, source):
+    """Read one plan's stages, in the order the document puts them.
+
+    A stage is a section whose first content is a field list carrying
+    ``Status``. The heading normally names it -- ``Stage 4``, ``P1`` -- and
+    ``:Stage:`` says so explicitly where the heading does not.
+
+    The prose around each stage stays what it always was: the argument for
+    doing it that way, and the record of what it cost. This reads the one line
+    that says where the work has got to, so that :doc:`../issues/next` can show
+    it without anybody maintaining a second copy of it.
+    """
+    stages = []
+    lines = text.split('\n')
+    for index in range(len(lines) - 1):
+        heading = lines[index].strip()
+        if not heading or not UNDERLINE_RE.match(lines[index + 1].strip()):
+            continue
+        if len(lines[index + 1].strip()) < len(heading):
+            continue
+        fields = _fields_after(lines, index + 2)
+        if 'Status' not in fields:
+            continue
+        lineno = index + 1
+        label, title = _stage_label(heading, fields, source, lineno)
+        _check_value('{0} line {1}'.format(source, lineno), fields, 'Status',
+                     STAGE_STATUSES)
+        if fields['Status'] == 'Done' and not fields.get('Resolution', '').strip():
+            raise IssueRegisterError(
+                '{0} line {1}: {2} is ``Done`` with no ``:Resolution:``. Name '
+                'the commit that landed it, or the issues that did'
+                .format(source, lineno, label))
+        stages.append(Stage(label, title, fields, source, lineno))
+    if not stages:
+        raise IssueRegisterError(
+            '{0}: no stages. A plan says where it has got to in a ``:Status:`` '
+            'field under each stage heading, one of {1}'
+            .format(source, ', '.join('``{0}``'.format(value)
+                                      for value in STAGE_STATUSES)))
+    return stages
+
+
+def check_stages(stages, source):
+    """A ladder is climbed in order, so its statuses have to read like one.
+
+    ``Done`` stages first, then at most one ``Next``, then ``Planned``. A plan
+    with work left says which piece is next -- that is the whole point of
+    reading it -- and a plan with none left says so by having no ``Next`` at
+    all, which is how a finished plan stops asking to be read.
+    """
+    remaining = [stage for stage in stages if not stage.is_done]
+    for stage in stages[len(stages) - len(remaining):]:
+        if stage.is_done:
+            raise IssueRegisterError(
+                '{0} line {1}: {2} is ``Done`` but a stage above it is not. '
+                'A stage that was taken out of order is still out of order in '
+                'the plan: move it, or say in its prose why it could jump'
+                .format(source, stage.lineno, stage.label))
+    nexts = [stage for stage in stages if stage.status == 'Next']
+    if len(nexts) > 1:
+        raise IssueRegisterError(
+            '{0}: {1} are both ``Next``. One of them is'
+            .format(source, ' and '.join(stage.label for stage in nexts)))
+    if remaining and not nexts:
+        raise IssueRegisterError(
+            '{0} line {1}: nothing is ``Next``, but {2} is not done. Mark the '
+            'one to do next, so that the queue can name it'
+            .format(source, remaining[0].lineno, remaining[0].label))
+    if nexts and nexts[0] is not remaining[0]:
+        raise IssueRegisterError(
+            '{0} line {1}: {2} is ``Next``, but {3} above it is not done '
+            'either'.format(source, nexts[0].lineno, nexts[0].label,
+                            remaining[0].label))
+
+
+def _fields_after(lines, start):
+    """The field list that opens a section, or ``{}`` if it does not."""
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+    fields = {}
+    current = None
+    for line in lines[start:]:
+        match = FIELD_RE.match(line)
+        if match:
+            current = match.group(1)
+            fields[current] = (match.group(2) or '').strip()
+            continue
+        if not line.strip():
+            break
+        if current is not None and line[:1].isspace():
+            fields[current] = (fields[current] + ' ' + line.strip()).strip()
+            continue
+        break
+    return fields
+
+
+def _stage_label(heading, fields, source, lineno):
+    """What to call this stage, and what the heading says it is."""
+    match = STAGE_HEADING_RE.match(heading)
+    if 'Stage' in fields:
+        return fields['Stage'], heading
+    if not match:
+        raise IssueRegisterError(
+            '{0} line {1}: ``{2}`` carries a stage ``:Status:`` but its '
+            'heading does not name a stage. Add ``:Stage:`` saying what to '
+            'call it'.format(source, lineno, heading))
+    prefix, number, title = match.groups()
+    label = '{0} {1}'.format(prefix, number) if prefix != 'P' else prefix + number
+    return label, title.strip() or heading
+
+
+def commit_references(issues, archive=(), stages=()):
+    """Every commit the documentation points at, as ``[(source, commit, path)]``.
+
+    ``path`` is the file the commit has to contain -- the archive's whole
+    purpose -- or ``None`` when only the commit itself is claimed to exist,
+    which is what a ``:Resolution:`` claims.
+
+    A ``:Resolution:`` names its commits in prose, so they are picked out by
+    shape: a bare hex run of at least seven characters with both a digit and a
+    letter in it. That last rule is what keeps ``max-age=31536000`` in issue 060
+    out, and it is deliberately a shape rather than a syntax -- the fields were
+    written for people first, and a commit this misses is unchecked rather than
+    wrongly reported.
+    """
+    references = []
+    for number in sorted(issues):
+        issue = issues[number]
+        source = 'docs/issues/{0}.rst'.format(issue.docname)
+        for commit in commits_in(issue.fields['Resolution']):
+            references.append((source + ' ``:Resolution:``', commit, None))
+    for path, commit, _why in archive:
+        references.append(('docs/archive.rst', commit, path))
+    for stage in stages:
+        for commit in commits_in(stage.resolution):
+            references.append(
+                ('{0} {1} ``:Resolution:``'.format(stage.source, stage.label),
+                 commit, None))
+    return references
+
+
 class QueueEntry(object):
     """One row of either generated table: an issue, its rank and its reason."""
 
@@ -310,6 +560,19 @@ def _referenced_ids(value):
             if number not in numbers:
                 numbers.append(number)
     return numbers
+
+
+def commits_in(value):
+    """The commits a prose field names, deduplicated and in order."""
+    commits = []
+    for candidate in COMMIT_RE.findall(value):
+        if not any(char.isdigit() for char in candidate):
+            continue
+        if not any(char in 'abcdef' for char in candidate):
+            continue
+        if candidate not in commits:
+            commits.append(candidate)
+    return commits
 
 
 def _title(text):

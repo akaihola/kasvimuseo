@@ -11,6 +11,17 @@ Every claim about tooling below was verified by running it in the
 found by writing the probe tests this plan proposes.
 
 
+Where this plan has got to
+==========================
+
+Generated from the ``:Status:`` field under each package heading below. Every
+one of them is ``Done``, so this plan asks for nothing: what keeps coverage
+where it is now is the floor in `The gate`_, not another package from this
+list. `Where coverage stands`_ is the measurement.
+
+.. stage-queue:: test-coverage-plan.rst
+
+
 Baseline
 ========
 
@@ -125,6 +136,10 @@ This is also the *right* choice on its own merits -- the migration history is a
 Infrastructure to put in place first
 ====================================
 
+:Stage: Step 0
+:Status: Done
+:Resolution: b60f8f0
+
 1. ``ylaneenkasvit/test_settings.py`` -- imports ``ylaneenkasvit_settings``,
    then::
 
@@ -174,6 +189,9 @@ Ordered by risk × cost, each independently mergeable.
 P1 -- Public-visibility logic (``models.py``)
 ---------------------------------------------
 
+:Status: Done
+:Resolution: b8ad488
+
 The highest-value target in the codebase: these methods alone decide what the
 public site shows, they are subtle, and they are entirely untested.
 
@@ -198,6 +216,9 @@ Roughly 15 tests. Target: 100 % of the non-declarative lines of ``models.py``.
 
 P2 -- Views and the labels API (``views.py``, 0 %)
 --------------------------------------------------
+
+:Status: Done
+:Resolution: da7a076
 
 * ``PlantedSpeciesList`` -- only public planted species, ordered by
   ``name_fi``, deduplicated.
@@ -231,6 +252,9 @@ coverage of any kind.
 P3 -- Cheap pure-function wins (template tags, ``forms.py``)
 ------------------------------------------------------------
 
+:Status: Done
+:Resolution: db10541
+
 No database, fast, and takes six modules from 0 % to ~100 %.
 
 * ``months.month_name`` and ``lightings.lighting_name`` -- valid number, and
@@ -251,6 +275,9 @@ Roughly 10 tests.
 P4 -- Admin (``admin.py``, 0 %)
 --------------------------------
 
+:Status: Done
+:Resolution: c10a156
+
 * Display callables, called directly -- ``PlantingAdmin.coordinates``,
   ``BedAdmin.map``, ``PhotoAdmin.image_filename``, ``SpeciesAdmin.photo_image``
   (including the ``photo is None`` branch).
@@ -263,6 +290,9 @@ P4 -- Admin (``admin.py``, 0 %)
 
 P5 -- Signals and integration edges
 ------------------------------------
+
+:Status: Done
+:Resolution: 951ab23
 
 * ``autoconnect_photo_to_species`` -- a ``post_save`` receiver connected at
   import for *every* model. Test: matches on the lowercased first word of the
@@ -400,6 +430,11 @@ Two notes for whoever writes the next tests:
 
 Second round: user-facing functionality
 =======================================
+
+:Stage: Second round
+:Status: Done
+:Resolution: a7d1026, 090bea3, b8fe471 and 5a02b0c -- one commit per
+    package, in the order this section lists them
 
 97 % line coverage turned out to overstate how much *functionality* was
 verified. Four gaps were left:

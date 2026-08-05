@@ -2,7 +2,6 @@
  Dependency and platform upgrade plan: Django 1.5 → 6.0
 =========================================================
 
-:Status: analysis and plan, nothing implemented
 :Date: 2026-07-28
 :Scope: every Python dependency of ``ylaneenkasvit``/``kasvimuseo``, the
         Python runtime itself, and the code changes each step forces
@@ -10,6 +9,22 @@
 .. contents::
    :depth: 2
    :local:
+
+
+Where this plan has got to
+==========================
+
+Generated from the ``:Status:`` field under each stage heading in Part 4, so
+it cannot disagree with them. ``Next`` is the stage to do now: everything above
+it is done and names the commit that landed it, everything below it is waiting.
+There is no separate list to keep in step -- a stage that lands changes its own
+field, and this table follows.
+
+.. stage-queue:: upgrade-plan.rst
+
+The reasoning for each stage, and what it cost when it ran, is in the stage's
+own section. The ordering constraints that produced this sequence are in Part 2
+and Part 3b.
 
 
 How this was produced
@@ -775,6 +790,10 @@ imports.
 Stage 0 — Dead weight and defensive settings (no version changes)
 -----------------------------------------------------------------
 
+:Status: Done
+:Resolution: 2d01cde, and the issues this stage is made of: 019, 020, 021, 022,
+    023, 024, 027 and 033
+
 Cheap, zero-risk, and it shortens every later stage. **All eight items are
 done; this stage is closed.** Not on this list, but done ahead of
 its own stage for the same reasons: ``fabfile.py``, with ``Fabric`` and
@@ -879,6 +898,9 @@ carrying went with it. See that item for what the reasoning missed.
 Stage 1 — Django 1.5.1 → 1.5.12
 -------------------------------
 
+:Status: Done
+:Resolution: 48fda0e
+
 Security patches only, no API change. Free.
 
 **Done** -- one line in ``requirements/production.txt``, and nothing else in
@@ -935,6 +957,9 @@ notes:
 
 Stage 2 — Photologue 2.6.1 → 2.8.3, still on Django 1.5
 --------------------------------------------------------
+
+:Status: Done
+:Resolution: f539523
 
 Photologue moves *first* and alone, because it owns tables.
 
@@ -1076,6 +1101,9 @@ page a 500. What was actually run is in issue 036; what it found is here.
 
 Stage 3 — Django 1.5.12 → 1.6.11
 --------------------------------
+
+:Status: Done
+:Resolution: 9add8ba
 
 **Done.** The four items below are all correct and none of them is the
 expensive part. The import they call a blocker is two lines; what the stage
@@ -1237,6 +1265,8 @@ runner this project does not use.
 Stage 4 — Photologue 2.8.3 → 3.0.2, still on Django 1.6
 --------------------------------------------------------
 
+:Status: Next
+
 The single most important ordering constraint in this document. Photologue 3.0.x
 and 3.1.1 are the only releases carrying both ``south_migrations/`` and
 ``migrations/``; 3.2 drops the South set. Land 3.0.2 (or 3.1.1) on Django 1.6
@@ -1261,6 +1291,8 @@ and ``get_prefetch_query_set`` only reach Django through the rename shim that
 
 Stage 5 — Django 1.6.11 → 1.7.11: the South cut
 -----------------------------------------------
+
+:Status: Planned
 
 * Delete ``south`` from every requirements file and from ``INSTALLED_APPS``.
 * Delete ``SOUTH_MIGRATION_MODULES`` and ``SOUTH_TESTS_MIGRATE``
@@ -1320,6 +1352,8 @@ concluded that South has to go together with the Sites framework arriving.
 Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 --------------------------------------
 
+:Status: Planned
+
 * ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS`` / ``TEMPLATE_DEBUG`` →
   a single ``TEMPLATES`` setting with ``APP_DIRS = True``. ``TEMPLATE_DIRS`` is
   by now the project's own ``templates/`` and nothing else: the hardcoded
@@ -1352,6 +1386,8 @@ Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 Stage 7 — Django 1.8.19 → 1.9.13
 --------------------------------
 
+:Status: Planned
+
 * ``EMPTY_CHANGELIST_VALUE`` is gone, and ``django.contrib.admin.util`` with it:
   **nothing to do.** Both were used only by ``kasvimuseo_admin_list.py``, deleted
   in Stage 5.
@@ -1363,6 +1399,8 @@ Stage 7 — Django 1.8.19 → 1.9.13
 
 Stage 8 — Django 1.9.13 → 1.10.8
 --------------------------------
+
+:Status: Planned
 
 * ``TEMPLATE_*`` and ``django.core.context_processors`` are gone (Stage 6 already
   did this).
@@ -1381,6 +1419,8 @@ Stage 8 — Django 1.9.13 → 1.10.8
 Stage 9 — Django 1.10.8 → 1.11.29 (LTS) — the staging point
 -----------------------------------------------------------
 
+:Status: Planned
+
 This is where the project should sit until it is fully Python-3 clean.
 
 * ``django-grappelli`` → 2.10.4.
@@ -1394,6 +1434,8 @@ This is where the project should sit until it is fully Python-3 clean.
 
 Stage 10 — **Python 2.7 → 3.7**, staying on Django 1.11.29
 -----------------------------------------------------------
+
+:Status: Planned
 
 The one irreversible step. Nothing else changes version in this stage.
 
@@ -1446,6 +1488,8 @@ Stage 9 already lands on 1.11.29, so this is satisfied.
 Stage 11 — Django 1.11 → 2.0.13
 -------------------------------
 
+:Status: Planned
+
 * ``patterns()`` gone → plain lists of ``url()``.
 * ``django.core.urlresolvers`` gone (Stage 8 handled it).
 * ``force_unicode`` gone (Stage 10 handled it).
@@ -1457,12 +1501,16 @@ Stage 11 — Django 1.11 → 2.0.13
 Stage 12 — Django 2.0 → 2.1.15
 ------------------------------
 
+:Status: Planned
+
 * ``django.contrib.auth.views.login``/``logout`` deleted (Stage 9 handled it).
 * ``django-grappelli`` → 2.12.4; ``django-photologue`` → 3.9.
 * Python ≥ 3.5.
 
 Stage 13 — Django 2.1 → 2.2.28 (LTS)
 ------------------------------------
+
+:Status: Planned
 
 * ``django-grappelli`` → 2.13.4; ``django-photologue`` → 3.10;
   ``django-sortedm2m`` → 2.0.0; ``pytest-django`` → 3.10.0 or 4.5.2.
@@ -1471,6 +1519,8 @@ Stage 13 — Django 2.1 → 2.2.28 (LTS)
 
 Stage 14 — Django 2.2 → 3.0.14
 ------------------------------
+
+:Status: Planned
 
 * ``render_to_response`` gone → ``render(request, …)`` in ``kasvimuseo/views.py``
   (3 call sites; the ``RequestContext`` import goes with it).
@@ -1486,11 +1536,15 @@ Stage 14 — Django 2.2 → 3.0.14
 Stage 15 — Django 3.0 → 3.1.14
 ------------------------------
 
+:Status: Planned
+
 * The ``tzinfo_factory`` fix lands → ``psycopg2-binary`` 2.9.x becomes safe.
 * ``django-grappelli`` → 2.14.4; ``django-photologue`` → 3.13.
 
 Stage 16 — Django 3.1 → 3.2.25 (LTS)
 ------------------------------------
+
+:Status: Planned
 
 * Set ``DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'`` explicitly.
   It is new in 3.2 and the default flips to ``BigAutoField`` in **6.0**;
@@ -1501,6 +1555,8 @@ Stage 16 — Django 3.1 → 3.2.25 (LTS)
 
 Stage 17 — Django 3.2 → 4.0.10 → 4.1.13 → 4.2.30 (LTS)
 -------------------------------------------------------
+
+:Status: Planned
 
 * **4.0 removes** ``ugettext_lazy`` → ``gettext_lazy`` and
   ``force_text``/``smart_text`` → ``force_str``/``smart_str``. Eight sites
@@ -1519,6 +1575,8 @@ Stage 17 — Django 3.2 → 4.0.10 → 4.1.13 → 4.2.30 (LTS)
 Stage 18 — Django 4.2 → 5.0.14 → 5.1.15 → 5.2.16 (LTS)
 -------------------------------------------------------
 
+:Status: Planned
+
 * Python ≥ 3.10.
 * 5.1 removes ``DEFAULT_FILE_STORAGE``, ``STATICFILES_STORAGE`` and
   ``index_together``.
@@ -1528,6 +1586,8 @@ Stage 18 — Django 4.2 → 5.0.14 → 5.1.15 → 5.2.16 (LTS)
 
 Stage 19 — Django 5.2 → 6.0.7 (current)
 ---------------------------------------
+
+:Status: Planned
 
 * Python ≥ 3.12.
 * ``DEFAULT_AUTO_FIELD`` default flips to ``BigAutoField`` — keep the explicit
