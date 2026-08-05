@@ -56,6 +56,13 @@ its **Claimed** column. That is the whole selection procedure: the ranking
 argument is in :doc:`issues/index` if you want it, but the queue has already
 applied it.
 
+That page is generated, so the rows exist only once the documentation is built.
+If you are reading the repository rather than the built site you will find a
+``.. issue-queue::`` directive where the table should be; build the docs, or
+read the issue files directly -- an actionable row is a file whose ``Status`` is
+``Open`` or ``Accepted`` with no ``Claimed`` field, which is the same set minus
+the ones waiting on a dependency.
+
 Two columns decide how much work the row is. **Decision** ``needed`` means the
 maintainer has not ruled on what the fix should be, so the work includes asking
 -- ask, and carry on rather than waiting. **Severity** is user-visible impact,
