@@ -165,6 +165,21 @@ about a status is written down twice, so nothing about a status can drift.
   A checkout that cannot answer, such as a shallow clone or one without
   ``git``, reports that it skipped the check and does not fail.
 
+Writing about a generated page: name the fields, not the table
+--------------------------------------------------------------
+
+A generated table exists only after a build. Half this project's readers are
+looking at the repository rather than the published site, and what they find
+where the table should be is ``.. issue-queue::`` and nothing else -- so an
+instruction to "take the top row" or "count the rows" is an instruction they
+cannot follow, and one they can misread as "there is no work".
+
+So point at what the table is made of. "The issues whose ``Status`` is ``Open``
+or ``Accepted`` with no ``Claimed``" is true in both places, and it says how the
+built table differs: it also drops the ones waiting on a dependency. Both of
+this convention's authors wrote the other kind first, in the same week, which
+is why it is written down here.
+
 The parser is ``docs/_ext/issue_register.py`` and the directives are in
 ``docs/_ext/sphinx_issue_register.py``; both are covered by
 ``kasvimuseo/tests/test_issue_register.py``.
