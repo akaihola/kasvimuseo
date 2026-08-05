@@ -1,0 +1,46 @@
+# The checks that nothing a pull request does can perform.
+#
+# tests.yml answers "does this change break anything?" and runs on the change.
+# This file answers "has the world moved under a document that claims to
+# describe it?", which no change to this repository can trigger, because the
+# thing that moved is outside it. A weekly run is the whole mechanism: what it
+# finds is a chore with an obvious next command, not a broken build.
+#
+# It is deliberately not part of tests.yml. A schedule there would run the
+# container build, the suite and both browser engines every week to ask a
+# question about PyPI, and a red weekly run in the same workflow as the pull
+# request checks reads like the branch broke something.
+
+name: weekly
+
+on:
+  schedule:
+    # Monday morning, in the small hours UTC: what it reports is a chore for
+    # the week rather than something anybody should be woken by. The odd
+    # minute is GitHub's own advice -- every scheduled workflow in the world
+    # asking for :00 is why a run at :00 is the one that gets delayed.
+    - cron: '23 4 * * 1'
+  # So that it can be run against a branch that changes it, without waiting
+  # until Monday.
+  workflow_dispatch:
+
+jobs:
+  inventory:
+    name: dependency inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      # About 2400 requests to PyPI, one per release, because a release's
+      # classifiers are only in its own record. Five minutes or so, and the
+      # reason this is weekly rather than part of the documentation build.
+      #
+      # A failure means docs/dependency-inventory.rst no longer describes what
+      # PyPI serves -- almost always because a package this project depends on
+      # has released since the file was written. The fix is one command,
+      # `dev/deps-inventory`, and a commit of what it rewrites. Nothing is
+      # pushed from here: what the bands now say is evidence the upgrade plan
+      # reasons from, and it is read before it is committed.
+      - name: Is the dependency inventory still what PyPI says?
+        run: dev/deps-inventory --check

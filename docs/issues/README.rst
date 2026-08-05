@@ -79,7 +79,60 @@ Metadata fields
     evidence would have carried the same ruling alone.
 
 ``Resolution``
-    Commit, or the reason for rejecting.
+    Commit, or the reason for rejecting. Written after the branch has landed on
+    ``master``: a commit named before the rebase does not exist afterwards, and
+    a dead pointer reads exactly like a live one. The build checks every commit
+    named here, so this is caught rather than believed.
+
+
+Stages, in the plans
+====================
+
+An issue is one problem. A *stage* is one step of a programme that was planned
+as a whole: :doc:`../upgrade-plan`'s twenty, and :doc:`../test-coverage-plan`'s
+packages. They are not issues -- there is nothing to decide about them and
+nothing to rank, because the plan already argued for the order -- but "what is
+next" has to be answerable without reading a hundred kilobytes of reasoning.
+
+So each stage heading carries a field list of its own::
+
+    Stage 4 — Photologue 2.8.3 → 3.0.2, still on Django 1.6
+    --------------------------------------------------------
+
+    :Status: Next
+
+``Status`` is ``Done``, ``Next`` or ``Planned``, and the three read as a ladder:
+everything above ``Next`` is done, everything below it is not, and exactly one
+stage is ``Next`` until the plan is finished, at which point none is and the
+plan stops asking to be read. ``Done`` also carries ``Resolution`` -- the commit
+that landed it, or the issues that did -- and those commits are checked like an
+issue's. ``Stage`` names the step where the heading does not, as
+``test-coverage-plan``'s infrastructure section does.
+
+The prose around a stage is unchanged: it is the argument for doing it that
+way and the record of what it cost. The field is the one line a machine reads,
+and "Where this plan has got to" at the top of each plan is generated from it.
+
+
+Removed documents, and the archive
+==================================
+
+Text this project no longer wants is removed with ``git rm`` rather than left
+in place with a note saying it is out of date. Git keeps the content; the
+pointer to it goes in ``docs/archive.rst``, one bullet per removed document::
+
+    * ``docs/issues/incoming.rst`` @ ``88455a0`` -- the "Emptied on ..."
+      entries, removed 2026-08-04. Why they went, in as many lines as it takes.
+
+The path and the commit are literals, separated by ``@``, and the reason
+follows ``--`` and wraps onto indented lines. **The commit is one that is
+already on** ``master``, and never one the removing branch makes itself: that
+commit is rewritten when the branch is rebased, and the pointer dies with it.
+Any older commit that still holds the file will do; the head of ``master`` at
+the time of writing is the obvious one.
+
+The build reads that page and asks ``git`` whether each pointer resolves, so an
+archive entry is a promise the documentation keeps rather than one it makes.
 
 
 What the build checks
@@ -98,7 +151,34 @@ about a status is written down twice, so nothing about a status can drift.
 * an issue file is missing from :doc:`index`'s suggested order, or appears in
   it twice -- the promise that "every issue appears exactly once" is enforced
   rather than hoped for,
-* that order names an issue with no file.
+* that order names an issue with no file,
+* a ``Depends on`` or ``Blocks`` field names an issue that has no file, or one
+  that does not name it back. Both halves matter: an edge pointing at nothing
+  used to be *dropped* from the queue, so a mistyped number read as "ready
+  now", and an edge recorded at one end only cannot be read from the other,
+* a plan's stages do not read as a ladder: two are ``Next``, a ``Done`` one sits
+  below an unfinished one, work is left and nothing says which piece is next, or
+  a ``Done`` stage does not say what landed it,
+* a commit named in a ``Resolution`` field, whether an issue's or a stage's, or
+  in an archive entry, is not in
+  this repository -- which is what a pointer written before a rebase becomes.
+  A checkout that cannot answer, such as a shallow clone or one without
+  ``git``, reports that it skipped the check and does not fail.
+
+Writing about a generated page: name the fields, not the table
+--------------------------------------------------------------
+
+A generated table exists only after a build. Half this project's readers are
+looking at the repository rather than the published site, and what they find
+where the table should be is ``.. issue-queue::`` and nothing else -- so an
+instruction to "take the top row" or "count the rows" is an instruction they
+cannot follow, and one they can misread as "there is no work".
+
+So point at what the table is made of. "The issues whose ``Status`` is ``Open``
+or ``Accepted`` with no ``Claimed``" is true in both places, and it says how the
+built table differs: it also drops the ones waiting on a dependency. Both of
+this convention's authors wrote the other kind first, in the same week, which
+is why it is written down here.
 
 The parser is ``docs/_ext/issue_register.py`` and the directives are in
 ``docs/_ext/sphinx_issue_register.py``; both are covered by

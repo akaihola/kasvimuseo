@@ -181,7 +181,14 @@ jobs:
     name: sphinx
     runs-on: ubuntu-latest
     steps:
+      # The whole history, not the default single commit. The build asks git
+      # whether every commit named in a :Resolution: field or an archive entry
+      # exists, and a shallow clone cannot answer: the check would report that
+      # it skipped and pass, which is exactly the check not running. Fetching
+      # everything costs a second or two on a repository this size.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Build the documentation
         run: dev/kasvimuseo docs --clean
