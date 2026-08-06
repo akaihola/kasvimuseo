@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Re-point the commits the documentation names at the commits that landed.
+
+Usage: dev/repoint [--write] [--verbose]
+
+An issue's ``:Resolution:``, a plan stage's, and an archive entry each name a
+commit. The branch that wrote the pointer is rebased onto ``master`` before it
+lands, which rewrites that commit, and the pointer is left naming a commit that
+is on no branch. This finds those, works out what each one became, and -- with
+``--write`` -- edits the file.
+
+Run it after the rebase and before the merge, so what lands is already true.
+``docs/issues/README.rst`` says when, and what the documentation build does
+about a pointer nobody re-pointed.
+
+Reports and changes nothing by default. It never writes a pointer it had to
+guess at: a commit that was squashed, split or dropped has no one successor,
+and this says so instead of inventing one.
+"""
+
+import io
+import os
+import subprocess
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(REPO, 'docs', '_ext'))
+
+import commit_pointers  # noqa: E402  (needs the path above)
+import issue_register  # noqa: E402
+
+
+def main(argv):
+    write = '--write' in argv
+    verbose = '--verbose' in argv or '-v' in argv
+    for argument in argv:
+        if argument not in ('--write', '--verbose', '-v'):
+            sys.stderr.write(__doc__)
+            return 2
+
+    git = commit_pointers.git_runner(REPO)
+    reason = commit_pointers.unverifiable(git)
+    if reason:
+        print('Cannot check: {0}.'.format(reason))
+        return 0
+
+    pointers = commit_pointers.pointers(read_register())
+    if commit_pointers.classify(pointers, git) is None:
+        print('Cannot check: git did not answer.')
+        return 0
+
+    if verbose:
+        report_all(pointers)
+    broken = [pointer for pointer in pointers if pointer.is_broken]
+    lost = [pointer for pointer in broken
+            if pointer.verdict == commit_pointers.LOST]
+    if not broken:
+        print('Every commit the documentation names is on master, on a branch, '
+              'or on a tag. Nothing to re-point.')
+        return 0
+
+    found = commit_pointers.successors(lost, git)
+    return repair(pointers, broken, found, write, git)
+
+
+def repair(pointers, broken, found, write, git):
+    """Say what each broken pointer is, edit the files, and pick an exit code."""
+    edits = {}
+    unmapped = []
+    for pointer in broken:
+        replacement = found.get(pointer.full)
+        if replacement is None:
+            unmapped.append(pointer)
+            continue
+        new, how = replacement
+        print('{0}\n    {1} -> {2}, by {3}\n    {4}'.format(
+            pointer.source, pointer.commit,
+            commit_pointers.abbreviate(new, len(pointer.commit)), how,
+            subject(new, git)))
+        edits.setdefault(pointer.file, []).append((pointer.commit, new))
+
+    for pointer in unmapped:
+        print('{0}\n    {1}: {2}'.format(pointer.source, pointer.commit,
+                                         explain(pointer)))
+
+    if edits and write:
+        for path in sorted(edits):
+            apply_edits(path, edits[path])
+        print('\nRewrote {0} pointer(s) in {1} file(s). Commit them, then '
+              'build the documentation.'.format(
+                  sum(len(pairs) for pairs in edits.values()), len(edits)))
+    elif edits:
+        print('\n{0} pointer(s) can be re-pointed. Run dev/repoint --write to '
+              'do it.'.format(sum(len(pairs) for pairs in edits.values())))
+    if unmapped:
+        print('\n{0} pointer(s) need a person: this cannot say what they '
+              'became.'.format(len(unmapped)))
+        return 1
+    return 0 if write or not edits else 1
+
+
+def explain(pointer):
+    """Why this one is not something to re-point automatically."""
+    if pointer.verdict == commit_pointers.GONE:
+        return ('git does not have this object. Nothing here can recover it; '
+                'read the issue and name the commit that fixed it')
+    if pointer.verdict == commit_pointers.MISSING_PATH:
+        return ('the commit is here, but it does not hold ``{0}``. Name a '
+                'commit that still has the file'.format(pointer.path))
+    return ('no commit on master has its patch or its subject. It was '
+            'squashed, split or dropped -- or it never landed, in which case '
+            'park it on a tag and say so')
+
+
+def subject(commit, git):
+    return git(['log', '-1', '--format=%h %s', commit]) or ''
+
+
+def apply_edits(path, pairs):
+    """Rewrite one file's pointers, once, in place."""
+    full = os.path.join(REPO, path)
+    with io.open(full, encoding='utf-8') as handle:
+        text = handle.read()
+    for old, new in pairs:
+        text = commit_pointers.replace_commit(text, old, new)
+    with io.open(full, 'w', encoding='utf-8') as handle:
+        handle.write(text)
+
+
+def report_all(pointers):
+    """Every pointer and its verdict, for somebody checking the checker."""
+    counts = {}
+    for pointer in pointers:
+        counts[pointer.verdict] = counts.get(pointer.verdict, 0) + 1
+        if pointer.verdict != commit_pointers.LANDED:
+            print('{0}: {1} is {2}'.format(pointer.source, pointer.commit,
+                                           pointer.verdict))
+    print('{0} pointer(s): {1}\n'.format(
+        len(pointers),
+        ', '.join('{0} {1}'.format(counts[key], key) for key in sorted(counts))))
+
+
+def read_register():
+    """Every commit the documentation names, with where it says it."""
+    docs = os.path.join(REPO, 'docs')
+    issues_dir = os.path.join(docs, 'issues')
+    issues = issue_register.load_issues(issues_dir)
+    archive = []
+    archive_path = os.path.join(docs, 'archive.rst')
+    if os.path.exists(archive_path):
+        with io.open(archive_path, encoding='utf-8') as handle:
+            archive = issue_register.parse_archive(handle.read())
+    stages = []
+    for name in issue_register.PLANS:
+        with io.open(os.path.join(docs, name), encoding='utf-8') as handle:
+            stages.extend(issue_register.parse_stages(handle.read(),
+                                                      'docs/' + name))
+    return issue_register.commit_references(issues, archive, stages)
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

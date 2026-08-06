@@ -96,8 +96,8 @@ Two commands, and both of them are what CI runs::
 The suite has a coverage floor, so a change that adds code without tests can
 fail on the number rather than on a test. The documentation build fails on a
 malformed issue field, on a ranking that does not list every issue exactly
-once, and on a commit that a ``Resolution`` names but the repository does not
-have; the message says which. :doc:`issues/README` explains each check.
+once, and on a commit that a ``Resolution`` names but no branch and no tag
+reaches; the message says which. :doc:`issues/README` explains each check.
 
 The browser suite, ``dev/kasvimuseo app browser-test``, is only needed if you
 touched the label editor.
@@ -110,11 +110,13 @@ Land it
 ``Decision``, and delete ``Claimed``. That is what takes the issue off the
 queue: there is no separate list to update.
 
-One catch worth knowing before it bites you: write the ``Resolution`` commit
-**after** the branch has landed on ``master``. Rebasing rewrites your commits,
-so a hash written before the rebase points at a commit that no longer exists.
-The documentation build now catches that, which is the only reason it is a
-footnote rather than a trap.
+One catch worth knowing before it bites you. Write the ``Resolution`` commit
+when you have it, then **run** ``dev/repoint --write`` **after you rebase**.
+Rebasing rewrites your commits, so the hash you wrote names a commit that is on
+no branch afterwards; the command finds what each one became and rewrites it.
+The documentation build fails on a pointer nobody re-pointed, so this is a
+footnote rather than a trap. :doc:`issues/README` says who runs it and how it
+works out the answer.
 
 Branch onto ``master`` and rebase; never merge ``master`` into your branch.
 There is no ``main`` in this repository.
