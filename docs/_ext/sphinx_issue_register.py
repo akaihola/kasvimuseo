@@ -23,7 +23,6 @@ from __future__ import unicode_literals
 
 import io
 import os
-import subprocess
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -31,6 +30,7 @@ from docutils.statemachine import StringList
 from sphinx.errors import ExtensionError
 from sphinx.util import logging
 
+import commit_pointers
 import issue_register
 from issue_register import IssueRegisterError
 
@@ -119,75 +119,75 @@ def load_register(app):
 
 
 def verify_commits(repo, references):
-    """Fail the build when a commit the documentation names cannot be read.
+    """Fail the build when nobody can follow a commit the documentation names.
 
     A ``:Resolution:`` names the commit that fixed the issue and an archive
     entry names a commit that still holds a removed file, so both are promises
-    about this repository's history -- and both are written on a task branch
-    whose commits are rewritten when it is rebased onto ``master``. A pointer
-    that died in a rebase is indistinguishable from a correct one by reading.
+    about this repository's history. Both are written on a task branch whose
+    commits are rewritten when it is rebased onto ``master``, and a pointer that
+    died in that rebase reads exactly like a live one.
 
-    One ``git cat-file --batch-check`` for the lot: a build must not cost
-    seventy processes. Where the history is not there to check -- no ``git``, a
-    shallow clone, an unpacked tree -- this reports that it skipped and passes,
-    because a checkout that cannot answer the question has not answered "no".
+    The question is not whether the object is here. It is: the checkout that
+    wrote the dead pointer holds the old commit, dangling, until ``git gc``
+    takes it. The question is whether anything *reaches* it -- so a commit on a
+    branch still in flight passes, a commit parked on a tag passes, and a commit
+    on nothing at all fails. :mod:`commit_pointers` asks, in three ``git`` calls
+    for the whole register.
+
+    Where the history is not there to check -- no ``git``, a shallow clone, no
+    ``master`` -- this reports that it skipped and passes: a checkout that
+    cannot answer the question has not answered "no".
     """
     if not references:
         return
-    reason = _unverifiable(repo)
+    git = commit_pointers.git_runner(repo)
+    reason = commit_pointers.unverifiable(git)
     if reason:
         logger.info('issue register: not checking %d commit reference(s): %s',
                     len(references), reason)
         return
-    queries = ['{0}:{1}'.format(commit, path) if path else
-               '{0}^{{commit}}'.format(commit)
-               for _source, commit, path in references]
-    output = _git(repo, ['cat-file', '--batch-check'],
-                  stdin='\n'.join(queries) + '\n')
-    if output is None:
+    pointers = commit_pointers.classify(commit_pointers.pointers(references),
+                                        git)
+    if pointers is None:
         logger.info('issue register: not checking %d commit reference(s): '
-                    'git cat-file did not run', len(references))
+                    'git did not answer', len(references))
         return
-    lines = output.split('\n')
-    for (source, commit, path), line in zip(references, lines):
-        if ' missing' not in line and ' ambiguous' not in line:
-            continue
-        if path:
-            raise IssueRegisterError(
-                '{0}: ``{1}`` is not in commit {2}. The archive points at the '
-                'commit that still holds the removed file, and it has to be one '
-                'that is already on master -- a commit made on the branch that '
-                'does the removal does not survive its rebase'
-                .format(source, path, commit))
-        raise IssueRegisterError(
-            '{0}: commit {1} is not in this repository. A commit written before '
-            'the branch was rebased onto master no longer exists; re-point it at '
-            'the commit that landed'.format(source, commit))
+    broken = [pointer for pointer in pointers if pointer.is_broken]
+    in_flight = [pointer for pointer in pointers
+                 if pointer.verdict == commit_pointers.PARKED]
+    if in_flight:
+        logger.info('issue register: %d commit reference(s) are not on %s yet, '
+                    'but a branch or a tag holds them',
+                    len(in_flight), commit_pointers.INTEGRATION)
+    if broken:
+        raise IssueRegisterError(_broken_message(broken))
 
 
-def _unverifiable(repo):
-    """Why this checkout cannot answer, or ``None`` when it can."""
-    if _git(repo, ['rev-parse', '--git-dir']) is None:
-        return 'this is not a git checkout, or git is not installed'
-    if _git(repo, ['rev-parse', '--is-shallow-repository']) == 'true':
-        return 'a shallow clone holds too little history to check against'
-    return None
+def _broken_message(broken):
+    """Every dead pointer at once, and the command that repairs them.
+
+    One at a time would mean one build per pointer, and this project found
+    eighteen of them in one go.
+    """
+    lines = ['{0} commit reference(s) point at nothing anybody can read:'
+             .format(len(broken))]
+    for pointer in broken:
+        lines.append('  {0}: {1} -- {2}'.format(pointer.source, pointer.commit,
+                                                _why(pointer)))
+    lines.append(
+        'A commit written before the branch was rebased onto master is on no '
+        'branch afterwards. Run ``dev/repoint`` to see what each one became, '
+        'and ``dev/repoint --write`` to re-point them. A commit that is '
+        'deliberately off master needs a tag to hold it, as 062 does.')
+    return '\n'.join(lines)
 
 
-def _git(repo, args, stdin=None):
-    """Run ``git`` in ``repo`` and return its output, or ``None`` if it failed."""
-    try:
-        process = subprocess.Popen(
-            ['git'] + args, cwd=repo,
-            stdin=subprocess.PIPE if stdin is not None else None,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except OSError:
-        return None
-    output, _errors = process.communicate(
-        stdin.encode('utf-8') if stdin is not None else None)
-    if process.returncode != 0:
-        return None
-    return output.decode('utf-8', 'replace').strip()
+def _why(pointer):
+    if pointer.verdict == commit_pointers.GONE:
+        return 'git does not have this object'
+    if pointer.verdict == commit_pointers.MISSING_PATH:
+        return '``{0}`` is not in that commit'.format(pointer.path)
+    return 'no branch and no tag reaches it'
 
 
 class _IssueTableDirective(Directive):

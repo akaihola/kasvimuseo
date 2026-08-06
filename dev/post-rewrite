@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Git post-rewrite hook: remember which commit each rewritten commit became.
+#
+# .git/hooks is not tracked, so this lives here and is installed once per clone,
+# beside dev/pre-push:
+#
+#     hooks=$(git rev-parse --git-path hooks)
+#     mkdir -p "$hooks"
+#     ln -sf "$PWD/dev/post-rewrite" "$hooks/post-rewrite"
+#
+# `git rev-parse` rather than a literal .git/hooks: core.hooksPath moves that
+# directory, and a worktree has its own.
+#
+# git runs this after `rebase` and after `commit --amend`, and hands it one
+# `<old> <new>` pair per rewritten commit on standard input. It appends them to
+# .git/rewritten-commits, which `dev/repoint` reads to re-point the commits the
+# documentation names -- exactly, rather than by inferring what became what.
+#
+# Nothing depends on this hook being installed. Without it dev/repoint works
+# out the mapping from the patch and the subject, which is right nearly always;
+# with it, the mapping is the one git itself made. What it cannot do is help
+# after `git gc` has pruned the old commit: the log is a record kept while the
+# object still exists, which is the whole reason for writing it at that moment.
+#
+# The file only grows, by about 50 bytes per rewritten commit. It is under
+# .git/, so it is neither committed nor pushed, and deleting it costs nothing
+# but the exactness.
+set -euo pipefail
+
+log=$(git rev-parse --git-path rewritten-commits)
+
+# $1 is `rebase` or `amend`. Both hand over the same two-or-three column format:
+# old, new, and for `amend` sometimes nothing else.
+while read -r old new _rest; do
+    [ -n "${old:-}" ] && [ -n "${new:-}" ] || continue
+    printf '%s %s\n' "$old" "$new" >>"$log"
+done

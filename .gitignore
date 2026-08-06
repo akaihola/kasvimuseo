@@ -27,6 +27,9 @@
 # sphinx-autoapi's generated pages; scratch, deleted after each build
 /docs/api/
 /.coverage
+# Where the hooks go when core.hooksPath points inside the checkout, which is
+# where `git rev-parse --git-path hooks` sends dev/pre-push and dev/post-rewrite.
+/.githooks/
 # Git worktrees live inside the repository, so they stay in the sandbox's
 # writable root and cannot be orphaned somewhere outside it.
 /.worktrees/

@@ -182,10 +182,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # The whole history, not the default single commit. The build asks git
-      # whether every commit named in a :Resolution: field or an archive entry
-      # exists, and a shallow clone cannot answer: the check would report that
-      # it skipped and pass, which is exactly the check not running. Fetching
-      # everything costs a second or two on a repository this size.
+      # whether anything still reaches every commit named in a :Resolution:
+      # field or an archive entry, and a shallow clone cannot answer: the check
+      # would report that it skipped and pass, which is exactly the check not
+      # running. Fetching everything costs a second or two on a repository this
+      # size.
+      #
+      # This job is where the check has teeth. A developer's checkout keeps the
+      # pre-rebase commit as a dangling object, so a dead pointer resolves
+      # there; a fresh clone has only what a reference reaches, which is what
+      # every other reader gets. The runner has no local `master` -- it checks
+      # out one branch and keeps the rest as origin/*, and the check knows to
+      # look there too.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
