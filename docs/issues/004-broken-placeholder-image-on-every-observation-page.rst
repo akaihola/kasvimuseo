@@ -14,7 +14,7 @@ Issue 004: Broken placeholder image on every observation page
 :Blocks: (none)
 :Related: 011 -- option 2 here renders the species photo, which is what 011 is about
 :Decision: Option 1 -- remove the tag
-:Resolution: Fixed in 170412f.
+:Resolution: Fixed in 65b6300.
 
 Problem
 =======
@@ -63,4 +63,4 @@ The one line is gone from
 ``test_observation_page_has_no_placeholder_image``, which asserts both that
 ``dummy.jpg`` is absent and that the page carries no ``<img>`` at all -- so
 option 2 cannot be added by accident without the test being changed
-deliberately. Commit 170412f.
+deliberately. Commit 65b6300.

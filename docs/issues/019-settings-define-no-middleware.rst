@@ -19,7 +19,7 @@ Issue 019: Settings define no MIDDLEWARE
     ``MIDDLEWARE`` waits for Stage 8 (Django 1.10), which is the first release
     that honours it -- doing it now would be a setting Django 1.5 ignores, which
     is the same silence this issue is about, only sooner.
-:Resolution: 8202f91 -- the tuple in ``ylaneenkasvit/common_settings.py``, the
+:Resolution: bba4ce6 -- the tuple in ``ylaneenkasvit/common_settings.py``, the
     test that pins it, and the notes in 023 and 036
 
 Problem

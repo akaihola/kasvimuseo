@@ -24,7 +24,7 @@ Issue 016: remove_diacritics silently breaks on Python 3
     nothing has to be migrated. It needed no ruling, since the choice is
     between a construct that is correct on one interpreter and one that is
     correct on both.
-:Resolution: 4a9881a -- the join in ``kasvimuseo/forms.py``, the widened pin
+:Resolution: 240f2bb -- the join in ``kasvimuseo/forms.py``, the widened pin
     and the new end-to-end slug test in ``kasvimuseo/tests/test_forms.py``
 
 Problem
@@ -94,4 +94,4 @@ the host has Django 1.5 -- but the expression itself needs only
 the same three inputs, returning ``str`` each time and
 ``'Kevatesikko ahkyssa'`` for the accented one.
 
-Commit 4a9881a.
+Commit 240f2bb.

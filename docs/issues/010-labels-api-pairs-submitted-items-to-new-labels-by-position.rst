@@ -25,7 +25,7 @@ Issue 010: Labels API pairs submitted items to new labels by position
     duplicate-species case does *not* break the old code on PostgreSQL --
     measured, it still pairs correctly, because the new primary keys come back
     in insert order there. The fragility is real, the failure was latent.
-:Resolution: Fixed in c9cb3f5.
+:Resolution: Fixed in cce65ac.
 
 Problem
 =======
@@ -64,7 +64,7 @@ through leaves the table empty.
 Resolution
 ==========
 
-Commit c9cb3f5, together with issue 039 -- the same handler. The labels are
+Commit cce65ac, together with issue 039 -- the same handler. The labels are
 created one at a time and mapped as they are created, so nothing about the
 mapping depends on how the database hands the rows back::
 

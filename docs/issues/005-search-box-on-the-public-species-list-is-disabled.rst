@@ -14,7 +14,7 @@ Issue 005: Search box on the public species list is disabled
 :Blocks: (none)
 :Related: (none)
 :Decision: Option 1 -- drop the ``X`` prefixes
-:Resolution: Fixed in 59b6a92.
+:Resolution: Fixed in 2c46529.
 
 Problem
 =======
@@ -73,4 +73,4 @@ Three characters gone from
 three attributes reach the delivered page and that no ``Xdata-filter`` remains.
 What the test cannot reach is the box itself: it is drawn by jQuery Mobile in
 the browser, so the assertion stops at the contract with it -- the rest wants
-the browser suite that 017 is about. Commit 59b6a92.
+the browser suite that 017 is about. Commit 2c46529.
