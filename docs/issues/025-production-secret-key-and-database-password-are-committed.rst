@@ -12,7 +12,7 @@ Issue 025: Production SECRET_KEY and database password are committed
 :Blocks: 049 -- deploying the rotated values needs settings that read them from the environment, which is what this issue did
 :Related: 026 -- the same file, and the same question of what the server carries that the repository does not
 :Decision: Option 2 in this repository, option 3 for the history, and option 1 handed on. The settings read both values from the environment (``KASVIMUSEO_SECRET_KEY``, ``KASVIMUSEO_DB_PASSWORD``) with no default, and Ansible supplies them from the vault the repository already had (option 2). The history is left alone (option 3): rewriting it un-discloses nothing, and rotation makes what is in it worthless. Rotation itself (option 1) is half done -- the maintainer has generated new values and put them in the vault -- and the deploy that makes them the ones in use is **issue 049**, which waits on agreeing the timing with the customer.
-:Resolution: Commit a58a697 moved both values out of every tracked file and into the environment, b8a380d recorded that half; no tracked file holds either value. That is all of this issue that the repository can do. It did not end the disclosure -- see 049, which is the step that does.
+:Resolution: Commit 49407ca moved both values out of every tracked file and into the environment, 90eb35d recorded that half; no tracked file holds either value. That is all of this issue that the repository can do. It did not end the disclosure -- see 049, which is the step that does.
 
 .. warning::
 

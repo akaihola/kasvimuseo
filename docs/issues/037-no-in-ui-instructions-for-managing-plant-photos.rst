@@ -27,7 +27,7 @@ Issue 037: No in-UI instructions for managing plant photos
     three lines of behaviour: choosing a photo did not enable the Save button,
     so the choice could not be saved at all unless a print tick was toggled
     too, and the honest line above the sheet would have had to say so.
-:Resolution: Fixed in badcb5f.
+:Resolution: Fixed in 4fef94c.
 
 Problem
 =======

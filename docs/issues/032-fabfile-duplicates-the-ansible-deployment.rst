@@ -20,10 +20,10 @@ Issue 032: fabfile.py duplicates the Ansible deployment, in Python 2
     description of how *Kajalan kasvimaat* was installed -- and the maintainer
     ruled on that on 2026-08-01, having been asked rather than second-guessed:
     the site no longer exists, its configuration is not to be transcribed here,
-    and this issue is to stay silent about it. ``git show edd59db^:fabfile.py``
+    and this issue is to stay silent about it. ``git show 1e36c72^:fabfile.py``
     is where it lives now. Recorded because the deletion was deliberate; not
     elaborated, for the same reason.
-:Resolution: edd59db -- deletes ``fabfile.py`` and the two ``requirements/dev.txt``
+:Resolution: 1e36c72 -- deletes ``fabfile.py`` and the two ``requirements/dev.txt``
     lines that existed for it.
 
 Problem
