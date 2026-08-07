@@ -9,8 +9,9 @@ a document that no longer exists.
 Each entry names a path, the commit that still contains the file at that path,
 and why the text went. The commit is always one that is already on ``master``,
 because ``master`` is never rewritten here. A commit made on a task branch does
-not survive the rebase, which is the same hazard the ``:Resolution:`` fields
-carry.
+not survive the rebase; that is the hazard the ``:Resolution:`` fields carry
+and ``dev/repoint`` repairs, and an archive entry avoids it entirely by naming
+an older commit.
 
 The line format is fixed, because the documentation build checks that every
 pointer resolves. ``docs/issues/README.rst`` defines it.

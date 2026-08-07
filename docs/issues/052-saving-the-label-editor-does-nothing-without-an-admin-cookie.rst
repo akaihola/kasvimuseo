@@ -36,7 +36,7 @@ Issue 052: Saving the label editor does nothing without an admin cookie
     a 200 and left ``Label.objects.count() == 0``. That also settled the first
     half -- rendering the token widened nothing, because a script already had
     what the button lacked.
-:Resolution: Fixed in e061b41 (the token) and d03cc21 (the gate).
+:Resolution: Fixed in bfe4aa2 (the token) and 7544f99 (the gate).
 
 Problem
 =======
@@ -108,7 +108,7 @@ The options
 Resolution
 ==========
 
-Commits e061b41 and d03cc21. All three options, because the ruling
+Commits bfe4aa2 and 7544f99. All three options, because the ruling
 was for all three:
 
 * ``{% csrf_token %}`` is rendered beside the Save button, outside the ``GET``

@@ -28,7 +28,7 @@ Issue 039: The label photo is saved but never read back
     lookups the labels with a photo of their own no longer need. Issue 037 can
     now describe the chevrons as choosing the label's photo, which is its option
     3.
-:Resolution: Fixed in c9cb3f5.
+:Resolution: Fixed in cce65ac.
 
 Problem
 =======
@@ -95,7 +95,7 @@ browser test, so only the JSON contract is covered).
 Resolution
 ==========
 
-Commit c9cb3f5, together with issue 010 -- the same handler. The read path now
+Commit cce65ac, together with issue 010 -- the same handler. The read path now
 hands the label down instead of one flag off it::
 
     photo_pk, photo_alternatives = get_species_photo_info(
