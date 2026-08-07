@@ -501,6 +501,18 @@ makes the rest of this page hold.
       where ``KASVIMUSEO_DEV_LOGIN`` is set -- which is ``dev/kasvimuseo`` and
       nowhere else -- so one ``xdg-open`` replaces the detour and a deployment
       has no such URL.
+   070: ``ansible/secure-production.yaml`` -- the security maintenance window
+      that runs 049, 050, 051 and 060 in one safe order -- has exactly one
+      place it can run today: production. So its ordering is a claim in a file
+      until the real window opens and the customer is already paying for it.
+      This asks whether a throwaway staging host, installed exactly as
+      production is and destroyed after, can rehearse that run first, and
+      whether Cloudflare, a Fly.io Sprite or an hourly cloud server is cheap
+      and faithful enough to be one. In this group because it does not fix
+      anything -- it makes the group 1 deploys verifiable before they are run --
+      and last in it because the other five are done. Ahead of group 9, though,
+      and startable here now: unlike the group 1 acts it relates to, it needs no
+      access to production, only a target that stands in for it.
 
 9. The upgrade programme
 ------------------------
