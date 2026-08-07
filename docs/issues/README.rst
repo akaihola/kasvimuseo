@@ -79,10 +79,12 @@ Metadata fields
     evidence would have carried the same ruling alone.
 
 ``Resolution``
-    Commit, or the reason for rejecting. Written after the branch has landed on
-    ``master``: a commit named before the rebase does not exist afterwards, and
-    a dead pointer reads exactly like a live one. The build checks every commit
-    named here, so this is caught rather than believed.
+    Commit, or the reason for rejecting. Write the commit as soon as you have
+    it, on the branch that makes it. The rebase onto ``master`` then rewrites
+    that commit and leaves this field naming one that is on no branch, so run
+    ``dev/repoint --write`` after the rebase: it finds each dead pointer and
+    names the commit that landed. "A commit named before it lands" below says
+    when, and what runs it. The build fails on a pointer nobody re-pointed.
 
 
 Stages, in the plans
@@ -125,14 +127,62 @@ pointer to it goes in ``docs/archive.rst``, one bullet per removed document::
       entries, removed 2026-08-04. Why they went, in as many lines as it takes.
 
 The path and the commit are literals, separated by ``@``, and the reason
-follows ``--`` and wraps onto indented lines. **The commit is one that is
-already on** ``master``, and never one the removing branch makes itself: that
-commit is rewritten when the branch is rebased, and the pointer dies with it.
-Any older commit that still holds the file will do; the head of ``master`` at
-the time of writing is the obvious one.
+follows ``--`` and wraps onto indented lines. **Name a commit that is already
+on** ``master``, and not one the removing branch makes itself. Any older commit
+that still holds the file will do, and the head of ``master`` at the time of
+writing is the obvious one, so this pointer never needs re-pointing at all.
 
-The build reads that page and asks ``git`` whether each pointer resolves, so an
-archive entry is a promise the documentation keeps rather than one it makes.
+The build reads that page and asks ``git`` whether each pointer resolves, and
+whether that commit really does hold the file, so an archive entry is a promise
+the documentation keeps rather than one it makes.
+
+
+A commit named before it lands
+==============================
+
+Write the hash when you have it. Re-point it when the branch lands:
+
+1. ``git rebase master``.
+2. ``dev/repoint`` -- what each dead pointer became, and how it was worked out.
+3. ``dev/repoint --write`` -- the same, written into the files.
+4. Commit that, then merge the branch with ``--no-ff``. A merge does not
+   rewrite a commit, so what you wrote in step 3 is still true afterwards.
+
+This replaces the rule that said to write nothing until the branch had landed.
+That rule was correct and nobody kept it: eighteen dead pointers reached
+``master`` under it, because "write the fix and the issue file in one commit"
+and "write the hash after that commit lands" cannot both be obeyed at once.
+A step that runs beats a rule that asks somebody to come back later.
+
+**Who runs it.** Whoever lands the branch, as step 3 of landing it. The
+documentation build is what notices when nobody did: it fails, names every dead
+pointer at once, and names this command. Continuous integration can only
+notice, never repair -- it clones the repository fresh, so it holds neither the
+old commit nor the record of what became of it.
+
+**How it knows.** Three sources, best first. ``dev/post-rewrite`` is a hook
+``git`` calls after every rebase and amend, with the ``old new`` pairs it just
+made; install it once per clone, as its own comment says. Failing that, the
+patch identity: the same judgement ``git rebase`` itself makes about whether a
+commit is already upstream. Failing that, the commit subject, which survives a
+conflict that changed the patch. A pointer none of the three can map is
+reported for a person to settle, never guessed at.
+
+**What it cannot do.** A commit ``git gc`` has pruned is gone, and no hash in
+any document will bring it back. The hook is what makes the mapping survive
+that, because it writes the pair down while both commits still exist.
+
+**A hash with no letter in it is invisible to the check.** The register reads a
+commit as a hex run with both a digit and a letter, which is what keeps
+``max-age=31536000`` out of it. About one abbreviation in fifty is all digits,
+and 059 was re-pointed at ``7200893`` before anybody noticed. ``dev/repoint``
+now writes such a hash long enough to reach a letter; a hash typed by hand
+wants the same care.
+
+**A commit that is deliberately not on** ``master`` **needs a tag.** Issue 062
+names a spike that was measured and abandoned. A tag holds it, so ``git`` can
+still reach it, and the build reads it as parked rather than as rot. Without
+the tag the two are indistinguishable.
 
 
 What the build checks
@@ -160,10 +210,20 @@ about a status is written down twice, so nothing about a status can drift.
   below an unfinished one, work is left and nothing says which piece is next, or
   a ``Done`` stage does not say what landed it,
 * a commit named in a ``Resolution`` field, whether an issue's or a stage's, or
-  in an archive entry, is not in
-  this repository -- which is what a pointer written before a rebase becomes.
-  A checkout that cannot answer, such as a shallow clone or one without
-  ``git``, reports that it skipped the check and does not fail.
+  in an archive entry, is one that nothing reaches: no branch, no tag, and in
+  the worst case no object either. That is what a pointer written before a
+  rebase becomes, and the message names every one of them and the command that
+  repairs them. A commit that is only on the branch you are working on passes,
+  because a branch reaches it; it is the next rebase that kills it, and
+  ``dev/repoint`` that saves it. A checkout that cannot answer -- a shallow
+  clone, one without ``git``, one with no ``master`` -- reports that it skipped
+  the check and does not fail.
+
+  Reachability is the question, not existence. The checkout that wrote a dead
+  pointer keeps the old commit as a dangling object for as long as ``git gc``
+  leaves it, so the pointer resolves there and nowhere else. Eighteen of them
+  had accumulated on ``master`` under a check that asked whether the object was
+  present.
 
 Writing about a generated page: name the fields, not the table
 --------------------------------------------------------------

@@ -24,7 +24,7 @@ Issue 018: No CI: the suite is only ever run by hand
     asked for and skipped, and cheap to change. Both jobs have since passed on
     a hosted runner. See "Decision" below for what was asked and what each
     platform costs, and "It has run" for what the runner actually did.
-:Resolution: Fixed in 331fd74.
+:Resolution: Fixed in 0f695d7.
 
 Problem
 =======

@@ -51,10 +51,12 @@ ARCHIVE_ENTRY_RE = re.compile(
 #: A bullet that opens with a literal is meant to be one, whatever it says.
 ARCHIVE_BULLET_RE = re.compile(r'^\*[ \t]+``')
 
-#: A commit named in prose: a bare hex run, not part of a longer word and not
-#: inside a path. ``git`` accepts any unambiguous prefix, so the length is not
-#: fixed at seven.
-COMMIT_RE = re.compile(r'(?<![0-9A-Za-z`_/-])([0-9a-f]{7,40})(?![0-9A-Za-z])')
+#: A commit named in prose: a hex run, not part of a longer word and not inside
+#: a path. ``git`` accepts any unambiguous prefix, so the length is not fixed at
+#: seven. A backtick may open it: ``` ``a58a697`` ``` is how this documentation
+#: usually writes one, and a pointer the check cannot see is a pointer nothing
+#: checks.
+COMMIT_RE = re.compile(r'(?<![0-9A-Za-z_/-])([0-9a-f]{7,40})(?![0-9A-Za-z])')
 
 #: The plans, whose stages are a second queue beside the issues. Named here
 #: rather than discovered: a plan is a document somebody decided to run, and
