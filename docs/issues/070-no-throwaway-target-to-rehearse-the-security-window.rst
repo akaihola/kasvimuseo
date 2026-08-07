@@ -2,7 +2,7 @@
 Issue 070: No throwaway target to rehearse the security maintenance window
 =============================================================================
 
-:Status: Open
+:Status: Accepted
 :Severity: Low
 :Area: deployment / infrastructure
 :Reported: 2026-08-06
@@ -22,10 +22,27 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     ``ALLOWED_HOSTS`` change, which a rehearsal must prove does not 400 the site
     060 -- adds the ``Strict-Transport-Security`` header to nginx, which a
     rehearsal can confirm is served
-:Decision: undecided -- whether to build a throwaway staging target at all, and
-    which of the three candidates fits, is the maintainer's to rule once the
-    investigation says what each costs and what each can host.
-:Resolution: (none yet)
+:Decision: Build the throwaway target, and run it before the real window. A
+    faithful target exists and the compute is a few cents, so the obstacle is two
+    setup acts, not money. Take DigitalOcean's 4 USD Basic Droplet, at about
+    0.006 USD an hour, billed per second and inbound free; or Hetzner's CX22 at
+    5.49 EUR a month for more room. Rule out Cloudflare and Fly.io: neither gives
+    an SSH-reachable systemd host that keeps what ``apt`` installs. Two
+    preconditions the run cannot skip and inventory cannot supply. First, a
+    Debian 10 or Ubuntu 18.04 image, because the playbook installs
+    ``python-minimal`` and no provider still ships that release as stock -- the
+    same end-of-life runtime issue 036 tracks. Second, a throwaway public DNS
+    name the maintainer controls, pointed at the host, because the nginx template
+    names a Let's Encrypt certificate per domain and the verify play checks HTTPS
+    with a trusted certificate. If standing up staging DNS is not wanted, run the
+    reduced rehearsal in "What we found" point 4: it still proves the ordering
+    that makes 049 hard to take. This is the maintainer's call to confirm. It is
+    recorded on the evidence, the way 031 is, because the investigation is
+    complete and only the go-ahead remained, and this workflow does not guarantee
+    a live answer.
+:Resolution: (none yet) -- the ruling is to build it; standing up the host and
+    running the rehearsal is the follow-on act, which needs cloud provisioning
+    and DNS the maintainer holds.
 
 Problem
 =======
@@ -68,32 +85,109 @@ against a throwaway host, seeded from the dump under ``.dev/backups/``, would
 turn each of those "must" clauses from a claim in a file into a checked fact --
 which is most of what makes the "when" decision in 049 hard to take.
 
-What to find out
-================
+What we found
+=============
 
-The work is an investigation, and it ends in a ruling the maintainer takes on
-the evidence. Answer these, in order:
+The investigation asked four questions. Here are the answers, in order. They
+carry the ruling in ``:Decision:``.
 
-1. **What the target must be.** The playbook installs PostgreSQL, uWSGI and
-   nginx onto an SSH-reachable Linux host, and its post-conditions read files on
-   that host. So the target is a full Linux virtual machine, not a serverless
-   runtime. Check each candidate against that: Cloudflare's Workers and Pages do
-   not run a VM Ansible can target, so name what part of Cloudflare could, or
-   rule it out; confirm whether Fly.io Sprites and an hourly cloud server each
-   give an SSH-reachable host whose OS and PostgreSQL version match production
-   closely enough for the rehearsal to be faithful.
-2. **What it costs.** Price the cheapest candidate for one short-lived run:
-   the instance by the hour, and any egress for the dump.
-3. **What the inventory needs.** Read ``ansible/`` and find every place a role
-   or variable assumes the production host -- a hostname, a DNS name, a
-   certificate. List what a staging inventory would have to override, and
-   whether any of it cannot be overridden.
-4. **What a rehearsal proves, and what it does not.** Write it down plainly, so
-   the rehearsal is never mistaken for the fix: it proves the run's ordering and
-   post-conditions; it does not end a disclosure and it does not reproduce
-   production's live session state.
+1. What the target must be
+--------------------------
 
-Record the answers in ``:Decision:`` with the ruling, the way 031 does. If the
-answer is that no candidate is cheap enough or faithful enough to be worth it,
-that is a valid ruling and closes the issue ``Rejected`` with the numbers that
-made the case.
+The target is a full Linux virtual machine with systemd and sshd, not a
+serverless runtime. ``ansible/install.yaml`` runs ``apt`` and ``import_role``
+for PostgreSQL, nginx and uWSGI; the verify play in
+``ansible/secure-production.yaml`` reads ``/proc/PID/stat`` and calls
+``systemctl show``. Two of the three named candidates fail that test:
+
+- **Cloudflare runs no such host. Ruled out.** Workers are isolates with no
+  operating system. Containers, at general availability since April 2026, are
+  ephemeral OCI images a Worker starts on demand and that sleep on their own;
+  ``wrangler containers ssh`` reaches one only while it runs, and does not wake
+  a stopped one. Nothing there is a persistent, mutable, apt-managed host.
+- **Fly.io runs the wrong kind of host.** A Fly Machine, and the Sprite built
+  on it since January 2026, is a Firecracker microVM booted from your OCI image.
+  Fly's own ``init`` is PID 1, not systemd, and ``fly ssh console`` is Fly's
+  agent, not your sshd. Anything ``apt`` writes outside a mounted volume is
+  undone on the next start, so the playbook's installs do not persist.
+
+Only **Hetzner Cloud** and a **DigitalOcean droplet** give a real virtual
+machine with systemd, sshd and a root filesystem that keeps what ``apt``
+installs. One faithfulness limit binds both. The playbook installs
+``python-minimal`` and runs ``/usr/bin/python2.7``, which exist only on Debian
+10 or earlier and Ubuntu 18.04 or earlier. Neither provider still offers those
+releases as a stock image; both retired them at end of life. So a faithful
+rehearsal starts from a custom Debian 10 or Ubuntu 18.04 image you upload, or it
+accepts a delta and installs Python 2.7 another way. This is the same
+end-of-life runtime issue 036 tracks.
+
+2. What it costs
+----------------
+
+The compute is a few cents. A DigitalOcean Basic Droplet is 4 USD a month, about
+0.006 USD an hour, billed per second with a one-minute floor and capped at the
+monthly price. A Hetzner CX22 is 5.49 EUR a month, about 0.0088 EUR an hour,
+billed by the hour and capped at the monthly price; it carries 2 vCPU and 4 GB
+against the droplet's 1 vCPU and 512 MB, so it suits the PostgreSQL, uWSGI and
+nginx stack better. Charging stops only when you delete the server, not when you
+power it off. The dump is ``.dev/backups/production.sql``, 17 MB; uploading it to
+the host is inbound traffic, which both providers give free. So one short-lived
+run costs under a euro, and the real price is the time to build the custom image
+and to wire the DNS.
+
+3. What the inventory needs
+---------------------------
+
+Three overrides are clean, one is a small refactor, and one part cannot come
+from inventory at all.
+
+- **Clean per-host overrides.** ``ansible/hosts`` names the staging host. A
+  vaulted ``ansible/host_vars/<host>`` carries its own ``kasvimuseo_secret_key``,
+  ``kasvimuseo_db_password`` and ``kasvimuseo_admin_passwords``. Use throwaway
+  values, so no production secret reaches the host.
+- **A small refactor.** ``kasvimuseo_allowed_hosts``, the nginx ``servers`` list
+  and ``certbot_certs`` all sit in ``ansible/vars/main.yml``, which every host
+  loads, and there is no ``group_vars``. To point them at staging without
+  touching production, move them to ``host_vars`` or a staging vars file.
+- **Cannot come from inventory.** The web layer is tied to a real domain.
+  ``ansible/templates/nginx-site.conf.j2`` names
+  ``/etc/letsencrypt/live/{{ server.domain }}/fullchain.pem`` for every server,
+  and every server listens on 443 with TLS; the verify play requests ``https://``
+  with certificate checking on. So the run needs a public DNS name the maintainer
+  controls, pointed at the host, for certbot to issue a trusted certificate. A
+  variable cannot supply that.
+- **One more host requirement, not an override.** ``install.yaml`` installs the
+  application from ``git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git``, so
+  the staging run needs the same Bitbucket access production has.
+
+4. What a rehearsal proves, and what it does not
+------------------------------------------------
+
+It proves the run, seeded from ``.dev/backups/production.sql``:
+
+- ``install.yaml`` completes in order, so 049's database and web tasks land
+  together.
+- 051's gate refuses to delete ``local_settings.py`` until the deployed settings
+  read the environment and ``uwsgi.ini`` carries ``ALLOWED_HOSTS``, then deletes
+  it and restarts uWSGI.
+- 050's password script sets the vaulted passwords, is idempotent on a second
+  run, and its audit lists the other accounts.
+- The verify play's post-conditions hold: uWSGI started after its environment
+  was written, no ``local_settings.py`` remains, and a forged Host header gets a
+  400 and not a debug page.
+- With the web layer up, nginx serves the ``Strict-Transport-Security`` header
+  issue 060 adds.
+
+It does not:
+
+- end 049, 050, 051 or 060. Each lives on the real production process and its
+  real nginx, and only the real run touches those.
+- reproduce production's live session state: the forced logouts, and the cookies
+  and reset tokens the running process still signs with the old key. A
+  dump-seeded host has none.
+- stand in for the real Let's Encrypt renewal of the ambitone.com names, or for
+  production's exact operating system, unless the image matches it.
+
+If staging DNS is not wanted, run ``install.yaml`` without the ``web`` tag and
+skip the two HTTPS assertions. That run still proves every ordering above except
+the nginx header, which is most of what makes 049's timing hard to take.
