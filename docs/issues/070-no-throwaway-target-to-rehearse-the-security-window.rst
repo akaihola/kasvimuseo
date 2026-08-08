@@ -24,9 +24,12 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     rehearsal can confirm is served
 :Decision: Build the throwaway target, and run it before the real window. A
     faithful target exists and the compute is a few cents, so the obstacle is two
-    setup acts, not money. Take DigitalOcean's 4 USD Basic Droplet, at about
-    0.006 USD an hour, billed per second and inbound free; or Hetzner's CX22 at
-    5.49 EUR a month for more room. Rule out Cloudflare and Fly.io: neither gives
+    setup acts, not money. The choice was between DigitalOcean's 4 USD Basic
+    Droplet, at about 0.006 USD an hour, billed per second and inbound free, and
+    Hetzner's CX22 at 5.49 EUR a month; the maintainer confirmed Hetzner on
+    2026-08-08, whose 2 vCPU and 4 GB suit the PostgreSQL, uWSGI and nginx stack
+    where the droplet's 1 vCPU and 512 MB would not. Rule out Cloudflare and
+    Fly.io: neither gives
     an SSH-reachable systemd host that keeps what ``apt`` installs. Two
     preconditions the run cannot skip and inventory cannot supply. First, a
     Debian 10 or Ubuntu 18.04 image, because the playbook installs
@@ -36,13 +39,21 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     names a Let's Encrypt certificate per domain and the verify play checks HTTPS
     with a trusted certificate. If standing up staging DNS is not wanted, run the
     reduced rehearsal in "What we found" point 4: it still proves the ordering
-    that makes 049 hard to take. This is the maintainer's call to confirm. It is
-    recorded on the evidence, the way 031 is, because the investigation is
-    complete and only the go-ahead remained, and this workflow does not guarantee
-    a live answer.
-:Resolution: (none yet) -- the ruling is to build it; standing up the host and
-    running the rehearsal is the follow-on act, which needs cloud provisioning
-    and DNS the maintainer holds.
+    that makes 049 hard to take. It was recorded on the evidence, the way 031 is,
+    because the investigation was complete and only the go-ahead remained, and
+    this workflow does not guarantee a live answer; the go-ahead, and the Hetzner
+    choice, then arrived.
+:Resolution: The repository half is built. ``ansible/hosts.staging`` is a
+    separate inventory the production ``hosts: all`` cannot reach, and
+    ``ansible/vars/staging.yml`` overrides the three web-layer values -- the
+    ``ALLOWED_HOSTS`` list, the nginx ``servers`` and ``certbot_certs`` -- as
+    extra-vars, so a staging run points them at ``staging_domain`` while every
+    other value comes from ``vars/main.yml`` unchanged and no production file
+    moves. README.rst, "Rehearsing the window on a throwaway host", is the
+    runbook, keyed to the Hetzner CX22. What remains is the follow-on act a
+    checkout cannot do: stand up the CX22 from a custom Debian 10 image, point a
+    throwaway DNS name at it, vault throwaway secrets, and run
+    ``ansible/secure-production.yaml`` against the staging inventory.
 
 Problem
 =======
