@@ -140,6 +140,16 @@ prerequisite for 051.
       next deploy. It stays open for the second half -- the year-long value --
       which its file gates on a failed certificate renewal being visible to
       somebody, since that cron job is unwatched.
+   071: The gate 060 holds itself on, and the reason it is directly below it:
+      the certbot renewal is a root cron job whose failures go to a mailbox
+      nothing on the host delivers to and nobody reads, so a renewal that
+      fails is invisible until the certificate expires. Behind 060 because it
+      exists to let 060's second half land, and ahead of 066 because it is the
+      only item in this group that makes a failure *visible* rather than
+      changing what the server serves. **Fixed**: the verification play reads
+      the certificate for each of the three names and fails when it has less
+      than a fortnight left. It is a check somebody runs, not a watch that
+      runs itself, and its file says which of the two 060 needed.
    066: The other half of 065, and the smallest thing in this group: the
       ``mail_admins`` handler is kept although nothing on the host can deliver
       what it sends, so an operator is never told about a 500 -- only able to
