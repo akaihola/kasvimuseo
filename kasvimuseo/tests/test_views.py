@@ -521,15 +521,16 @@ def test_labels_api_refuses_anyone_who_is_not_staff(client, method):
 
 @pytest.mark.django_db
 def test_the_label_editor_page_shows_a_login_form_to_anyone_else(staff_client):
-    """The page is gated the admin's way, which in Django 1.5 is a 200.
+    """The page is gated the admin's way, which since Django 1.7 is a redirect.
 
-    ``staff_member_required`` renders the admin login form at the requested
-    URL rather than redirecting -- the register notes that under "Observations,
-    not actionable" -- so the assertion is on what came back, not on a status.
+    ``staff_member_required`` used to render the admin login form under the
+    requested URL; 1.7 redirects to the admin login instead (upgrade plan
+    Stage 5). Following the redirect must end in the login form, not in the
+    editor.
     """
     create_planted(name_fi='valkonarsissi', external_id=1)
 
-    anonymous = Client().get(reverse('planting-label'))
+    anonymous = Client().get(reverse('planting-label'), follow=True)
 
     assert 'id="app"' not in anonymous.content.decode('utf-8')
     assert 'name="password"' in anonymous.content.decode('utf-8')
