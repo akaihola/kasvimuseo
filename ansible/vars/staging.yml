@@ -1,0 +1,56 @@
+# Staging overrides for the issue 070 rehearsal. Load them on a staging run:
+#
+#     ansible-playbook -i ansible/hosts.staging \
+#       -e @ansible/vars/staging.yml ansible/install.yaml
+#
+# These are passed as extra-vars, which win over the play's vars_files. That is
+# how they point the web layer at the throwaway host without editing
+# ansible/vars/main.yml, so production's values are untouched and there is no
+# precedence trap: main.yml stays production's, this file is staging's, and only
+# a run that names it with -e picks it up.
+#
+# The three keys below are exactly the web-layer values that vars/main.yml ties
+# to kasvit.ambitone.com -- the ALLOWED_HOSTS the settings insist on, the nginx
+# server blocks, and the certbot certificate. Everything else a staging run
+# needs (PostgreSQL, the app_user, the Python 2.7 paths, uWSGI) is identical to
+# production and comes from vars/main.yml unchanged.
+
+# The one public DNS name you control and have already pointed at the throwaway
+# host. certbot issues a trusted certificate for it and its two subdomains, and
+# the verify play checks HTTPS against it. Replace it, and match it in
+# ansible/hosts.staging.
+staging_domain: staging.example.invalid
+
+kasvimuseo_allowed_hosts:
+  - "{{ staging_domain }}"
+  - "static.{{ staging_domain }}"
+  - "media.{{ staging_domain }}"
+
+nginx_http_template:
+  default:
+    template_file: nginx-site.conf.j2
+    conf_file_name: default.conf
+    conf_file_location: /etc/nginx/conf.d/
+    servers:
+      - domain: "{{ staging_domain }}"
+        app_path: "/"
+        static_paths:
+          /favicon.ico: /www/ylaneenkasvit/static/img/favicon.ico
+      - domain: "static.{{ staging_domain }}"
+        static_paths:
+          /: /www/ylaneenkasvit/static/
+      - domain: "media.{{ staging_domain }}"
+        static_paths:
+          /: /www/ylaneenkasvit/media/
+
+certbot_certs:
+  - domains:
+      - "{{ staging_domain }}"
+      - "static.{{ staging_domain }}"
+      - "media.{{ staging_domain }}"
+
+# Seed the throwaway database from the committed production dump (issue 070), so
+# the rehearsal runs against real data rather than an empty schema. The path is
+# relative to the playbook in ansible/. install.yaml only restores when this is
+# defined, so it is set here and absent from production's vars.
+database_backup_to_restore: ../.dev/backups/production.sql

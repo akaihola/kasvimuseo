@@ -1,0 +1,19 @@
+# Throwaway staging host for the issue 070 rehearsal of the security window.
+#
+# Run against it explicitly, never through the production runbook:
+#
+#     export ANSIBLE_VAULT_PASS=***********
+#     ansible-playbook -i ansible/hosts.staging \
+#       -e @ansible/vars/staging.yml ansible/install.yaml
+#
+# This is a SEPARATE inventory on purpose. ansible/hosts stays single-host so
+# the production playbooks' `hosts: all` can never reach a staging box by
+# accident. Nothing here is loaded unless you pass -i ansible/hosts.staging.
+#
+# Replace the placeholder below with the public DNS name you pointed at the
+# throwaway Hetzner CX22 (see README.rst, "Rehearsing the window on a throwaway
+# host"). Use the SAME name for the vaulted secrets file,
+# ansible/host_vars/<that-name>, and for staging_domain in
+# ansible/vars/staging.yml.
+[staging]
+staging.example.invalid
