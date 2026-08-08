@@ -722,3 +722,88 @@ without writing, the deletion reports the files it would remove without
 removing them, and the read-only checks run for real::
 
     ansible-playbook ansible/secure-production.yaml --check
+
+
+Rehearsing the window on a throwaway host
+=========================================
+
+Issue 070 asks for proof, before the real window opens, that
+``ansible/secure-production.yaml`` does what its files claim -- that 049's
+database and web tasks land together, that 051 will not delete
+``local_settings.py`` before ``ALLOWED_HOSTS`` is deployed, that 050's password
+step is idempotent, and that the verify play's post-conditions hold. A rehearsal
+does not *close* 049, 050, 051 or 060 -- each of those lives on the real
+production process and only the real run touches it -- but it turns every "must"
+in the runbook above from a claim into a checked fact.
+
+The repository half of that rehearsal is in place: a separate staging inventory
+(``ansible/hosts.staging``) and a staging override file
+(``ansible/vars/staging.yml``). Neither is loaded unless you name it, so nothing
+here changes a production run. What is left is the two acts a checkout cannot do
+for you -- standing up a host and pointing DNS at it.
+
+The target
+----------
+
+The maintainer's call (2026-08-08) is a **Hetzner Cloud CX22**: 2 vCPU and 4 GB
+for 5.49 EUR a month, about 0.0088 EUR an hour, billed by the hour, capped at
+the monthly price, and destroyed when you are done. It carries the PostgreSQL,
+uWSGI and nginx stack with room to spare, where a 512 MB droplet would not.
+Charging stops only on delete, not on power-off.
+
+One faithfulness limit binds any provider: ``install.yaml`` installs
+``python-minimal`` and runs ``/usr/bin/python2.7``, which exist as stock only on
+Debian 10 / Ubuntu 18.04 or earlier, and no provider still ships those as an
+image (the end-of-life runtime issue 036 tracks). So the host boots from a
+**custom Debian 10 image you upload** to Hetzner, or you accept a delta and
+install Python 2.7 another way. Cloudflare and Fly.io are ruled out: neither
+gives an SSH-reachable systemd host that keeps what ``apt`` installs.
+
+Before running it
+-----------------
+
+* **Stand up the CX22** from a Debian 10 image, and put its public DNS name in
+  ``ansible/hosts.staging`` in place of ``staging.example.invalid``.
+* **Point a throwaway DNS name you control** at the host -- the name itself and
+  its ``static.`` and ``media.`` subdomains -- and set it as ``staging_domain``
+  in ``ansible/vars/staging.yml``. certbot needs it to issue a trusted
+  certificate, and the verify play checks HTTPS against it. A variable cannot
+  supply a real domain; this is the one precondition inventory does not hold.
+* **Vault throwaway secrets for the host**, exactly as production does but with
+  values that are not production's::
+
+      ansible-vault edit ansible/host_vars/<the-staging-name>
+
+  holding ``kasvimuseo_secret_key``, ``kasvimuseo_db_password`` and
+  ``kasvimuseo_admin_passwords`` (a mapping naming ``akaihola``). The playbook
+  stops before installing anything if any is missing.
+* **The staging host needs the same Bitbucket read access production has**;
+  ``install.yaml`` installs the app from
+  ``git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git``.
+
+Running it
+----------
+
+The one command, against staging rather than production::
+
+    export ANSIBLE_VAULT_PASS=***********
+    ansible-playbook -i ansible/hosts.staging \
+      -e @ansible/vars/staging.yml \
+      ansible/secure-production.yaml
+
+``-e @ansible/vars/staging.yml`` wins over the playbook's ``vars_files``, so it
+points ``ALLOWED_HOSTS``, the nginx server blocks and the certbot certificate at
+``staging_domain`` while every other value comes from ``vars/main.yml``
+unchanged. The database is seeded from ``.dev/backups/production.sql`` because
+``database_backup_to_restore`` is set in the staging file. When you are done,
+**delete the server** -- that, not power-off, is what stops the charge.
+
+Without staging DNS
+-------------------
+
+If wiring a public DNS name is not wanted, run the reduced rehearsal: the same
+command with ``--skip-tags web`` against ``ansible/install.yaml``, and skip the
+verify play's two HTTPS assertions. That still proves every ordering above --
+049's tasks landing together, 051's gate, 050's idempotence -- except the one
+thing the web layer carries, issue 060's ``Strict-Transport-Security`` header.
+That is most of what makes 049's timing hard to take.
