@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-from .forms import PhotoForm, SpeciesForm
+from .forms import ObservationForm, PhotoForm, SpeciesForm
 from kasvimuseo.models import (
     Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
 from kasvimuseo.views import PlantedSpecies
@@ -20,9 +20,20 @@ ADMIN_CSS_PATH = '%scss/kasvimuseo.admin.css' % settings.STATIC_URL
 CSS = {'all': (ADMIN_CSS_PATH,)}
 
 
-def edit(instance):
-    return _('Edit')
-edit.short_description = _(u'Edit')
+class EditColumnAdmin(admin.ModelAdmin):
+    """A ``ModelAdmin`` whose changelists start with an Edit link column.
+
+    ``edit`` is a method named by the string ``'edit'`` in ``list_display``,
+    not a module-level callable, because Django writes the entry itself into
+    the cell's class: the string renders ``field-edit``, a callable would
+    render ``field-<function edit at 0x...>`` (upgrade plan Stage 5).
+    ``kasvimuseo.admin.css`` targets ``field-edit`` and ``column-edit`` to
+    hide the column in print.
+    """
+
+    def edit(self, instance):
+        return _('Edit')
+    edit.short_description = _(u'Edit')
 
 
 class CareInline(admin.TabularInline):
@@ -38,6 +49,7 @@ class CareInline(admin.TabularInline):
 
 class ObservationInline(admin.StackedInline):
     model = Observation
+    form = ObservationForm
     extra = 1
 
 
@@ -82,12 +94,12 @@ def planted_species_report(modeladmin, request, queryset):
 planted_species_report.short_description = _(u'Create Species Sheets')
 
 
-class SpeciesAdmin(admin.ModelAdmin):
+class SpeciesAdmin(EditColumnAdmin):
     inlines = [ObservationInline]
     form = SpeciesForm
     save_on_top = True
     list_display = (
-        edit,
+        'edit',
         'external_id',
         'name_fi',
         'genus',
@@ -153,11 +165,11 @@ class SpeciesAdmin(admin.ModelAdmin):
 admin.site.register(Species, SpeciesAdmin)
 
 
-class LocationAdmin(admin.ModelAdmin):
+class LocationAdmin(EditColumnAdmin):
     inlines = LocationContactInline, ObservationInline,
     save_on_top = True
     exclude = 'external_id', 'contacts',
-    list_display = (edit,
+    list_display = ('edit',
                     'name',
                     'alias',
                     'village',
@@ -176,10 +188,10 @@ class LocationAdmin(admin.ModelAdmin):
 admin.site.register(Location, LocationAdmin)
 
 
-class PlantingAdmin(admin.ModelAdmin):
+class PlantingAdmin(EditColumnAdmin):
     inlines = [CareInline]
     save_on_top = True
-    list_display = (edit,
+    list_display = ('edit',
                     'observation_external_id',
                     'observation',
                     'bed',
@@ -205,9 +217,10 @@ class PlantingAdmin(admin.ModelAdmin):
 admin.site.register(Planting, PlantingAdmin)
 
 
-class ObservationAdmin(admin.ModelAdmin):
+class ObservationAdmin(EditColumnAdmin):
+    form = ObservationForm
     save_on_top = True
-    list_display = (edit,
+    list_display = ('edit',
                     'external_id',
                     'name_fi',
                     'genus',
@@ -262,9 +275,9 @@ class ObservationAdmin(admin.ModelAdmin):
 admin.site.register(Observation, ObservationAdmin)
 
 
-class CareAdmin(admin.ModelAdmin):
+class CareAdmin(EditColumnAdmin):
     save_on_top = True
-    list_display = (edit,
+    list_display = ('edit',
                     'date',
                     'planting',
                     'description',
@@ -285,9 +298,9 @@ class CareAdmin(admin.ModelAdmin):
 admin.site.register(Care, CareAdmin)
 
 
-class ContactAdmin(admin.ModelAdmin):
+class ContactAdmin(EditColumnAdmin):
     save_on_top = True
-    list_display = (edit,
+    list_display = ('edit',
                     'last_name',
                     'first_name',
                     'phone',
@@ -323,8 +336,8 @@ class ContactAdmin(admin.ModelAdmin):
 admin.site.register(Contact, ContactAdmin)
 
 
-class PlotAdmin(admin.ModelAdmin):
-    list_display = edit, 'name',
+class PlotAdmin(EditColumnAdmin):
+    list_display = 'edit', 'name',
     inlines = BedInline,
     save_on_top = True
 
@@ -333,8 +346,8 @@ class PlotAdmin(admin.ModelAdmin):
 admin.site.register(Plot, PlotAdmin)
 
 
-class BedAdmin(admin.ModelAdmin):
-    list_display = edit, 'plot', 'name', 'description', 'public', 'map'
+class BedAdmin(EditColumnAdmin):
+    list_display = 'edit', 'plot', 'name', 'description', 'public', 'map'
     save_on_top = True
 
     def map(self, obj):

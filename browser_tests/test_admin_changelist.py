@@ -25,7 +25,7 @@ YRTTI = '?type__exact=3'
 
 def species_names(page):
     """The ``name_fi`` column, in the order the changelist lists it."""
-    return page.eval_on_selector_all('td.fieldname_name_fi',
+    return page.eval_on_selector_all('td.field-name_fi',
                                      'cells => cells.map(c => c.textContent)')
 
 
