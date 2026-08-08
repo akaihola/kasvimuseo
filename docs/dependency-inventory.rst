@@ -128,6 +128,19 @@ question is what changed inside a band.
 
 django-photologue
 -----------------
+
+The pin is **3.0.2** since Stage 4 of the upgrade plan, up from 2.8.3 at Stage
+2 and 2.6.1 before that. Every band below reads "nothing declared" until 3.4,
+and that is false for all of them: photologue's ``setup.py`` reads its own
+``requirements.txt`` at build time, so the sdist carries no ``Requires-Dist``
+and this table records the absence. Read that file instead. 2.8.3 asks for
+``django-sortedm2m>=0.6.1,<0.8`` and ``django-model-utils>=2.0.3``; 3.0.2 asks
+for ``Django>=1.6``, ``django-sortedm2m>=0.8.1`` and
+``django-model-utils>=2.2``. A ceiling becoming a floor is why the sortedm2m
+pin has to move in the same change, and the thing Stage 4 exists for -- 3.0.x
+and 3.1.1 ship both ``south_migrations/`` and ``migrations/`` -- is in no
+metadata at all.
+
 * **2.3 – 2.8.3 (10 releases)**
     :Python: ``-``
     :Requires: nothing declared
@@ -218,6 +231,16 @@ a Django version, not by a classifier.
 
 django-sortedm2m
 ----------------
+
+The pin is **0.8.1** since Stage 4 of the upgrade plan, up from 0.7.0 at Stage
+2, and neither release is in this table: it opens at 0.9.0. Both are below it
+because photologue declares the bound, and photologue declares it in a file
+this inventory cannot see -- see the note above that section. What separates
+the two is not in any metadata either: 0.7.0 defines ``get_query_set`` and
+``get_prefetch_query_set``, which reach Django 1.6 only through the rename
+shim Django 1.8 deletes, and 0.8.1 defines the new names with the old ones as
+aliases.
+
 * **0.9.0 – 1.0.1 (9 releases)**
     :Python: ``clf:2.6,2.7,3.2,3.3``
     :Requires: nothing declared
