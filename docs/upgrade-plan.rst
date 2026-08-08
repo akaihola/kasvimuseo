@@ -159,8 +159,8 @@ Package                      Pinned    Notes
 ============================ ========= =========================================
 ``django``                   1.6.11    The last 1.6 patch release; 1.5.1 until
                                        Stage 1, 1.5.12 until Stage 3
-``django-photologue``        2.8.3     Owns database schema. The hard pacer.
-                                       2.6.1 until Stage 2
+``django-photologue``        3.0.2     Owns database schema. The hard pacer.
+                                       2.6.1 until Stage 2, 2.8.3 until Stage 4
 ``django-grappelli``         2.5.7     Admin skin. The other hard pacer. One
                                        series per Django release, so 2.4.5
                                        until Stage 3 moved the framework
@@ -193,7 +193,8 @@ was confirmed by reading the installed metadata and grepping the package, and
 the image builds and the suite passes without it. It came back with photologue
 2.8, which is Stage 2 below -- at **0.7.0**, not at the version that used to be
 here, and in ``requirements/production.txt`` rather than in an image
-definition.
+definition. Stage 4 raised it to **0.8.1**, which photologue 3.0.2 declares as
+a floor.
 
 ``django-indexer==0.3.0`` and ``django-paging==0.2.4`` were in this list when it
 was written, referenced by nothing; Stage 0 has since removed them (issue 020),
@@ -1063,8 +1064,11 @@ page a 500. What was actually run is in issue 036; what it found is here.
       collision with itself. On this database, where the longest title is 41
       characters and most of them end in a number already, that renumbers all
       137 photos, and a photo's title is what attaches it to a species. Faking
-      it leaves three ``title`` columns at ``varchar(100)`` where the model
-      says 50, which is a wider column than declared and harmless.
+      it leaves three ``title`` columns wider than the model declares. Stage 4
+      measured them: two are ``varchar(100)`` and
+      ``photologue_galleryupload.title`` is ``varchar(75)``, where this
+      sentence used to say all three were 100. A wider column than declared is
+      harmless, and Stage 4's ``0007`` narrows the third one to 50.
     * ``kasvimuseo`` has to be migrated to the end *before* photologue moves.
       ``kasvimuseo:0021`` is a data migration that reaches ``species.photo``
       through South's frozen ORM, and that frozen copy of ``photologue.Photo``
@@ -1265,7 +1269,14 @@ runner this project does not use.
 Stage 4 — Photologue 2.8.3 → 3.0.2, still on Django 1.6
 --------------------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: b8eb855
+
+**Done.** Both paragraphs below are right, and neither is what the stage cost.
+The pin inversion is the one thing they name, and it went in as written,
+because Stages 2 and 3 had already measured it. The five things underneath
+them are the stage: three of them change code, and the plan has none of them.
+What was run is in issue 036; what it found is here.
 
 The single most important ordering constraint in this document. Photologue 3.0.x
 and 3.1.1 are the only releases carrying both ``south_migrations/`` and
@@ -1289,10 +1300,94 @@ settles the shim this stage would otherwise inherit: 0.7.0's ``get_query_set``
 and ``get_prefetch_query_set`` only reach Django through the rename shim that
 1.8 deletes.
 
+Both halves of that paragraph held. ``django-sortedm2m==0.8.1`` is the pin now,
+and 0.8.1 defines ``get_queryset`` and ``get_prefetch_queryset`` with the two
+old names as aliases beside them, so nothing here waits on Django 1.8 any more.
+``django-model-utils==2.3.1`` did not move. The production image was built and
+``manage validate`` run inside it, which is the only place the
+``pkg_resources`` resolution happens: 0 errors, and no
+``ContextualVersionConflict``.
+
+What the list did not have
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **photologue 3.0 moves its own URLs into an application namespace, and the
+  include has to say so.** Its ``urls.py`` reverses
+  ``photologue:pl-gallery-archive`` for the redirect at its root,
+  ``Gallery.get_absolute_url`` and ``Photo.get_absolute_url`` reverse
+  ``photologue:pl-gallery`` and ``photologue:pl-photo``, and every template it
+  ships reverses a namespaced name. So ``ylaneenkasvit/urls.py`` includes them
+  with ``namespace='photologue'`` now, which is what photologue's own
+  installation page asks for. Without it the gallery index, the gallery detail
+  page and every photo page are a ``NoReverseMatch``. The project's own
+  ``pl-gallery-archive`` route stays where it is, ahead of the include and
+  outside the namespace: it is the ``allow_empty`` override from issue 008,
+  and ``ylaneenkasvit/dashboard.py`` reverses the bare name.
+* **The South history changes directory, and no setting comes back.** 3.0 moves
+  ``migrations/`` to ``south_migrations/`` and puts the Django migrations in
+  the old name. photologue's installation page tells a Django 1.6 project to
+  set ``SOUTH_MIGRATION_MODULES``, and this project does not have to: South
+  1.0.2 imports ``<app>.south_migrations`` first and falls back to
+  ``migrations`` only when that fails. Measured in the built image --
+  ``Migrations('photologue').migrations_module()`` answers
+  ``photologue.south_migrations``, and ``import photologue.migrations`` raises
+  ``ImproperlyConfigured``, which is what that package's ``__init__`` is for.
+  So the setting Stage 2 deleted stays deleted, and South never imports the
+  package that refuses to load.
+* **The schema delta is one migration, and it is the one that repairs a
+  column.** ``south_migrations/0001`` to ``0006`` are the same files 2.8.3
+  shipped under the old directory name, byte for byte, so the recorded history
+  matched by name and South soft-matched ``0002``. Only
+  ``0007_auto__chg_field_galleryupload_title`` is new. It makes
+  ``photologue_galleryupload.title`` nullable **and** narrows it from
+  ``varchar(75)`` to ``varchar(50)``, which is one of the three columns Stage
+  2's faked ``0002`` left wider than the model declares.
+* **photologue 3.0 reads and writes every image through Django's storage
+  API.** ``Photo.get_<size>_filename()`` returns a name the storage
+  understands rather than an absolute path, ``cache_path()`` is relative now,
+  and ``create_size()`` saves through ``storage.save`` instead of
+  ``Image.save``. Nothing in this project's own code opens those files, and
+  one test did: ``test_reports_build_an_uncached_photo_size`` passed the name
+  to ``PIL.Image.open`` and got ``IOError``. It opens through the storage
+  instead. That was the only failure in the whole suite.
+* **Tags are off, and the templates are Bootstrap.** 3.0 disables
+  django-tagging: ``PHOTOLOGUE_ENABLE_TAGS`` defaults to ``False``, so
+  photologue's own ``PhotoAdmin`` drops the ``tags`` column and both of its
+  admin forms exclude the field. This project never installed django-tagging,
+  and ``kasvimuseo.admin.PhotoAdmin`` derives its ``list_display`` from
+  photologue's, so the column left the photo changelist by itself. 3.0 also
+  promotes the Twitter-Bootstrap templates to the default set and moves the
+  old ones to ``photologue/contrib/old_style_templates/``. The gallery index
+  is the only photologue template this project renders, and it renders.
+
+One measurement for Stage 5
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The point of this stage is that the schema on the day South goes away is the
+schema photologue's Django ``0001_initial`` describes. That was measured
+rather than argued. The restored production database was migrated forward, a
+second database was built from the models alone with ``syncdb --all``, and
+``pg_dump -s`` of the ``photologue_*`` tables was compared. They agree
+everywhere except in three places, all of them older than this stage:
+
+#. ``photologue_gallery.title`` and ``photologue_photo.title`` are
+   ``varchar(100)`` where the model says 50. That is Stage 2's faked ``0002``,
+   and it is a wider column than declared, which nothing notices.
+#. The restored database carries column defaults that a Django-built one does
+   not, because South's ``alter_column`` leaves them. Django reads no default
+   from the database.
+#. Index and foreign-key constraint names differ, and the restored database
+   lacks the ``varchar_pattern_ops`` indexes on four ``name`` and ``slug``
+   columns.
+
+Stage 5 fakes photologue's Django migrations onto this schema, so it inherits
+all three. None of them is a delta anybody has to hand-write, which is what
+this stage was for.
+
 Stage 5 — Django 1.6.11 → 1.7.11: the South cut
 -----------------------------------------------
 
-:Status: Planned
+:Status: Next
 
 * Delete ``south`` from every requirements file and from ``INSTALLED_APPS``.
 * Delete ``SOUTH_MIGRATION_MODULES`` and ``SOUTH_TESTS_MIGRATE``
