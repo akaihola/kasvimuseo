@@ -57,7 +57,14 @@ Issue 071: A failed certificate renewal reaches nobody
     which needs the failure to stop being *silent*, and it is not enough to be
     called monitoring. A second, external watch stays worth having, and it is
     left as the follow-on below rather than pretended away
-:Resolution: (none yet) -- to be filled in with the commit on this branch
+:Resolution: cd29466 -- the two tasks at the end of the verification play in
+    ``ansible/secure-production.yaml``, ``certificate_expiry_margin_days`` in
+    ``ansible/vars/main.yml``, and the bullet in ``README.rst`` under "What to
+    check afterwards". That is everything this repository can do: the check is
+    real on the next run of ``ansible-playbook
+    ansible/secure-production.yaml -t verify`` and not before. The external
+    watch named in ``Decision`` is not this repository's to install and is not
+    in it
 
 Problem
 =======
