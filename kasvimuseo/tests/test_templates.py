@@ -330,6 +330,12 @@ def test_reports_build_an_uncached_photo_size(client, display_size,
 
     Asserting the cached file rather than the response, because a
     ``PhotoSize`` that is never applied still gives a 200 and a URL.
+
+    The cached file is opened through the storage, not through the file
+    system. photologue 3.0 writes and reads every derived size with Django's
+    storage API (upgrade plan Stage 4), so ``get_display_filename()`` returns a
+    name the storage understands rather than an absolute path, and
+    ``PIL.Image.open`` on it raises ``IOError``.
     """
     from PIL import Image
     from photologue.models import PhotoSizeCache
@@ -345,7 +351,8 @@ def test_reports_build_an_uncached_photo_size(client, display_size,
     page(client.get(species_url('planted-species', 1)))
 
     assert photo.size_exists(photosize)
-    assert Image.open(photo.get_display_filename()).size == (width, height)
+    cached = photo.image.storage.open(photo.get_display_filename())
+    assert Image.open(cached).size == (width, height)
 
 
 @pytest.mark.django_db
