@@ -58,7 +58,7 @@ Follow ``docs/upgrade-plan.rst``. Its structure, in brief:
 Stages 0-1   Dead weight and defensive settings; Django 1.5.12
              -- **both done**, see Progress
 Stages 2-4   photologue forward, still on Django 1.5/1.6
-             -- **2 done** (2.6.1 to 2.8.3), see Progress
+             -- **all done** (2.6.1 to 3.0.2), see Progress
 Stage 5      **South to Django migrations** -- the riskiest step
 Stages 6-9   Django 1.7 to 1.11 LTS, the staging point
 Stage 10     **Python 2.7 to 3.7** -- the irreversible one
@@ -77,9 +77,9 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-**Stages 0, 1, 2 and 3 are done. This issue stays ``Open``:** four stages of
-twenty, the application is still Python 2.7 and still unpatched everywhere but
-Django, and nothing about that is finished. It closes when the programme does.
+**Stages 0 to 4 are done. This issue stays ``Open``:** five stages of twenty,
+the application is still Python 2.7 and still unpatched everywhere but Django,
+and nothing about that is finished. It closes when the programme does.
 
 Stage 0 went in three changes. First, with 020, 021 and 033 ``Fixed``
 together, the dead weight it lists went -- ``django-indexer``,
@@ -129,7 +129,20 @@ re-sync (issue 034's predicted recurring cost, arriving), issue 059's parked
 tripwire fired because 1.6 defines ``CSRF_COOKIE_HTTPONLY``, and grappelli 2.5
 turned out to request a Finnish date-picker file it does not ship.
 
-All four stages were tested the way the caveat below asks for; see the next
+Stage 4 is **photologue 2.8.3 → 3.0.2**, still on Django 1.6, and it is the
+ordering constraint the whole programme turns on: 3.0.x and 3.1.1 are the only
+releases that ship both ``south_migrations/`` and ``migrations/``, so this is
+the release that has to land while South still runs. ``django-sortedm2m``
+moved to 0.8.1 in the same change, because photologue 3.0.2 declares that
+version as a floor where 2.8.3 declared it as a ceiling. Three things the plan
+did not name cost the stage what it cost: photologue's URLs went into an
+application namespace, so ``ylaneenkasvit/urls.py`` includes them with
+``namespace='photologue'``; the South history moved to
+``south_migrations/``, which South 1.0.2 finds by itself, so no
+``SOUTH_MIGRATION_MODULES`` came back; and photologue now reads and writes
+every image through Django's storage API.
+
+All five stages were tested the way the caveat below asks for; see the next
 section for exactly what was run and what it found.
 
 Three further obstacles are out of the way: 019 is ``Fixed``, so
@@ -429,3 +442,79 @@ URL pattern; and the ``to_field`` restriction was exercised on the running
 instance -- ``/admin/auth/user/?pop=1&t=password`` now raises
 ``DisallowedModelAdminToField``, which is the point of the fix, while every
 admin page this application uses still renders.
+
+Stage 4 has had the same test, and it is the first stage whose whole point is
+a schema rather than an API. What was run:
+
+* ``dev/kasvimuseo app test`` -- **528 passed**. This stage adds no test and
+  removes none, so the count is the one the branch started with; the ``455``
+  above is Stage 3's number, and the issues that landed between the two stages
+  are what grew it.
+* ``dev/kasvimuseo app browser-test`` -- **59 passed, 7 skipped**, in Chromium
+  and in WebKit, the skips being the tests WebKit cannot run (issue 061).
+* ``dev/kasvimuseo app manage validate`` -- 0 errors, in both images.
+* Both images rebuilt: the development one (``dev.txt``) and the production
+  one (``Dockerfile``, ``production.txt``, eleven runtime packages).
+  ``manage validate`` and ``manage migrate --list`` were both run **inside the
+  production image**, because that is the only place ``pkg_resources``
+  resolves every distribution's declared requirements. Nothing conflicts and
+  nothing is unapplied: photologue 3.0.2 asks for ``Django>=1.6``,
+  ``django-sortedm2m>=0.8.1`` and ``django-model-utils>=2.2``, and the lock
+  now says 1.6.11, 0.8.1 and 2.3.1.
+* ``.dev/backups/production.sql`` restored and ``dev/kasvimuseo db
+  upgrade-photologue`` run on it. The command is unchanged and still right:
+  South soft-matched ``0002`` under the new directory name, faked it, and ran
+  ``0003`` to ``0007``. Afterwards, in ``psql``: 137 photos, one gallery, its
+  four photos, every photo on site 1, the four photo sizes from
+  ``initial_data.json``, and ``photologue_galleryupload.title`` nullable.
+* ``dev/kasvimuseo db bootstrap`` on an empty database as well, which comes out
+  with the same seven photologue migrations and the same four photo sizes.
+* **The schema was compared rather than trusted**, which is this stage's
+  reason to exist. A second database was built from the models alone with
+  ``syncdb --all``, and ``pg_dump -s`` of the ``photologue_*`` tables of both
+  was diffed. The upgrade plan's Stage 4 section lists the three differences;
+  all three are older than this stage and none is a delta anybody has to write
+  by hand.
+* Pages rendered over HTTP against the restored database, logged in: the admin
+  index, the species and planting changelists, the photologue photo changelist
+  and a photo change form, the photologue gallery admin, the user and
+  observation changelists, the label editor, the public planted-species list,
+  the printable and compact species reports, and -- the four this stage's URL
+  namespace decides -- ``/photologue/`` (301), the gallery index, a gallery
+  detail page and a photo detail page. All 200 or 301. The production image
+  was then served under gunicorn against the same database: the login page,
+  the admin, the public list, the gallery index and a gallery detail page, all
+  200.
+* ``dev/kasvimuseo docs`` clean.
+
+Five things the reasoning had not predicted:
+
+#. **photologue 3.0 moved its URLs into an application namespace.** Its own
+   ``urls.py``, both ``get_absolute_url`` methods and every template it ships
+   reverse ``photologue:<name>``, so ``include('photologue.urls')`` without
+   ``namespace='photologue'`` is a ``NoReverseMatch`` on every photologue
+   page. The plan does not mention it, and photologue's own installation page
+   is where it is written down.
+#. **The South history moved to ``south_migrations/``, and no setting had to
+   come back.** photologue's installation page tells a Django 1.6 project to
+   set ``SOUTH_MIGRATION_MODULES``; South 1.0.2 does not need to be told,
+   because it imports ``<app>.south_migrations`` first and falls back to
+   ``migrations``. Measured in the built image, along with the other half:
+   ``import photologue.migrations`` raises ``ImproperlyConfigured``, which is
+   what that package's ``__init__`` is written to do on Django 1.6. So the
+   setting Stage 2 deleted stays deleted.
+#. **photologue 3.0 reads and writes every image through Django's storage
+   API.** ``get_<size>_filename()`` is a storage name now, not a path. That is
+   the one test in the suite this stage changed:
+   ``test_reports_build_an_uncached_photo_size`` opened the name with
+   ``PIL.Image.open`` and got ``IOError``; it opens through the storage now.
+#. **The schema delta is a single migration, and it repairs a column.** Only
+   ``0007_auto__chg_field_galleryupload_title`` is new, and besides making the
+   column nullable it narrows it from ``varchar(75)`` to ``varchar(50)`` --
+   one of the three columns Stage 2's faked ``0002`` left wide. Stage 2's own
+   text said all three were ``varchar(100)``; it is corrected in the plan.
+#. **django-tagging is disabled from 3.0**, so photologue's ``PhotoAdmin``
+   drops the ``tags`` column. ``kasvimuseo.admin.PhotoAdmin`` derives its
+   ``list_display`` from photologue's, so the column left the photo changelist
+   without anybody editing it. This project never installed django-tagging, so
+   the field was already plain text.

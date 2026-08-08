@@ -22,7 +22,14 @@ urlpatterns = patterns(
     url(r'^photologue/gallery/$',
         GalleryArchiveIndexView.as_view(allow_empty=True),
         name='pl-gallery-archive'),
-    (r'^photologue/', include('photologue.urls')),
+    # ``namespace='photologue'`` is not a preference: photologue 3.0 moved its
+    # own URLs into that namespace (upgrade plan Stage 4). Its ``urls.py``,
+    # ``Gallery.get_absolute_url``, ``Photo.get_absolute_url`` and every
+    # template it ships reverse ``photologue:<name>``, so without the namespace
+    # every one of those raises ``NoReverseMatch``. The route above keeps the
+    # bare ``pl-gallery-archive`` name as well, because
+    # ``ylaneenkasvit/dashboard.py`` reverses it.
+    (r'^photologue/', include('photologue.urls', namespace='photologue')),
     (r'^kasvimuseo/', include('kasvimuseo.urls')),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login',
         dict(template_name='jqm/login.html'),
