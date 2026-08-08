@@ -672,7 +672,11 @@ The last play asserts, on the server:
   that is not Django's debug page;
 * every account named in the vault has the vaulted password. A Django hash
   verifies exactly one plaintext, so that is also the statement that the
-  password published in this repository no longer signs anybody in.
+  password published in this repository no longer signs anybody in;
+* every name nginx serves has a certificate with more than a fortnight left.
+  The renewal cron mails its failures to a mailbox nobody reads, so this
+  assertion is the only thing that reports one. Issue 071 says why it lives
+  here, and issue 060 is what waits for it.
 
 It is a separate play so it can be run on its own, later, without changing
 anything::
