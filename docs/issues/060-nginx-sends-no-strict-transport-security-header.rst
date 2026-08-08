@@ -27,8 +27,11 @@ Issue 060: nginx sends no ``Strict-Transport-Security`` header
     connection to the production host that this environment does not have.
     Nothing here observes the running server, so what the deploy does is
     inferred from the rendering, not seen
-:Depends on: (none) -- but see ``Decision``: it is a change to the running
-    server's configuration, so it lands on a deploy, like 049 and 051
+:Depends on: 071 -- a failed certificate renewal reaching a person, which is
+    the fourth condition on stage 2 below and the only one of the four that is
+    work rather than a check. It is ``Fixed``: the verification play asserts
+    the expiry. Stage 1 depended on nothing, and both stages are changes to the
+    running server's configuration, so each lands on a deploy, like 049 and 051
 :Blocks: (none)
 :Related: 059 -- the application half, fixed. That change stops the first
     ``http://`` request leaking a session cookie; this one would stop the
@@ -36,7 +39,7 @@ Issue 060: nginx sends no ``Strict-Transport-Security`` header
     049 -- the same repository-half / server-half split, and a playbook run this
     could ride
     051 -- likewise: a configuration change that only takes effect on a deploy
-:Decision: **Send the header, staged: ``max-age=300`` now and ``max-age=31536000`` later, with neither ``includeSubDomains`` nor ``preload`` at either stage.** Ruled here, on the evidence, and not put to the maintainer -- which is the register's convention (003, 042, 049 all record a ruling taken from what could be read rather than waited for), and which is defensible in this issue only because of the shape of the ruling itself: the part that lands now is reversible in five minutes by construction, and every part that is not reversible is declined or deferred to a decision somebody still has to take on purpose. What made this a decision rather than a line of configuration is that ``max-age`` cannot be withdrawn faster than it expires, and the deployment reading in "The deployment, read" below is what settles the duration: three sites, one certificate covering all three names, renewed by a root cron job at 03:30 that stops nginx, renews and starts it again, whose failure output goes to cron's mail on the host -- which nothing in this repository configures, monitors or reads. An expired certificate is a warning a visitor clicks through today and a page no browser will open under a year-long promise, so a year cannot be the first value; but nothing in that argument survives five minutes, which is what the ``300`` stage costs to abandon. Hence stage 1, which the fix lands, and stage 2, which is a one-line commit against this issue once the conditions in "What has to be true before stage 2" are met -- among them that a renewal failure becomes visible to a person. Monitoring the renewal is a real defect and was considered for its own issue number; it is deliberately not filed as one, because at stage 1 the exposure it would cover is five minutes and because it is exactly the gate this issue is already held open by. Whoever files it can point at this field. ``includeSubDomains`` is declined rather than forgotten: each of the three names is a leaf, they are siblings rather than parents of one another, so none of them is covered by another's header in any case, and the directive would only commit names that do not exist yet and might not be this project's. ``preload`` is declined outright, and would be even at stage 2: it is irreversible in practice, it requires ``includeSubDomains``, and it is a promise about the whole of ``ambitone.com``, which this project does not own alone. The alternative rulings, both rejected: going straight to a year, which buys a header nobody would dare deploy on an unmonitored renewal, and doing nothing until renewal monitoring exists, which leaves the cleartext window open for the sake of a risk that five minutes bounds. ``Status`` is ``Accepted`` and not ``Fixed`` for a reason that is the same shape as 056's: half of this has landed and pins itself, and the other half -- the year -- is owed and has nothing here to track it if this issue closes
+:Decision: **Send the header, staged: ``max-age=300`` now and ``max-age=31536000`` later, with neither ``includeSubDomains`` nor ``preload`` at either stage.** Ruled here, on the evidence, and not put to the maintainer -- which is the register's convention (003, 042, 049 all record a ruling taken from what could be read rather than waited for), and which is defensible in this issue only because of the shape of the ruling itself: the part that lands now is reversible in five minutes by construction, and every part that is not reversible is declined or deferred to a decision somebody still has to take on purpose. What made this a decision rather than a line of configuration is that ``max-age`` cannot be withdrawn faster than it expires, and the deployment reading in "The deployment, read" below is what settles the duration: three sites, one certificate covering all three names, renewed by a root cron job at 03:30 that stops nginx, renews and starts it again, whose failure output goes to cron's mail on the host -- which nothing in this repository configures, monitors or reads. An expired certificate is a warning a visitor clicks through today and a page no browser will open under a year-long promise, so a year cannot be the first value; but nothing in that argument survives five minutes, which is what the ``300`` stage costs to abandon. Hence stage 1, which the fix lands, and stage 2, which is a one-line commit against this issue once the conditions in "What has to be true before stage 2" are met -- among them that a renewal failure becomes visible to a person. Monitoring the renewal is a real defect and was considered for its own issue number; it is deliberately not filed as one, because at stage 1 the exposure it would cover is five minutes and because it is exactly the gate this issue is already held open by. Whoever files it can point at this field. Somebody did: it is issue 071, it took the third of the three routes named in condition 4 below, and it is fixed, so what stage 2 waits on now is a deploy of stage 1 and the three checks against it. ``includeSubDomains`` is declined rather than forgotten: each of the three names is a leaf, they are siblings rather than parents of one another, so none of them is covered by another's header in any case, and the directive would only commit names that do not exist yet and might not be this project's. ``preload`` is declined outright, and would be even at stage 2: it is irreversible in practice, it requires ``includeSubDomains``, and it is a promise about the whole of ``ambitone.com``, which this project does not own alone. The alternative rulings, both rejected: going straight to a year, which buys a header nobody would dare deploy on an unmonitored renewal, and doing nothing until renewal monitoring exists, which leaves the cleartext window open for the sake of a risk that five minutes bounds. ``Status`` is ``Accepted`` and not ``Fixed`` for a reason that is the same shape as 056's: half of this has landed and pins itself, and the other half -- the year -- is owed and has nothing here to track it if this issue closes
 :Resolution: (none yet) -- stage 1 is committed, in 0baa1a6: the ``add_header`` in ``ansible/templates/nginx-site.conf.j2``, the argument in that template's Jinja comment, and the deploy step and its consequence in ``README.rst`` under "The security maintenance window". That is everything this repository can do to *stage 1*, and the header is real on the next ``install.yaml`` run and not before. This issue closes with stage 2 -- ``max-age=31536000`` in the same directive -- which is one line, is deliberately not in this commit, and has conditions written below
 
 Problem
@@ -148,15 +151,19 @@ than deciding it again.
    fetch -- the vendored jQuery Mobile templates fetch jQuery from a CDN --
    which is a third-party ``https://`` URL and is unaffected by this header,
    but it is the class of thing to look for.
-#. **A failed renewal reaches a person.** Anything counts: mail from cron that
-   is actually delivered and read, an external certificate-expiry check, or a
-   line in the verification play that asserts ``notAfter`` is more than a
-   fortnight away. This is the one condition that is not a check but a piece of
-   work, and it is the reason this issue is held open rather than closed with a
-   short value shipped and forgotten.
+#. **A failed renewal reaches a person.** *Done, by issue 071.* Three routes
+   were open: mail from cron that is actually delivered and read, an external
+   certificate-expiry check, or a line in the verification play that asserts
+   ``notAfter`` is more than a fortnight away. 071 took the third and says why
+   it rejected the other two. ``ansible-playbook
+   ansible/secure-production.yaml -t verify`` now fails, naming the date, when
+   the certificate for any of the three names has less than a fortnight to
+   run. This was the one condition that was work rather than a check, and it
+   was the reason this issue was held open rather than closed with a short
+   value shipped and forgotten.
 
-None of these needs the maintainer's ruling. They need a deploy, which is
-somebody's afternoon.
+Condition 4 is met. The three that remain need no ruling from the maintainer.
+They need a deploy, which is somebody's afternoon.
 
 
 ``includeSubDomains`` and ``preload``

@@ -22,6 +22,8 @@
 #      (050) and deleting the untracked local_settings.py that forces
 #      DEBUG = True (051), in that file's order and behind a gate.
 #   3. Verification, read-only, so it can also be run on its own afterwards.
+#      It also reads the TLS certificates (071), which belong to no act above:
+#      the check is here because this is the play somebody runs again later.
 #
 # Tags. The existing vocabulary (code, static, python, database, restore,
 # backup, media, web, nginx, certbot, uwsgi) belongs to install.yaml and still
@@ -410,3 +412,58 @@
           {{ verify_passwords.stdout | default('') }}
           {{ verify_passwords.stderr | default('') }}
         quiet: true
+
+    # ----------------------------------------------------------- 071, 060 ---
+    - name: Read how much life each name's certificate has left
+      # Issue 071. certbot renews from a root cron job at 03:30 and mails its
+      # output to a mailbox nothing on the host reads, so a renewal that fails
+      # stays quiet until the certificate expires. These two tasks are what
+      # make it loud, and issue 060 holds its second stage open until they
+      # exist: under a year-long Strict-Transport-Security an expired
+      # certificate is a page no returning browser opens.
+      #
+      # openssl, and not community.crypto's x509_certificate_info: the binary
+      # is on the host because certbot put it there, while that module needs
+      # the `cryptography` library under the interpreter Ansible uses on the
+      # host, and nothing in this repository installs it. `-checkend` answers
+      # the question directly, so no date is parsed anywhere.
+      #
+      # One reading per server, over the paths nginx-site.conf.j2 itself names.
+      # certbot writes one lineage, named after the first domain in
+      # certbot_certs; the template names a directory per domain. So a name
+      # whose file is missing, or is a different certificate that nobody
+      # renews, fails here rather than in a visitor's browser.
+      become: true
+      shell: |
+        set -euo pipefail
+        cert=/etc/letsencrypt/live/{{ item.domain }}/fullchain.pem
+        openssl x509 -noout -enddate -in "$cert" | cut -d= -f2
+        openssl x509 -noout -checkend {{ certificate_expiry_margin_days | int * 86400 }} \
+          -in "$cert" >/dev/null && echo fresh || echo expiring
+      args:
+        executable: /bin/bash
+      loop: "{{ nginx_http_template.default.servers }}"
+      loop_control:
+        label: "{{ item.domain }}"
+      register: certificate_expiry
+      changed_when: false
+      check_mode: false
+
+    - name: Every name's certificate outlives the renewal window (071, 060)
+      assert:
+        that:
+          - item.stdout_lines[1] == 'fresh'
+        msg: >-
+          The certificate nginx serves for {{ item.item.domain }} expires
+          {{ item.stdout_lines[0] }}, which is less than
+          {{ certificate_expiry_margin_days }} days away. certbot starts
+          renewing at 30 days and tries every night, so the renewal has been
+          failing for about a fortnight. Read /var/log/letsencrypt/ on the
+          host, then run `certbot renew --dry-run` there. Fix it before
+          anybody raises Strict-Transport-Security to a year (issue 060):
+          browsers that have seen that header refuse an expired certificate
+          with no way to click through.
+        quiet: true
+      loop: "{{ certificate_expiry.results }}"
+      loop_control:
+        label: "{{ item.item.domain }}"

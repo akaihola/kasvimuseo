@@ -81,6 +81,13 @@ nginx_http_template:
         static_paths:
           /: /www/ylaneenkasvit/media/
 
+# How much life a certificate must have left before the verification play in
+# ansible/secure-production.yaml calls it fine (issues 060 and 071). certbot
+# starts renewing at 30 days, and the cron job below tries once a day, so a
+# fortnight is about fifteen failed attempts: late enough that one bad night is
+# not an alarm, early enough that a person still has two weeks to act.
+certificate_expiry_margin_days: 14
+
 certbot_admin_email: antti19@ambitone.com
 certbot_create_if_missing: true
 certbot_create_standalone_stop_services:
