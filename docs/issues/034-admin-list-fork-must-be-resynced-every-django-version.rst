@@ -22,8 +22,8 @@ Issue 034: The admin_list fork has to be re-synced at every Django version
     consequence is that ``kasvimuseo_admin_list.py``, its ``{% load %}`` and the
     ``fieldname_`` class names are deleted in Stage 5 and the five plan items
     that assumed the file would still exist at Stages 6, 7, 10 and 17 are gone.
-:Resolution: Ruled and recorded in 508fd78; no code change. The deletion
-    itself is Stage 5 work, listed there in ``docs/upgrade-plan.rst``.
+:Resolution: Ruled and recorded in 508fd78; the deletion landed at Stage 5
+    in 67e0a28, in the four steps "What Stage 5 does, concretely" lists below.
 
 Problem
 =======
