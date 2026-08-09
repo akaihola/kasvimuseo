@@ -10,9 +10,10 @@
 # the production playbooks' `hosts: all` can never reach a staging box by
 # accident. Nothing here is loaded unless you pass -i ansible/hosts.staging.
 #
-# staging-rehearsal is the reused Hetzner CX11 "lead-1", wiped and booted from
-# a Debian 10 cloud image for the 2026-08-09 reduced rehearsal (README.rst,
-# "Rehearsing the window on a throwaway host"). Its vaulted secrets file is
+# staging-rehearsal is a reused Hetzner CX11 (renamed kasvimuseo-staging-
+# rehearsal in Hetzner Cloud), wiped and booted from a Debian 10 cloud image
+# for the 2026-08-09 reduced rehearsal (README.rst, "Rehearsing the window on
+# a throwaway host"). kasvimuseo-staging.vempai.men points at it. Its vaulted secrets file is
 # ansible/host_vars/staging-rehearsal, untracked on purpose: its vault
 # password is the operator's throwaway one, not production's. The Python 2.7
 # interpreter is the one production's era of these playbooks assumes; the
