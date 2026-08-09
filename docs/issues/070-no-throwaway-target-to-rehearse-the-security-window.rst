@@ -2,7 +2,7 @@
 Issue 070: No throwaway target to rehearse the security maintenance window
 =============================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Low
 :Area: deployment / infrastructure
 :Reported: 2026-08-06
@@ -50,22 +50,32 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     extra-vars, so a staging run points them at ``staging_domain`` while every
     other value comes from ``vars/main.yml`` unchanged and no production file
     moves. README.rst, "Rehearsing the window on a throwaway host", is the
-    runbook, keyed to the Hetzner CX22. What remains is the follow-on act a
-    checkout cannot do: stand up the CX22 from a custom Debian 10 image, point a
-    throwaway DNS name at it, vault throwaway secrets, and run
-    ``ansible/secure-production.yaml`` against the staging inventory. On
-    2026-08-09 an execution attempt did the part a checkout can. The staging
-    invocation parses: ``--syntax-check`` and ``--list-tasks`` pass with the
-    staging inventory and extra-vars on ansible-core 2.21.2. The attempt fixed
-    three faults that would have stopped the run. The runbook now bootstraps
-    the fresh host, and plants the ``local_settings.py`` a fresh install does
-    not have before a second run. The reduced variant now skips
-    ``nginx,certbot,https`` and sets ``nginx_start=false``, instead of
-    ``--skip-tags web``, which also skipped the uWSGI role and left 051's gate
-    no ``uwsgi.ini`` to read. The verify play now also asserts the
-    Strict-Transport-Security header (060). The question to the maintainer
-    failed to send twice, so this attempt is recorded on the evidence, the way
-    the ``:Decision:`` was; the cloud acts stay with the maintainer.
+    runbook, keyed to the Hetzner CX22. What remained was the follow-on act a
+    checkout cannot do: stand up a host, point a throwaway DNS name at it,
+    vault throwaway secrets, and run ``ansible/secure-production.yaml``
+    against the staging inventory. On 2026-08-09 a first execution attempt
+    fixed three faults in the prose before any server existed (commit
+    179bc5b). The runbook now bootstraps the fresh host, and plants the
+    ``local_settings.py`` a fresh install does not have before a second run.
+    The reduced variant now skips ``nginx,certbot,https`` and sets
+    ``nginx_start=false``, instead of ``--skip-tags web``, which also skipped
+    the uWSGI role and left 051's gate no ``uwsgi.ini`` to read. The verify
+    play now also asserts the Strict-Transport-Security header (060). The
+    maintainer then chose the reduced rehearsal now and the full one later,
+    and it ran the same day: commit 7c8fdbd, on the idle Hetzner CX11
+    ``lead-1``, wiped and booted from the archived Debian 10 cloud image in
+    rescue mode. Two clean runs, with production's ``local_settings.py``
+    shape planted between them, proved every claim under "What a rehearsal
+    proves" except the two the web layer carries. The live run caught four
+    more faults, each one live in the real window too. The install URL named
+    the Bitbucket copy, which no longer receives pushes; a window run would
+    have deployed stale code. ``bootstrap.yaml`` pinned Bitbucket's pre-2023
+    ssh host key, which ssh refuses today. Nothing installed ``git``, which
+    pip needs to clone the application. And the restore ran as ``postgres``,
+    so a dump with no ``OWNER TO`` statements left the application locked
+    out of its own tables. Commit 7c8fdbd fixes all four. The web-layer half
+    -- certbot, nginx and the 060 header -- waits for the follow-up full
+    rehearsal on a real DNS name, which the maintainer chose to do later.
 
 Problem
 =======
