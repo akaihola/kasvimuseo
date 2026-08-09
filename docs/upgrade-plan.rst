@@ -1496,7 +1496,16 @@ What the list did not have
   measurement predicted. This ``migrate`` is the one command production gets
   when this stage deploys; ``README.rst`` records it where restoring dumps is
   described. ``dev/kasvimuseo db upgrade-photologue`` needs South and now
-  says to run from the Stage 4 checkout instead of failing partway.
+  prints the worktree recipe instead of failing partway. One warning belongs
+  beside this: 1.7 detects an initial migration to fake by table *existence*,
+  and never compares the tables' shape. On a database older than Stage 2,
+  ``photologue_photo`` exists with ``title_slug`` unrenamed, so a plain
+  ``migrate`` there adopts the wrong schema and says nothing. Give such a
+  database the South-era chain first -- ``README.rst`` holds the developer
+  recipe ("Development setup") and the one-window production cutover
+  ("Crossing the South cut", under Deployment). The toll is paid once: from
+  this baseline on, the database half of every later stage is one
+  ``migrate``, also when a deployment jumps several stages.
 * **Three Django 1.7 behaviour changes the suite had pinned at 1.5.** The
   admin gate redirects to ``admin:login`` instead of rendering the login form
   in place. ``get_app('messages')`` raises for an application without models.

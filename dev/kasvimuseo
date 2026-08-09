@@ -236,11 +236,25 @@ print(make_password(sys.argv[1]))' "$DEV_PASSWORD")
 # and why photologue's 0002 must be faked, never run -- are in the Stage 4
 # checkout this message names, above this same function.
 photologue_upgrade() {
-    die 'db upgrade-photologue needs South, which upgrade plan Stage 5 removed.
-Check out the commit that Stage 4 names in its :Resolution: field in
-docs/upgrade-plan.rst, build the image there (app build), and run this command
-there against this same cluster. Then return to this checkout and bring the
-database the rest of the way: dev/kasvimuseo app manage migrate'
+    die 'db upgrade-photologue needs South, and upgrade plan Stage 5 removed South.
+Give the database the South-era chain from a worktree of the last South
+commit -- the one Stage 4 names in its :Resolution: field in
+docs/upgrade-plan.rst. From this repository root:
+
+  git worktree add /tmp/stage4 <that commit>
+  ln -s "$PWD/.dev" /tmp/stage4/.dev    # the worktree must use THIS cluster
+  (cd /tmp/stage4 && KASVIMUSEO_IMAGE=kasvimuseo-dev-south dev/kasvimuseo app build)
+  (cd /tmp/stage4 && KASVIMUSEO_IMAGE=kasvimuseo-dev-south dev/kasvimuseo db upgrade-photologue)
+  rm /tmp/stage4/.dev && git worktree remove /tmp/stage4
+  dev/kasvimuseo app manage migrate     # Django adopts the schema; output says FAKED
+
+Set KASVIMUSEO_IMAGE as shown: a plain `app build` in the worktree would
+re-tag kasvimuseo-dev with the old dependencies. Do NOT skip to `migrate`:
+Django 1.7 fakes an initial migration when its tables merely exist, so on a
+pre-Stage-2 schema it records photologue as migrated with title_slug still
+unrenamed, and the application breaks later, not here. README.rst says why
+("Development setup") and what this means for production ("Crossing the
+South cut", under Deployment).'
 }
 
 # The printable and compact species views make Django open the image files to

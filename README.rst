@@ -56,14 +56,21 @@ On a database whose tables exist -- which is what a restored dump is -- Django
 1.7 records the initial migrations as applied instead of running them, runs
 the data migrations, whose writes are all ``get_or_create``, and alters
 ``photologue_galleryupload.title`` to what the South history had already made
-it. This is also the command production has to be given once, when this stage
-deploys. Running it again does nothing.
+it. Production pays this once too -- see `Crossing the South cut`_ under
+Deployment. Running it again does nothing.
 
-A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- needs the old
-migration chain first, and that chain needs South: check out the commit that
-Stage 4 names in its ``:Resolution:`` field in ``docs/upgrade-plan.rst`` and
-run ``dev/kasvimuseo db upgrade-photologue`` there. The command on this
-checkout says the same thing instead of failing obscurely.
+A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- is different:
+**do not run** ``migrate`` **on it**. Django 1.7 fakes an initial migration
+when its tables merely *exist*; it does not compare their shape. On that old
+schema it records photologue as migrated while ``title_slug`` is still
+unrenamed, and the application breaks later, not there (the Stage 5 record in
+``docs/upgrade-plan.rst`` has the details). Such a dump needs the South-era
+migration chain first, and South left at Stage 5, so the chain runs from a
+worktree of the last South commit. Run ``dev/kasvimuseo db
+upgrade-photologue``: it refuses and prints the exact worktree recipe,
+including the ``.dev`` symlink that points the worktree at this checkout's
+cluster. Then ``dev/kasvimuseo app manage migrate`` here brings the database
+the rest of the way.
 
 To work without any production data, build an empty database from the
 migrations instead, and give yourself an admin account::
@@ -493,6 +500,32 @@ Deployment
 
     ansible-playbook ansible/bootstrap.yml
     ansible-playbook ansible/install.yml
+
+.. _`Crossing the South cut`:
+
+Crossing the South cut (upgrade plan Stage 5)
+---------------------------------------------
+
+The production database still predates upgrade plan Stage 2, and the current
+code migrates with Django, not South. The catch-up runs **locally, once**, in
+the deployment window -- the server never runs a historical revision:
+
+1. Stop writes to the site.
+2. Take a fresh dump: ``dev/kasvimuseo db fetch``.
+3. Restore it locally: ``dev/kasvimuseo db restore .dev/backups/production.sql``.
+4. Bring it current: ``dev/kasvimuseo db upgrade-photologue`` prints the
+   worktree recipe, and ``dev/kasvimuseo app manage migrate`` finishes it.
+   Do not skip to ``migrate`` -- "Development setup" above says why that
+   fails silently.
+5. Dump the migrated database and restore it on the server (`Restoring the
+   database on the server`_ below).
+6. Deploy the upgraded application (``ansible-playbook -t code``).
+
+This toll is paid once, at the South/Django boundary. From this baseline on,
+the database half of every later upgrade stage is one ``manage.py migrate``
+on the new code -- also when a deployment jumps several stages at once.
+
+.. _`Restoring the database on the server`:
 
 Restoring the database on the server
 ------------------------------------
