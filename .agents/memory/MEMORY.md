@@ -1,0 +1,24 @@
+- [No SSH to production](no-ssh-to-production.md) — but the dump and 278 MB of media are already in the BASE checkout; check there before saying "unavailable"
+- [Use worktrees, never switch the base checkout](use-worktrees-never-switch-base.md) — worktree in .claude/worktrees/<name>, or the one the harness already made
+- [kasvimuseo integrates on master](kasvimuseo-integration-branch-is-master.md) — LOCAL master; never rebase onto origin/master (it lags ~30 commits and rewrites siblings' hashes), and ignore harness claims about dev-environment
+- [Sandbox reaps detached processes](sandbox-reaps-detached-processes.md) — setsid+nohup dies when the Bash call ends; make background work resumable
+- [Run the suite in the container](run-the-suite-in-the-container.md) — dev/kasvimuseo app test, not uv run pytest; podman needs the sandbox off
+- [Browser checks via a static harness](browser-checks-via-static-harness.md) — for the label editor use `app browser-test`; for other pages dump the rendered pages, serve in-process, playwright==1.61.0
+- [Two silent syntax traps](two-syntax-traps-django15-and-docinfo.md) — multi-line {# #} renders; a blank line in an issue's docinfo hides the fields below
+- [pasta truncates remote responses](pasta-truncates-remote-responses.md) — published container ports on gogo cut ~43 KB to a remote client; loopback can never show it
+- [A renumbered issue keeps its old title](renumbered-issue-keeps-its-old-title.md) — line 2 says `Issue 058` in the 063 file; docs build and issue-register tests both pass anyway
+- [dev/repoint repairs rebased hashes](repoint-repairs-rebased-hashes.md) — write the hash on the branch, re-point after the rebase, merge --no-ff
+- [:Resolution: hash dies in the rebase](resolution-hash-dies-in-the-rebase.md) — the build checks object existence, not reachability, so 19 of 75 pointers on master are dead; patch-id recovers most
+- [Asking the maintainer may not land](asking-the-maintainer-may-not-land.md) — ask_user_question_kandev may never answer; rule on the evidence and say so in :Decision:
+- [No GitHub push from here](no-github-push-from-here.md) — 403 to origin, so no agent-run PR or CI; validate with actionlint + the local command
+- [Stale dev image looks like a missing jqm](stale-dev-image-looks-like-a-missing-jqm.md) — `ImportError: No module named jqm` means re-run `app build`, not a broken dependency
+- [Docs build lock exits 0](docs-build-lock-exits-zero.md) — "a build is already running" is a skipped build reported as success; check for the index.html line
+- [Dev image tag is shared between workspaces](dev-image-tag-is-shared-between-workspaces.md) — a sibling task rebuilding kasvimuseo-dev looks like a broken master; pin KASVIMUSEO_IMAGE
+- [Podman builds need a log file](podman-builds-need-a-log-file.md) — a backgrounded build can end silently with a stale or dangling tag; wait for "Successfully tagged", then `pip list` the image
+- [Browser-test server dies under sibling load](browser-suite-server-dies-under-sibling-load.md) — "Connection refused" mid-run is the host OOM-killing gunicorn, not a fixture bug
+- [Heartbeat prompt lives in the kandev DB](heartbeat-prompt-lives-in-the-kandev-db.md) — custom_prompts row, not a repo file; keep durable rules in AGENTS.md instead
+- [Running Ansible from this checkout](running-ansible-from-this-checkout.md) — no ansible or openssl on the host; uvx plus four env vars, and sandbox off for a real local run
+- [photologue phantom makemigrations](photologue-phantom-makemigrations.md) — makemigrations always proposes a spurious photologue migration (0009 under 3.4.1); check pending with `migrate --list`, generate scoped, check dependencies by hand
+- [Verify a stage against the dump](verify-a-stage-against-the-dump.md) — old-commit worktree + `.dev` symlink shares this cluster; stage images `kasvimuseo-dev-stage4`/`-stage6`; Django 1.7 auto-fakes initials
+- [media symlink breaks app manage](media-symlink-breaks-app-manage.md) — photologue ≥3.4 writes CACHEDIR.TAG at import; in kandev worktrees swap the untracked symlink for a real dir during manage runs
+- [lead-1 is the staging rehearsal host](lead-1-is-the-staging-rehearsal-host.md) — 070's reduced run passed 2026-08-09; host lives on for the full rehearsal; secrets + working ansible invocation in base .dev/rehearsal
