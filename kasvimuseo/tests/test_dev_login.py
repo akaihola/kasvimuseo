@@ -73,7 +73,8 @@ def test_the_route_logs_the_user_in(client, user, dev_login_urls):
 
     assert response.status_code == 302
     assert response['Location'].endswith('/admin/')
-    assert client.session['_auth_user_id'] == user.pk
+    # A string since Django 1.8, which serializes the pk field's value.
+    assert client.session['_auth_user_id'] == str(user.pk)
 
 
 def test_the_admin_is_open_afterwards(client, user, dev_login_urls):

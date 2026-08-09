@@ -36,7 +36,7 @@ INLINE_PREFIXES = {
 
 def admin_url(model, page, *args):
     return reverse('admin:{0}_{1}_{2}'.format(model._meta.app_label,
-                                              model._meta.module_name,
+                                              model._meta.model_name,
                                               page),
                    args=args)
 

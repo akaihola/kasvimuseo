@@ -19,6 +19,8 @@ The project's ``kasvimuseo/templates/admin/change_list.html`` override is a
 grappelli 2.4-era copy of grappelli's own template. Its one reason to differ
 -- the ``admin_list`` fork's tag -- left with upgrade plan Stage 5, so every
 remaining difference is drift: old breadcrumb URLs, an older results layout,
-and none of grappelli 2.6's own fixes. Diffed against the installed grappelli
-2.6.5 while doing Stage 5. Deleting the override would hand the page back to
-the installed grappelli; decide at Stage 6, where grappelli moves again.
+and none of grappelli's own fixes. Diffed again while doing upgrade plan
+Stage 6, against the installed grappelli 2.7.3: 139 of the override's 244
+lines differ, and the page still renders -- the admin tests pass against it.
+Deleting the override would hand the page back to the installed grappelli;
+the decision is still open, and grappelli moves again at Stage 7.
