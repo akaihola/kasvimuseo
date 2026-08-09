@@ -215,7 +215,7 @@ def sample_data(db, photo_factory):
 def test_admin_page_returns_200(admin_client, sample_data, model, page):
     assert model in django_admin.site._registry
     url = reverse('admin:{0}_{1}_{2}'.format(model._meta.app_label,
-                                             model._meta.module_name,
+                                             model._meta.model_name,
                                              page))
 
     assert admin_client.get(url).status_code == 200
@@ -237,12 +237,16 @@ def test_admin_chrome_is_finnish(admin_client):
     """
     index = admin_client.get(reverse('admin:index')).content.decode('utf-8')
 
-    # The heading comes from django.contrib.admin's catalog, the Add/Change
-    # links on each model row from django/conf's.
+    # The heading comes from django.contrib.admin's catalog, the Add icon's
+    # ``title`` from django/conf's. Grappelli 2.7's dashboard renders each
+    # model row as the model name -- itself the change link -- plus that one
+    # icon, so the old ``>Lisää</a>`` / ``>Muokkaa</a>`` anchors are gone.
+    # The attribute is unquoted because the dashboard template writes
+    # ``title={% trans "Add" %}``; pin what ships.
     assert '<h1>Sivuston ylläpito</h1>' in index
     assert 'Site administration' not in index
-    assert '>Lisää</a>' in index
-    assert '>Muokkaa</a>' in index
+    assert 'title=Lisää' in index
+    assert 'title=Add' not in index
 
 
 @pytest.mark.django_db

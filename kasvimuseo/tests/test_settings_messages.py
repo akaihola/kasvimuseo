@@ -26,7 +26,7 @@ def test_messages_middleware_and_context_processor_are_configured():
     assert ('django.contrib.messages.middleware.MessageMiddleware'
             in settings.MIDDLEWARE_CLASSES)
     assert ('django.contrib.messages.context_processors.messages'
-            in settings.TEMPLATE_CONTEXT_PROCESSORS)
+            in settings.TEMPLATES[0]['OPTIONS']['context_processors'])
 
 
 def test_the_messages_app_brings_no_models():

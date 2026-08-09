@@ -38,7 +38,7 @@ def thead(html):
 
 
 def get(admin_client, model, view='changelist', query=''):
-    url = reverse('admin:kasvimuseo_{0}_{1}'.format(model._meta.module_name,
+    url = reverse('admin:kasvimuseo_{0}_{1}'.format(model._meta.model_name,
                                                     view))
     response = admin_client.get(url + query)
     assert response.status_code == 200
@@ -264,13 +264,13 @@ def test_planting_changelist_uses_the_declared_ordering(admin_client, db):
 def test_observation_add_page_fieldsets(admin_client, db):
     html = get(admin_client, Observation, view='add')
     fieldsets = re.findall(
-        r'<fieldset class="grp-module ([^"]*)">'
+        r'<fieldset class="module grp-module ([^"]*)">'
         r'(?:<h2[^>]*>([^<]*)</h2>)?', html)
 
     assert fieldsets[:2] == [('fieldset_column', ugettext('Basic information')),
                              ('', ugettext('Extra information'))]
     # the declared fields of the first group are the ones rendered in it
-    first = search(r'<fieldset class="grp-module fieldset_column">.*?'
+    first = search(r'<fieldset class="module grp-module fieldset_column">.*?'
                    r'</fieldset>', html).group(0)
     for field in ['external_id', 'origin', 'species', 'variation', 'date']:
         assert 'name="{0}"'.format(field) in first
@@ -279,7 +279,7 @@ def test_observation_add_page_fieldsets(admin_client, db):
 
 def test_species_add_page_has_one_unnamed_fieldset(admin_client, db):
     html = get(admin_client, Species, view='add')
-    fieldsets = re.findall(r'<fieldset class="grp-module ([^"]*)">'
+    fieldsets = re.findall(r'<fieldset class="module grp-module ([^"]*)">'
                            r'(<h2)?', html)
 
     # a single ``(None, {...})`` group: no classes, no legend
