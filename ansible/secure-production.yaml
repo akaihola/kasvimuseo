@@ -28,7 +28,10 @@
 # Tags. The existing vocabulary (code, static, python, database, restore,
 # backup, media, web, nginx, certbot, uwsgi) belongs to install.yaml and still
 # selects within it. This file adds `password` and `audit` for 050,
-# `localsettings` for 051, and `verify` for the last play.
+# `localsettings` for 051, and `verify` for the last play. It also adds
+# `https` on the verify tasks only a host with the web layer and a trusted
+# certificate can pass, so the reduced rehearsal (README.rst, "Without
+# staging DNS") can skip exactly those.
 #
 # The one thing that must not be reachable by choosing a tag is 051's failure
 # mode: deleting local_settings.py before ALLOWED_HOSTS is deployed, which
@@ -349,12 +352,34 @@
         quiet: true
 
     - name: Request an ordinary page the way a visitor does
+      tags:
+        - https
       uri:
         url: "https://{{ kasvimuseo_allowed_hosts[0] }}/"
         status_code: 200
+      register: ordinary_page
       check_mode: false
 
+    - name: The response carries the Strict-Transport-Security header (060)
+      tags:
+        - https
+      # uri returns every response header as a lowercased, underscored key on
+      # its result. nginx-site.conf.j2 adds the header to every HTTPS response,
+      # so a missing key means the deployed nginx configuration is not the one
+      # in this repository.
+      assert:
+        that:
+          - "'max-age=' in ordinary_page.strict_transport_security | default('')"
+        msg: >-
+          The 200 for https://{{ kasvimuseo_allowed_hosts[0] }}/ arrived with
+          no Strict-Transport-Security header. nginx-site.conf.j2 sends it on
+          every HTTPS response (issue 060). The deployed nginx configuration
+          is older than this repository, or another server answered.
+        quiet: true
+
     - name: Request the same page with a host name the site does not answer to
+      tags:
+        - https
       uri:
         url: "https://{{ kasvimuseo_allowed_hosts[0] }}/"
         headers:
@@ -365,6 +390,8 @@
       check_mode: false
 
     - name: A forged Host gets a 400, and not a debug page (051, 026)
+      tags:
+        - https
       assert:
         that:
           - "'Traceback' not in bad_host_response.content"
@@ -415,6 +442,8 @@
 
     # ----------------------------------------------------------- 071, 060 ---
     - name: Read how much life each name's certificate has left
+      tags:
+        - https
       # Issue 071. certbot renews from a root cron job at 03:30 and mails its
       # output to a mailbox nothing on the host reads, so a renewal that fails
       # stays quiet until the certificate expires. These two tasks are what
@@ -450,6 +479,8 @@
       check_mode: false
 
     - name: Every name's certificate outlives the renewal window (071, 060)
+      tags:
+        - https
       assert:
         that:
           - item.stdout_lines[1] == 'fresh'

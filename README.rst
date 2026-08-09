@@ -498,8 +498,8 @@ and run::
 Deployment
 ==========
 
-    ansible-playbook ansible/bootstrap.yml
-    ansible-playbook ansible/install.yml
+    ansible-playbook ansible/bootstrap.yaml
+    ansible-playbook ansible/install.yaml
 
 .. _`Crossing the South cut`:
 
@@ -805,6 +805,13 @@ Before running it
 
 * **Stand up the CX22** from a Debian 10 image, and put its public DNS name in
   ``ansible/hosts.staging`` in place of ``staging.example.invalid``.
+* **Bootstrap the fresh host**, so the ``kasvimuseo`` user every playbook
+  connects as exists::
+
+      ansible-playbook -i ansible/hosts.staging ansible/bootstrap.yaml
+
+  The header of ``ansible/bootstrap.yaml`` says how to reach the host as root
+  the first time.
 * **Point a throwaway DNS name you control** at the host -- the name itself and
   its ``static.`` and ``media.`` subdomains -- and set it as ``staging_domain``
   in ``ansible/vars/staging.yml``. certbot needs it to issue a trusted
@@ -836,15 +843,46 @@ The one command, against staging rather than production::
 points ``ALLOWED_HOSTS``, the nginx server blocks and the certbot certificate at
 ``staging_domain`` while every other value comes from ``vars/main.yml``
 unchanged. The database is seeded from ``.dev/backups/production.sql`` because
-``database_backup_to_restore`` is set in the staging file. When you are done,
-**delete the server** -- that, not power-off, is what stops the charge.
+``database_backup_to_restore`` is set in the staging file.
+
+Run the playbook twice. The first run installs everything and proves 049's
+order. A fresh install has no ``local_settings.py``, so before the second run,
+plant the file production has::
+
+    ssh kasvimuseo@<the-staging-name> "echo 'DEBUG = True' > \
+      /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit/local_settings.py"
+
+The second run proves the rest: 050's password step reports no change, and
+051's gate lets the deletion through, deletes the file and restarts uWSGI.
+
+When you are done, **delete the server** -- that, not power-off, is what stops
+the charge.
 
 Without staging DNS
 -------------------
 
-If wiring a public DNS name is not wanted, run the reduced rehearsal: the same
-command with ``--skip-tags web`` against ``ansible/install.yaml``, and skip the
-verify play's two HTTPS assertions. That still proves every ordering above --
-049's tasks landing together, 051's gate, 050's idempotence -- except the one
-thing the web layer carries, issue 060's ``Strict-Transport-Security`` header.
-That is most of what makes 049's timing hard to take.
+If wiring a public DNS name is not wanted, run the reduced rehearsal -- the
+whole playbook, minus what only a public name provides::
+
+    ansible-playbook -i ansible/hosts.staging \
+      -e @ansible/vars/staging.yml \
+      -e nginx_start=false \
+      --skip-tags nginx,certbot,https \
+      ansible/secure-production.yaml
+
+Do not use ``--skip-tags web``: that also skips the uWSGI role, so
+``uwsgi.ini`` is never written and 051's gate refuses everything after it.
+Each extra argument removes one thing only a public name provides:
+
+* ``nginx`` and ``certbot`` skip the two roles that need a trusted
+  certificate. The uWSGI role still runs, so 051's gate has a ``uwsgi.ini``
+  to read.
+* ``https`` skips the verify tasks that request pages over HTTPS and read the
+  certificates.
+* ``-e nginx_start=false`` keeps the uWSGI role's "reload nginx" notification
+  from failing on a host that has no nginx.
+
+That run still proves every ordering above -- 049's tasks landing together,
+051's gate, 050's idempotence -- except the one thing the web layer carries,
+issue 060's ``Strict-Transport-Security`` header. That is most of what makes
+049's timing hard to take.

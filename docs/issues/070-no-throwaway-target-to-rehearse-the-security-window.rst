@@ -53,7 +53,19 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     runbook, keyed to the Hetzner CX22. What remains is the follow-on act a
     checkout cannot do: stand up the CX22 from a custom Debian 10 image, point a
     throwaway DNS name at it, vault throwaway secrets, and run
-    ``ansible/secure-production.yaml`` against the staging inventory.
+    ``ansible/secure-production.yaml`` against the staging inventory. On
+    2026-08-09 an execution attempt did the part a checkout can. The staging
+    invocation parses: ``--syntax-check`` and ``--list-tasks`` pass with the
+    staging inventory and extra-vars on ansible-core 2.21.2. The attempt fixed
+    three faults that would have stopped the run. The runbook now bootstraps
+    the fresh host, and plants the ``local_settings.py`` a fresh install does
+    not have before a second run. The reduced variant now skips
+    ``nginx,certbot,https`` and sets ``nginx_start=false``, instead of
+    ``--skip-tags web``, which also skipped the uWSGI role and left 051's gate
+    no ``uwsgi.ini`` to read. The verify play now also asserts the
+    Strict-Transport-Security header (060). The question to the maintainer
+    failed to send twice, so this attempt is recorded on the evidence, the way
+    the ``:Decision:`` was; the cloud acts stay with the maintainer.
 
 Problem
 =======
@@ -199,6 +211,8 @@ It does not:
 - stand in for the real Let's Encrypt renewal of the ambitone.com names, or for
   production's exact operating system, unless the image matches it.
 
-If staging DNS is not wanted, run ``install.yaml`` without the ``web`` tag and
-skip the two HTTPS assertions. That run still proves every ordering above except
-the nginx header, which is most of what makes 049's timing hard to take.
+If staging DNS is not wanted, run the reduced rehearsal in README.rst, "Without
+staging DNS". It keeps the uWSGI role, because 051's gate reads ``uwsgi.ini``,
+and skips the nginx and certbot roles and the ``https``-tagged verify tasks.
+That run still proves every ordering above except the nginx header, which is
+most of what makes 049's timing hard to take.
