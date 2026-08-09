@@ -882,8 +882,11 @@ The one command, against staging rather than production::
 ``-e @ansible/vars/staging.yml`` wins over the playbook's ``vars_files``, so it
 points ``ALLOWED_HOSTS``, the nginx server blocks and the certbot certificate at
 ``staging_domain`` while every other value comes from ``vars/main.yml``
-unchanged. The database is seeded from ``.dev/backups/production.sql`` because
-``database_backup_to_restore`` is set in the staging file.
+unchanged. The database is seeded from ``.dev/backups/production-migrated.sql``
+-- the production dump *after* the "Crossing the South cut" catch-up above --
+because ``database_backup_to_restore`` is set in the staging file. The comment
+there says why the raw dump no longer serves: ``install.yaml`` deploys current
+master, and current code over the pre-cut schema answers 500.
 
 Run the playbook twice. The first run installs everything and proves 049's
 order. A fresh install has no ``local_settings.py``, so before the second run,
