@@ -73,9 +73,21 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     ssh host key, which ssh refuses today. Nothing installed ``git``, which
     pip needs to clone the application. And the restore ran as ``postgres``,
     so a dump with no ``OWNER TO`` statements left the application locked
-    out of its own tables. Commit 7c8fdbd fixes all four. The web-layer half
-    -- certbot, nginx and the 060 header -- waits for the follow-up full
-    rehearsal on a real DNS name, which the maintainer chose to do later.
+    out of its own tables. Commit 7c8fdbd fixes all four. The full rehearsal
+    followed the same day, on ``kasvimuseo-staging.vempai.men``, and passed
+    twice: commit 92146e7, ``ok=89 failed=0``, the second run quiet. Every
+    claim under "What a rehearsal proves" now holds, the web layer included:
+    the page answers 200 over a trusted certificate, the response carries
+    ``Strict-Transport-Security`` (060), and a forged Host gets a clean 400.
+    It caught three more faults. certbot writes one lineage per
+    ``certbot_certs`` entry while the nginx template reads a directory per
+    domain, so a three-name certificate left nginx unable to start; staging
+    now issues one lineage per name, and production's ``live/`` layout must
+    be checked before the window. Current master over the raw pre-South-cut
+    dump answers 500, so the staging seed is now the migrated dump the
+    README's "Crossing the South cut" section produces -- the real window
+    has the same dependency. And the uWSGI role never started a stopped
+    service; it does now. The staging host stays up for later use.
 
 Problem
 =======
