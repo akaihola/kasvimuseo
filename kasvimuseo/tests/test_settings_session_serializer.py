@@ -58,7 +58,8 @@ def test_a_logged_in_session_is_stored_as_json(client, user):
 
     payload = json.loads(stored_payload(client).decode('utf-8'))
 
-    assert payload['_auth_user_id'] == user.pk
+    # A string since Django 1.8, which serializes the pk field's value.
+    assert payload['_auth_user_id'] == str(user.pk)
     assert payload['_auth_user_backend'] == (
         'django.contrib.auth.backends.ModelBackend')
 

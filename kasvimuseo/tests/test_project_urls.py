@@ -63,7 +63,8 @@ def test_login_with_valid_credentials(client, user):
                            {'username': user.username, 'password': PASSWORD})
 
     assert response.status_code == 302
-    assert client.session['_auth_user_id'] == user.pk
+    # A string since Django 1.8, which serializes the pk field's value.
+    assert client.session['_auth_user_id'] == str(user.pk)
 
 
 def test_login_with_invalid_credentials(client, user):
@@ -123,7 +124,7 @@ def test_dashboard_links_to_every_configured_model(admin_client, model):
 
     assert response.status_code == 200
     url = reverse('admin:{0}_{1}_changelist'.format(model._meta.app_label,
-                                                    model._meta.module_name))
+                                                    model._meta.model_name))
     assert 'href="{0}"'.format(url) in content(response)
 
 
@@ -424,14 +425,15 @@ def test_media_404s_a_missing_file_without_a_fallback(client, db, media_root):
 
 
 def test_media_does_not_serve_outside_media_root(client, db, media_root):
-    """``django.views.static.serve`` strips ``..`` before it reaches the disk.
+    """``django.views.static.serve`` refuses a path that leaves ``MEDIA_ROOT``.
 
-    Without a fallback the escape attempt is a 404; with one it is a redirect
-    to the fallback host, which is the same public host the URL would have
-    named anyway. Either way nothing outside ``MEDIA_ROOT`` is served.
+    Django 1.8 answers the escape attempt with a 400: ``serve`` raises
+    ``SuspiciousFileOperation`` before it reaches the disk. Older releases
+    stripped the ``..`` and answered 404, or redirected to the fallback host.
+    Every one of these leaves the file unserved, which is what this pins.
     """
     with override_settings(DEBUG=False, MEDIA_FALLBACK_URL=''):
         response = client.get('/media/../ylaneenkasvit/local_settings.py')
 
-    assert response.status_code in (301, 302, 404)
+    assert response.status_code in (301, 302, 400, 404)
     assert not response.get('Content-Type', '').startswith('text/x-python')

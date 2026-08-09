@@ -44,15 +44,15 @@ def counted_queries():
     from django.db import connection, reset_queries
 
     request_started.disconnect(reset_queries)
-    old_debug_cursor = connection.use_debug_cursor
-    connection.use_debug_cursor = True
+    old_debug_cursor = connection.force_debug_cursor
+    connection.force_debug_cursor = True
     counted = QueryCount()
     start = len(connection.queries)
     try:
         yield counted
     finally:
         counted.count = len(connection.queries) - start
-        connection.use_debug_cursor = old_debug_cursor
+        connection.force_debug_cursor = old_debug_cursor
         request_started.connect(reset_queries)
 
 
@@ -203,9 +203,13 @@ def test_labels_api_get_reads_the_label_photo_without_more_queries(
     Issue 012 then took it to 14: ``ObservationManager`` prefetches the beds it
     used to fetch one planting at a time.
 
-    16 now, and the two on top are not this view's: the endpoint is staff-only
-    since issue 052, so every request first reads the session row and then the
-    user it names. They are what any admin page already pays.
+    14 since upgrade plan Stage 6. photologue reads ``effect`` when it builds
+    a cached size, so ``get_photo_titles_pks_and_urls`` now fetches it with
+    the photo row -- and the deferred-load query per photo that the old
+    ``only()`` list cost went with it. The two on top of the managers' twelve
+    are not this view's: the endpoint is staff-only since issue 052, so every
+    request first reads the session row and then the user it names. They are
+    what any admin page already pays.
     """
     first = create_planted(name_fi='valkonarsissi', external_id=1)
     second = create_planted(name_fi='tulppaani', external_id=2)
@@ -223,7 +227,7 @@ def test_labels_api_get_reads_the_label_photo_without_more_queries(
     assert response.status_code == 200
     assert len(json.loads(response.content.decode('utf-8'))
                ['object_list']) == 3
-    assert queries.count == 16
+    assert queries.count == 14
 
 
 @pytest.mark.django_db
