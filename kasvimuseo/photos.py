@@ -11,7 +11,11 @@ def get_photo_titles_pks_and_urls():
     the two cannot disagree about case (issue 003). A photo whose title has no
     word in it names no species and is left out rather than raising.
     """
-    photos = Photo.objects.only('title', 'image').order_by('title', 'pk')
+    # ``effect`` rides along because photologue 3.4's ``create_size`` reads
+    # it; deferred, it would cost two queries per photo without a cached
+    # display size (upgrade plan Stage 6).
+    photos = (Photo.objects.only('title', 'image', 'effect')
+              .order_by('title', 'pk'))
     titles_pks_and_urls = []
     for photo in photos:
         title = match_key(photo.title)

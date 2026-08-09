@@ -111,6 +111,10 @@ class SpeciesForm(forms.ModelForm):
 
     class Meta:
         model = Species
+        # Every field, which is what a ``Meta`` without ``fields`` meant when
+        # this form was written; Django 1.8 makes the choice explicit
+        # (upgrade plan Stage 6).
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(SpeciesForm, self).__init__(*args, **kwargs)
@@ -137,6 +141,8 @@ class ObservationForm(forms.ModelForm):
 
     class Meta:
         model = Observation
+        # Every field; see ``SpeciesForm.Meta`` above.
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(ObservationForm, self).__init__(*args, **kwargs)

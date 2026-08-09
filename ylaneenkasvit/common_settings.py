@@ -209,26 +209,41 @@ CSRF_COOKIE_SECURE = True
 # out ``MIDDLEWARE_CLASSES`` and 059 writes out ``X_FRAME_OPTIONS``.
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.request',
-    'django.contrib.messages.context_processors.messages',
-)
-
-# Only this project's own templates. Photologue's are found by the app
-# template loader, which is in Django's default ``TEMPLATE_LOADERS`` and which
-# this project does not override, so an installed application's ``templates/``
-# directory needs no entry here. There used to be a second entry naming
-# photologue's templates inside the virtualenv's ``site-packages`` by literal
-# path: it wrote the interpreter version into a settings file, and it had
-# already stopped resolving anywhere -- the container installs the dependencies
-# into the image and mounts the working copy at ``/src``, which has no ``lib/``
-# (issue 024).
-TEMPLATE_DIRS = (here('templates'),)
+# One ``TEMPLATES`` entry replaces ``TEMPLATE_DIRS``,
+# ``TEMPLATE_CONTEXT_PROCESSORS`` and ``TEMPLATE_DEBUG`` (upgrade plan Stage
+# 6). Django 1.8 reads this setting; the three old names are deprecated.
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # Only this project's own templates. Photologue's are found by the
+        # application template loader, which ``APP_DIRS`` turns on, so an
+        # installed application's ``templates/`` directory needs no entry
+        # here. There used to be a second entry naming photologue's templates
+        # inside the virtualenv's ``site-packages`` by literal path: it wrote
+        # the interpreter version into a settings file, and it had already
+        # stopped resolving anywhere -- the container installs the
+        # dependencies into the image and mounts the working copy at
+        # ``/src``, which has no ``lib/`` (issue 024).
+        'DIRS': [here('templates')],
+        # The same two loaders Django 1.5's default ``TEMPLATE_LOADERS`` gave
+        # this project: the filesystem loader for ``DIRS`` above, and the
+        # application loader.
+        'APP_DIRS': True,
+        'OPTIONS': {
+            # No ``debug`` entry: its default follows ``DEBUG``, which is
+            # what the old ``TEMPLATE_DEBUG = DEBUG`` line said.
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.request',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
@@ -391,7 +406,6 @@ LOGGING = {
 
 
 DEBUG = bool(os.environ.get('KASVIMUSEO_DEBUG'))
-TEMPLATE_DEBUG = DEBUG
 
 # The password-free ``/dev-login/<username>/`` route, off unless something asks
 # for it (issue 068). ``dev/kasvimuseo`` sets the variable for the containers it
