@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the rendered admin changelist.
 
-The project ships its own ``admin/change_list.html`` and a fork of Django's
-``admin_list`` in ``kasvimuseo.templatetags.kasvimuseo_admin_list`` whose only
-purpose is to put ``fieldname_<name>`` classes on every header and cell
-(Django ticket #11195), so ``kasvimuseo.admin.css`` can target columns. These
-tests assert that markup, plus the sorting, filtering, ordering and fieldset
-behaviour the ModelAdmins declare.
+Django 1.7 puts a ``field-<name>`` class on every cell and a ``column-<name>``
+class on every header (its own fix for ticket #11195), so
+``kasvimuseo.admin.css`` can target columns. The classes came from a fork of
+Django's ``admin_list`` until upgrade plan Stage 5 deleted it (issue 034).
+These tests assert that markup, plus the sorting, filtering, ordering and
+fieldset behaviour the ModelAdmins declare.
 """
 
 from __future__ import unicode_literals
@@ -19,7 +19,6 @@ from django.utils.translation import ugettext
 
 from kasvimuseo import admin
 from kasvimuseo.models import Care, Observation, Planting, Species
-from kasvimuseo.templatetags.kasvimuseo_admin_list import identifier_for_field
 from kasvimuseo.tests import factories
 
 
@@ -60,7 +59,7 @@ def column_values(html, identifier):
     The first column is wrapped in the change link, so tags are stripped.
     """
     pattern = re.compile(
-        r'<t[dh][^>]*class="[^"]*fieldname_{0}[ "][^>]*>(.*?)</t[dh]>'.format(
+        r'<t[dh][^>]*class="[^"]*field-{0}[ "][^>]*>(.*?)</t[dh]>'.format(
             identifier), re.S)
     return [re.sub(r'<[^>]+>', '', pattern.search(row).group(1)).strip()
             for row in ROW_RE.findall(html)]
@@ -76,7 +75,7 @@ def species(db):
 
 
 @pytest.mark.parametrize('identifier', [
-    'edit',           # a plain function in list_display
+    'edit',           # a ModelAdmin method, named by a string in list_display
     'external_id',    # a real model field
     'name_fi',
     'genus',
@@ -84,12 +83,12 @@ def species(db):
     'photo_image',    # a ModelAdmin attribute
 ])
 def test_species_changelist_field_classes(admin_client, species, identifier):
-    """Every column carries its ``fieldname_`` class in header and body."""
+    """Every column carries ``column-`` in the header, ``field-`` in the body."""
     html = get(admin_client, Species)
     classes = cell_classes(html)
 
-    assert 'fieldname_{0}'.format(identifier) in classes['th'] | classes['td']
-    # and the class reaches the data cells, not just the header
+    assert 'column-{0}'.format(identifier) in classes['th']
+    # and the ``field-`` class reaches the data cells
     assert len(column_values(html, identifier)) == 1
 
 
@@ -104,26 +103,8 @@ def test_planting_changelist_field_classes(admin_client, identifier):
     html = get(admin_client, Planting)
     classes = cell_classes(html)
 
-    assert 'fieldname_{0}'.format(identifier) in classes['th'] | classes['td']
+    assert 'column-{0}'.format(identifier) in classes['th']
     assert len(column_values(html, identifier)) == 1
-
-
-def test_identifier_for_field_branches():
-    """The five lookup branches of the ticket #11195 fork."""
-    assert identifier_for_field('name_fi', Species) == 'name_fi'
-    assert identifier_for_field('__unicode__', Species) == 'species'
-    assert identifier_for_field(str('__str__'), Species) == str('species')
-    assert identifier_for_field(lambda obj: obj, Species) == '__lambda__'
-    assert identifier_for_field(admin.edit, Species) == 'edit'
-    # a ModelAdmin attribute...
-    assert identifier_for_field(
-        'photo_image', Species, model_admin=admin.SpeciesAdmin) \
-        == 'photo_image'
-    # ...and a model attribute
-    assert identifier_for_field('observation_external_id', Planting) \
-        == 'observation_external_id'
-    with pytest.raises(AttributeError):
-        identifier_for_field('nonexistent', Species)
 
 
 # ---------------------------------------------------------------------------
@@ -143,26 +124,22 @@ def test_action_checkbox_column(admin_client, species):
     html = get(admin_client, Species)
     classes = cell_classes(html)
 
-    # the header gets the special class instead of a fieldname_ one...
+    # Django's own pair: the header gets one class, the body cells the other.
+    # ``kasvimuseo.admin.css`` hides both when a changelist is printed.
     assert 'action-checkbox-column' in classes['th']
-    # ...while the body cell gets both
     assert 'action-checkbox' in classes['td']
-    assert 'fieldname_action_checkbox' in classes['td']
 
 
 def test_changelist_sorting_marks_the_sorted_header(admin_client, species):
     index = sortable_column_index(admin.SpeciesAdmin, 'name_fi')
     html = get(admin_client, Species, query='?o={0}'.format(index))
 
-    header = search(r'<th[^>]*class="([^"]*fieldname_name_fi[^"]*)"(.*?)</th>',
+    header = search(r'<th[^>]*class="([^"]*column-name_fi[^"]*)"(.*?)</th>',
                     thead(html))
-    # ``column-name_fi`` is Django's own, added in 1.6 and kept by the fork's
-    # Stage 3 re-sync rather than replaced by ``fieldname_`` -- so a forked
-    # changelist's markup is an unforked one's plus a class, which is all the
-    # fork is for (issue 034).
+    # Exactly Django's own classes and no ``fieldname_`` one: the fork that
+    # used to add it is gone (issue 034, upgrade plan Stage 5).
     assert set(header.group(1).split()) == set(
-        ['sortable', 'column-name_fi', 'fieldname_name_fi',
-         'sorted', 'ascending'])
+        ['sortable', 'column-name_fi', 'sorted', 'ascending'])
     # the toggle flips to descending and a remove link appears
     assert 'grp-toggle grp-ascending' in header.group(2)
     assert 'o=-{0}'.format(index) in header.group(2)   # url_toggle
@@ -170,7 +147,7 @@ def test_changelist_sorting_marks_the_sorted_header(admin_client, species):
 
     descending = thead(
         get(admin_client, Species, query='?o=-{0}'.format(index)))
-    classes = search(r'<th[^>]*class="([^"]*fieldname_name_fi[^"]*)"',
+    classes = search(r'<th[^>]*class="([^"]*column-name_fi[^"]*)"',
                      descending).group(1)
     assert 'descending' in classes.split()
 
@@ -188,22 +165,20 @@ def test_changelist_sorting_orders_the_rows(admin_client, db):
 
 def test_changelist_rows_carry_the_filters_into_the_change_form(admin_client,
                                                                 species):
-    """Django 1.6's ``_changelist_filters``, through the fork (issue 034).
+    """Django 1.6's ``_changelist_filters``, on the row's change link.
 
     1.6 made the change form remember which filtered or sorted changelist it
     was opened from, by hanging the changelist's query string off the row's
     link; the admin then sends Save back to that list rather than to an
-    unfiltered one. It is one ``add_preserved_filters`` line in Django's
-    ``items_for_result``, and a fork of that function which is not re-synced
-    silently becomes the only changelist in the admin without it -- markup
-    that renders perfectly and behaves differently, which is what issue 034
-    says the recurring cost of this file looks like.
+    unfiltered one. Until upgrade plan Stage 5 this line came from the
+    ``admin_list`` fork, which is what issue 034 means by a fork that renders
+    perfectly and behaves differently when it misses a re-sync.
     """
     index = sortable_column_index(admin.SpeciesAdmin, 'name_fi')
 
     html = get(admin_client, Species, query='?o={0}'.format(index))
 
-    link = search(r'<th class="[^"]*fieldname_edit[^"]*"><a href="([^"]*)"',
+    link = search(r'<th class="[^"]*field-edit[^"]*"><a href="([^"]*)"',
                   html).group(1)
     assert '_changelist_filters=o%3D{0}'.format(index) in link
 
@@ -339,7 +314,8 @@ def test_photo_changelist_shows_the_file_name(admin_client, photo_factory):
     photo = photo_factory(title='valkonarsissi kukassa')
     html = get_photos(admin_client)
 
-    assert 'fieldname_title' not in html
+    assert 'column-title' not in html
+    assert 'field-title' not in html
     assert column_values(html, 'image_filename') == [
         photo.image.name.split('/')[-1]]
 
@@ -351,7 +327,7 @@ def test_photo_changelist_file_name_header_is_a_sort_link(admin_client,
     index = sortable_column_index(admin.PhotoAdmin, 'image_filename')
 
     header = search(
-        r'<th[^>]*class="([^"]*fieldname_image_filename[^"]*)"(.*?)</th>',
+        r'<th[^>]*class="([^"]*column-image_filename[^"]*)"(.*?)</th>',
         thead(get_photos(admin_client)))
 
     assert 'sortable' in header.group(1).split()

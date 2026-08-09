@@ -478,8 +478,8 @@ the module/name is no longer present in the shipped package.
 Django API                                           Gone in  Used by
 ==================================================== ======== =====================================================
 ``django.conf.urls.defaults``                        **1.6**  — *done at Stage 3*: both ``urls.py`` import ``django.conf.urls``
-``DATABASES[...]['TEST_NAME']``                      1.8      ``ylaneenkasvit/test_settings.py``
-``django.contrib.admin.util``                        1.9      — (the fork that used it goes in Stage 5)
+``DATABASES[...]['TEST_NAME']``                      1.8      — *done at Stage 5*: ``test_settings.py`` uses ``'TEST': {'NAME': …}``
+``django.contrib.admin.util``                        1.9      — (the fork that used it went at Stage 5)
 ``EMPTY_CHANGELIST_VALUE``                           1.9      — (same)
 ``django.db.models.get_model``                       1.9      —
 ``SubfieldBase``                                     1.10     —
@@ -1270,7 +1270,7 @@ Stage 4 — Photologue 2.8.3 → 3.0.2, still on Django 1.6
 --------------------------------------------------------
 
 :Status: Done
-:Resolution: b8eb855
+:Resolution: fa8ac5f
 
 **Done.** Both paragraphs below are right, and neither is what the stage cost.
 The pin inversion is the one thing they name, and it went in as written,
@@ -1387,7 +1387,15 @@ this stage was for.
 Stage 5 — Django 1.6.11 → 1.7.11: the South cut
 -----------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 67e0a28
+
+**Done.** Every bullet below held as written, and the four ``admin_list``
+steps went in exactly as issue 034 enumerated them. What the list did not
+have is under it, and the pattern of Stages 2 and 4 held too: the cost was in
+what only running the stage could show. The suite ends at 525 tests and 99 %
+coverage -- the fork's uncovered statements left the total with the file, as
+034 predicted.
 
 * Delete ``south`` from every requirements file and from ``INSTALLED_APPS``.
 * Delete ``SOUTH_MIGRATION_MODULES`` and ``SOUTH_TESTS_MIGRATE``
@@ -1444,10 +1452,72 @@ time instead of in one jump. Recorded here because the *idea* is worth knowing
 about even though the code was not worth keeping: the earlier attempt also
 concluded that South has to go together with the Sites framework arriving.
 
+What the list did not have
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **The 19 migrations were 22.** Issues 011 and 054 added 0020 to 0022 after
+  this section counted. Two of the three are data migrations -- 0021 measures
+  the photo orientations, 0022 adds the ``mobilethumbnail`` photo size -- and
+  the same rule covers them: production has their effects, so only the schema
+  had to match.
+* **``initial_data.json`` had to become a data migration.** Django 1.7 loads
+  no ``initial_data`` fixture for an application with migrations, and the
+  fresh ``0001_initial`` makes ``kasvimuseo`` one. The four photo sizes are
+  ``kasvimuseo/migrations/0002_photo_sizes.py`` now. That migration declares
+  ``run_before`` photologue's ``0002_photosize_data``, which fills an *empty*
+  ``photologue_photosize`` table with photologue's three default sizes: with
+  the project's rows written first, a new database gets the four production
+  rows and none of photologue's. ``kasvimuseo/tests/test_photo_sizes.py``
+  pins both halves.
+* **A model ``help_text`` that queries the database does not survive
+  ``makemigrations``.** ``Observation.external_id`` carried a lazy "next
+  available ID" hint that runs a query when it is forced. ``makemigrations``
+  serializes ``help_text``, so it forced that query against a database with
+  no tables yet -- and on any other database it would have frozen one day's
+  answer into the migration file. The hint moved to ``ObservationForm``,
+  which computes it when the admin builds the form; the rendered page is
+  unchanged.
+* **photologue's shipped migrations never match its models exactly.**
+  ``PhotoEffect.filters`` builds its ``help_text`` from the filter list of
+  the installed Pillow, so ``makemigrations`` proposes a cosmetic
+  ``AlterField`` for photologue on every run -- and named that phantom
+  migration as the dependency of the generated ``kasvimuseo/0001_initial``.
+  The dependency was pointed at ``photologue/0001_initial`` by hand.
+  ``migrate`` reads only the files on disk and is unaffected.
+* **``migrate --fake-initial`` is the Django 1.8 spelling; 1.7 does it by
+  itself.** On a database whose tables exist, plain ``migrate`` records each
+  initial migration as applied -- the output says ``FAKED`` -- and runs the
+  rest. Measured on the restored production dump, first brought to the South
+  endpoint with the Stage 4 checkout: six initials faked, both data
+  migrations no-ops (``get_or_create`` against rows that exist), photologue's
+  0003 and 0004 applied for real. The schema then differs from a
+  freshly-bootstrapped database only in the two ``title`` columns Stage 2's
+  faked ``0002`` left at ``varchar(100)`` -- the inheritance the Stage 4
+  measurement predicted. This ``migrate`` is the one command production gets
+  when this stage deploys; ``README.rst`` records it where restoring dumps is
+  described. ``dev/kasvimuseo db upgrade-photologue`` needs South and now
+  prints the worktree recipe instead of failing partway. One warning belongs
+  beside this: 1.7 detects an initial migration to fake by table *existence*,
+  and never compares the tables' shape. On a database older than Stage 2,
+  ``photologue_photo`` exists with ``title_slug`` unrenamed, so a plain
+  ``migrate`` there adopts the wrong schema and says nothing. Give such a
+  database the South-era chain first -- ``README.rst`` holds the developer
+  recipe ("Development setup") and the one-window production cutover
+  ("Crossing the South cut", under Deployment). The toll is paid once: from
+  this baseline on, the database half of every later stage is one
+  ``migrate``, also when a deployment jumps several stages.
+* **Three Django 1.7 behaviour changes the suite had pinned at 1.5.** The
+  admin gate redirects to ``admin:login`` instead of rendering the login form
+  in place. ``get_app('messages')`` raises for an application without models.
+  And Django's own default ``MIDDLEWARE_CLASSES`` shrank to two entries,
+  because 1.7's project template writes the list out -- the move issue 019
+  made here, which is why this application's middleware did not change when
+  Django's default did. Five test updates, no application change.
+
 Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 --------------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS`` / ``TEMPLATE_DEBUG`` →
   a single ``TEMPLATES`` setting with ``APP_DIRS = True``. ``TEMPLATE_DIRS`` is

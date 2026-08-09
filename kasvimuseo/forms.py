@@ -6,7 +6,8 @@ from unicodedata import combining, normalize
 
 from photologue.models import Photo
 
-from kasvimuseo.models import Species
+from kasvimuseo.models import (
+    Observation, Species, get_next_observation_extid)
 from kasvimuseo.photos import get_candidate_photo_pks
 
 #: What ``clean()`` below does with the file name, and what
@@ -123,3 +124,20 @@ class SpeciesForm(forms.ModelForm):
         if self.instance.photo_id is not None:
             pks = pks + [self.instance.photo_id]
         photo.queryset = Photo.objects.filter(pk__in=pks).order_by('title')
+
+
+class ObservationForm(forms.ModelForm):
+    """The observation form, for the admin page and the inlines alike.
+
+    Its one job is the ``external_id`` hint: the next free number, computed
+    when the form is built. The hint used to be the model field's
+    ``help_text``; ``get_next_observation_extid`` in ``models.py`` says why it
+    cannot stay there (upgrade plan Stage 5).
+    """
+
+    class Meta:
+        model = Observation
+
+    def __init__(self, *args, **kwargs):
+        super(ObservationForm, self).__init__(*args, **kwargs)
+        self.fields['external_id'].help_text = get_next_observation_extid()

@@ -7,7 +7,6 @@ from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 import operator
 from photologue.models import Photo
-from south.modelsinspector import add_introspection_rules
 
 from kasvimuseo import photo_matching
 
@@ -365,6 +364,11 @@ def get_next_observation_extid():
     # ``external_id`` is nullable and PostgreSQL sorts NULLs first on a
     # descending order_by, so NULLs must be filtered out; an empty table then
     # leaves no row at all.
+    #
+    # ``ObservationForm`` puts this on the ``external_id`` form field. It must
+    # not be the model field's ``help_text``: ``makemigrations`` serializes
+    # ``help_text``, which would run this query and freeze its answer into the
+    # migration file (upgrade plan Stage 5).
     last_ids = (Observation.objects
                 .filter(external_id__isnull=False)
                 .order_by('-external_id')
@@ -411,8 +415,7 @@ class ObservationManager(models.Manager):
 class Observation(models.Model):
     external_id = models.IntegerField(
         null=True, blank=True,
-        verbose_name=_(u'YläneNro'),
-        help_text=get_next_observation_extid())
+        verbose_name=_(u'YläneNro'))
     origin = models.ForeignKey(
         Location,
         verbose_name=_(u'Kasvin alkuperä'))
@@ -699,14 +702,6 @@ class Care(models.Model):
         verbose_name = _(u'care')
         verbose_name_plural = _(u'care operations')
         ordering = 'date',
-
-
-# make South work with Photologue
-# see:
-# http://blog.fergusrossferrier.co.uk/2010/09/django-getting-south-and-photologue-to.html
-# http://south.aeracode.org/docs/customfields.html
-# http://groups.google.com/group/south-users/browse_thread/thread/4088fd57a0e45eeb?pli=1
-add_introspection_rules([], ["^photologue\.models\.TagField"])
 
 
 def autoconnect_photo_to_species(sender, instance, **kwargs):

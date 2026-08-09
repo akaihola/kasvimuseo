@@ -15,4 +15,10 @@ to carry.
 Waiting
 -------
 
-Nothing.
+The project's ``kasvimuseo/templates/admin/change_list.html`` override is a
+grappelli 2.4-era copy of grappelli's own template. Its one reason to differ
+-- the ``admin_list`` fork's tag -- left with upgrade plan Stage 5, so every
+remaining difference is drift: old breadcrumb URLs, an older results layout,
+and none of grappelli 2.6's own fixes. Diffed against the installed grappelli
+2.6.5 while doing Stage 5. Deleting the override would hand the page back to
+the installed grappelli; decide at Stage 6, where grappelli moves again.

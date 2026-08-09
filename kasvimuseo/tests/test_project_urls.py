@@ -88,18 +88,20 @@ def test_logout_ends_the_session(client, user):
 
 @pytest.mark.django_db
 def test_admin_page_gates_anonymous_users_with_the_login_form(client):
-    """Django 1.5's admin answers with the login form in place of the page.
+    """Django 1.7's admin redirects anonymous users to ``admin:login``.
 
-    It renders it under the requested URL rather than redirecting to
-    ``admin:login``, so what this pins is the 200 with the login form and no
-    data in it.
+    Django 1.5 rendered the login form under the requested URL instead; the
+    redirect arrived with 1.7 (upgrade plan Stage 5). What this pins is the
+    login form at the end of the redirect, with no data in it.
     """
     species = Species.objects.create(name_fi='valkonarsissi', type=2)
 
-    response = client.get(reverse('admin:kasvimuseo_species_changelist'))
+    response = client.get(reverse('admin:kasvimuseo_species_changelist'),
+                          follow=True)
     body = content(response)
 
-    assert response.status_code == 200
+    assert response.redirect_chain
+    assert reverse('admin:login') in response.redirect_chain[-1][0]
     assert 'name="username"' in body
     assert 'name="password"' in body
     assert species.name_fi not in body

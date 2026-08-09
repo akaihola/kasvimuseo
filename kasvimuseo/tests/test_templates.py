@@ -98,10 +98,11 @@ def test_species_list_offers_the_jquery_mobile_search_box(client):
 def test_the_initial_data_defines_the_mobilethumbnail_photo_size():
     """docs/issues/054: the size the list page's accessor is named after.
 
-    No fixture creates it here. ``initial_data.json`` is what the test
-    database is built from, so this asserts the shipped data rather than
-    anything the suite arranges -- which is the whole defect: the row was
-    missing from the fixture while production had it.
+    No fixture creates it here. The test database is built by the migrations,
+    ``kasvimuseo/migrations/0002_photo_sizes.py`` among them, so this asserts
+    the shipped data rather than anything the suite arranges -- which is the
+    whole defect: the row was missing from the shipped set while production
+    had it.
     """
     from photologue.models import PhotoSize
 
@@ -112,9 +113,9 @@ def test_the_initial_data_defines_the_mobilethumbnail_photo_size():
 
 
 @pytest.mark.django_db
-def test_species_list_renders_a_photo_url_from_the_fixtures_alone(
+def test_species_list_renders_a_photo_url_from_the_migrations_alone(
         client, photo_factory):
-    """docs/issues/054: a real ``src``, on a database built from the fixtures.
+    """docs/issues/054: a real ``src``, on a database built by the migrations.
 
     Photologue attaches ``get_<size>_url`` only for the sizes that are rows in
     ``photologue_photosize``, so with the row missing the accessor does not

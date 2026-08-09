@@ -15,7 +15,7 @@ is the reason adding the app changed nothing about the database.
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db.models import get_app, get_models
+from django.apps import apps
 
 
 def test_messages_app_is_installed():
@@ -33,4 +33,4 @@ def test_the_messages_app_brings_no_models():
     """Nothing to migrate: the storage is cookies and the session."""
     assert settings.MESSAGE_STORAGE == (
         'django.contrib.messages.storage.fallback.FallbackStorage')
-    assert get_models(get_app('messages')) == []
+    assert apps.get_app_config('messages').models_module is None
