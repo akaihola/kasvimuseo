@@ -24,12 +24,6 @@ SECRET_KEY = 'test'
 # from gunicorn, outside that, and reach it on ``127.0.0.1`` (issue 017).
 ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 
-# South migrates apps alphabetically, so ``kasvimuseo`` runs before
-# ``photologue`` and migration 0014 fails on the foreign key to
-# ``photologue_photo``. With this off, South leaves the test database to
-# ``syncdb``, which builds every table straight from the models.
-SOUTH_TESTS_MIGRATE = False
-
 DATABASES['default'].update({  # noqa: F405
     'NAME': os.environ.get('KASVIMUSEO_DB_NAME', 'ylaneenkasvit'),
     'USER': os.environ.get('KASVIMUSEO_DB_USER', 'ylaneenkasvit'),
@@ -39,9 +33,11 @@ DATABASES['default'].update({  # noqa: F405
     'PASSWORD': os.environ.get('KASVIMUSEO_DB_PASSWORD', ''),
     'PORT': os.environ.get('KASVIMUSEO_DB_PORT', ''),
     # Lets concurrent test runs against one cluster use separate databases.
-    'TEST_NAME': 'test_{0}{1}'.format(
+    # The nested form arrived in Django 1.7; the flat ``TEST_NAME`` it
+    # replaces is deleted in 1.8 (upgrade plan Stage 5).
+    'TEST': {'NAME': 'test_{0}{1}'.format(
         os.environ.get('KASVIMUSEO_DB_NAME', 'ylaneenkasvit'),
-        os.environ.get('KASVIMUSEO_TEST_SUFFIX', '')),
+        os.environ.get('KASVIMUSEO_TEST_SUFFIX', ''))},
 })
 
 # ``common_settings`` marks both cookies ``Secure``, because production is

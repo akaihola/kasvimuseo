@@ -3,7 +3,6 @@
 <!-- LOADING -->
 {% load url from future %}
 {% load admin_list i18n grp_tags %}
-{% load kasvimuseo_admin_list %}
 
 <!-- STYLESHEETS -->
 {% block stylesheets %}
@@ -220,7 +219,7 @@
             {% endif %}
             <!-- CHANGELIST-RESULTS -->
             {% block result_list %}
-                {% result_list_with_fieldnames_in_classes cl %}
+                {% result_list cl %}
             {% endblock %}
         </section>
         <!-- PAGINATION BOTTOM -->

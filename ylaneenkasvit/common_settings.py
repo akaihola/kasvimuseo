@@ -75,10 +75,10 @@ TIME_ZONE = 'Europe/Helsinki'
 USE_TZ = True
 
 INSTALLED_APPS = (
-    # Not for fixtures any more: ``initial_data.json`` moved to ``kasvimuseo``,
-    # which has migrations, so South loads it after ``migrate`` instead of
-    # ``syncdb`` trying it before photologue's tables exist (issue 055). What
-    # keeps this entry is ``ylaneenkasvit/locale/``: there is no
+    # Not for fixtures any more: the photo sizes that were its
+    # ``initial_data.json`` live in the data migration
+    # ``kasvimuseo/migrations/0002_photo_sizes.py`` now (issue 055, upgrade
+    # plan Stage 5). What keeps this entry is ``ylaneenkasvit/locale/``: there is no
     # ``LOCALE_PATHS``, so those translations are found because the package is
     # an installed application. It defines no models.
     'ylaneenkasvit',
@@ -105,7 +105,6 @@ INSTALLED_APPS = (
     # Stage 0). ``local_settings.development.py`` appends it, so a development
     # checkout still has it and a production install does not have to install
     # it.
-    'south',
 
     'jqm',
     # photologue 2.8's ``Gallery.photos`` is a ``SortedManyToManyField``, whose
@@ -262,17 +261,6 @@ DATE_FORMAT = 'Y-m-d'
 # filters its gallery and photo views by it, and the receiver that puts every
 # saved photo on the current site.
 SITE_ID = 1
-
-# ``SOUTH_MIGRATION_MODULES`` is deliberately absent (upgrade plan Stage 2). It
-# used to point photologue at ``ylaneenkasvit/external_migrations/photologue/``
-# -- one local squashed ``0001_initial`` standing in for the package's whole
-# history -- which meant photologue's own migrations could never run. That copy
-# turned out to *be* photologue's own ``0001_initial``, so the
-# ``south_migrationhistory`` row it left behind is the one photologue's history
-# starts from and no faking was needed to adopt it; ``0002`` onwards are in the
-# package. See ``dev/kasvimuseo db upgrade-photologue`` for the one migration
-# in that history this project must not run, and why.
-
 
 # Django's stock block with one handler added and one taken away: a stream
 # handler, so that an unhandled exception is written down somewhere (issue

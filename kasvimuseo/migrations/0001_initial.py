@@ -1,258 +1,255 @@
-# encoding: utf-8
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
-class Migration(SchemaMigration):
-
-    def forwards(self, orm):
-        
-        # Adding model 'Species'
-        db.create_table('kasvimuseo_species', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('external_id', self.gf('django.db.models.fields.IntegerField')()),
-            ('type', self.gf('django.db.models.fields.IntegerField')()),
-            ('genus', self.gf('django.db.models.fields.CharField')(max_length=40)),
-            ('group', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('species', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('subspecies', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('variety', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('name_fi', self.gf('django.db.models.fields.CharField')(max_length=40)),
-            ('name_sv', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('name_local', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('abbr_fi', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('abbr_scientific', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('height', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('width', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('flower_color', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('flowering_time', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('substrate', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('spacing', self.gf('django.db.models.fields.TextField')(blank=True)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Species'])
-
-        # Adding model 'Contact'
-        db.create_table('kasvimuseo_contact', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('last_name', self.gf('django.db.models.fields.CharField')(max_length=40)),
-            ('first_name', self.gf('django.db.models.fields.CharField')(max_length=40)),
-            ('phone', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('mobile', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('email', self.gf('django.db.models.fields.EmailField')(max_length=75, blank=True)),
-            ('street', self.gf('django.db.models.fields.CharField')(max_length=80, blank=True)),
-            ('number', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('apartment', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('zipcode', self.gf('django.db.models.fields.CharField')(max_length=5, blank=True)),
-            ('city', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Contact'])
-
-        # Adding model 'Location'
-        db.create_table('kasvimuseo_location', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('external_id', self.gf('django.db.models.fields.IntegerField')()),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=40)),
-            ('alias', self.gf('django.db.models.fields.CharField')(max_length=40)),
-            ('village', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('area', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('street', self.gf('django.db.models.fields.CharField')(max_length=80, blank=True)),
-            ('number', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('apartment', self.gf('django.db.models.fields.CharField')(max_length=20, blank=True)),
-            ('zipcode', self.gf('django.db.models.fields.CharField')(max_length=5, blank=True)),
-            ('city', self.gf('django.db.models.fields.CharField')(max_length=40, blank=True)),
-            ('history', self.gf('django.db.models.fields.TextField')(blank=True)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Location'])
-
-        # Adding M2M table for field contacts on 'Location'
-        db.create_table('kasvimuseo_location_contacts', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('location', models.ForeignKey(orm['kasvimuseo.location'], null=False)),
-            ('contact', models.ForeignKey(orm['kasvimuseo.contact'], null=False))
-        ))
-        db.create_unique('kasvimuseo_location_contacts', ['location_id', 'contact_id'])
-
-        # Adding model 'Observation'
-        db.create_table('kasvimuseo_observation', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('external_id', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
-            ('origin', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['kasvimuseo.Location'])),
-            ('species', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['kasvimuseo.Species'])),
-            ('date', self.gf('django.db.models.fields.DateField')()),
-            ('characteristics', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('nickname', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('history', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('stories', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('pictures', self.gf('django.db.models.fields.TextField')(blank=True)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Observation'])
-
-        # Adding model 'Plot'
-        db.create_table('kasvimuseo_plot', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=80)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Plot'])
-
-        # Adding model 'Bed'
-        db.create_table('kasvimuseo_bed', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('plot', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['kasvimuseo.Plot'], null=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=80)),
-            ('description', self.gf('django.db.models.fields.TextField')()),
-        ))
-        db.send_create_signal('kasvimuseo', ['Bed'])
-
-        # Adding model 'Planting'
-        db.create_table('kasvimuseo_planting', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('observation', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['kasvimuseo.Observation'])),
-            ('Bed', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['kasvimuseo.Bed'])),
-            ('planting_date', self.gf('django.db.models.fields.DateField')()),
-            ('count', self.gf('django.db.models.fields.IntegerField')(default=1)),
-            ('removal_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Planting'])
-
-        # Adding model 'Care'
-        db.create_table('kasvimuseo_care', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('planting', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['kasvimuseo.Planting'])),
-            ('date', self.gf('django.db.models.fields.DateField')()),
-            ('description', self.gf('django.db.models.fields.TextField')()),
-            ('count', self.gf('django.db.models.fields.IntegerField')(default=1)),
-        ))
-        db.send_create_signal('kasvimuseo', ['Care'])
+from django.db import models, migrations
+import django.db.models.deletion
 
 
-    def backwards(self, orm):
-        
-        # Deleting model 'Species'
-        db.delete_table('kasvimuseo_species')
+class Migration(migrations.Migration):
 
-        # Deleting model 'Contact'
-        db.delete_table('kasvimuseo_contact')
+    dependencies = [
+        ('photologue', '0001_initial'),
+    ]
 
-        # Deleting model 'Location'
-        db.delete_table('kasvimuseo_location')
-
-        # Removing M2M table for field contacts on 'Location'
-        db.delete_table('kasvimuseo_location_contacts')
-
-        # Deleting model 'Observation'
-        db.delete_table('kasvimuseo_observation')
-
-        # Deleting model 'Plot'
-        db.delete_table('kasvimuseo_plot')
-
-        # Deleting model 'Bed'
-        db.delete_table('kasvimuseo_bed')
-
-        # Deleting model 'Planting'
-        db.delete_table('kasvimuseo_planting')
-
-        # Deleting model 'Care'
-        db.delete_table('kasvimuseo_care')
-
-
-    models = {
-        'kasvimuseo.bed': {
-            'Meta': {'object_name': 'Bed'},
-            'description': ('django.db.models.fields.TextField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '80'}),
-            'plot': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['kasvimuseo.Plot']", 'null': 'True'})
-        },
-        'kasvimuseo.care': {
-            'Meta': {'object_name': 'Care'},
-            'count': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'date': ('django.db.models.fields.DateField', [], {}),
-            'description': ('django.db.models.fields.TextField', [], {}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'planting': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['kasvimuseo.Planting']"})
-        },
-        'kasvimuseo.contact': {
-            'Meta': {'object_name': 'Contact'},
-            'apartment': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
-            'mobile': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'phone': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'street': ('django.db.models.fields.CharField', [], {'max_length': '80', 'blank': 'True'}),
-            'zipcode': ('django.db.models.fields.CharField', [], {'max_length': '5', 'blank': 'True'})
-        },
-        'kasvimuseo.location': {
-            'Meta': {'object_name': 'Location'},
-            'alias': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
-            'apartment': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'area': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'city': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'contacts': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['kasvimuseo.Contact']", 'symmetrical': 'False'}),
-            'external_id': ('django.db.models.fields.IntegerField', [], {}),
-            'history': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'street': ('django.db.models.fields.CharField', [], {'max_length': '80', 'blank': 'True'}),
-            'village': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'zipcode': ('django.db.models.fields.CharField', [], {'max_length': '5', 'blank': 'True'})
-        },
-        'kasvimuseo.observation': {
-            'Meta': {'object_name': 'Observation'},
-            'characteristics': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'date': ('django.db.models.fields.DateField', [], {}),
-            'external_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
-            'history': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'nickname': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'origin': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['kasvimuseo.Location']"}),
-            'pictures': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'species': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['kasvimuseo.Species']"}),
-            'stories': ('django.db.models.fields.TextField', [], {'blank': 'True'})
-        },
-        'kasvimuseo.planting': {
-            'Bed': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['kasvimuseo.Bed']"}),
-            'Meta': {'object_name': 'Planting'},
-            'count': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'observation': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['kasvimuseo.Observation']"}),
-            'planting_date': ('django.db.models.fields.DateField', [], {}),
-            'removal_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'})
-        },
-        'kasvimuseo.plot': {
-            'Meta': {'object_name': 'Plot'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '80'})
-        },
-        'kasvimuseo.species': {
-            'Meta': {'object_name': 'Species'},
-            'abbr_fi': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
-            'abbr_scientific': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
-            'external_id': ('django.db.models.fields.IntegerField', [], {}),
-            'flower_color': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'flowering_time': ('django.db.models.fields.CharField', [], {'max_length': '20', 'blank': 'True'}),
-            'genus': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
-            'group': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'height': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name_fi': ('django.db.models.fields.CharField', [], {'max_length': '40'}),
-            'name_local': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'name_sv': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'spacing': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'species': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'subspecies': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'substrate': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'type': ('django.db.models.fields.IntegerField', [], {}),
-            'variety': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'}),
-            'width': ('django.db.models.fields.CharField', [], {'max_length': '40', 'blank': 'True'})
-        }
-    }
-
-    complete_apps = ['kasvimuseo']
+    operations = [
+        migrations.CreateModel(
+            name='Bed',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=80, verbose_name='name')),
+                ('description', models.TextField(verbose_name='description', blank=True)),
+                ('public', models.BooleanField(default=False, verbose_name='public')),
+            ],
+            options={
+                'verbose_name': 'bed',
+                'verbose_name_plural': 'beds',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Care',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('date', models.DateField(verbose_name='date')),
+                ('description', models.TextField(verbose_name='description')),
+                ('count', models.IntegerField(verbose_name='number of plants after care')),
+            ],
+            options={
+                'ordering': ('date',),
+                'verbose_name': 'care',
+                'verbose_name_plural': 'care operations',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Contact',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('last_name', models.CharField(max_length=40, verbose_name='SukuNimi')),
+                ('first_name', models.CharField(max_length=40, verbose_name='EtuNimi')),
+                ('phone', models.CharField(max_length=40, verbose_name='LankaPuh', blank=True)),
+                ('mobile', models.CharField(max_length=40, verbose_name='MatkaPuh', blank=True)),
+                ('email', models.EmailField(max_length=75, verbose_name='S\xe4hk\xf6Posti', blank=True)),
+                ('street', models.CharField(max_length=80, verbose_name='KatuOsoite', blank=True)),
+                ('number', models.CharField(max_length=20, verbose_name='N:o', blank=True)),
+                ('apartment', models.CharField(max_length=20, verbose_name='as', blank=True)),
+                ('zipcode', models.CharField(max_length=5, verbose_name='PostiNro', blank=True)),
+                ('city', models.CharField(max_length=40, verbose_name='PostiToimiPaikka', blank=True)),
+                ('description', models.TextField(verbose_name='Lis\xe4tieto', blank=True)),
+            ],
+            options={
+                'ordering': ('last_name',),
+                'verbose_name': 'contact',
+                'verbose_name_plural': 'contacts',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Label',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('visible', models.BooleanField(default=True)),
+                ('photo', models.ForeignKey(blank=True, to='photologue.Photo', null=True)),
+            ],
+            options={
+                'verbose_name': 'label',
+                'verbose_name_plural': 'labels',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Location',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('external_id', models.IntegerField(null=True, verbose_name='YhteysNro', blank=True)),
+                ('name', models.CharField(max_length=40, verbose_name='Talo')),
+                ('alias', models.CharField(max_length=40, verbose_name='Toinen nimitys', blank=True)),
+                ('village', models.CharField(max_length=40, verbose_name='Kyl\xe4', blank=True)),
+                ('area', models.CharField(max_length=40, verbose_name='Asuinalue', blank=True)),
+                ('street', models.CharField(max_length=80, verbose_name='KatuOsoite', blank=True)),
+                ('number', models.CharField(max_length=20, verbose_name='N:o', blank=True)),
+                ('apartment', models.CharField(max_length=20, verbose_name='as', blank=True)),
+                ('zipcode', models.CharField(max_length=5, verbose_name='PostiNro', blank=True)),
+                ('city', models.CharField(max_length=40, verbose_name='PostiToimiPaikka', blank=True)),
+                ('history', models.TextField(help_text='Tietoja talon ja puutarhan historiasta', verbose_name='Historia', blank=True)),
+            ],
+            options={
+                'ordering': ('name',),
+                'verbose_name': 'location',
+                'verbose_name_plural': 'locations',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='LocationContact',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('contact', models.ForeignKey(to='kasvimuseo.Contact')),
+                ('location', models.ForeignKey(to='kasvimuseo.Location')),
+            ],
+            options={
+                'db_table': 'kasvimuseo_location_contacts',
+                'verbose_name': 'contact for location',
+                'verbose_name_plural': 'contacts for locations',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Observation',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('external_id', models.IntegerField(null=True, verbose_name='Yl\xe4neNro', blank=True)),
+                ('variation', models.CharField(max_length=200, verbose_name='color/form', blank=True)),
+                ('date', models.DateField(verbose_name='Havaintop\xe4iv\xe4')),
+                ('characteristics', models.TextField(help_text='Milt\xe4 se n\xe4ytt\xe4\xe4?', verbose_name='Tuntomerkkej\xe4', blank=True)),
+                ('nickname', models.CharField(max_length=200, verbose_name='Kutsumanimi', blank=True)),
+                ('history', models.TextField(help_text='Tietoja alkuper\xe4st\xe4 ja viljelyhistoriasta: Kuinka kauan se on kasvanut nykyisell\xe4 paikallaan? Mist\xe4 se on alun perin saatu? Arviolta mill\xe4 vuosikymmenell\xe4 sen tiedet\xe4\xe4n kasvaneen? Kuka sit\xe4 on viljellyt?', verbose_name='Viljelyhistoria', blank=True)),
+                ('stories', models.TextField(help_text='Kasviin liittyv\xe4 tarina, tapahtuma', verbose_name='Tarinat', blank=True)),
+                ('pictures', models.TextField(verbose_name='Kuvat', blank=True)),
+                ('notes', models.TextField(verbose_name='notes', blank=True)),
+                ('environment', models.TextField(help_text='Maaper\xe4 ja kasvupaikka', verbose_name='Kasvuymp\xe4rist\xf6', blank=True)),
+                ('origin', models.ForeignKey(verbose_name='Kasvin alkuper\xe4', to='kasvimuseo.Location')),
+            ],
+            options={
+                'ordering': ('species__name_fi',),
+                'verbose_name': 'observation',
+                'verbose_name_plural': 'observations',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Planting',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('planting_date', models.DateField(verbose_name='date of planting')),
+                ('count', models.IntegerField(verbose_name='count')),
+                ('distance_left', models.IntegerField(default=15, help_text='distance in cm from the left edge of the bed', verbose_name='distance left')),
+                ('distance_front', models.IntegerField(default=15, help_text='distance in cm from the front edge of the bed', verbose_name='distance front')),
+                ('width', models.IntegerField(default=15, help_text='width of the planting in cm', verbose_name='width')),
+                ('depth', models.IntegerField(default=15, help_text='depth of the planting in cm', verbose_name='depth')),
+                ('removal_date', models.DateField(null=True, verbose_name='date of removal', blank=True)),
+                ('bed', models.ForeignKey(verbose_name='bed', to='kasvimuseo.Bed')),
+                ('label', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='label', blank=True, to='kasvimuseo.Label', null=True)),
+                ('observation', models.ForeignKey(verbose_name='observation', to='kasvimuseo.Observation')),
+            ],
+            options={
+                'ordering': ('observation__species__name_fi',),
+                'verbose_name': 'planting',
+                'verbose_name_plural': 'plantings',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='PlantingPhoto',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('photo', models.ImageField(upload_to='photos/planting', verbose_name='photo')),
+                ('date', models.DateField(verbose_name='date of photo')),
+                ('photographer', models.CharField(max_length=80, verbose_name='name of photographer')),
+                ('planting', models.ForeignKey(verbose_name='planting', to='kasvimuseo.Planting')),
+            ],
+            options={
+                'verbose_name': 'planting',
+                'verbose_name_plural': 'plantings',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Plot',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=80, verbose_name='name')),
+            ],
+            options={
+                'verbose_name': 'garden plot',
+                'verbose_name_plural': 'garden plots',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Species',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('external_id', models.IntegerField(null=True, verbose_name='LajiNro', blank=True)),
+                ('type', models.IntegerField(verbose_name='type', choices=[(1, 'Yksi/kaksiv. koristekasvi'), (2, 'Perenna'), (3, 'Yrtti'), (4, 'Muu hy\xf6tykasvi'), (5, 'Koristepensas'), (6, 'Koristek\xf6ynn\xf6s'), (7, 'Marja'), (8, 'Marjapensas'), (9, 'Koristepuu'), (10, 'Hedelm\xe4puu'), (11, 'Luonnonkasvi')])),
+                ('genus', models.CharField(max_length=40, verbose_name='Sukunimi')),
+                ('group', models.CharField(max_length=40, verbose_name='Ryhm\xe4', blank=True)),
+                ('species', models.CharField(max_length=40, verbose_name='Laji')),
+                ('subspecies', models.CharField(max_length=40, verbose_name='subspecies', blank=True)),
+                ('variety', models.CharField(max_length=40, verbose_name='lajike', blank=True)),
+                ('cultivation_history', models.TextField(verbose_name='cultivation history', blank=True)),
+                ('name_fi', models.CharField(max_length=40, verbose_name='SuomalainenNimi')),
+                ('height', models.CharField(max_length=40, verbose_name='korkeuscm', blank=True)),
+                ('width', models.CharField(max_length=40, verbose_name='leveyscm', blank=True)),
+                ('spacing', models.TextField(verbose_name='Taimiv\xe4li', blank=True)),
+                ('flower_color', models.CharField(max_length=80, verbose_name='kukinnanv\xe4ri', blank=True)),
+                ('flowering_start', models.IntegerField(blank=True, null=True, verbose_name='first flowering month', choices=[(1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'), (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'), (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')])),
+                ('flowering_end', models.IntegerField(blank=True, null=True, verbose_name='last flowering month', choices=[(1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'), (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'), (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')])),
+                ('lighting', models.IntegerField(blank=True, null=True, verbose_name='light requirement', choices=[(1, 'A'), (2, 'A-Pv'), (3, 'Pv'), (4, 'Pv-V'), (5, 'V'), (6, 'A-V')])),
+                ('substrate', models.TextField(verbose_name='Kasvualusta', blank=True)),
+                ('additional_info', models.TextField(verbose_name='additional information', blank=True)),
+                ('photo_is_horizontal', models.NullBooleanField(default=None, verbose_name='photo is wider than it is tall', editable=False)),
+                ('photo', models.ForeignKey(blank=True, to='photologue.Photo', null=True)),
+            ],
+            options={
+                'ordering': ('name_fi',),
+                'verbose_name': '(one) species',
+                'verbose_name_plural': '(all) species',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='observation',
+            name='species',
+            field=models.ForeignKey(verbose_name='Kasvilaji', to='kasvimuseo.Species'),
+            preserve_default=True,
+        ),
+        migrations.AlterUniqueTogether(
+            name='locationcontact',
+            unique_together=set([('location', 'contact')]),
+        ),
+        migrations.AddField(
+            model_name='location',
+            name='contacts',
+            field=models.ManyToManyField(to='kasvimuseo.Contact', through='kasvimuseo.LocationContact'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='label',
+            name='species',
+            field=models.ForeignKey(verbose_name='species', to='kasvimuseo.Species'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='care',
+            name='planting',
+            field=models.ForeignKey(verbose_name='planting', to='kasvimuseo.Planting', help_text='Specify the planting'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='bed',
+            name='plot',
+            field=models.ForeignKey(verbose_name='plot', blank=True, to='kasvimuseo.Plot', null=True),
+            preserve_default=True,
+        ),
+    ]

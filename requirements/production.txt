@@ -28,25 +28,19 @@
 # to answer, and there was no version history behind it to reason about. It is
 # vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
 # build reaches nothing but PyPI.
-# 1.6.11 is the last release in the 1.6 series (upgrade plan Stage 3). What it
-# costs this project is one import -- `django.conf.urls.defaults` is gone, and
-# both `urls.py` files import from `django.conf.urls` now -- and three pins
-# that have to move with it, below. Django's own packaging accident stopped at
-# 1.5.12 and stays stopped: 1.6.11 collects the locale catalogs, fixtures and
-# `project_template` as `package_data`, so they land inside the package
-# whichever way pip installs it (issue 040). Both image definitions keep the
-# assertion that they are readable there -- see the comment beside it in
-# `dev/Containerfile`.
-#
-# The next stage that touches this line is Stage 5, and it is the expensive
-# one: 1.7 takes South away.
-django==1.6.11
+# 1.7.11 is the last release in the 1.7 series (upgrade plan Stage 5). 1.7 is
+# the release where Django runs its own migrations, so this is the pin that
+# ended South: the `south` pin left this file in the same change,
+# `kasvimuseo/migrations/` became a Django `0001_initial` plus one data
+# migration, and photologue's `migrations/` package -- shipped beside its
+# `south_migrations/` for exactly this handover -- became the one that runs.
+django==1.7.11
 # Grappelli ships exactly one series per Django release and says so in its own
-# README -- 2.4.x for Django 1.4/1.5, 2.5.x for 1.6, 2.6.x for 1.7 -- so this
+# README -- 2.5.x for Django 1.6, 2.6.x for 1.7, 2.7.x for 1.8 -- so this
 # pin is not a preference and cannot be skipped or deferred a stage; it moves
-# whenever the line above does (issue 035). 2.5.7 is the last 2.5 release on
-# PyPI, and it is the one this project ran the admin on.
-django-grappelli==2.5.7
+# whenever the line above does (issue 035). 2.6.5 is the last 2.6 release on
+# PyPI.
+django-grappelli==2.6.5
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
 # constraints picks exactly that pair, a gunicorn that cannot import. This pin
@@ -56,26 +50,6 @@ django-grappelli==2.5.7
 # and 20.x, so no `setuptools<82` has to be carried through eight stages.
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
-# 1.0.2 is South's last release. It supports Django 1.6 and never 1.7, which is
-# the whole shape of upgrade plan Stage 5: the framework cannot move again until
-# this package is gone. Nothing declares an upper bound on it because there is
-# no release above it to bound.
-#
-# 0.8.1, which this was, predates 1.6 and branches on it in two places that
-# matter here -- both added in 1.0 and neither reachable by a version test in
-# this repository:
-#
-# * `LoadInitialDataMigrator` is what loads `kasvimuseo/fixtures/
-#   initial_data.json` after `migrate` rather than during `syncdb` (issue 055).
-#   0.8.1 does it by swapping `django.db.models.get_apps` out from under
-#   `loaddata`; 1.0.2 has a separate `post_1_6` path that builds a fresh
-#   `AppCache` instead, because 1.6's `loaddata` no longer reads the module
-#   attribute the old trick replaced.
-# * `south.hacks.django_1_0.Hacks.repopulate_app_cache` writes
-#   `cache.handled = set()` on 1.6 and `{}` below it -- 1.6 changed that
-#   attribute's type, and South goes through this every time it puts
-#   INSTALLED_APPS back, which `syncdb` and every test-database build do.
-south==1.0.2
 # Upgrade plan Stage 4: 2.8.3 -> 3.0.2, moved alone and ahead of the framework
 # because photologue owns database tables. This pin is the ordering constraint
 # the whole upgrade plan turns on. 3.0.x and 3.1.1 are the only releases that
@@ -90,10 +64,11 @@ south==1.0.2
 #   `Gallery.get_absolute_url` and every shipped template reverse
 #   `photologue:<name>`, so `ylaneenkasvit/urls.py` includes them with
 #   `namespace='photologue'` now.
-# * South reads `photologue.south_migrations` rather than
-#   `photologue.migrations`. South 1.0.2 finds that package by itself, so no
-#   `SOUTH_MIGRATION_MODULES` comes back; the recorded history is the same
-#   names, because 0001 to 0006 are the same files in the new directory.
+# * Until upgrade plan Stage 5, South read `photologue.south_migrations` --
+#   South 1.0.2 finds that package by itself, so no `SOUTH_MIGRATION_MODULES`
+#   was needed; the recorded history kept the same names, because 0001 to 0006
+#   are the same files in the new directory. Stage 5 removed South, and
+#   `photologue.migrations` -- the Django set beside it -- is what runs now.
 # * The Twitter-Bootstrap templates become the default set, and the old ones
 #   move to `photologue/contrib/old_style_templates/`. Nothing here renders a
 #   photologue template except the gallery index, so this is markup only.

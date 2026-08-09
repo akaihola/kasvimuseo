@@ -289,10 +289,18 @@ def test_next_observation_extid_ignores_nulls_among_rows():
 
 @pytest.mark.django_db
 def test_observation_add_form_help_text_renders_on_empty_database():
-    """The lazy help_text is evaluated when the admin form is built."""
-    help_text = models.Observation._meta.get_field('external_id').help_text
+    """``ObservationForm`` computes the hint when the form is built.
+
+    The hint left the model field at upgrade plan Stage 5:
+    ``get_next_observation_extid`` in ``models.py`` says why it cannot be the
+    field's ``help_text`` any more.
+    """
+    from kasvimuseo.forms import ObservationForm
+
+    form = ObservationForm()
     with override(None):
-        assert force_text(help_text) == 'Next available ID: 1'
+        assert force_text(form.fields['external_id'].help_text) == \
+            'Next available ID: 1'
 
 
 # --------------------------------------------------------------------------

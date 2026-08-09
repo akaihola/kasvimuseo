@@ -4,7 +4,7 @@ Development setup
 Before you change anything here, read ``AGENTS.md``. It holds the rules this
 repository writes and works by, for people and for agents.
 
-The app is Django 1.5 on Python 2.7, which no longer exists in current
+The app is Django 1.7 on Python 2.7, which no longer exists in current
 distributions, so it runs in a container. The database runs natively as a
 throwaway PostgreSQL cluster inside the working copy. Everything is driven by
 one script, ``dev/kasvimuseo``; all its state lives under ``.dev/`` and can be
@@ -46,20 +46,31 @@ container; ``KASVIMUSEO_DEV_PASSWORD`` changes it. It touches the ``auth_user``
 password column and nothing else, so the names, the addresses and every plant
 record are still the real ones.
 
-A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- needs one more
-command before the application will serve it, and so does any other database
-this project was running before that stage::
+A restored dump needs one more command before this code will serve it. The
+dump records South's migration history; upgrade plan Stage 5 replaced South
+with Django's own migrations, and their bookkeeping starts empty::
 
-    $ dev/kasvimuseo db upgrade-photologue
+    $ dev/kasvimuseo app manage migrate
 
-It syncs the new ``django_site`` table, finishes the ``kasvimuseo`` migrations
-on the old photologue schema, fakes photologue's ``0002`` and migrates the rest
-forward, which is what renames ``title_slug`` to ``slug`` and puts every photo
-and gallery on the site. The order is not arbitrary and ``0002`` is not faked
-for convenience: the reasons are written above the function in
-``dev/kasvimuseo``, and this is the command production has to be given once,
-which is why it is a command rather than a paragraph. Running it on an
-already-current database does nothing.
+On a database whose tables exist -- which is what a restored dump is -- Django
+1.7 records the initial migrations as applied instead of running them, runs
+the data migrations, whose writes are all ``get_or_create``, and alters
+``photologue_galleryupload.title`` to what the South history had already made
+it. Production pays this once too -- see `Crossing the South cut`_ under
+Deployment. Running it again does nothing.
+
+A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- is different:
+**do not run** ``migrate`` **on it**. Django 1.7 fakes an initial migration
+when its tables merely *exist*; it does not compare their shape. On that old
+schema it records photologue as migrated while ``title_slug`` is still
+unrenamed, and the application breaks later, not there (the Stage 5 record in
+``docs/upgrade-plan.rst`` has the details). Such a dump needs the South-era
+migration chain first, and South left at Stage 5, so the chain runs from a
+worktree of the last South commit. Run ``dev/kasvimuseo db
+upgrade-photologue``: it refuses and prints the exact worktree recipe,
+including the ``.dev`` symlink that points the worktree at this checkout's
+cluster. Then ``dev/kasvimuseo app manage migrate`` here brings the database
+the rest of the way.
 
 To work without any production data, build an empty database from the
 migrations instead, and give yourself an admin account::
@@ -489,6 +500,32 @@ Deployment
 
     ansible-playbook ansible/bootstrap.yml
     ansible-playbook ansible/install.yml
+
+.. _`Crossing the South cut`:
+
+Crossing the South cut (upgrade plan Stage 5)
+---------------------------------------------
+
+The production database still predates upgrade plan Stage 2, and the current
+code migrates with Django, not South. The catch-up runs **locally, once**, in
+the deployment window -- the server never runs a historical revision:
+
+1. Stop writes to the site.
+2. Take a fresh dump: ``dev/kasvimuseo db fetch``.
+3. Restore it locally: ``dev/kasvimuseo db restore .dev/backups/production.sql``.
+4. Bring it current: ``dev/kasvimuseo db upgrade-photologue`` prints the
+   worktree recipe, and ``dev/kasvimuseo app manage migrate`` finishes it.
+   Do not skip to ``migrate`` -- "Development setup" above says why that
+   fails silently.
+5. Dump the migrated database and restore it on the server (`Restoring the
+   database on the server`_ below).
+6. Deploy the upgraded application (``ansible-playbook -t code``).
+
+This toll is paid once, at the South/Django boundary. From this baseline on,
+the database half of every later upgrade stage is one ``manage.py migrate``
+on the new code -- also when a deployment jumps several stages at once.
+
+.. _`Restoring the database on the server`:
 
 Restoring the database on the server
 ------------------------------------

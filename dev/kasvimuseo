@@ -8,7 +8,7 @@
 #   db development [in] [out]           a dump with every password set to a known one
 #   db restore <file>                   load a dump into the local database
 #   db bootstrap                        empty database from the migrations
-#   db upgrade-photologue               existing database -> photologue 2.8.3
+#   db upgrade-photologue               says how to modernise a pre-2026 dump
 #   media fetch                         download the photos the database uses
 #   app build                           build the Python 2.7 dev image
 #   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
@@ -226,61 +226,35 @@ print(make_password(sys.argv[1]))' "$DEV_PASSWORD")
   dev/kasvimuseo db restore $out" >&2
 }
 
-# Take an existing database -- a restored production dump, or any database this
-# project was running before upgrade plan Stage 2 -- from photologue 2.6.1's
-# schema to photologue 2.8.3's. This is the deployment step for that stage, and
-# it is here rather than in a shell history because it is what production will
-# have to be given, once, before the new code serves a request.
-#
-# Four things about it are not obvious, and all four were found by running it
-# against `.dev/backups/production.sql`:
-#
-# 1. `syncdb` first, and not for photologue: `django.contrib.sites` arrives
-#    with this stage and is not a migrated app, so nothing else creates
-#    `django_site` -- and photologue's data migration 0006 looks up
-#    `Site.objects.get(pk=SITE_ID)`. syncdb's `create_default_site` receiver
-#    writes row 1, which is what SITE_ID is set to.
-#
-# 2. Nothing has to be faked back to 0001. The local squashed migration that
-#    `SOUTH_MIGRATION_MODULES` used to point photologue at *is* photologue's
-#    own `0001_initial` -- identical but for whitespace and a redundant
-#    `db_index=True` -- so the `photologue/0001_initial` row already in
-#    `south_migrationhistory` means exactly what the package means by it. The
-#    upgrade plan expected a `--fake` back to 0001 here; there is none.
-#
-# 3. `kasvimuseo` is migrated to the end *before* photologue moves, and the
-#    order is load-bearing rather than tidy. `kasvimuseo:0021` is a data
-#    migration that reads `species.photo` through South's frozen ORM, and that
-#    frozen copy of `photologue.Photo` still has a `title_slug` field -- so run
-#    it after photologue's rename and it stops with `column
-#    photologue_photo.title_slug does not exist`. Any database old enough to
-#    need 0021 is therefore migrated on the old photologue schema first. On a
-#    database that is already current this step does nothing.
-#
-# 4. 0002 is faked, and it is the one migration in this history this project
-#    must not run. Its schema half narrows three `title` columns from 100
-#    characters to 50; its data half rewrites the title of **every** photo,
-#    not only the long ones, because it truncates the title and then tests
-#    `Photo.objects.filter(title=<the same title>).exists()` -- which is true
-#    of the photo itself -- and appends a digit to escape a collision with the
-#    row it is looking at. On this database that would put a `1` on the end of
-#    every photo title, and a photo's title is what attaches it to a species
-#    here. Faking it leaves the columns at `varchar(100)`, wider than the model
-#    declares and therefore harmless; the alternative loses data.
-#
-# 0003 (a `photologue_photosize.name` widening), 0004 (default photo sizes,
-# which returns early when the table is not empty), 0005 (the `title_slug` ->
-# `slug` rename and the two `sites` join tables) and 0006 (sort values, and
-# every gallery and photo onto the current site) then run for real -- as part
-# of the plain `migrate` that ends this, so a database that is also behind on
-# `kasvimuseo` migrations, as a restored dump usually is, comes out current.
+# This command needed South, and upgrade plan Stage 5 removed South, so it now
+# says what to do instead of doing it. It took an existing database -- a
+# restored production dump, or any database this project was running before
+# upgrade plan Stage 2 -- from photologue 2.6.1's schema to photologue 2.8.3's,
+# and it is still the step such a database has to be given, once, before this
+# code can serve it. Its four non-obvious points -- why `syncdb` came first,
+# why nothing was faked back to 0001, why `kasvimuseo` moved before photologue
+# and why photologue's 0002 must be faked, never run -- are in the Stage 4
+# checkout this message names, above this same function.
 photologue_upgrade() {
-    with_db app_run_container "" sh -c '
-        set -e
-        python ylaneenkasvit/manage.py syncdb --noinput
-        python ylaneenkasvit/manage.py migrate kasvimuseo --noinput
-        python ylaneenkasvit/manage.py migrate photologue 0002 --fake --noinput
-        python ylaneenkasvit/manage.py migrate --noinput'
+    die 'db upgrade-photologue needs South, and upgrade plan Stage 5 removed South.
+Give the database the South-era chain from a worktree of the last South
+commit -- the one Stage 4 names in its :Resolution: field in
+docs/upgrade-plan.rst. From this repository root:
+
+  git worktree add /tmp/stage4 <that commit>
+  ln -s "$PWD/.dev" /tmp/stage4/.dev    # the worktree must use THIS cluster
+  (cd /tmp/stage4 && KASVIMUSEO_IMAGE=kasvimuseo-dev-south dev/kasvimuseo app build)
+  (cd /tmp/stage4 && KASVIMUSEO_IMAGE=kasvimuseo-dev-south dev/kasvimuseo db upgrade-photologue)
+  rm /tmp/stage4/.dev && git worktree remove /tmp/stage4
+  dev/kasvimuseo app manage migrate     # Django adopts the schema; output says FAKED
+
+Set KASVIMUSEO_IMAGE as shown: a plain `app build` in the worktree would
+re-tag kasvimuseo-dev with the old dependencies. Do NOT skip to `migrate`:
+Django 1.7 fakes an initial migration when its tables merely exist, so on a
+pre-Stage-2 schema it records photologue as migrated with title_slug still
+unrenamed, and the application breaks later, not here. README.rst says why
+("Development setup") and what this means for production ("Crossing the
+South cut", under Deployment).'
 }
 
 # The printable and compact species views make Django open the image files to
@@ -294,6 +268,8 @@ photologue_upgrade() {
 media_fetch() {
     with_db app_run_container "" python -c '
 import os, sys, urllib, urllib2
+import django
+django.setup()
 from django.conf import settings
 from photologue.models import Photo
 
@@ -516,15 +492,12 @@ browser_test() {
          -c "DROP DATABASE IF EXISTS $BROWSER_DB" \
          -c "CREATE DATABASE $BROWSER_DB OWNER $DB_USER"
     BROWSER_DB_MADE=1
-    # photologue first, as in `db bootstrap`: kasvimuseo:0014 references
-    # photologue_photo. The photo sizes the labels render -- `display` among
-    # them -- come from kasvimuseo/fixtures/initial_data.json, which South
-    # loads after migrating kasvimuseo; photologue ships no initial data of
-    # its own (issue 055).
-    app_run_container "$BROWSER_ENV" sh -c \
-        'python ylaneenkasvit/manage.py syncdb --noinput >/dev/null &&
-         python ylaneenkasvit/manage.py migrate photologue --noinput >/dev/null &&
-         python ylaneenkasvit/manage.py migrate --noinput >/dev/null'
+    # One command since upgrade plan Stage 5: Django's own migrations order
+    # themselves, and the photo sizes the labels render -- `display` among
+    # them -- are a data migration (issue 055,
+    # kasvimuseo/migrations/0002_photo_sizes.py).
+    app_run_container "$BROWSER_ENV" \
+        python ylaneenkasvit/manage.py migrate --noinput >/dev/null
     browser_seed
 
     echo "Serving $BROWSER_DB on port $port ..." >&2
@@ -584,20 +557,15 @@ case "${1:-}" in
 the migrations. To load the dump instead:
   dev/kasvimuseo db restore $3"
                # Empty database from the migrations, for working without a
-               # production dump. photologue must go first: kasvimuseo:0014
-               # references photologue_photo.
-               #
-               # The photo sizes arrive with the last of these: they are
-               # kasvimuseo/fixtures/initial_data.json, and South loads an
-               # app's initial data after migrating it. They live in a
-               # migrated app for exactly that reason -- as ylaneenkasvit's,
-               # they were loaded by `syncdb` before South had created
-               # photologue_photosize, which failed and left the database with
-               # no photo sizes at all (issue 055).
-               with_db app_run_container "" sh -c \
-                 'python ylaneenkasvit/manage.py syncdb --noinput &&
-                  python ylaneenkasvit/manage.py migrate photologue --noinput &&
-                  python ylaneenkasvit/manage.py migrate --noinput' ;;
+               # production dump. One command since upgrade plan Stage 5:
+               # Django's own migrations order themselves -- kasvimuseo
+               # depends on photologue, whose tables its 0014 used to have to
+               # wait for -- and the photo sizes arrive with
+               # kasvimuseo/migrations/0002_photo_sizes.py, a data migration
+               # since Django 1.7 loads no initial_data fixture for a
+               # migrated application (issue 055).
+               with_db app_run_container "" \
+                 python ylaneenkasvit/manage.py migrate --noinput ;;
       development)
                db_development "${3:-}" "${4:-}" ;;
       restore) db_restore "${3:-}" ;;

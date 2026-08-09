@@ -9,30 +9,35 @@ writing it out changed nothing today, and that it is still the 1.5 default
 rather than something that drifted.
 
 The second assertion is expected to be *deliberately* changed, not to keep
-passing for ever: from Stage 5 of ``docs/upgrade-plan.rst`` onwards the list
-grows entries Django's own default does not have, and at Stage 8 it is renamed
-to ``MIDDLEWARE``.
+passing for ever: the list grows entries Django's own default does not have,
+and at Stage 8 of ``docs/upgrade-plan.rst`` it is renamed to ``MIDDLEWARE``.
 
-The first such deliberate change has already happened, before the upgrade got
-there: ``XFrameOptionsMiddleware`` was added for issue 059, so the list is now
-the 1.5 default *plus* that one entry, and it is spelled out that way here
-rather than by loosening the comparison. What is pinned is unchanged -- that
-nothing has drifted out of the default, and that nothing has drifted in
-unnoticed.
+Two deliberate changes have happened so far. ``XFrameOptionsMiddleware`` was
+added for issue 059. And at upgrade plan Stage 5 the comparison to the
+installed ``global_settings`` ended: Django 1.7 cut its own default down to
+``CommonMiddleware`` and ``CsrfViewMiddleware``, because its project template
+started writing the list out -- the same move issue 019 made here. The list
+below is therefore a literal now: the Django 1.5 default this project has
+always run on, plus the one addition. That an upgrade changed Django's default
+and this application kept its behaviour is 019 working as intended.
 """
 
 from __future__ import unicode_literals
 
-from django.conf import global_settings, settings
+from django.conf import settings
 
-# Added deliberately, and the only entry here that Django's own default does
-# not have (issue 059).
-ADDED = ('django.middleware.clickjacking.XFrameOptionsMiddleware',)
+EXPECTED = (
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    # Added deliberately; not in the 1.5 default (issue 059).
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
 
-EXPECTED = tuple(global_settings.MIDDLEWARE_CLASSES) + ADDED
 
-
-def test_middleware_is_the_installed_django_default_plus_clickjacking():
+def test_middleware_is_the_django_15_default_plus_clickjacking():
     assert tuple(settings.MIDDLEWARE_CLASSES) == EXPECTED
 
 

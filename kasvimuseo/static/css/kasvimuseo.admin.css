@@ -16,8 +16,6 @@
   height: 4em;
 }
 
-#changelist-form td.fieldname_admin_thumbnail a img { margin: -9px 0 -13px 0; }
-
 #changelist-form td {
   max-width: 13em;
   white-space: nowrap;
@@ -36,8 +34,8 @@
     .module.footer,
     #footer,
     h1 + .tools,
-    .fieldname_action_checkbox,
-    .fieldname_edit,
+    .action-checkbox, .action-checkbox-column,
+    .field-edit, .column-edit,
     .pagination,
     a.button.toggle-filters,
     #ui-datepicker-div { display: none; }

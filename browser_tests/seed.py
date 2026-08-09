@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Build the data the label editor tests arrange, inside the app container.
 
-Python 2.7 and Django 1.5, because it runs where the application runs -- the
+Python 2.7 and Django 1.7, because it runs where the application runs -- the
 browser tests themselves are Python 3 on the host, and never import Django.
 ``dev/kasvimuseo app browser-test`` runs this against a throwaway database of
 its own, so it drops what it made first and can be re-run.
@@ -27,6 +27,7 @@ import io
 import os
 import shutil
 
+import django
 from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -110,9 +111,10 @@ def main():
     wipe()
     create_staff_user()
     # ``get_display_url`` is the URL the labels render, and the accessor only
-    # exists when a ``PhotoSize`` of that name is in the database. syncdb loads
-    # photologue's own initial data, so this is a safety net for a database
-    # built some other way, not a second definition.
+    # exists when a ``PhotoSize`` of that name is in the database. The
+    # migrations install the row (``kasvimuseo/migrations/0002_photo_sizes.py``),
+    # so this is a safety net for a database built some other way, not a
+    # second definition.
     PhotoSize.objects.get_or_create(name='display',
                                     defaults={'width': 300, 'height': 300})
     PhotoSizeCache().reset()
@@ -163,4 +165,8 @@ def main():
 
 
 if __name__ == '__main__':
+    # A plain script, not a management command, so Django 1.7's application
+    # registry has to be filled by hand before a model is used (upgrade plan
+    # Stage 5).
+    django.setup()
     main()
