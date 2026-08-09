@@ -483,8 +483,8 @@ Django API                                           Gone in  Used by
 ``EMPTY_CHANGELIST_VALUE``                           1.9      — (same)
 ``django.db.models.get_model``                       1.9      —
 ``SubfieldBase``                                     1.10     —
-``django.core.context_processors``                   1.10     ``ylaneenkasvit/common_settings.py`` (5 entries)
-``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS``  1.10     ``common_settings.py``
+``django.core.context_processors``                   1.10     — *done at Stage 6*: the ``TEMPLATES`` entry names ``django.template.context_processors``
+``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS``  1.10     — *done at Stage 6*: one ``TEMPLATES`` setting
 string view names in ``url()``                       1.10     ``ylaneenkasvit/urls.py`` (3 — see Stage 8)
 ``patterns()``                                       **2.0**  ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py``
 ``django.core.urlresolvers``                         2.0      ``kasvimuseo/admin.py``, ``ylaneenkasvit/dashboard.py``
@@ -1517,7 +1517,42 @@ What the list did not have
 Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 --------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 52d7497
+
+**Done.** Every bullet below held as written: the settings move, the two
+renames, the three pins, and every "nothing to do" checked out as nothing
+to do. The cost was again in what only running the stage could show --
+two moves the list did not have, one more deprecation, and four behaviour
+changes the suite had pinned at the old versions. The suite ends at 525
+tests and 99 % coverage.
+
+* **Two moves the list did not name.** photologue 3.4.1 declares
+  ``django-sortedm2m>=1.1.1``, so that pin moved 0.8.1 → 1.1.1 in the
+  same change -- a pin below a declared floor stops the production
+  ``manage`` script, which is the Stage 2 lesson; the pin's comment in
+  ``requirements/production.txt`` carries the argument. And Django 1.8
+  widens the default ``EmailField`` length from 75 to 254, so
+  ``Contact.email`` -- which declares no length -- changed column type
+  under an unchanged model: migration ``0003_contact_email_length``.
+* **One more 1.6 deprecation came due than the list had.** A ``ModelForm``
+  without ``fields`` or ``exclude`` is an error from 1.8. ``SpeciesForm``
+  and ``ObservationForm`` now say ``fields = '__all__'``, which is what
+  their bare ``Meta`` always meant.
+* **Four behaviour changes the suite had pinned at the old versions.**
+  The session stores ``_auth_user_id`` as a string.
+  ``connection.use_debug_cursor`` became ``force_debug_cursor``.
+  ``django.views.static.serve`` answers a ``..`` path with a 400 instead
+  of stripping it. And grappelli 2.7's dashboard renders a model row as
+  the name plus one Add icon, so the ``>Lisää</a>`` anchors the
+  Finnish-chrome test looked for are gone. Seven test updates, no
+  application change.
+* **One query-count constant moved, and it moved down.** photologue 3.4
+  reads ``effect`` when it builds a cached size. Deferred, that cost two
+  queries per photo -- 1.8 loads one deferred field per query where 1.7
+  loaded them all in one. ``get_photo_titles_pks_and_urls`` now fetches
+  ``effect`` with the photo row, so the labels API costs 14 queries where
+  it cost 16: the per-photo deferred load 1.7 was paying went too.
 
 * ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS`` / ``TEMPLATE_DEBUG`` →
   a single ``TEMPLATES`` setting with ``APP_DIRS = True``. ``TEMPLATE_DIRS`` is
@@ -1551,7 +1586,7 @@ Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 Stage 7 — Django 1.8.19 → 1.9.13
 --------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``EMPTY_CHANGELIST_VALUE`` is gone, and ``django.contrib.admin.util`` with it:
   **nothing to do.** Both were used only by ``kasvimuseo_admin_list.py``, deleted
