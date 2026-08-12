@@ -498,8 +498,8 @@ and run::
 Deployment
 ==========
 
-    ansible-playbook ansible/bootstrap.yml
-    ansible-playbook ansible/install.yml
+    ansible-playbook ansible/bootstrap.yaml
+    ansible-playbook ansible/install.yaml
 
 .. _`Crossing the South cut`:
 
@@ -786,25 +786,70 @@ for you -- standing up a host and pointing DNS at it.
 The target
 ----------
 
-The maintainer's call (2026-08-08) is a **Hetzner Cloud CX22**: 2 vCPU and 4 GB
-for 5.49 EUR a month, about 0.0088 EUR an hour, billed by the hour, capped at
-the monthly price, and destroyed when you are done. It carries the PostgreSQL,
-uWSGI and nginx stack with room to spare, where a 512 MB droplet would not.
-Charging stops only on delete, not on power-off.
+Any Hetzner Cloud x86 server with 2 GB of memory carries the stack. The
+maintainer first confirmed a CX22 (2026-08-08); a day later none was on offer,
+and the 2026-08-09 rehearsal reused the idle CX11 ``lead-1`` instead -- 1 vCPU
+and 2 GB sufficed for the reduced run. For a server created for this, charging
+stops only on delete, not on power-off. A reused server just keeps costing
+what it did.
 
 One faithfulness limit binds any provider: ``install.yaml`` installs
 ``python-minimal`` and runs ``/usr/bin/python2.7``, which exist as stock only on
 Debian 10 / Ubuntu 18.04 or earlier, and no provider still ships those as an
-image (the end-of-life runtime issue 036 tracks). So the host boots from a
-**custom Debian 10 image you upload** to Hetzner, or you accept a delta and
-install Python 2.7 another way. Cloudflare and Fly.io are ruled out: neither
-gives an SSH-reachable systemd host that keeps what ``apt`` installs.
+image (the end-of-life runtime issue 036 tracks). So you write a **Debian 10
+image onto the server yourself**, from Hetzner's rescue system. Cloudflare and
+Fly.io are ruled out: neither gives an SSH-reachable systemd host that keeps
+what ``apt`` installs.
+
+Writing the Debian 10 image
+---------------------------
+
+The 2026-08-09 rehearsal proved this sequence. Boot the server into rescue::
+
+    hcloud ssh-key create --name rehearsal --public-key-from-file ~/.ssh/id_rsa.pub
+    hcloud server enable-rescue <server> --ssh-key rehearsal
+    hcloud server reboot <server>
+
+In the rescue system, write the archived Debian 10 cloud image to the disk::
+
+    curl -LO https://cloud.debian.org/images/cloud/buster/latest/debian-10-genericcloud-amd64.qcow2
+    curl -LO https://cloud.debian.org/images/cloud/buster/latest/SHA512SUMS
+    sha512sum --ignore-missing -c SHA512SUMS
+    qemu-img convert -f qcow2 -O host_device debian-10-genericcloud-amd64.qcow2 /dev/sda
+
+Still in rescue, mount ``/dev/sda1`` and prepare three things the first boot
+will not do for you:
+
+* Write your public key to ``/root/.ssh/authorized_keys``. cloud-init only
+  re-applies the keys the server was *created* with.
+* Replace ``/etc/apt/sources.list``: buster moved to
+  ``http://archive.debian.org/debian`` (and ``archive.debian.org/debian-security``
+  for ``buster/updates``).
+* Write ``Acquire::Check-Valid-Until "false";`` into
+  ``/etc/apt/apt.conf.d/99archive``. The archive's release files are expired
+  on purpose.
+
+Reboot. Then install what this playbook's era of Ansible assumes on the host:
+``apt-get install python-apt python-pip``. The staging inventory sets
+``ansible_python_interpreter=/usr/bin/python2.7``, and the ``apt`` and ``pip``
+modules need those two packages under that interpreter.
 
 Before running it
 -----------------
 
 * **Stand up the CX22** from a Debian 10 image, and put its public DNS name in
   ``ansible/hosts.staging`` in place of ``staging.example.invalid``.
+* **Bootstrap the fresh host**, so the ``kasvimuseo`` user every playbook
+  connects as exists::
+
+      ansible-playbook -i ansible/hosts.staging ansible/bootstrap.yaml
+
+  The header of ``ansible/bootstrap.yaml`` says how to reach the host as root
+  the first time.
+* **Give Ansible a way to become root.** ``bootstrap.yaml`` gives
+  ``kasvimuseo`` a password whose plaintext is not written anywhere. Set your
+  own as root (``echo 'kasvimuseo:<a-throwaway>' | chpasswd``), write it to a
+  file, and pass ``--become-password-file <that-file>`` on every run.
 * **Point a throwaway DNS name you control** at the host -- the name itself and
   its ``static.`` and ``media.`` subdomains -- and set it as ``staging_domain``
   in ``ansible/vars/staging.yml``. certbot needs it to issue a trusted
@@ -818,9 +863,11 @@ Before running it
   holding ``kasvimuseo_secret_key``, ``kasvimuseo_db_password`` and
   ``kasvimuseo_admin_passwords`` (a mapping naming ``akaihola``). The playbook
   stops before installing anything if any is missing.
-* **The staging host needs the same Bitbucket read access production has**;
+* **The staging host needs read access to the GitHub repository**;
   ``install.yaml`` installs the app from
-  ``git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git``.
+  ``git+ssh://git@github.com/akaihola/kasvimuseo.git``. Add the host's
+  generated public key (``/home/kasvimuseo/.ssh/id_rsa.pub``) as a read-only
+  deploy key on GitHub.
 
 Running it
 ----------
@@ -835,16 +882,56 @@ The one command, against staging rather than production::
 ``-e @ansible/vars/staging.yml`` wins over the playbook's ``vars_files``, so it
 points ``ALLOWED_HOSTS``, the nginx server blocks and the certbot certificate at
 ``staging_domain`` while every other value comes from ``vars/main.yml``
-unchanged. The database is seeded from ``.dev/backups/production.sql`` because
-``database_backup_to_restore`` is set in the staging file. When you are done,
-**delete the server** -- that, not power-off, is what stops the charge.
+unchanged. The database is seeded from ``.dev/backups/production-migrated.sql``
+-- the production dump *after* the "Crossing the South cut" catch-up above --
+because ``database_backup_to_restore`` is set in the staging file. The comment
+there says why the raw dump no longer serves: ``install.yaml`` deploys current
+master, and current code over the pre-cut schema answers 500.
+
+Run the playbook twice. The first run installs everything and proves 049's
+order. A fresh install has no ``local_settings.py``, so before the second run,
+plant the file production has. Its shape matters:
+``ylaneenkasvit_settings.py`` calls ``modify(globals())`` after importing it,
+so a file without a ``modify`` function crashes every settings import::
+
+    ssh kasvimuseo@<the-staging-name> "cat > \
+      /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit/local_settings.py" <<'EOF'
+    def modify(settings):
+        settings['DEBUG'] = True
+        settings['TEMPLATE_DEBUG'] = True
+    EOF
+
+The second run proves the rest: 050's password step reports no change, and
+051's gate lets the deletion through, deletes the file and restarts uWSGI.
+
+When you are done, **delete the server** -- that, not power-off, is what stops
+the charge.
 
 Without staging DNS
 -------------------
 
-If wiring a public DNS name is not wanted, run the reduced rehearsal: the same
-command with ``--skip-tags web`` against ``ansible/install.yaml``, and skip the
-verify play's two HTTPS assertions. That still proves every ordering above --
-049's tasks landing together, 051's gate, 050's idempotence -- except the one
-thing the web layer carries, issue 060's ``Strict-Transport-Security`` header.
-That is most of what makes 049's timing hard to take.
+If wiring a public DNS name is not wanted, run the reduced rehearsal -- the
+whole playbook, minus what only a public name provides::
+
+    ansible-playbook -i ansible/hosts.staging \
+      -e @ansible/vars/staging.yml \
+      -e nginx_start=false \
+      --skip-tags nginx,certbot,https \
+      ansible/secure-production.yaml
+
+Do not use ``--skip-tags web``: that also skips the uWSGI role, so
+``uwsgi.ini`` is never written and 051's gate refuses everything after it.
+Each extra argument removes one thing only a public name provides:
+
+* ``nginx`` and ``certbot`` skip the two roles that need a trusted
+  certificate. The uWSGI role still runs, so 051's gate has a ``uwsgi.ini``
+  to read.
+* ``https`` skips the verify tasks that request pages over HTTPS and read the
+  certificates.
+* ``-e nginx_start=false`` keeps the uWSGI role's "reload nginx" notification
+  from failing on a host that has no nginx.
+
+That run still proves every ordering above -- 049's tasks landing together,
+051's gate, 050's idempotence -- except the one thing the web layer carries,
+issue 060's ``Strict-Transport-Security`` header. That is most of what makes
+049's timing hard to take.
