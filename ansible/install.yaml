@@ -75,12 +75,25 @@
 #        - python
 #      command: python2.7 /tmp/get-pip.py --user
 
+    - name: Install git, which pip needs to clone the application
+      # The 070 rehearsal caught this on a fresh host: nothing here installed
+      # git, and the pip task below fails without it.
+      tags:
+        - code
+      apt:
+        name: git
+        state: present
+      become: yes
+
     - name: Install the Kasvimuseo application
       tags:
         - code
       pip:
         executable: "/home/{{ app_user }}/.local/bin/pip2"
-        name: "git+ssh://git@bitbucket.org/akaihola/kasvimuseo.git"
+        # GitHub, not Bitbucket: the repository moved, and the Bitbucket copy
+        # stopped receiving pushes. The 070 rehearsal caught the old URL: a
+        # window that installed from it would deploy stale code.
+        name: "git+ssh://git@github.com/akaihola/kasvimuseo.git"
         state: latest
         extra_args: "--user"
 
@@ -151,13 +164,18 @@
       tags:
         - database
         - restore
-      become: true
-      become_user: "{{ postgresql_user }}"
+      # As the database's own role over TCP, not as postgres over peer auth.
+      # The dumps here carry no OWNER TO statements, so whoever restores one
+      # owns every restored table. The 070 rehearsal caught the old way: a
+      # restore as postgres left the application denied its own tables.
       postgresql_db:
         name: "{{ item.name }}"
         owner: "{{ item.owner | default(postgresql_user) }}"
         state: restore
         target: /tmp/backup.sql
+        login_host: 127.0.0.1
+        login_user: "{{ item.owner | default(postgresql_user) }}"
+        login_password: "{{ kasvimuseo_db_password }}"
       when: database_backup_to_restore is defined
       with_items: "{{ postgresql_databases }}"
 

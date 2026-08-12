@@ -2,7 +2,7 @@
 Issue 070: No throwaway target to rehearse the security maintenance window
 =============================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Low
 :Area: deployment / infrastructure
 :Reported: 2026-08-06
@@ -50,10 +50,44 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     extra-vars, so a staging run points them at ``staging_domain`` while every
     other value comes from ``vars/main.yml`` unchanged and no production file
     moves. README.rst, "Rehearsing the window on a throwaway host", is the
-    runbook, keyed to the Hetzner CX22. What remains is the follow-on act a
-    checkout cannot do: stand up the CX22 from a custom Debian 10 image, point a
-    throwaway DNS name at it, vault throwaway secrets, and run
-    ``ansible/secure-production.yaml`` against the staging inventory.
+    runbook, keyed to the Hetzner CX22. What remained was the follow-on act a
+    checkout cannot do: stand up a host, point a throwaway DNS name at it,
+    vault throwaway secrets, and run ``ansible/secure-production.yaml``
+    against the staging inventory. On 2026-08-09 a first execution attempt
+    fixed three faults in the prose before any server existed (commit
+    1b93917). The runbook now bootstraps the fresh host, and plants the
+    ``local_settings.py`` a fresh install does not have before a second run.
+    The reduced variant now skips ``nginx,certbot,https`` and sets
+    ``nginx_start=false``, instead of ``--skip-tags web``, which also skipped
+    the uWSGI role and left 051's gate no ``uwsgi.ini`` to read. The verify
+    play now also asserts the Strict-Transport-Security header (060). The
+    maintainer then chose the reduced rehearsal now and the full one later,
+    and it ran the same day: commit 8260b6f, on the idle Hetzner CX11
+    ``lead-1``, wiped and booted from the archived Debian 10 cloud image in
+    rescue mode. Two clean runs, with production's ``local_settings.py``
+    shape planted between them, proved every claim under "What a rehearsal
+    proves" except the two the web layer carries. The live run caught four
+    more faults, each one live in the real window too. The install URL named
+    the Bitbucket copy, which no longer receives pushes; a window run would
+    have deployed stale code. ``bootstrap.yaml`` pinned Bitbucket's pre-2023
+    ssh host key, which ssh refuses today. Nothing installed ``git``, which
+    pip needs to clone the application. And the restore ran as ``postgres``,
+    so a dump with no ``OWNER TO`` statements left the application locked
+    out of its own tables. Commit 8260b6f fixes all four. The full rehearsal
+    followed the same day, on ``kasvimuseo-staging.vempai.men``, and passed
+    twice: commit a8df30b, ``ok=89 failed=0``, the second run quiet. Every
+    claim under "What a rehearsal proves" now holds, the web layer included:
+    the page answers 200 over a trusted certificate, the response carries
+    ``Strict-Transport-Security`` (060), and a forged Host gets a clean 400.
+    It caught three more faults. certbot writes one lineage per
+    ``certbot_certs`` entry while the nginx template reads a directory per
+    domain, so a three-name certificate left nginx unable to start; staging
+    now issues one lineage per name, and production's ``live/`` layout must
+    be checked before the window. Current master over the raw pre-South-cut
+    dump answers 500, so the staging seed is now the migrated dump the
+    README's "Crossing the South cut" section produces -- the real window
+    has the same dependency. And the uWSGI role never started a stopped
+    service; it does now. The staging host stays up for later use.
 
 Problem
 =======
@@ -199,6 +233,8 @@ It does not:
 - stand in for the real Let's Encrypt renewal of the ambitone.com names, or for
   production's exact operating system, unless the image matches it.
 
-If staging DNS is not wanted, run ``install.yaml`` without the ``web`` tag and
-skip the two HTTPS assertions. That run still proves every ordering above except
-the nginx header, which is most of what makes 049's timing hard to take.
+If staging DNS is not wanted, run the reduced rehearsal in README.rst, "Without
+staging DNS". It keeps the uWSGI role, because 051's gate reads ``uwsgi.ini``,
+and skips the nginx and certbot roles and the ``https``-tagged verify tasks.
+That run still proves every ordering above except the nginx header, which is
+most of what makes 049's timing hard to take.

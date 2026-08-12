@@ -10,10 +10,13 @@
 # the production playbooks' `hosts: all` can never reach a staging box by
 # accident. Nothing here is loaded unless you pass -i ansible/hosts.staging.
 #
-# Replace the placeholder below with the public DNS name you pointed at the
-# throwaway Hetzner CX22 (see README.rst, "Rehearsing the window on a throwaway
-# host"). Use the SAME name for the vaulted secrets file,
-# ansible/host_vars/<that-name>, and for staging_domain in
-# ansible/vars/staging.yml.
+# staging-rehearsal is a reused Hetzner CX11 (renamed kasvimuseo-staging-
+# rehearsal in Hetzner Cloud), wiped and booted from a Debian 10 cloud image
+# for the 2026-08-09 reduced rehearsal (README.rst, "Rehearsing the window on
+# a throwaway host"). kasvimuseo-staging.vempai.men points at it. Its vaulted secrets file is
+# ansible/host_vars/staging-rehearsal, untracked on purpose: its vault
+# password is the operator's throwaway one, not production's. The Python 2.7
+# interpreter is the one production's era of these playbooks assumes; the
+# host prep that makes it work is in the README section named above.
 [staging]
-staging.example.invalid
+staging-rehearsal ansible_host=135.181.83.114 ansible_python_interpreter=/usr/bin/python2.7 ansible_ssh_private_key_file=~/.ssh/id_rsa

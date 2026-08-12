@@ -36,8 +36,12 @@
   shell: systemctl daemon-reload
   when: wsgi_service.changed
 
-- name: Ensure that the wsgi service is enabled
-  service: "name={{ uwsgi_service }} enabled=yes"
+# Started as well as enabled: with only `enabled`, a host whose uWSGI is down
+# stays down for the whole run unless the config happens to change, and the
+# verify play fails at its start-time check. The 070 rehearsal hit exactly
+# that after an operator stop.
+- name: Ensure that the wsgi service is enabled and running
+  service: "name={{ uwsgi_service }} enabled=yes state=started"
 
 # We can't use a handler for this, because handlers don't work well with dynamic parameters.
 - name: Restart uWSGI service

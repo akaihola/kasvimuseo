@@ -17,9 +17,10 @@
 
 # The one public DNS name you control and have already pointed at the throwaway
 # host. certbot issues a trusted certificate for it and its two subdomains, and
-# the verify play checks HTTPS against it. Replace it, and match it in
-# ansible/hosts.staging.
-staging_domain: staging.example.invalid
+# the verify play checks HTTPS against it. The records live in Cloudflare's
+# vempai.men zone, DNS-only (not proxied): certbot's HTTP-01 challenge and the
+# verify play's TLS checks must reach the host itself, not Cloudflare's edge.
+staging_domain: kasvimuseo-staging.vempai.men
 
 kasvimuseo_allowed_hosts:
   - "{{ staging_domain }}"
@@ -43,14 +44,28 @@ nginx_http_template:
         static_paths:
           /: /www/ylaneenkasvit/media/
 
+# One lineage per name, not one SAN certificate for all three. certbot names
+# its directory after the first domain of a certificate, and
+# nginx-site.conf.j2 loads /etc/letsencrypt/live/<server.domain>/ for every
+# server block -- the 2026-08-09 full rehearsal proved that a single
+# three-name certificate leaves the static. and media. blocks pointing at
+# directories that do not exist, and nginx refuses to start.
 certbot_certs:
   - domains:
       - "{{ staging_domain }}"
+  - domains:
       - "static.{{ staging_domain }}"
+  - domains:
       - "media.{{ staging_domain }}"
 
-# Seed the throwaway database from the committed production dump (issue 070), so
-# the rehearsal runs against real data rather than an empty schema. The path is
+# Seed the throwaway database from the production dump (issue 070), so the
+# rehearsal runs against real data rather than an empty schema. The path is
 # relative to the playbook in ansible/. install.yaml only restores when this is
 # defined, so it is set here and absent from production's vars.
-database_backup_to_restore: ../.dev/backups/production.sql
+#
+# The dump must have crossed the South cut first. install.yaml deploys current
+# master, and the 2026-08-09 full rehearsal proved that current code over the
+# raw pre-cut dump answers 500: Django 1.7 queries tables the old schema does
+# not have. README.rst, "Crossing the South cut", is the catch-up that turns
+# production.sql into this file.
+database_backup_to_restore: ../.dev/backups/production-migrated.sql
