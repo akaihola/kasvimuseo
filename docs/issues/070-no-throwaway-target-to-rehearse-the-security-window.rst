@@ -55,14 +55,14 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     vault throwaway secrets, and run ``ansible/secure-production.yaml``
     against the staging inventory. On 2026-08-09 a first execution attempt
     fixed three faults in the prose before any server existed (commit
-    179bc5b). The runbook now bootstraps the fresh host, and plants the
+    1b93917). The runbook now bootstraps the fresh host, and plants the
     ``local_settings.py`` a fresh install does not have before a second run.
     The reduced variant now skips ``nginx,certbot,https`` and sets
     ``nginx_start=false``, instead of ``--skip-tags web``, which also skipped
     the uWSGI role and left 051's gate no ``uwsgi.ini`` to read. The verify
     play now also asserts the Strict-Transport-Security header (060). The
     maintainer then chose the reduced rehearsal now and the full one later,
-    and it ran the same day: commit 7c8fdbd, on the idle Hetzner CX11
+    and it ran the same day: commit 8260b6f, on the idle Hetzner CX11
     ``lead-1``, wiped and booted from the archived Debian 10 cloud image in
     rescue mode. Two clean runs, with production's ``local_settings.py``
     shape planted between them, proved every claim under "What a rehearsal
@@ -73,9 +73,9 @@ Issue 070: No throwaway target to rehearse the security maintenance window
     ssh host key, which ssh refuses today. Nothing installed ``git``, which
     pip needs to clone the application. And the restore ran as ``postgres``,
     so a dump with no ``OWNER TO`` statements left the application locked
-    out of its own tables. Commit 7c8fdbd fixes all four. The full rehearsal
+    out of its own tables. Commit 8260b6f fixes all four. The full rehearsal
     followed the same day, on ``kasvimuseo-staging.vempai.men``, and passed
-    twice: commit 92146e7, ``ok=89 failed=0``, the second run quiet. Every
+    twice: commit a8df30b, ``ok=89 failed=0``, the second run quiet. Every
     claim under "What a rehearsal proves" now holds, the web layer included:
     the page answers 200 over a trusted certificate, the response carries
     ``Strict-Transport-Security`` (060), and a forged Host gets a clean 400.
