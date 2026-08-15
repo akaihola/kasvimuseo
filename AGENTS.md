@@ -36,6 +36,17 @@ decides. The commands or the checklist come first. The argument comes below.
 These rules bind new text and text you edit. They do not oblige you to rewrite a
 document you are not otherwise touching.
 
+## Maintain agent memories
+
+Every agent must maintain the shared memories in `.agents/memory/`.
+
+At the start of a session, every agent must read `.agents/memory/MEMORY.md`.
+During a session, every agent must record durable project facts in that directory.
+At the end of a session, every agent must update `MEMORY.md` when the memory index needs a new entry.
+
+Use one Markdown file for each durable fact. Keep each file short and link it from `MEMORY.md`.
+Do not write project memories in an agent-specific directory.
+
 ## Do not duplicate prose
 
 Write a fact once, in the file that owns it. Everywhere else, write one short
