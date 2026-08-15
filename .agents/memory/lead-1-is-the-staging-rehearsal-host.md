@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 7ffdd050-57e8-4227-a77a-c59056215558
-  modified: 2026-08-09T19:46:03.181Z
+  modified: 2026-08-09T20:01:13.205Z
 ---
 
 The issue 070 **reduced** rehearsal passed on 2026-08-09 (commit 7c8fdbd on the
@@ -28,6 +28,18 @@ to the vempai.men zone). The token in `cloudflare-api.env` (`CF_API_TOKEN`) is
 no-South stack. Over the un-migrated production dump that risks the South-cut
 schema gap — README "Crossing the South cut" is the catch-up the real window
 needs first.
+
+**The FULL rehearsal passed on 2026-08-09** (`ok=89 failed=0`, run6.log in
+`.dev/rehearsal/` of the task worktree): page 200 over trusted HTTPS, HSTS
+`max-age=300` asserted, forged Host → clean 400, all three lineages fresh,
+passwords idempotent. It took: (a) the South-cut catch-up — restore
+production.sql into the dev cluster, run `db upgrade-photologue` from a
+`/tmp/stage4` worktree of fa8ac5f with `KASVIMUSEO_IMAGE=kasvimuseo-dev-stage4`
+(image already built), then `app manage migrate`, then
+`pg_dump --no-owner --no-acl` → `production-migrated.sql` (now the staging
+seed in vars/staging.yml); (b) per-domain certbot lineages; (c) uwsgi role
+`state=started` fix. `manage.py migrate` interactively prompts about stale
+content types at the end — use `--noinput`.
 
 **Certificate lineage trap, proven live (full rehearsal, 2026-08-09):** a
 `certbot_certs` entry with three domains issues ONE lineage named after the
