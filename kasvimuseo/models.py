@@ -188,7 +188,8 @@ class Species(models.Model):
         blank=True)
     photo = models.ForeignKey(
         'photologue.Photo',
-        null=True, blank=True)
+        null=True, blank=True,
+        on_delete=models.CASCADE)
     photo_is_horizontal = models.NullBooleanField(
         verbose_name=_(u'photo is wider than it is tall'),
         default=None,
@@ -347,8 +348,8 @@ class Location(models.Model):
 
 
 class LocationContact(models.Model):
-    location = models.ForeignKey(Location)
-    contact = models.ForeignKey(Contact)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
 
     def __unicode__(self):
         return u'%s/%s' % (self.location, self.contact)
@@ -418,9 +419,11 @@ class Observation(models.Model):
         verbose_name=_(u'YläneNro'))
     origin = models.ForeignKey(
         Location,
+        on_delete=models.CASCADE,
         verbose_name=_(u'Kasvin alkuperä'))
     species = models.ForeignKey(
         Species,
+        on_delete=models.CASCADE,
         verbose_name=_(u'Kasvilaji'))
     variation = models.CharField(
         max_length=200,
@@ -507,6 +510,7 @@ class Bed(models.Model):
     plot = models.ForeignKey(
         Plot,
         null=True, blank=True,
+        on_delete=models.CASCADE,
         verbose_name=_(u'plot'))
     name = models.CharField(
         max_length=80,
@@ -531,10 +535,12 @@ class Bed(models.Model):
 class Label(models.Model):
     species = models.ForeignKey(
         Species,
+        on_delete=models.CASCADE,
         verbose_name=_(u'species'))
     photo = models.ForeignKey(
         'photologue.Photo',
-        null=True, blank=True)
+        null=True, blank=True,
+        on_delete=models.CASCADE)
     visible = models.BooleanField(default=True)
 
     def __unicode__(self):
@@ -563,9 +569,11 @@ class PlantingManager(models.Manager):
 class Planting(models.Model):
     observation = models.ForeignKey(
         Observation,
+        on_delete=models.CASCADE,
         verbose_name=_(u'observation'))
     bed = models.ForeignKey(
         Bed,
+        on_delete=models.CASCADE,
         verbose_name=_(u'bed'))
     planting_date = models.DateField(
         verbose_name=_(u'date of planting'))
@@ -665,6 +673,7 @@ class Planting(models.Model):
 class PlantingPhoto(models.Model):
     planting = models.ForeignKey(
         Planting,
+        on_delete=models.CASCADE,
         verbose_name=_(u'planting'))
     photo = models.ImageField(
         verbose_name=_(u'photo'),
@@ -686,6 +695,7 @@ class PlantingPhoto(models.Model):
 class Care(models.Model):
     planting = models.ForeignKey(
         Planting,
+        on_delete=models.CASCADE,
         verbose_name=_(u'planting'),
         help_text=_(u'Specify the planting'))
     date = models.DateField(
