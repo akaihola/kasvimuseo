@@ -241,12 +241,13 @@ def test_admin_chrome_is_finnish(admin_client):
     # ``title`` from django/conf's. Grappelli 2.7's dashboard renders each
     # model row as the model name -- itself the change link -- plus that one
     # icon, so the old ``>Lisää</a>`` / ``>Muokkaa</a>`` anchors are gone.
-    # The attribute is unquoted because the dashboard template writes
-    # ``title={% trans "Add" %}``; pin what ships.
+    # The attribute is quoted since grappelli 2.8.1 (upgrade plan Stage 7),
+    # which changed ``title={% trans "Add" %}`` to ``title="{% trans "Add" %}"``
+    # in ``dashboard/modules/model_list.html``; pin what ships.
     assert '<h1>Sivuston ylläpito</h1>' in index
     assert 'Site administration' not in index
-    assert 'title=Lisää' in index
-    assert 'title=Add' not in index
+    assert 'title="Lisää"' in index
+    assert 'title="Add"' not in index
 
 
 @pytest.mark.django_db
