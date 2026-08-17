@@ -190,6 +190,14 @@ repair. It has that ruling, and the fix.
    002: A ``post_save`` receiver registered for every model can raise on any
       save. The largest blast radius on the list, and 042 cannot be done until
       it is fixed.
+   072: Deleting a photologue photo deletes the plant species that showed it,
+      and its observations, plantings and care records behind it. Reachable
+      from the photo admin by an editor with no reason to expect it. Behind 002
+      because 002 can fire on any save while this needs a delete, and ahead of
+      009 because it destroys data rather than raising. Thirteen years old
+      rather than new: ``CASCADE`` was Django 1.x's implicit default, and
+      upgrade plan Stage 7 made the rule visible by writing it out. It needs a
+      ruling on three fields, which is why it is filed rather than fixed.
    009: The ``Create Species Sheets`` action 500s on a species with no
       ``external_id``, which the production data has. **Fixed**: those species are
       skipped and named in an admin message.
