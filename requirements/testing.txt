@@ -1,8 +1,52 @@
-# Kept in step with dev/Containerfile. pytest-django 2.9.1 is the last release
-# supporting Django 1.5, and it needs pytest < 3.6; that in turn rules out
-# pytest-cov, so coverage is measured with `coverage run -m pytest`.
-pytest==3.5.0
-pytest-django==2.9.1
-coverage==4.5.4
+# Kept in step with dev/Containerfile and with setup.py's `tests_require`.
+#
+# Upgrade plan Stage 7 is the first stage that moves this file. Stages 0 to 6
+# all ran on pytest-django 2.9.1, whose own `tox.ini` envlist covers Django 1.4
+# to 1.9, so the safety net did not have to move while the framework did. 1.10
+# is where 2.9.1 stops and Stage 8 is the stage that arrives there, so the move
+# happens one stage early, on a Django that both releases support.
+#
+# 3.1.2 covers Django 1.7 to 1.10 and declares `pytest>=2.9`. Three
+# compatibility notes from its own `docs/changelog.rst` that a reader of this
+# suite should know:
+#
+# * 3.0.0 dropped Django 1.4 to 1.6 and moved the guard against unmarked
+#   database access from the cursor level to the connection level. A test that
+#   touches the database without `@pytest.mark.django_db` or the `db` fixture
+#   fails here where 2.9.1 let it through.
+# * 3.0.0 deleted the internal fixtures `_django_db_setup` and
+#   `_django_cursor_wrapper`. Nothing in `kasvimuseo/tests/` names either.
+# * 3.1.0 deleted the internal `_django_clear_outbox` fixture and made a direct
+#   read of `mail.outbox` an `AssertionError`; 3.1.2 put the automatic clearing
+#   back. This suite sends no mail, so neither release affects it.
+pytest-django==3.1.2
+
+# 3.10.1 is the last pytest in the 3.x series and the last release that runs on
+# Python 2.7 (`requires_python` is `>=2.7, !=3.0.*, !=3.1.*, !=3.2.*,
+# !=3.3.*`). pytest 3.5.0 already satisfied pytest-django 3.1.2's `>=2.9`, so
+# this move is a choice rather than a floor: 3.10.1 is the pin Appendix A of
+# `docs/upgrade-plan.rst` gives Stage 8, and taking it here leaves Stage 8
+# nothing to do in this file.
+#
+# It also lifts the `pluggy<0.7` ceiling that pytest 3.5.0 carried and that the
+# note below used to blame for ruling out pytest-cov. The plugin is still not
+# installed: `coverage run -m pytest` is what `dev/kasvimuseo app coverage` and
+# the CI step both run, and one command is easier to keep honest than two.
+pytest==3.10.1
+
+# 5.5 is the last coverage that runs on Python 2.7 (`requires_python` is
+# `>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4`), so this pin is the
+# end of the ladder until the Python 3 flip at Stage 10. Appendix A of
+# `docs/upgrade-plan.rst` schedules it here, and Part 2.6 calls the 4.5.4 pin
+# before it "conservative".
+#
+# One consequence for the gate rather than for the measurement: 5.5 adds the
+# `precision` setting that 4.5.4 has no equivalent of, and `precision` is what
+# decides whether `fail_under` rounds. Measured in this image on a module at an
+# exact 96.77 %: with no `precision`, `fail_under = 97` exits 0, the same
+# rounding 4.5.4 did; with `precision = 2` it exits 2. `.coveragerc` sets it and
+# argues why.
+coverage==5.5
+
 mock==2.0.0
 pbr==4.0.2
