@@ -1722,9 +1722,12 @@ What the list did not have
   ``SET_NULL`` is what a nullable photo reference almost certainly wants, and
   ``Planting.label`` is the precedent in this very model file. Changing it is a
   behaviour change rather than an upgrade step, and it needs the person who owns
-  the garden's data. **This is the one decision this stage leaves open**: the
-  maintainer should rule on whether those three become ``SET_NULL``, and the
-  ruling belongs in an issue of its own rather than in a framework bump.
+  the garden's data. **This is the one decision this stage leaves open**, and it
+  is filed as issue 072, ranked in group 2 of ``docs/issues/index.rst`` behind
+  002. Its ``Decision`` field is where the maintainer rules on the three fields.
+  Note what the filing is worth on its own: no test in this suite deletes a
+  photo, so nothing pins today's behaviour, and writing the rule out is what
+  made it readable at all.
 
 * **Photologue 3.5, not 3.5.1, is a trap on Python 2.7.** The plan offers
   "3.5.1 or 3.6". Read 3.5.1 rather than 3.5: photologue's own ``CHANGELOG``
