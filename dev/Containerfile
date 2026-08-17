@@ -54,9 +54,17 @@ RUN set -e; \
         }; \
     done
 
-# Test dependencies, as pinned in setup.py's tests_require.
-RUN pip install --no-cache-dir 'pytest==3.5.0' 'pytest-django==2.9.1' \
-                               'coverage==4.5.4' \
+# Test dependencies, as pinned in requirements/testing.txt and in setup.py's
+# tests_require. Written out rather than `-r`ed so the layer above -- the
+# runtime install -- stays cacheable when only a test pin moves.
+#
+# No `--no-deps` here, unlike the runtime install: pytest 3.10.1 declares nine
+# requirements (`atomicwrites`, `attrs`, `funcsigs`, `more-itertools`,
+# `pathlib2`, `pluggy>=0.7`, `py`, `six`, `setuptools`) and none of them is a
+# package this repository chooses, so pip resolves them. The runtime set is a
+# hand-maintained lock and this one is not.
+RUN pip install --no-cache-dir 'pytest==3.10.1' 'pytest-django==3.1.2' \
+                               'coverage==5.5' \
                                'mock==2.0.0' 'pbr==4.0.2'
 
 ENV PYTHONPATH=/src \
