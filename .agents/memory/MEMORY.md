@@ -22,3 +22,4 @@
 - [Verify a stage against the dump](verify-a-stage-against-the-dump.md) — old-commit worktree + `.dev` symlink shares this cluster; stage images `kasvimuseo-dev-stage4`/`-stage6`; Django 1.7 auto-fakes initials
 - [media symlink breaks app manage](media-symlink-breaks-app-manage.md) — photologue ≥3.4 writes CACHEDIR.TAG at import; in kandev worktrees swap the untracked symlink for a real dir during manage runs
 - [lead-1 is the staging rehearsal host](lead-1-is-the-staging-rehearsal-host.md) — 070's reduced run passed 2026-08-09; host lives on for the full rehearsal; secrets + working ansible invocation in base .dev/rehearsal
+- [Issue-register tests are in the suite](issue-register-tests-are-in-the-suite.md) — a new docs/issues/ file can turn a green `app test` red; `:Resolution:` is required even when Open
