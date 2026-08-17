@@ -33,3 +33,27 @@ developer warning ("Development setup") and the production cutover ("Crossing
 the South cut", under Deployment), and the Stage 5 record names the 1.7
 fake-by-existence trap. Point people there instead of restating.
 Related: [[photologue-phantom-makemigrations]], [[dev-image-tag-is-shared-between-workspaces]].
+
+**Since 2026-08-17 there is a shortcut.** `.dev/backups/production-migrated.sql`
+in the BASE checkout is a production dump already brought through the South cut
+(made 2026-08-09 for the 070 staging rehearsal). Restore it and migrate
+straight from the current stage's image, with no old-commit worktree and no
+South:
+
+    KASVIMUSEO_DB_NAME=sNdump dev/kasvimuseo db restore \
+        /home/agent/prg/kasvimuseo/.dev/backups/production-migrated.sql
+    KASVIMUSEO_DB_NAME=sNdump KASVIMUSEO_IMAGE=<stage image> \
+        dev/kasvimuseo app manage migrate --noinput
+
+`--noinput` is not optional. Django >= 1.9 runs every migration, commits them,
+and *then* `update_contenttypes` asks on stdin whether to delete the stale
+`auth | message` content type (Django 1.4 deleted that model; production still
+has the row). `app manage` gives the container no terminal, so the run ends in
+`EOFError` **after** the migrations are already applied -- which reads as a
+failed migration and is not one. `--noinput` answers no and keeps the row.
+
+To compare schemas, query `information_schema.columns` and diff against a
+`KASVIMUSEO_DB_NAME=sNfresh db bootstrap` database. It reports name, type,
+length and nullability, and says nothing about column defaults or index names,
+which are Stage 4's items 2 and 3. Never print `auth_user` rows: the dump's
+hashes are real credentials (issues 049-051).
