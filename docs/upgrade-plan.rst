@@ -220,7 +220,11 @@ Test and development
     ``pytest==3.5.0``, ``pytest-django==2.9.1``, ``coverage==4.5.4``,
     ``mock==2.0.0``, ``pbr==4.0.2``.
     pytest 3.5.0 pulls ``py``, ``six``, ``attrs``, ``more-itertools``,
-    ``pluggy<0.7``, ``funcsigs``, ``setuptools``.
+    ``pluggy<0.7``, ``funcsigs``, ``setuptools``. These five held through
+    Stage 6 and moved at Stage 7, the first stage that touches this file:
+    ``pytest-django==3.1.2``, ``pytest==3.10.1``, ``coverage==5.5``, the other
+    two unchanged. pytest 3.10.1 pulls ``atomicwrites`` and ``pathlib2`` as
+    well, and lifts the ``pluggy<0.7`` ceiling.
 
 ``requirements/dev.txt``
     ``django-extensions==1.6.7`` (1.5.9 until Stage 3), ``flax``
@@ -389,10 +393,20 @@ pytest-django      Django              pytest
 4.12.0             4.2 – 6.0           >=7.0, Python >=3.10
 ================== =================== =====================
 
-Note the comment in ``requirements/testing.txt`` — "pytest-django 2.9.1 is the
-last release supporting Django 1.5" — is correct, but it is *also* the case
-that 2.9.1 keeps working all the way to **Django 1.9**. The test suite does not
-need touching until then.
+``requirements/testing.txt`` used to carry the comment "pytest-django 2.9.1 is
+the last release supporting Django 1.5", which is correct; it is *also* the case
+that 2.9.1 keeps working all the way to **Django 1.9**, so the test stack held
+through six stages of framework moves. Stage 7 is where it moved, to 3.1.2, one
+stage ahead of the Django 1.10 that would have forced it.
+
+Two things Stage 7 measured about that move, both of them about the pair rather
+than about either release. 3.0.0 moved the guard against unmarked database
+access from the cursor level to the connection level, so a test that touches the
+database without ``@pytest.mark.django_db`` fails at 3.1.2 where 2.9.1 let it
+through; no test in this suite did. And 3.1.2 reads marks through pytest's
+``MarkInfo``, which pytest 3.6 deprecated, so pairing it with pytest 3.10.1
+costs 456 warnings from one line of the plugin. The Stage 7 record has what that
+cost and what bought it back.
 
 2.5 psycopg2
 ------------
@@ -432,7 +446,11 @@ Package                      Ladder
                              which photologue 3.0.2 declares as a *floor* where
                              2.8.3 declared a ceiling, so the pin must move in
                              that stage's own change (measured at Stage 3);
-                             then 1.3.3 at Stage 7 (photologue 3.7's
+                             then 1.1.1 at Stage 6 (photologue 3.4.1's floor,
+                             and the release upstream wrote that floor for
+                             because of Django 1.9 — **so it stays at Stage 7**,
+                             which this row used to schedule 1.3.3 in);
+                             then 1.3.3 at Stage 9 (photologue 3.7's
                              floor) → 1.5.0 (Dj ≤1.9) → 2.0.0 (1.11–2.2)
                              → 3.0.0 (2.2–3.0) → 3.1.1 (2.2–3.2) → 4.0.0 (4.2–5.1)
 ``Pillow``                   6.2.2 last on py2.7 · 7.0 needs 3.5 · 9.0 → 3.7 ·
@@ -486,7 +504,7 @@ Django API                                           Gone in  Used by
 ``django.core.context_processors``                   1.10     — *done at Stage 6*: the ``TEMPLATES`` entry names ``django.template.context_processors``
 ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS``  1.10     — *done at Stage 6*: one ``TEMPLATES`` setting
 string view names in ``url()``                       1.10     ``ylaneenkasvit/urls.py`` (3 — see Stage 8)
-``patterns()``                                       **2.0**  ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py``
+``patterns()``                                       **1.10** ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py`` (Stage 8 — this row said 2.0 until Stage 7 observed 1.10.8 without it)
 ``django.core.urlresolvers``                         2.0      ``kasvimuseo/admin.py``, ``ylaneenkasvit/dashboard.py``
 ``force_unicode``                                    2.0      — (same)
 ``MIDDLEWARE_CLASSES`` (and its default)             2.0      **nothing — see below**
@@ -1586,35 +1604,317 @@ tests and 99 % coverage.
 Stage 7 — Django 1.8.19 → 1.9.13
 --------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 9a92f79, 5c690c2, 1f16227, 693ae18, 83fd23e
+
+**Done.** The suite ends at 525 tests and 99.16 % coverage, which is the number
+it started at: no test was skipped, none was deleted, and two were changed
+because the framework's correct behaviour changed. What the list below names
+held, with two corrections. The list's two "nothing to do" claims are true, and
+a grep is what proves them. The one prediction it makes about cost is wrong, and
+wrong in an interesting direction.
+
+The pattern of Stages 2, 4, 5 and 6 held again: the cost was in what only
+running the stage could show. Four Django 1.9 removals reach this project rather
+than the two the list has, one of them a 500 on every admin changelist. The
+``on_delete`` work costs no migration and costs an edit to a historical one.
+Photologue's move brings two migrations that close the oldest schema divergence
+this upgrade carries. And the first stage that moves the test stack turns out to
+be the first stage that has to edit three files to change two pins.
+
+**What this changes for the garden.** Nothing visible, which is the point.
+Issue 036 records that the runtime stack is end-of-life, and this stage moves
+the framework from a release that stopped getting security fixes in April 2018
+to one whose series ended in June 2017. Neither is supported, so the honest
+claim is narrow: the gap between this application and a supported Django is one
+rung shorter, and two more rungs (Stages 8 and 9) reach the Django 1.11 LTS the
+Python 3 flip needs. What stops being at risk today is smaller and real. Every
+admin changelist would have answered 500 at 1.9 because of one template line,
+and that line is gone. Deleting a plant species while a photo of it exists
+behaves exactly as it did at 1.8, because every ``ForeignKey`` now says so in
+writing rather than relying on a default Django 2.0 deletes.
+
+**What this changes technically, and why the ladder.** This stage is the
+argument for one rung at a time, made in numbers. It moved one Django minor
+version and it found six things, four of which no amount of reading would have
+produced: a template tag whose removal is a 500, a test import of a deleted
+shim, a migration prediction that was wrong, and a schema convergence nobody had
+noticed was coming. Each one was a single-line fix *because* only one version
+moved. Bundle Stages 5 to 9 into one commit and the same six findings arrive
+together, as one red suite with 630 warnings and no way to tell which version
+caused what. The suite is the instrument, and it only reads cleanly when exactly
+one thing has changed since it was last green. That is what "make each step
+survivable" buys, and it is why this plan is 19 stages rather than one jump to
+Django 6.
+
+``on_delete`` is the same argument applied two versions early. Django 1.9 makes
+it a warning and Django 2.0 makes it an error, so Stage 11 could do it. Doing it
+here costs one mechanical edit across 12 fields plus 12 in a migration, on a
+version where the old form still works, so the change can be made and the suite
+run with nothing else moving. Left to Stage 11 it becomes a hard failure at
+import time, competing for attention with ``patterns()``, ``allow_tags``,
+``include()``'s app_name and ``force_unicode``, all of which come due in that
+same stage. Cheap now, or expensive later and mixed with four other things: that
+choice is the whole plan in one line.
 
 * ``EMPTY_CHANGELIST_VALUE`` is gone, and ``django.contrib.admin.util`` with it:
   **nothing to do.** Both were used only by ``kasvimuseo_admin_list.py``, deleted
-  in Stage 5.
+  in Stage 5. **Verified rather than trusted:** ``grep -rn`` for both names over
+  the whole repository finds them in ``docs/issues/034`` and in this file, and in
+  no ``.py`` or ``.html`` anywhere. So does a grep for the other four names 1.9
+  deletes that this project once had a use for: ``django.db.models.get_model``,
+  ``django.forms.util``, ``WSGIRequest.REQUEST`` and
+  ``django.utils.datastructures.SortedDict``.
 * ``ForeignKey(on_delete=...)`` starts warning. Add it now — it becomes
-  mandatory at 2.0 and adding it early costs one no-op migration.
+  mandatory at 2.0. **It costs no migration at all**; see below.
 * **Test stack moves for the first time:** ``pytest-django`` 2.9.1 → 3.1.2
-  (Django 1.7–1.10), ``pytest`` 3.5.0 → 3.0.x/3.10.x.
-* ``django-grappelli`` → 2.8.3; ``django-photologue`` → 3.5.1 or 3.6.
+  (Django 1.7–1.10), ``pytest`` 3.5.0 → 3.10.1, ``coverage`` 4.5.4 → 5.5.
+* ``django-grappelli`` → 2.8.3; ``django-photologue`` → 3.5.1.
+  ``django-sortedm2m`` stays at 1.1.1, against Part 2.6 above.
+
+What the list did not have
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Two more 1.9 removals reach this project, and the list names neither.**
+  A grep for the two names it does have cannot find them, because both have
+  different names.
+
+  - ``{% load url from future %}`` on line 4 of
+    ``kasvimuseo/templates/admin/change_list.html``. Django 1.9's release notes
+    say "``ssi`` and ``url`` template tags are removed from the ``future``
+    template tag library", so this template raised ``TemplateSyntaxError`` and
+    **every changelist in the admin was a 500** — which, in an application that
+    *is* its admin, is the whole site. The ``future`` library existed to give
+    Django 1.3 the quoted-name ``url`` syntax early, and that syntax has been
+    the default ``url`` tag since 1.5, so deleting the load line changes nothing
+    that renders. The nine ``{% url '...' %}`` calls in the file already quote
+    their name.
+  - ``django.utils.importlib`` in ``kasvimuseo/tests/test_dev_login.py``. It was
+    a Python 2.5 shim for the standard library's ``importlib``, which Python 2.7
+    has, so the import now names the standard library. This one was a *collection
+    error*, not a failure: pytest collected 518 of 525 items and stopped.
+
+  The lesson for Stages 8 to 19 is procedural. The `Django API removals`_ table
+  is a list of names this project was known to use, so it cannot warn about a
+  name nobody had grepped for. Read the release notes' own "Features removed in
+  X" section against the repository, which is how both of these turned up.
+
+* **``on_delete`` costs no migration, and costs an edit to a historical one.**
+  Django 1.9's ``ForeignObject.deconstruct`` writes ``on_delete`` into the
+  kwargs unconditionally, and a field rebuilt from a migration that omits it
+  falls back to ``CASCADE``. Both sides therefore deconstruct to the same
+  thing, and ``makemigrations kasvimuseo --dry-run`` answers "No changes
+  detected in app 'kasvimuseo'" before and after the model change. What the
+  deprecation message asks for is the other half of the sentence, "on models
+  **and in existing migrations**", so all 12 fields in
+  ``kasvimuseo/migrations/0001_initial.py`` name ``CASCADE`` too. Measured in
+  the container: importing that module went from 12 warnings to 0. Editing a
+  historical migration is safe here because ``on_delete`` is enforced in Python
+  and never reaches the schema — Django emits no ``ON DELETE`` clause.
+
+* **Twelve of the 13 foreign keys, and three of the 12 deserve a second look.**
+  ``Planting.label`` already said ``SET_NULL``, so 12 moved, all to
+  ``CASCADE``, which is the default Django 1.x applied. No delete behaviour
+  changes, which is what an upgrade stage should cost. But ``Species.photo``,
+  ``Label.photo`` and ``Bed.plot`` are nullable, and ``CASCADE`` on the first
+  two means **deleting a photologue Photo deletes the plant species that showed
+  it**, and with it that species' observations, plantings and care records.
+  ``SET_NULL`` is what a nullable photo reference almost certainly wants, and
+  ``Planting.label`` is the precedent in this very model file. Changing it is a
+  behaviour change rather than an upgrade step, and it needs the person who owns
+  the garden's data. **This is the one decision this stage leaves open**: the
+  maintainer should rule on whether those three become ``SET_NULL``, and the
+  ruling belongs in an issue of its own rather than in a framework bump.
+
+* **Photologue 3.5, not 3.5.1, is a trap on Python 2.7.** The plan offers
+  "3.5.1 or 3.6". Read 3.5.1 rather than 3.5: photologue's own ``CHANGELOG``
+  says 3.5 "failed to install under Python 2.7", because distutils choked on a
+  non-ASCII filename (their issue #149), and 3.5.1 is the fix. 3.6 is the
+  release that added Django 1.10 and is Stage 8's rung, so taking 3.5.1 keeps
+  one rung per stage and leaves Stage 8's list correct as written.
+
+* **Photologue 3.5 closes the oldest schema divergence in this upgrade.** 3.5
+  ships two migrations that 3.4.1 does not: ``0009_auto_20160102_0904`` rewrites
+  ``photo.date_taken``'s help text, and ``0010_auto_20160105_1307`` widens
+  ``title`` and ``slug`` on both ``photologue_photo`` and ``photologue_gallery``
+  to ``varchar(250)``. The Stage 4 measurement found production's two ``title``
+  columns at ``varchar(100)`` where the model said 50, left there by Stage 2's
+  faked South ``0002``, and Stage 5 inherited that. An ``AlterField`` re-types a
+  column whatever its current width, so both databases converge.
+
+  Measured, not reasoned, and against the dump rather than against an empty
+  database. ``production-migrated.sql`` restored into a throwaway local
+  database read ``photologue_gallery.title varchar(100)``,
+  ``photologue_photo.title varchar(100)`` and both slugs ``varchar(50)``
+  before the migration, and all four ``varchar(250)`` after it. Then the two
+  databases were compared: ``information_schema.columns`` over the 56
+  ``photologue_*`` columns and the 93 ``kasvimuseo_*`` columns of the migrated
+  dump and of a ``db bootstrap`` database built from the migrations alone
+  **agree exactly**, on name, type, length and nullability.
+
+  So the Stage 4 record's item 1 is spent. The two ``title`` columns were the
+  last thing on that list that a column comparison could see, and they agree
+  now. Its items 2 and 3 are about South's leftover column defaults and about
+  index and constraint names, which ``information_schema.columns`` does not
+  report, so this measurement says nothing about them and they should be
+  assumed to remain.
+
+* **Django 1.9's ``migrate`` stops on the production database, and it is not a
+  migration that stops it.** All 15 pending migrations applied, and then the
+  ``post_migrate`` receiver ``update_contenttypes`` asked, on standard input,
+  whether to delete the stale content type ``auth | message`` — Django 1.4
+  deleted that model, and production's ``django_content_type`` still carries the
+  row. ``dev/kasvimuseo app manage`` gives the container no terminal, so the run
+  ended in ``EOFError`` *after* every migration had committed. Pass
+  ``--noinput`` to answer no and leave the row, which is what the deployment
+  wants: the row is inert, and deleting it deletes anything pointing at it.
+  ``README.rst``'s deployment section is where that flag belongs when this stage
+  ships.
+
+* **django-sortedm2m stays at 1.1.1, and Part 2.6 above is wrong to schedule
+  1.3.3 here.** Photologue 3.5.1 declares ``django-sortedm2m>=1.1.1``, the same
+  floor 3.4.1 declared, and photologue's ``CHANGELOG`` entry for 3.4.1 is one
+  line: "Django 1.9 requires latest version of django-sortedm2m". The dates
+  settle which release that means. Photologue published 3.4.1 on 2015-12-23 and
+  sortedm2m published 1.1.1 on 2015-12-07, so ``>=1.1.1`` **is** the Django 1.9
+  floor, written by upstream for this exact reason. 1.1.1's classifiers stop at
+  Django 1.8, which is why the pin looks wrong and is not; classifiers lag,
+  changelogs do not. The next real floor is photologue 3.7's ``>=1.3.3`` at
+  Stage 9.
+
+* **The test pins live in three files, so the first stage that moves them edits
+  three.** ``requirements/testing.txt`` is the source, ``dev/Containerfile``
+  writes the same five pins out again rather than ``-r``-ing the file (so that a
+  test-pin change does not invalidate the cached runtime layer), and
+  ``setup.py``'s ``tests_require`` names four of them. Stages 0 to 6 never moved
+  the test stack, so the duplication cost nothing for seven stages and was
+  invisible. It costs one forgotten file at Stage 7 and at every stage after it.
+  Stage 9 moves these pins again; whoever does it should check all three.
+
+* **pytest 3.10.1 with pytest-django 3.1.2 costs 456 warnings, and one ini line
+  buys them back.** ``pytest_django/plugin.py:630`` reads a test's marks through
+  ``MarkInfo``, which pytest 3.6 deprecated and pytest 4 removes, so one line of
+  the plugin printed 456 of the 630 warnings the first green run produced. Those
+  456 buried the 174 that matter, every one of them Django's and every one of
+  them work Stages 8 and 11 own. ``pytest.ini`` now carries
+  ``filterwarnings = ignore:MarkInfo objects are deprecated``, and the suite
+  prints 162 warnings, all Django's. Stage 9's pytest-django 3.10.0 calls
+  ``node.iter_markers()``, so that stage deletes the line.
+
+  Note what was *not* forced: pytest 3.5.0 already satisfied pytest-django
+  3.1.2's declared ``pytest>=2.9``. Moving to 3.10.1 is a choice, and the reason
+  is that Appendix A already gives Stage 8 that pin, so taking it here leaves
+  Stage 8 nothing to do in ``requirements/testing.txt``.
+
+* **coverage 5.5 did not have to wait for Python 3, and it makes the 97 floor
+  mean 97.** ``.coveragerc`` predicted that ``precision`` would arrive with the
+  Python 3 flip at Stage 10. coverage 5.5 declares
+  ``requires_python >= 2.7, ..., < 4``, so it arrives here instead. coverage
+  compares the *rounded* percentage unless ``precision`` is set, which made
+  ``fail_under = 97`` refuse nothing above 96.5 % for the whole of Stages 0 to
+  6. Measured in the Stage 7 image on a module at an exact 96.77 %: with no
+  ``precision``, the gate exits 0; with ``precision = 2`` it exits 2. Also
+  measured, and worth knowing: the command line is not the place for it, because
+  ``coverage report --fail-under=97 --precision=2`` exits 0 and only the value
+  in ``.coveragerc`` reaches the comparison. The floor did not move, and at
+  99.16 % it has two points of headroom rather than one and a half.
+
+* **One behaviour change the suite had pinned at the old version.** Grappelli
+  2.8.1 changed ``title={% trans "Add" %}`` to ``title="{% trans "Add" %}"`` in
+  ``dashboard/modules/model_list.html``, so ``test_admin_chrome_is_finnish``
+  asserts ``title="Lisää"`` where it asserted the unquoted form Stage 6 pinned.
+  One test update, no application change. That test is the only one in the suite
+  that asserts a string *Django* translates rather than one this repository
+  does, so it moves whenever the skin's markup does; expect it again at 2.9.1
+  in Stage 8.
+
+What Stage 7 hands Stage 8, measured
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The 162 warnings the green suite prints are Stage 8's and Stage 11's work list,
+already sorted. They are recorded here because a warning count is cheap to read
+now and expensive to reconstruct later.
+
+Due at 1.10, so **Stage 8 owns these**:
+
+============================================== ===== =========================
+Warning                                        Count Where
+============================================== ===== =========================
+``patterns()`` is deprecated                      24 ``kasvimuseo/urls.py``,
+                                                     ``ylaneenkasvit/urls.py``
+                                                     (4 calls), and
+                                                     ``test_settings_logging.py``
+``render()`` must be called with a dict           51 Django's own
+                                                     ``admin_list.py`` and
+                                                     grappelli's ``grp_tags.py``
+                                                     — **nothing to do here**
+``context_instance`` argument of                  12 ``kasvimuseo/views.py``
+``render_to_string``                                 lines 302–310
+string view arguments to ``url()``                28 four names, not three
+``load_template_sources()``                        1 ``test_settings_template_dirs.py``
+============================================== ===== =========================
+
+Two of those rows correct this document. **The `Django API removals`_ table
+dates ``patterns()`` at 2.0, and Django removed it at 1.10.** Observed the way
+that table says it observes things: ``django/conf/urls/__init__.py`` defines
+``patterns`` in the 1.9.13 sdist and does not in the 1.10.8 sdist, and 1.10's
+release notes list it under "Features removed in 1.10". The row is corrected
+above. And Stage 8's list names three string view arguments; there are **four**.
+The fourth is ``planted_observation`` in ``kasvimuseo/urls.py``, which is a
+string naming a view in the same module rather than a dotted path, so it reads
+as a callable at a glance.
+
+Due at 2.0, so **Stage 11 owns these**: ``allow_tags`` on four fields (21
+warnings, three of them this project's — ``coordinates``, ``page`` and ``map``
+in ``kasvimuseo/admin.py`` — and ``admin_thumbnail`` photologue's), ``include()``
+with a namespace and no ``app_name`` (9), passing a 3-tuple to ``include()`` (9),
+and the 7 remaining ``on_delete`` warnings, which are photologue 3.5.1's own
+migrations and not this project's.
 
 Stage 8 — Django 1.9.13 → 1.10.8
 --------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``TEMPLATE_*`` and ``django.core.context_processors`` are gone (Stage 6 already
   did this).
 * Define ``MIDDLEWARE`` (new style). ``MIDDLEWARE_CLASSES`` is still honoured
   here, so both can coexist for one stage.
-* String view references in ``url()`` are gone → import the views as callables
-  in ``ylaneenkasvit/urls.py``. Three of them, and not the three this plan was
-  written against: ``django.views.static.serve`` for the dead
-  ``/media/grappelli/`` route left with Stage 0 (issue 022), and
-  ``ylaneenkasvit.media.serve_media`` arrived with the live ``/media/`` route
-  (issue 048). What is there now is the two auth views,
-  ``django.contrib.auth.views.login`` and ``.logout``, plus ``serve_media``.
+* String view references in ``url()`` are gone → import the views as callables.
+  **Four of them, not three**, and not the three this plan was written against
+  either: ``django.views.static.serve`` for the dead ``/media/grappelli/`` route
+  left with Stage 0 (issue 022), and ``ylaneenkasvit.media.serve_media`` arrived
+  with the live ``/media/`` route (issue 048). Stage 7 ran the suite and read the
+  warnings: ``django.contrib.auth.views.login`` and ``.logout`` and
+  ``ylaneenkasvit.media.serve_media`` in ``ylaneenkasvit/urls.py``, plus
+  ``planted_observation`` in ``kasvimuseo/urls.py``. The fourth is a bare name
+  rather than a dotted path, which is why it reads as a callable at a glance.
+* ``patterns()`` **is gone here, not at 2.0.** `Django API removals`_ dated it
+  2.0 until Stage 7 observed ``django/conf/urls/__init__.py`` defining
+  ``patterns`` in the 1.9.13 sdist and not in the 1.10.8 one. Five call sites,
+  each becoming a plain list: ``kasvimuseo/urls.py`` line 13,
+  ``ylaneenkasvit/urls.py`` lines 12, 53 and 74, and
+  ``kasvimuseo/tests/test_settings_logging.py`` line 62. Stage 7's suite prints
+  24 warnings for them.
+* ``render_to_response(..., RequestContext(request))`` loses its
+  ``context_instance`` argument. One call site,
+  ``kasvimuseo/views.py`` lines 302 to 310, and 12 warnings at Stage 7. Pass a
+  ``request=`` keyword or move to ``render()``.
 * ``django.core.urlresolvers`` → ``django.urls`` (available from 1.10).
 * ``django-grappelli`` → 2.9.1; ``django-photologue`` → 3.6.
+* **Nothing to do in ``requirements/testing.txt``:** Stage 7 already took
+  pytest-django 3.1.2, pytest 3.10.1 and coverage 5.5, which is the row
+  Appendix A gives this stage.
+* **Expect ``test_admin_chrome_is_finnish`` to need one edit**, as it did at
+  Stage 6 and again at Stage 7. It is the only test that asserts a string Django
+  translates rather than one this repository does, so grappelli's markup decides
+  it, and 2.9.1 is a new skin.
+* Two warnings Stage 7 measured that are **not this project's work**. Django's
+  own ``contrib/admin/templatetags/admin_list.py`` and grappelli's
+  ``templatetags/grp_tags.py`` raise "``render()`` must be called with a dict,
+  not a Context" 51 times between them at 1.9. Django 1.10 fixes its own side by
+  removing the deprecated path; whether grappelli 2.9.1 fixes its side is a
+  question for this stage rather than a change to make here.
 
 Stage 9 — Django 1.10.8 → 1.11.29 (LTS) — the staging point
 -----------------------------------------------------------
@@ -1993,8 +2293,7 @@ The direct pins per stage:
 Stage      Django       pytest-django     pytest     coverage
 ========== ============ ================= ========== ==========
 0 – 6      1.5 – 1.8    2.9.1             3.5.0      4.5.4
-7          1.9          2.9.1             3.5.0      5.5
-8          1.10         3.1.2             3.10.1     5.5
+7 – 8      1.9 – 1.10   3.1.2             3.10.1     5.5
 9          1.11 (py2.7) 3.10.0            4.6.11     5.5
 10 – 12    1.11 – 2.1   3.10.0            4.6.11     5.5
 13 – 15    2.2 – 3.1    4.5.2             6.2.5      7.2.7
