@@ -15,10 +15,13 @@ source = kasvimuseo,ylaneenkasvit
 
 # Four kinds of file, and a reason each:
 #
-#   migrations/  A 2013-era South chain that the tests do not replay at all --
-#                SOUTH_TESTS_MIGRATE = False, so syncdb builds the test
-#                database from the models. Measuring code no test can reach
-#                would put a permanent, meaningless 0% in the total.
+#   migrations/  Django migrations, which pytest-django replays into the test
+#                database before the first test and which no test imports.
+#                They read as covered or uncovered depending on the run rather
+#                than on the suite, so measuring them says nothing. This line
+#                used to name a South chain and SOUTH_TESTS_MIGRATE = False;
+#                upgrade plan Stage 5 ended South, and Stage 7's Django 1.9
+#                deleted the `syncdb` that sentence relied on.
 #   tests/       Measuring the tests measures whether the tests ran, which the
 #                suite already reports, and inflates the total with a thousand
 #                statements that are covered by construction.
@@ -27,15 +30,13 @@ source = kasvimuseo,ylaneenkasvit
 #   *settings*   asserting nothing; test_settings.py in particular would be
 #                measuring the measurement.
 #
-# Deliberately **not** omitted: kasvimuseo/templatetags/kasvimuseo_admin_list.py.
-# docs/test-coverage-plan.rst excludes that vendored fork of Django's
-# admin_list from its coverage *target*, and this file does not contradict it:
-# nothing here asks anybody to raise the fork's 91%. But a target and a floor
-# are different instruments. Dropping 139 statements out of the measurement to
-# protect the number is the opposite of a gate, the fork is covered
-# incidentally by the admin changelist smoke tests and so moves with them, and
-# issue 034 has already scheduled the file for deletion at upgrade Stage 5 --
-# at which point the total rises rather than needing to be renegotiated.
+# Nothing else is omitted, and one candidate was refused on purpose. The
+# vendored fork of Django's admin_list, kasvimuseo/templatetags/
+# kasvimuseo_admin_list.py, sat at 91% and was 139 statements; dropping those
+# out of the measurement to protect the number would have been the opposite of
+# a gate. Upgrade plan Stage 5 deleted the file instead, and the total rose
+# rather than needing to be renegotiated, which is what this paragraph
+# predicted.
 omit =
     */migrations/*
     */tests/*
@@ -46,10 +47,11 @@ omit =
 [report]
 # The gate: one floor on the total, not a per-file minimum.
 #
-# Today's total is 97.87% -- 920 of 940 statements, measured on 2026-08-03 and
-# written out in docs/test-coverage-plan.rst under "Where coverage stands".
-# 97 is deliberately just under that, and both neighbouring choices were
-# considered and rejected:
+# Today's total is 99.16% -- 823 of 830 statements, measured on 2026-08-17 at
+# upgrade plan Stage 7. The floor was chosen against 97.87% -- 920 of 940
+# statements on 2026-08-03, written out in docs/test-coverage-plan.rst under
+# "Where coverage stands" -- and 97 is deliberately just under that number.
+# Both neighbouring choices were considered and rejected:
 #
 #   * A floor **at** today's number turns every unrelated pull request into a
 #     coverage negotiation: one defensive `except` branch nobody can trigger
@@ -69,20 +71,33 @@ omit =
 # comfortably above the next integer for a while; do not raise it in the same
 # pull request that earns the increase.
 #
-# One property of the installed coverage worth knowing rather than
-# rediscovering: **4.5.4 compares the rounded percentage**, not the exact one.
-# Measured, not assumed -- `coverage report --fail-under=98` passes today at
-# 97.87%, and --fail-under=99 fails. So this floor is in practice 96.5%, about
-# thirteen statements below today, and half a point looser than it reads.
-# There is no `precision` setting to tighten it with before coverage 5.0, which
-# needs Python 3 and so arrives with upgrade Stage 10; a half-integer here
-# (97.5) would be exact, and is not used because a floor should be legible at a
-# glance and this one has room to spare either way.
+# The floor used to be half a point looser than it read, and `precision` below
+# is what closed that gap. **coverage compares the rounded percentage unless
+# `precision` is set**, so under the coverage 4.5.4 this file was written
+# against, `fail_under = 97` refused nothing above 96.5%. Measured then rather
+# than assumed: at 97.87%, `coverage report --fail-under=98` passed and
+# `--fail-under=99` failed.
+#
+# Upgrade plan Stage 7 moved the pin to coverage 5.5 -- the last release that
+# runs on Python 2.7, so this did not wait for the Python 3 flip the way this
+# paragraph used to predict -- and 5.5 has the `precision` setting 4.5.4 has no
+# equivalent of. Measured in the Stage 7 image on a module at an exact 96.77%:
+# with no `precision`, `fail_under = 97` exits 0; with `precision = 2` it exits
+# 2. The command line is not the place to set it, also measured --
+# `coverage report --fail-under=97 --precision=2` exits 0, and only the value in
+# this file reaches the comparison.
+#
+# So 97 now means 97, and the number did not have to move to mean it. The
+# headroom above is two points rather than one and a half.
 #
 # Per-file minimums were the other candidate and were rejected. Twenty-one
-# files each with a number is twenty-one numbers to maintain, coverage 4.5.4
-# cannot express them anyway (no per-file thresholds before 5.0), and the one
-# file whose number genuinely differs from the rest -- the vendored fork above
-# -- is the one file nobody intends to change.
+# files each with a number is twenty-one numbers to maintain, and coverage
+# cannot express them at all: `coverage report --help` on 5.5 offers
+# `--fail-under` on the total and nothing per file.
 fail_under = 97
+
+# What makes `fail_under` above mean 97 rather than 96.5. Upgrade plan Stage 7
+# is where this became available; the paragraph above has the measurement.
+precision = 2
+
 show_missing = True
