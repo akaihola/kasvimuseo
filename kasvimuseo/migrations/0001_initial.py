@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('visible', models.BooleanField(default=True)),
-                ('photo', models.ForeignKey(blank=True, to='photologue.Photo', null=True)),
+                ('photo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='photologue.Photo', null=True)),
             ],
             options={
                 'verbose_name': 'label',
@@ -104,8 +104,8 @@ class Migration(migrations.Migration):
             name='LocationContact',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('contact', models.ForeignKey(to='kasvimuseo.Contact')),
-                ('location', models.ForeignKey(to='kasvimuseo.Location')),
+                ('contact', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='kasvimuseo.Contact')),
+                ('location', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='kasvimuseo.Location')),
             ],
             options={
                 'db_table': 'kasvimuseo_location_contacts',
@@ -128,7 +128,7 @@ class Migration(migrations.Migration):
                 ('pictures', models.TextField(verbose_name='Kuvat', blank=True)),
                 ('notes', models.TextField(verbose_name='notes', blank=True)),
                 ('environment', models.TextField(help_text='Maaper\xe4 ja kasvupaikka', verbose_name='Kasvuymp\xe4rist\xf6', blank=True)),
-                ('origin', models.ForeignKey(verbose_name='Kasvin alkuper\xe4', to='kasvimuseo.Location')),
+                ('origin', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='Kasvin alkuper\xe4', to='kasvimuseo.Location')),
             ],
             options={
                 'ordering': ('species__name_fi',),
@@ -148,9 +148,9 @@ class Migration(migrations.Migration):
                 ('width', models.IntegerField(default=15, help_text='width of the planting in cm', verbose_name='width')),
                 ('depth', models.IntegerField(default=15, help_text='depth of the planting in cm', verbose_name='depth')),
                 ('removal_date', models.DateField(null=True, verbose_name='date of removal', blank=True)),
-                ('bed', models.ForeignKey(verbose_name='bed', to='kasvimuseo.Bed')),
+                ('bed', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='bed', to='kasvimuseo.Bed')),
                 ('label', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='label', blank=True, to='kasvimuseo.Label', null=True)),
-                ('observation', models.ForeignKey(verbose_name='observation', to='kasvimuseo.Observation')),
+                ('observation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='observation', to='kasvimuseo.Observation')),
             ],
             options={
                 'ordering': ('observation__species__name_fi',),
@@ -166,7 +166,7 @@ class Migration(migrations.Migration):
                 ('photo', models.ImageField(upload_to='photos/planting', verbose_name='photo')),
                 ('date', models.DateField(verbose_name='date of photo')),
                 ('photographer', models.CharField(max_length=80, verbose_name='name of photographer')),
-                ('planting', models.ForeignKey(verbose_name='planting', to='kasvimuseo.Planting')),
+                ('planting', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='planting', to='kasvimuseo.Planting')),
             ],
             options={
                 'verbose_name': 'planting',
@@ -209,7 +209,7 @@ class Migration(migrations.Migration):
                 ('substrate', models.TextField(verbose_name='Kasvualusta', blank=True)),
                 ('additional_info', models.TextField(verbose_name='additional information', blank=True)),
                 ('photo_is_horizontal', models.NullBooleanField(default=None, verbose_name='photo is wider than it is tall', editable=False)),
-                ('photo', models.ForeignKey(blank=True, to='photologue.Photo', null=True)),
+                ('photo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='photologue.Photo', null=True)),
             ],
             options={
                 'ordering': ('name_fi',),
@@ -221,7 +221,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='observation',
             name='species',
-            field=models.ForeignKey(verbose_name='Kasvilaji', to='kasvimuseo.Species'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='Kasvilaji', to='kasvimuseo.Species'),
             preserve_default=True,
         ),
         migrations.AlterUniqueTogether(
@@ -237,19 +237,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='label',
             name='species',
-            field=models.ForeignKey(verbose_name='species', to='kasvimuseo.Species'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='species', to='kasvimuseo.Species'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='care',
             name='planting',
-            field=models.ForeignKey(verbose_name='planting', to='kasvimuseo.Planting', help_text='Specify the planting'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='planting', to='kasvimuseo.Planting', help_text='Specify the planting'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='bed',
             name='plot',
-            field=models.ForeignKey(verbose_name='plot', blank=True, to='kasvimuseo.Plot', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='plot', blank=True, to='kasvimuseo.Plot', null=True),
             preserve_default=True,
         ),
     ]
