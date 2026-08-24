@@ -27,23 +27,21 @@
 # to answer, and there was no version history behind it to reason about. It is
 # vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
 # build reaches nothing but PyPI.
-# 1.9.13 is the last release in the 1.9 series (upgrade plan Stage 7). 1.9
-# deletes `django.contrib.admin.util`, `EMPTY_CHANGELIST_VALUE` and the `url`
-# tag of the `future` template library. The first two had one reader,
-# `kasvimuseo/templatetags/kasvimuseo_admin_list.py`, which Stage 5 deleted;
-# the third had one, `kasvimuseo/templates/admin/change_list.html`, and Stage 7
-# deleted the `{% load url from future %}` line. 1.9 also starts warning about
-# a `ForeignKey` with no `on_delete`, which 2.0 makes an error, so all 13 of
-# them in `kasvimuseo/models.py` name `on_delete=models.CASCADE` since the same
-# stage. The 1.8 pin before this one was an LTS and brought the one `TEMPLATES`
-# setting; the Stage 6 section of `docs/upgrade-plan.rst` records that.
-django==1.9.13
+# 1.10.8 is the last release in the 1.10 series (upgrade plan Stage 8). 1.10
+# deletes `patterns()`, the string view reference in `url()` and the
+# `context_instance` argument of `render_to_response`. The commit before this
+# pin moved every call site off all three, so the suite proved the new forms
+# on 1.9.13 first. 1.10 also reads the new `MIDDLEWARE` setting -- it still
+# honours `MIDDLEWARE_CLASSES`, which Django 2.0 stops reading -- and it adds
+# `django.urls`, the new home of `django.core.urlresolvers`. The Stage 8
+# section of `docs/upgrade-plan.rst` records both renames.
+django==1.10.8
 # Grappelli ships exactly one series per Django release and says so in its own
-# README -- 2.5.x for Django 1.6, 2.6.x for 1.7, 2.7.x for 1.8, 2.8.x for 1.9
-# -- so this pin is not a preference and cannot be skipped or deferred a stage;
-# it moves whenever the line above does (issue 035). 2.8.3 is the last 2.8
-# release on PyPI.
-django-grappelli==2.8.3
+# README -- 2.5.x for Django 1.6, 2.6.x for 1.7, 2.7.x for 1.8, 2.8.x for
+# 1.9, 2.9.x for 1.10 -- so this pin is not a preference and cannot be skipped
+# or deferred a stage; it moves whenever the line above does (issue 035).
+# 2.9.1 is the only 2.9 release on PyPI.
+django-grappelli==2.9.1
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
 # constraints picks exactly that pair, a gunicorn that cannot import. This pin
@@ -53,26 +51,21 @@ django-grappelli==2.8.3
 # and 20.x, so no `setuptools<82` has to be carried through eight stages.
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
-# Upgrade plan Stage 7: 3.4.1 -> 3.5.1. Stage 6's 3.4.1 was the first release
-# to state Django 1.9 support, so the framework line above did not force this
-# move; the plan's Stage 7 list asks for "3.5.1 or 3.6" and 3.5.1 is the
-# nearer rung. Stage 8 takes 3.6, which is the release that added Django 1.10.
-# Read 3.5.1 rather than 3.5: photologue's own CHANGELOG says 3.5 "failed to
-# install under Python 2.7", because distutils choked on a non-ASCII filename
-# (their issue #149), and 3.5.1 is the fix. This interpreter is Python 2.7, so
-# 3.5 is not a candidate here at all.
+# Upgrade plan Stage 8: 3.5.1 -> 3.6, the release that added Django 1.10
+# support and the rung the plan's Stage 8 list names. One rung per stage held
+# at Stage 7, which took 3.5.1 because it was the nearer of the two rungs its
+# list offered and left 3.6 to this stage.
 #
-# What 3.5.1 changes for this file: nothing in the pins, and two migrations in
-# the database. `photologue/0009_auto_20160102_0904` rewrites
-# `photo.date_taken`'s help text, and `0010_auto_20160105_1307` widens
-# `title` and `slug` on both `photologue_photo` and `photologue_gallery` from
-# `varchar(50)` to `varchar(250)`. That second one closes the oldest schema
-# divergence this upgrade carries: the Stage 4 measurement found production's
-# two `title` columns at `varchar(100)` where the model said 50, left there by
-# Stage 2's faked South `0002`, and an `AlterField` re-types a column whatever
-# its current width, so a restored database and a freshly-bootstrapped one both
-# come out of this migration at 250.
-django-photologue==3.5.1
+# What 3.6 changes for this file: nothing. Its metadata declares the same
+# four floors 3.5.1 declared -- `django-sortedm2m>=1.1.1` among them, read
+# from PyPI rather than assumed -- so no other pin moves. The next sortedm2m
+# floor is photologue 3.7's `>=1.3.3` at Stage 9; the sortedm2m comment below
+# carries that story. What it changes in the database: nothing either. The
+# 3.6 sdist ships the same migrations 0001 to 0010 that 3.5.1 shipped, so
+# there is no new migration to apply. Stage 7's move ended at 0010, which
+# closed the oldest schema divergence this upgrade carried; the Stage 7
+# section of `docs/upgrade-plan.rst` records that.
+django-photologue==3.6
 # photologue's model dependency. Upgrade plan Stage 6 moved it 0.8.1 -> 1.1.1,
 # because photologue 3.4.1 declares `django-sortedm2m>=1.1.1`. A pin below a
 # declared floor is not a warning, it is a stopped application -- `manage` in

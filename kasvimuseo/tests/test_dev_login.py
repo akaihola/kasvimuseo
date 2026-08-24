@@ -22,7 +22,7 @@ from importlib import import_module
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.urlresolvers import (Resolver404, clear_url_caches, resolve,
+from django.urls import (Resolver404, clear_url_caches, resolve,
                                       reverse)
 from django.http import Http404
 from django.test.utils import override_settings

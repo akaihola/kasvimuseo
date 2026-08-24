@@ -41,8 +41,8 @@ import logging.config
 
 import pytest
 from django.conf import settings
-from django.conf.urls import patterns, url
-from django.core.urlresolvers import clear_url_caches
+from django.conf.urls import url
+from django.urls import clear_url_caches
 from django.test.utils import override_settings
 from django.utils.six import StringIO
 
@@ -59,7 +59,7 @@ def crash(request):
     raise ZeroDivisionError('deliberate, from test_settings_logging')
 
 
-urlpatterns = patterns('', url(r'^crash/$', crash))
+urlpatterns = [url(r'^crash/$', crash)]
 
 
 def handlers_reaching(logger_name):

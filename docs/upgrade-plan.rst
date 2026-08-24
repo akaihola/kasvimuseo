@@ -503,15 +503,15 @@ Django API                                           Gone in  Used by
 ``SubfieldBase``                                     1.10     —
 ``django.core.context_processors``                   1.10     — *done at Stage 6*: the ``TEMPLATES`` entry names ``django.template.context_processors``
 ``TEMPLATE_DIRS`` / ``TEMPLATE_CONTEXT_PROCESSORS``  1.10     — *done at Stage 6*: one ``TEMPLATES`` setting
-string view names in ``url()``                       1.10     ``ylaneenkasvit/urls.py`` (3 — see Stage 8)
-``patterns()``                                       **1.10** ``ylaneenkasvit/urls.py``, ``kasvimuseo/urls.py`` (Stage 8 — this row said 2.0 until Stage 7 observed 1.10.8 without it)
-``django.core.urlresolvers``                         2.0      ``kasvimuseo/admin.py``, ``ylaneenkasvit/dashboard.py``
+string view names in ``url()``                       1.10     — *done at Stage 8*: four imported callables; the fourth was in ``kasvimuseo/urls.py``
+``patterns()``                                       **1.10** — *done at Stage 8*: plain lists (this row said 2.0 until Stage 7 observed 1.10.8 without it)
+``django.core.urlresolvers``                         2.0      — *done at Stage 8*: ``django.urls`` on all 15 import lines
 ``force_unicode``                                    2.0      — (same)
-``MIDDLEWARE_CLASSES`` (and its default)             2.0      **nothing — see below**
+``MIDDLEWARE_CLASSES`` (and its default)             2.0      — *done at Stage 8*: renamed to ``MIDDLEWARE``; see below
 ``ForeignKey`` without ``on_delete``                 2.0      ``kasvimuseo/models.py`` (13 sites)
 ``django.contrib.auth.views.login`` / ``logout``     2.1      ``ylaneenkasvit/urls.py``
 ``django.utils.six``                                 3.0      —
-``render_to_response``                               3.0      ``kasvimuseo/views.py``
+``render_to_response``                               3.0      — *done at Stage 8*: ``planted_observation`` calls ``render()``
 ``postgresql_psycopg2`` ENGINE alias                 3.0      ``common_settings.py``
 ``ugettext`` / ``ugettext_lazy``                     **4.0**  ``models.py``, ``admin.py``, ``dashboard.py``
 ``force_text`` / ``smart_text``                      4.0      ``ylaneenkasvit/dashboard.py``
@@ -540,7 +540,7 @@ of ``None`` and Django **2.0 deleted** ``MIDDLEWARE_CLASSES`` and made
 will not raise an obvious error. Define ``MIDDLEWARE`` explicitly **now**, while
 it is still just a no-op restatement of the current default. *Done* -- issue 019
 wrote the 1.5 default out into ``common_settings``, under the name Django 1.5
-reads; Stage 8 renames it.
+reads; Stage 8 renamed it.
 
 **No** ``django.contrib.messages`` **app.** Its context processor is configured
 but the app is not in ``INSTALLED_APPS``. The admin requires it from Django 1.7
@@ -1877,52 +1877,108 @@ migrations and not this project's.
 Stage 8 — Django 1.9.13 → 1.10.8
 --------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 1851d45, 57edfff, d8cd291, 6a52576
 
-* ``TEMPLATE_*`` and ``django.core.context_processors`` are gone (Stage 6 already
-  did this).
-* Define ``MIDDLEWARE`` (new style). ``MIDDLEWARE_CLASSES`` is still honoured
-  here, so both can coexist for one stage.
-* String view references in ``url()`` are gone → import the views as callables.
-  **Four of them, not three**, and not the three this plan was written against
-  either: ``django.views.static.serve`` for the dead ``/media/grappelli/`` route
-  left with Stage 0 (issue 022), and ``ylaneenkasvit.media.serve_media`` arrived
-  with the live ``/media/`` route (issue 048). Stage 7 ran the suite and read the
-  warnings: ``django.contrib.auth.views.login`` and ``.logout`` and
-  ``ylaneenkasvit.media.serve_media`` in ``ylaneenkasvit/urls.py``, plus
-  ``planted_observation`` in ``kasvimuseo/urls.py``. The fourth is a bare name
-  rather than a dotted path, which is why it reads as a callable at a glance.
-* ``patterns()`` **is gone here, not at 2.0.** `Django API removals`_ dated it
-  2.0 until Stage 7 observed ``django/conf/urls/__init__.py`` defining
-  ``patterns`` in the 1.9.13 sdist and not in the 1.10.8 one. Five call sites,
-  each becoming a plain list: ``kasvimuseo/urls.py`` line 13,
-  ``ylaneenkasvit/urls.py`` lines 12, 53 and 74, and
-  ``kasvimuseo/tests/test_settings_logging.py`` line 62. Stage 7's suite prints
-  24 warnings for them.
-* ``render_to_response(..., RequestContext(request))`` loses its
-  ``context_instance`` argument. One call site,
-  ``kasvimuseo/views.py`` lines 302 to 310, and 12 warnings at Stage 7. Pass a
-  ``request=`` keyword or move to ``render()``.
-* ``django.core.urlresolvers`` → ``django.urls`` (available from 1.10).
-* ``django-grappelli`` → 2.9.1; ``django-photologue`` → 3.6.
-* **Nothing to do in ``requirements/testing.txt``:** Stage 7 already took
-  pytest-django 3.1.2, pytest 3.10.1 and coverage 5.5, which is the row
-  Appendix A gives this stage.
-* **Expect ``test_admin_chrome_is_finnish`` to need one edit**, as it did at
-  Stage 6 and again at Stage 7. It is the only test that asserts a string Django
-  translates rather than one this repository does, so grappelli's markup decides
-  it, and 2.9.1 is a new skin.
-* Two warnings Stage 7 measured that are **not this project's work**. Django's
-  own ``contrib/admin/templatetags/admin_list.py`` and grappelli's
-  ``templatetags/grp_tags.py`` raise "``render()`` must be called with a dict,
-  not a Context" 51 times between them at 1.9. Django 1.10 fixes its own side by
-  removing the deprecated path; whether grappelli 2.9.1 fixes its side is a
-  question for this stage rather than a change to make here.
+**Done.** The suite ends at 525 tests and 99.16 % coverage, the numbers it
+started at. Every call site this list names was where it said: four string
+views, five ``patterns()`` calls, one ``context_instance``. Both of its
+"nothing to do" claims held. Its one prediction about a test was wrong in the
+cheap direction — no edit was needed. And the one failure the list could not
+have named cost 15 red tests from a single line, which is the pattern of
+Stages 2 to 7 again: the cost is in what only running the stage can show.
+
+**What this changes for the garden.** Nothing visible, on purpose. The gap to
+a supported Django is one rung shorter, and Stage 9 is the 1.11 LTS the
+Python 3 flip stands on. The run is also quieter in a way a later stage can
+spend: every warning the suite prints now is a Django 2.0 removal notice, so
+Stage 11's work list is already measured — see the end of this section.
+
+**Order of landing, and why.** The removals list ran backwards this time:
+``patterns()``, string views and ``context_instance`` all still *work* at
+1.9.13, so the refactor (1851d45) landed before the pins moved and the suite
+measured it alone, on a Django that accepts both forms — 525 passed before
+and after, warnings 162 → 98. Then the pins moved (57edfff) with the code
+already in the shape 1.10 requires. A stage that has to land a refactor and
+a version bump should try this order first: each commit's diff is one kind of
+change, and the suite reads cleanly after each.
+
+* Define ``MIDDLEWARE`` (new style): **done as a rename, not a coexistence**
+  (6a52576). Both spellings are honoured at 1.10, but a second copy of the
+  same six classes is a second statement to keep in step, and
+  ``test_settings_middleware`` had scheduled the rename for this stage in its
+  own docstring. Every class in the list is Django's own and supports both
+  protocols. Three readers of the old name existed beside the two in that
+  test — ``test_settings_messages``, ``test_settings_cookie_security``, and
+  prose in ``test_admin`` — and the rename is what found them: at 1.10 a
+  project that renames the setting gets ``global_settings``' two-entry
+  ``MIDDLEWARE_CLASSES`` default back, so a test still reading the old name
+  fails loudly instead of passing against a stale copy. The deps bump had
+  put 226 "old-style middleware" warning lines into the run; the rename ends
+  them.
+* String view references in ``url()``: the four this section names, in the
+  files it names (1851d45). The fourth, ``planted_observation``, was a bare
+  string resolved against the ``patterns()`` prefix ``'kasvimuseo.views'``,
+  so both removals met in that one line; it is an imported callable now,
+  like the other three.
+* ``patterns()``: the five call sites became plain lists of ``url()`` calls
+  (1851d45), tuples included — the tuple route form leaves with the function
+  that resolved it.
+* ``render_to_response(..., RequestContext(request))`` →
+  ``render(request, ...)``, same template, same context (1851d45). The
+  module's last ``RequestContext`` import went with it.
+* ``django.core.urlresolvers`` → ``django.urls``: 15 import lines, one per
+  file, nothing else on any of them (6a52576). **Silent at 1.10** — the old
+  module warns only from 1.11 — so a grep is what found the count, not the
+  warning list.
+* ``django-grappelli`` → 2.9.1, the only 2.9 release on PyPI;
+  ``django-photologue`` → 3.6 (57edfff). Photologue 3.6 declares the same
+  four floors 3.5.1 declared — sortedm2m's ``>=1.1.1`` among them, read from
+  PyPI rather than assumed — and ships the same migrations 0001 to 0010, so
+  this is the first photologue move in the plan that costs no other pin and
+  no database change. ``makemigrations kasvimuseo --dry-run`` still answers
+  "No changes detected".
+* **Nothing to do in ``requirements/testing.txt``**: held, as Stage 7
+  arranged. ``TEMPLATE_*``: held, gone since Stage 6.
+* **The predicted ``test_admin_chrome_is_finnish`` edit was not needed.**
+  The strings it pins — ``<h1>Sivuston ylläpito</h1>``, ``title="Lisää"`` in
+  a quoted attribute — render identically under grappelli 2.9.1. The first
+  grappelli move since Stage 6 that cost that test nothing.
+* **The question Stage 7 left about grappelli is answered: yes.** The 51
+  "``render()`` must be called with a dict" lines from Django's
+  ``admin_list.py`` and grappelli's ``grp_tags.py`` are zero at 1.10.8 with
+  2.9.1 — Django removed its deprecated path and grappelli's new skin does
+  not take it. Nothing about it rides forward.
+
+What the list did not have
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **One line was 15 red tests: ``select_related('bed__public')``.**
+  ``PlantingManager.public_planted`` named a *column* where only relations
+  are legal. Every Django through 1.9 ignored the invalid name silently;
+  1.10 raises ``FieldError`` for it, so everything that lists public
+  plantings — the reports and the labels API — failed at once. The fix
+  (d8cd291) names the relation alone, ``select_related('bed')``, which is
+  the row ``is_public_planted`` reads and what the line always meant; the
+  query-count test pins that the join still happens. The procedural lesson
+  extends Stage 7's: this is not a removal, so no grep against a table of
+  deleted names can find it. It is a validation that became strict, listed
+  in the release notes' *backwards-incompatible changes* — read that section
+  too, not only "features removed".
+
+* **The warning column is now Stage 11's list, pre-measured.** 113 warning
+  lines remain and every one is ``RemovedInDjango20Warning``: 65
+  ``use_for_related_fields`` (``ObservationManager``), 21 ``allow_tags``
+  (admin methods here and in photologue), 18 for ``include()`` 3-tuples and
+  a namespace without ``app_name`` (both in ``ylaneenkasvit/urls.py``), 7
+  ``on_delete``-less foreign keys in photologue's own migrations, and two
+  singletons. None of it is due before Django 2.0; none of it is this
+  stage's work.
 
 Stage 9 — Django 1.10.8 → 1.11.29 (LTS) — the staging point
 -----------------------------------------------------------
 
-:Status: Planned
+:Status: Next
 
 This is where the project should sit until it is fully Python-3 clean.
 

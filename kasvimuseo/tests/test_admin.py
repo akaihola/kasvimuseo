@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 import pytest
 from django.contrib import admin as django_admin
 from django.contrib.messages.storage import default_storage
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from kasvimuseo import admin
 from kasvimuseo.models import (
@@ -172,7 +172,7 @@ def test_planted_species_report_through_the_admin(admin_client):
     """The action really is reachable, and ``message_user`` really works.
 
     ``message_user`` needs ``MessageMiddleware``, which the explicit
-    ``MIDDLEWARE_CLASSES`` carries (issue 019); the app itself is in
+    ``MIDDLEWARE`` carries (issue 019); the app itself is in
     ``INSTALLED_APPS`` since issue 023.
     """
     factories.create_species(name_fi='valkonarsissi', external_id=11)
