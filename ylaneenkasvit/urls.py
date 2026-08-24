@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.contrib.auth.views import login, logout
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.http import HttpResponseRedirect
 from photologue.views import GalleryArchiveIndexView
@@ -31,11 +31,16 @@ urlpatterns = [
     # ``ylaneenkasvit/dashboard.py`` reverses it.
     url(r'^photologue/', include('photologue.urls', namespace='photologue')),
     url(r'^kasvimuseo/', include('kasvimuseo.urls')),
-    url(r'^accounts/login/$', login,
-        dict(template_name='jqm/login.html'),
+    # ``LoginView`` and ``LogoutView`` arrived at Django 1.11, and Django 2.1
+    # deletes the ``login``/``logout`` function views they replace -- so
+    # upgrade plan Stage 9 moves while both forms exist. Same templates, same
+    # URL names; the templates move from the extra-context dict to
+    # ``template_name`` arguments of ``as_view()``.
+    url(r'^accounts/login/$',
+        LoginView.as_view(template_name='jqm/login.html'),
         name='login'),
-    url(r'^accounts/logout/$', logout,
-        dict(template_name='jqm/logout.html'),
+    url(r'^accounts/logout/$',
+        LogoutView.as_view(template_name='jqm/logout.html'),
         name='logout'),
 
     url(r'^$', lambda request: HttpResponseRedirect('/admin/')),
