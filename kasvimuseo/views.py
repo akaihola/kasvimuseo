@@ -10,8 +10,7 @@ from operator import attrgetter
 
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseForbidden
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.views.generic import View, ListView
 from django.views.generic.base import TemplateResponseMixin, TemplateView
 from django.views.generic.detail import DetailView
@@ -299,15 +298,15 @@ def planted_observation(request, observation_external_id):
     if observation.stories:
         texts.append(observation.stories)
 
-    return render_to_response(
+    return render(
+        request,
         'kasvimuseo/reports/planted-observation.html',
         {'species': observation.species,
          'observation': observation,
          'plantings': plantings,
          'beds': beds,
          'origin': observation.origin,
-         'texts': texts},
-        RequestContext(request))
+         'texts': texts})
 
 
 class BedMap(DetailView):

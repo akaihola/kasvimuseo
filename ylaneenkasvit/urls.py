@@ -1,19 +1,19 @@
 from django.conf import settings
-from django.conf.urls import include, patterns, url
+from django.conf.urls import include, url
 from django.contrib import admin
+from django.contrib.auth.views import login, logout
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.http import HttpResponseRedirect
 from photologue.views import GalleryArchiveIndexView
 from ylaneenkasvit.dev_login import dev_login
+from ylaneenkasvit.media import serve_media
 import re
 
 admin.autodiscover()
 
-urlpatterns = patterns(
-    '',
-
-    (r'^grappelli/', include('grappelli.urls')),
-    (r'^admin/', include(admin.site.urls)),
+urlpatterns = [
+    url(r'^grappelli/', include('grappelli.urls')),
+    url(r'^admin/', include(admin.site.urls)),
     # (r'^sentry/', include('sentry.web.urls')),
     # Photologue's own gallery index is a date archive with ``allow_empty``
     # off, so it raises ``Http404`` until the first gallery exists. Same path
@@ -29,17 +29,17 @@ urlpatterns = patterns(
     # every one of those raises ``NoReverseMatch``. The route above keeps the
     # bare ``pl-gallery-archive`` name as well, because
     # ``ylaneenkasvit/dashboard.py`` reverses it.
-    (r'^photologue/', include('photologue.urls', namespace='photologue')),
-    (r'^kasvimuseo/', include('kasvimuseo.urls')),
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login',
+    url(r'^photologue/', include('photologue.urls', namespace='photologue')),
+    url(r'^kasvimuseo/', include('kasvimuseo.urls')),
+    url(r'^accounts/login/$', login,
         dict(template_name='jqm/login.html'),
         name='login'),
-    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
+    url(r'^accounts/logout/$', logout,
         dict(template_name='jqm/logout.html'),
         name='logout'),
 
-    (r'^$', lambda request: HttpResponseRedirect('/admin/')),
-)
+    url(r'^$', lambda request: HttpResponseRedirect('/admin/')),
+]
 
 # Password-free login for a development browser, and only where something has
 # asked for it: ``settings.DEV_LOGIN`` comes from ``KASVIMUSEO_DEV_LOGIN``,
@@ -50,10 +50,9 @@ urlpatterns = patterns(
 # too. The callable is imported rather than named as a string, because a string
 # view is what Django 1.10 stops accepting (issue 022).
 if settings.DEV_LOGIN:
-    urlpatterns += patterns(
-        '',
+    urlpatterns += [
         url(r'^dev-login/(?P<username>[^/]+)/$', dev_login, name='dev-login'),
-    )
+    ]
 
 # ``manage.py runserver`` serves ``STATIC_URL`` out of the staticfiles finders
 # by itself, and nothing else does -- so under the gunicorn that
@@ -71,10 +70,9 @@ urlpatterns += staticfiles_urlpatterns()
 # fallback the development case needs.
 if (settings.MEDIA_URL.startswith('/')
         and not settings.MEDIA_URL.startswith('//')):
-    urlpatterns += patterns(
-        '',
+    urlpatterns += [
         url(r'^{0}(?P<path>.*)$'.format(
                 re.escape(settings.MEDIA_URL.lstrip('/'))),
-            'ylaneenkasvit.media.serve_media',
+            serve_media,
             name='media'),
-    )
+    ]
