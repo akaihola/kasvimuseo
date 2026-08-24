@@ -16,7 +16,7 @@ from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission, User
 from django.contrib.staticfiles import finders
-from django.core.urlresolvers import resolve, reverse
+from django.urls import resolve, reverse
 from django.test.utils import override_settings
 from django.utils.translation import ugettext
 

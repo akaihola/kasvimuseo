@@ -9,10 +9,11 @@ writing it out changed nothing today, and that it is still the 1.5 default
 rather than something that drifted.
 
 The second assertion is expected to be *deliberately* changed, not to keep
-passing for ever: the list grows entries Django's own default does not have,
-and at Stage 8 of ``docs/upgrade-plan.rst`` it is renamed to ``MIDDLEWARE``.
+passing for ever: the list grows entries Django's own default does not have.
 
-Two deliberate changes have happened so far. ``XFrameOptionsMiddleware`` was
+Three deliberate changes have happened so far. At Stage 8 of
+``docs/upgrade-plan.rst`` the setting became ``MIDDLEWARE``: Django 1.10
+reads the new name, and 2.0 stops reading the old one. ``XFrameOptionsMiddleware`` was
 added for issue 059. And at upgrade plan Stage 5 the comparison to the
 installed ``global_settings`` ended: Django 1.7 cut its own default down to
 ``CommonMiddleware`` and ``CsrfViewMiddleware``, because its project template
@@ -38,10 +39,10 @@ EXPECTED = (
 
 
 def test_middleware_is_the_django_15_default_plus_clickjacking():
-    assert tuple(settings.MIDDLEWARE_CLASSES) == EXPECTED
+    assert tuple(settings.MIDDLEWARE) == EXPECTED
 
 
 def test_middleware_is_defined_by_the_project_not_inherited():
     from ylaneenkasvit import common_settings
 
-    assert tuple(common_settings.MIDDLEWARE_CLASSES) == EXPECTED
+    assert tuple(common_settings.MIDDLEWARE) == EXPECTED

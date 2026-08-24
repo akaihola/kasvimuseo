@@ -24,7 +24,7 @@ import os
 import photologue
 import pytest
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.template import engines
 from django.template.loaders.app_directories import Loader
 

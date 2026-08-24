@@ -42,7 +42,7 @@ import logging.config
 import pytest
 from django.conf import settings
 from django.conf.urls import url
-from django.core.urlresolvers import clear_url_caches
+from django.urls import clear_url_caches
 from django.test.utils import override_settings
 from django.utils.six import StringIO
 
