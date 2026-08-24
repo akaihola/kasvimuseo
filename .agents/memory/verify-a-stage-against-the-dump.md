@@ -14,7 +14,8 @@ database: `git worktree add /tmp/claude/stageNwt <old-commit>`, then
 PGDATA/PGSOCK from $REPO, so the symlink makes both checkouts share one
 cluster. Select the old image with KASVIMUSEO_IMAGE (Stage 4's is
 `kasvimuseo-dev-stage4`: Django 1.6.11 + South; Stage 6's is
-`kasvimuseo-dev-stage6`: Django 1.8.19 + photologue 3.4.1) and the target
+`kasvimuseo-dev-stage6`: Django 1.8.19 + photologue 3.4.1; Stage 8's is
+`kasvimuseo-dev-stage8`: Django 1.10.8 + grappelli 2.9.1 + photologue 3.6) and the target
 database with KASVIMUSEO_DB_NAME.
 
 **Why:** a production dump predates Stage 2; only pre-Stage-5 code (with

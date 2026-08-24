@@ -27,7 +27,7 @@ import os
 
 import pytest
 from django.conf import global_settings, settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test.utils import override_settings
 
 from kasvimuseo.tests.conftest import log_in_as_staff
@@ -152,7 +152,7 @@ def test_the_superseded_template_is_gone():
 
 def test_the_clickjacking_middleware_is_installed():
     assert ('django.middleware.clickjacking.XFrameOptionsMiddleware'
-            in common_settings.MIDDLEWARE_CLASSES)
+            in common_settings.MIDDLEWARE)
 
 
 def test_the_frame_options_value_is_written_out_rather_than_inherited():

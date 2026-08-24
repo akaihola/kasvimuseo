@@ -14,7 +14,7 @@ import os
 import re
 
 import pytest
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.template.loader import render_to_string
 
 from kasvimuseo.templatetags.bush import bush_shadow

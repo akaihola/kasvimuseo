@@ -15,7 +15,7 @@ from __future__ import unicode_literals
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from kasvimuseo import admin  # noqa: F401  (registers the ModelAdmins)
 from kasvimuseo.models import (

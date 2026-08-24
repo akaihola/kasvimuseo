@@ -123,8 +123,10 @@ INSTALLED_APPS = (
 # ``MIDDLEWARE_CLASSES`` is gone from ``global_settings`` and ``MIDDLEWARE``
 # defaults to ``[]``, so a project that never names its own middleware would
 # quietly start with none: no sessions, no authentication, no CSRF (issue 019).
-# Later stages of ``docs/upgrade-plan.rst`` edit this list, and it stays under
-# the old name until Stage 8 (Django 1.10), where both spellings are honoured.
+# Named ``MIDDLEWARE`` since Stage 8 of ``docs/upgrade-plan.rst``: Django 1.10
+# reads the new name and runs the new-style protocol through it, every class
+# below is Django's own and supports both styles, and 2.0 stops reading
+# ``MIDDLEWARE_CLASSES`` at all.
 #
 # ``XFrameOptionsMiddleware`` is the one entry that is not in that default. It
 # is what sets ``X-Frame-Options`` at all -- ``X_FRAME_OPTIONS`` below is read
@@ -132,7 +134,7 @@ INSTALLED_APPS = (
 # editor included, could be framed by any site and clicked through blind
 # (issue 059). Last, so that it sees the finished response of everything above
 # it, which is where Django's own ordering documentation puts it.
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -206,7 +208,7 @@ CSRF_COOKIE_SECURE = True
 # already-JSON-encoded string of messages. The line stays although it now
 # names the default: 057's argument is about what this application must not
 # serialize with, and a default is not a decision -- the same reason 019 writes
-# out ``MIDDLEWARE_CLASSES`` and 059 writes out ``X_FRAME_OPTIONS``.
+# out ``MIDDLEWARE`` and 059 writes out ``X_FRAME_OPTIONS``.
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 # One ``TEMPLATES`` entry replaces ``TEMPLATE_DIRS``,

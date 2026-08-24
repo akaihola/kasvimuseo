@@ -31,7 +31,7 @@ on Django 1.5.
 from __future__ import unicode_literals
 
 import pytest
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from photologue.models import Gallery
 
 
