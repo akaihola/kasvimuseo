@@ -27,21 +27,26 @@
 # to answer, and there was no version history behind it to reason about. It is
 # vendored into `jqm/` in this repository now -- see `jqm/README.rst` -- and a
 # build reaches nothing but PyPI.
-# 1.10.8 is the last release in the 1.10 series (upgrade plan Stage 8). 1.10
-# deletes `patterns()`, the string view reference in `url()` and the
-# `context_instance` argument of `render_to_response`. The commit before this
-# pin moved every call site off all three, so the suite proved the new forms
-# on 1.9.13 first. 1.10 also reads the new `MIDDLEWARE` setting -- it still
-# honours `MIDDLEWARE_CLASSES`, which Django 2.0 stops reading -- and it adds
-# `django.urls`, the new home of `django.core.urlresolvers`. The Stage 8
-# section of `docs/upgrade-plan.rst` records both renames.
-django==1.10.8
+# 1.11.29 is the last release in the 1.11 series, and 1.11 is an LTS (upgrade
+# plan Stage 9). This is the staging point: the project sits on this pin until
+# it is fully Python-3 clean, and Stage 10 flips the interpreter without
+# moving it. 1.11 is also the first Django with a runtime dependency of its
+# own -- `pytz`, declared with no bound -- so this file gains the pytz pin
+# below to stay a complete lock under `--no-deps`.
+django==1.11.29
+
+# Django's own, not the application's: 1.11 declares `pytz` and imports it at
+# startup, and `--no-deps` installs only what this file names. 2021.3 is the
+# version Appendix A of `docs/upgrade-plan.rst` resolves for Stages 10 to 12,
+# so the Python 3 flip keeps this pin. Part 3b.4 of the plan records why any
+# release works: pytz is a data package with a stable API.
+pytz==2021.3
 # Grappelli ships exactly one series per Django release and says so in its own
 # README -- 2.5.x for Django 1.6, 2.6.x for 1.7, 2.7.x for 1.8, 2.8.x for
-# 1.9, 2.9.x for 1.10 -- so this pin is not a preference and cannot be skipped
-# or deferred a stage; it moves whenever the line above does (issue 035).
-# 2.9.1 is the only 2.9 release on PyPI.
-django-grappelli==2.9.1
+# 1.9, 2.9.x for 1.10, 2.10.x for 1.11 -- so this pin is not a preference and
+# cannot be skipped or deferred a stage; it moves whenever the line above does
+# (issue 035). 2.10.4 is the last 2.10 release on PyPI.
+django-grappelli==2.10.4
 # Issue 029: gunicorn <= 20.1.0 imports `pkg_resources`, and setuptools
 # stopped shipping it in 82.0.0 -- resolving the middle upgrade stages without
 # constraints picks exactly that pair, a gunicorn that cannot import. This pin
@@ -51,45 +56,27 @@ django-grappelli==2.9.1
 # and 20.x, so no `setuptools<82` has to be carried through eight stages.
 gunicorn==0.17.4
 psycopg2-binary==2.8.4
-# Upgrade plan Stage 8: 3.5.1 -> 3.6, the release that added Django 1.10
-# support and the rung the plan's Stage 8 list names. One rung per stage held
-# at Stage 7, which took 3.5.1 because it was the nearer of the two rungs its
-# list offered and left 3.6 to this stage.
-#
-# What 3.6 changes for this file: nothing. Its metadata declares the same
-# four floors 3.5.1 declared -- `django-sortedm2m>=1.1.1` among them, read
-# from PyPI rather than assumed -- so no other pin moves. The next sortedm2m
-# floor is photologue 3.7's `>=1.3.3` at Stage 9; the sortedm2m comment below
-# carries that story. What it changes in the database: nothing either. The
-# 3.6 sdist ships the same migrations 0001 to 0010 that 3.5.1 shipped, so
-# there is no new migration to apply. Stage 7's move ended at 0010, which
-# closed the oldest schema divergence this upgrade carried; the Stage 7
-# section of `docs/upgrade-plan.rst` records that.
-django-photologue==3.6
-# photologue's model dependency. Upgrade plan Stage 6 moved it 0.8.1 -> 1.1.1,
-# because photologue 3.4.1 declares `django-sortedm2m>=1.1.1`. A pin below a
+# Upgrade plan Stage 9: 3.6 -> 3.7, the release that added Django 1.11
+# support. What 3.7 changes for this file: one pin. Its metadata raises the
+# sortedm2m floor from `>=1.1.1` to `>=1.3.3`, so the pin below moves in the
+# same commit. What it changes in the database: nothing. The 3.7 sdist ships
+# the same migrations 0001 to 0010 that 3.6 shipped, so there is no new
+# migration to apply.
+django-photologue==3.7
+# photologue's model dependency. Upgrade plan Stage 9 moved it 1.1.1 -> 1.3.3,
+# because photologue 3.7 declares `django-sortedm2m>=1.3.3`. A pin below a
 # declared floor is not a warning, it is a stopped application -- `manage` in
 # the production image is a setuptools console script, and `pkg_resources`
 # resolves the declared requirements of every installed distribution before
 # it runs a line (`ContextualVersionConflict`: the half-day upgrade plan
 # Stage 2 lost, and no stage since has repeated).
 #
-# 1.1.1 stays at Stage 7, and it is the Django 1.9 release of this package even
-# though its classifiers stop at Django 1.8. The evidence is photologue's own
-# CHANGELOG entry for 3.4.1, "Django 1.9 requires latest version of
-# django-sortedm2m": photologue released 3.4.1 on 2015-12-23 and sortedm2m
-# 1.1.1 on 2015-12-07, so 1.1.1 is the release that sentence points at, and
-# `>=1.1.1` is the floor photologue wrote because of Django 1.9. Part 2.6 of
-# `docs/upgrade-plan.rst` used to schedule 1.3.3 here; the Stage 7 section
-# records why it does not, and the next real floor is photologue 3.7's
-# `>=1.3.3` at Stage 9, where the pin moves with the package that asks for it.
-#
 # The build-tool constraint is issue 030, and it is about the *builder* rather
 # than the version: every sortedm2m before 2.0.0 is sdist-only and its
 # `setup.py` fails under setuptools >= 82, so this pin can only be built in a
 # period-appropriate image. The Python 2.7 one here has setuptools 44.1.0, and
 # Stage 10's `python:3.7-alpine` has 57.5.0.
-django-sortedm2m==1.1.1
+django-sortedm2m==1.3.3
 # photologue's as well, since it reads EXIF through this package from 3.4 on.
 # 2.1.2 is the floor photologue declares, and also the ceiling this
 # interpreter allows: it is the last release that ships a Python 2 wheel --
