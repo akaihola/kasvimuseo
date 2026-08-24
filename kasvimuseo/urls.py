@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.clickjacking import xframe_options_exempt
 
@@ -8,11 +8,10 @@ from .views import (BedMap,
                     PlantedSpeciesLabelsApi,
                     PlantedSpeciesList,
                     PlantedSpeciesPrintable,
+                    planted_observation,
                     staff_only_api)
 
-urlpatterns = patterns(
-    'kasvimuseo.views',
-
+urlpatterns = [
     # pylint: disable=E1101
     #         Instance of <class> has no <member>
 
@@ -62,10 +61,10 @@ urlpatterns = patterns(
         name='planted-species'),
 
     url(regex=r'^planted-observation/(\d+)/$',
-        view='planted_observation',
+        view=planted_observation,
         name='planted-observation'),
 
     url(regex=r'^map/(?P<pk>\d+)/$',
         view=BedMap.as_view(),
         name='bed-map'),
-)
+]
