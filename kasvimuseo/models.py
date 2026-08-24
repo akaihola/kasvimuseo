@@ -558,7 +558,12 @@ class PlantingManager(models.Manager):
         base_qs = super(PlantingManager, self).all()
         all_plantings = (base_qs
                          .filter(bed__public=True)
-                         .select_related('bed__public')
+                         # The relation, not its column: ``is_public_planted``
+                         # reads ``self.bed.public``, so the bed row is what
+                         # the join must fetch. Django 1.10 raises
+                         # ``FieldError`` for a non-relational name here where
+                         # 1.9 ignored it (upgrade plan Stage 8).
+                         .select_related('bed')
                          .prefetch_related('care_set')
                          .order_by())
         planting_pks = {planting.pk for planting in all_plantings
