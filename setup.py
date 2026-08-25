@@ -29,6 +29,6 @@ setup(
     install_requires=[line for line in open('requirements/production.txt')],
     tests_require=['mock==2.0.0',
                    'pbr==4.0.2',
-                   'pytest==3.10.1',
-                   'pytest-django==3.1.2']
+                   'pytest==4.6.11',
+                   'pytest-django==3.10.0']
 )

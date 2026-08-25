@@ -29,6 +29,7 @@ from django.template import engines
 from django.template.loaders.app_directories import Loader
 
 APP_LOADER = 'django.template.loaders.app_directories.Loader'
+CACHED_LOADER = 'django.template.loaders.cached.Loader'
 
 
 def test_template_dirs_names_only_the_projects_own_templates():
@@ -45,11 +46,16 @@ def test_no_template_dir_reaches_into_site_packages():
 
 def test_the_app_template_loader_is_active():
     """``APP_DIRS`` and no ``loaders`` override, so Django builds the same
-    two loaders its 1.5 ``TEMPLATE_LOADERS`` default named."""
+    two loaders its 1.5 ``TEMPLATE_LOADERS`` default named. Django 1.11
+    wraps them in one cached loader when ``DEBUG`` is off (upgrade plan
+    Stage 9), so the two loaders to inspect are inside the wrapper."""
     assert settings.TEMPLATES[0]['APP_DIRS'] is True
     assert 'loaders' not in settings.TEMPLATES[0]['OPTIONS']
+    top_level = engines['django'].engine.template_loaders
+    assert ['{0.__module__}.{0.__name__}'.format(type(loader))
+            for loader in top_level] == [CACHED_LOADER]
     loaded = ['{0.__module__}.{0.__name__}'.format(type(loader))
-              for loader in engines['django'].engine.template_loaders]
+              for loader in top_level[0].loaders]
     assert APP_LOADER in loaded
 
 

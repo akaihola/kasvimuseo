@@ -1,38 +1,24 @@
 # Kept in step with dev/Containerfile and with setup.py's `tests_require`.
 #
-# Upgrade plan Stage 7 is the first stage that moves this file. Stages 0 to 6
-# all ran on pytest-django 2.9.1, whose own `tox.ini` envlist covers Django 1.4
-# to 1.9, so the safety net did not have to move while the framework did. 1.10
-# is where 2.9.1 stops and Stage 8 is the stage that arrives there, so the move
-# happens one stage early, on a Django that both releases support.
+# Upgrade plan Stage 9 is the second stage that moves this file; Stage 7 was
+# the first, and the Stage 7 section of `docs/upgrade-plan.rst` records that
+# move. 3.10.0 covers Django 1.8 to 3.0, declares `pytest>=3.6`, and is the
+# last pytest-django that runs on Python 2.7, so the pin holds from here
+# through Stage 12 -- Appendix A of the plan gives the ladder.
 #
-# 3.1.2 covers Django 1.7 to 1.10 and declares `pytest>=2.9`. Three
-# compatibility notes from its own `docs/changelog.rst` that a reader of this
-# suite should know:
-#
-# * 3.0.0 dropped Django 1.4 to 1.6 and moved the guard against unmarked
-#   database access from the cursor level to the connection level. A test that
-#   touches the database without `@pytest.mark.django_db` or the `db` fixture
-#   fails here where 2.9.1 let it through.
-# * 3.0.0 deleted the internal fixtures `_django_db_setup` and
-#   `_django_cursor_wrapper`. Nothing in `kasvimuseo/tests/` names either.
-# * 3.1.0 deleted the internal `_django_clear_outbox` fixture and made a direct
-#   read of `mail.outbox` an `AssertionError`; 3.1.2 put the automatic clearing
-#   back. This suite sends no mail, so neither release affects it.
-pytest-django==3.1.2
+# 3.10.0 reads a test's marks through `node.iter_markers()`, where 3.1.2 read
+# them through `MarkInfo`. That one plugin line was 456 warnings and the only
+# `filterwarnings` entry `pytest.ini` carried since Stage 7; the move to
+# 3.10.0 deleted the entry.
+pytest-django==3.10.0
 
-# 3.10.1 is the last pytest in the 3.x series and the last release that runs on
-# Python 2.7 (`requires_python` is `>=2.7, !=3.0.*, !=3.1.*, !=3.2.*,
-# !=3.3.*`). pytest 3.5.0 already satisfied pytest-django 3.1.2's `>=2.9`, so
-# this move is a choice rather than a floor: 3.10.1 is the pin Appendix A of
-# `docs/upgrade-plan.rst` gives Stage 8, and taking it here leaves Stage 8
-# nothing to do in this file.
-#
-# It also lifts the `pluggy<0.7` ceiling that pytest 3.5.0 carried and that the
-# note below used to blame for ruling out pytest-cov. The plugin is still not
-# installed: `coverage run -m pytest` is what `dev/kasvimuseo app coverage` and
-# the CI step both run, and one command is easier to keep honest than two.
-pytest==3.10.1
+# 4.6.11 is the last pytest in the 4.x series and the last release that runs
+# on Python 2.7 (`requires_python` is `>=2.7, !=3.0.*, !=3.1.*, !=3.2.*,
+# !=3.3.*`; pytest 5 requires Python 3), so this pin also holds through
+# Stage 12. pytest-cov is still not installed: `coverage run -m pytest` is
+# what `dev/kasvimuseo app coverage` and the CI step both run, and one
+# command is easier to keep honest than two.
+pytest==4.6.11
 
 # 5.5 is the last coverage that runs on Python 2.7 (`requires_python` is
 # `>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4`), so this pin is the
