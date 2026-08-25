@@ -10,9 +10,11 @@ from django.utils.encoding import force_text
 from django.utils.translation import override
 
 from kasvimuseo import models
-from kasvimuseo.tests.factories import (create_care, create_location,
+from kasvimuseo.tests.factories import (create_bed, create_care,
+                                        create_label, create_location,
                                         create_observation, create_planted,
-                                        create_planting, create_species)
+                                        create_planting, create_plot,
+                                        create_species)
 from kasvimuseo.tests.test_views import counted_queries
 
 
@@ -426,3 +428,42 @@ def test_label_unicode_with_photo_hidden(photo_factory):
     with override(None):
         assert force_text(label) == 'kielo / {0} [hidden]'.format(
             photo.image_filename())
+
+
+# --------------------------------------------------------------------------
+# on_delete on the nullable foreign keys (issue 072)
+# --------------------------------------------------------------------------
+# Delete the row a nullable ForeignKey points at. The row that points must
+# survive, with the field set to None. Issue 072 states the rule.
+
+@pytest.mark.django_db
+def test_delete_photo_keeps_the_species(photo_factory):
+    photo = photo_factory()
+    species = create_species(photo=photo)
+
+    photo.delete()
+
+    species = models.Species.objects.get(pk=species.pk)
+    assert species.photo is None
+
+
+@pytest.mark.django_db
+def test_delete_photo_keeps_the_label(photo_factory):
+    photo = photo_factory()
+    label = create_label(photo=photo)
+
+    photo.delete()
+
+    label = models.Label.objects.get(pk=label.pk)
+    assert label.photo is None
+
+
+@pytest.mark.django_db
+def test_delete_plot_keeps_the_bed():
+    plot = create_plot()
+    bed = create_bed(plot=plot)
+
+    plot.delete()
+
+    bed = models.Bed.objects.get(pk=bed.pk)
+    assert bed.plot is None

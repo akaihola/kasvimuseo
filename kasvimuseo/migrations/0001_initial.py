@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('visible', models.BooleanField(default=True)),
-                ('photo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='photologue.Photo', null=True)),
+                ('photo', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, blank=True, to='photologue.Photo', null=True)),
             ],
             options={
                 'verbose_name': 'label',
@@ -209,7 +209,7 @@ class Migration(migrations.Migration):
                 ('substrate', models.TextField(verbose_name='Kasvualusta', blank=True)),
                 ('additional_info', models.TextField(verbose_name='additional information', blank=True)),
                 ('photo_is_horizontal', models.NullBooleanField(default=None, verbose_name='photo is wider than it is tall', editable=False)),
-                ('photo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, blank=True, to='photologue.Photo', null=True)),
+                ('photo', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, blank=True, to='photologue.Photo', null=True)),
             ],
             options={
                 'ordering': ('name_fi',),
@@ -249,7 +249,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='bed',
             name='plot',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, verbose_name='plot', blank=True, to='kasvimuseo.Plot', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='plot', blank=True, to='kasvimuseo.Plot', null=True),
             preserve_default=True,
         ),
     ]

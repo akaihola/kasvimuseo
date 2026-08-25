@@ -189,7 +189,7 @@ class Species(models.Model):
     photo = models.ForeignKey(
         'photologue.Photo',
         null=True, blank=True,
-        on_delete=models.CASCADE)
+        on_delete=models.SET_NULL)
     photo_is_horizontal = models.NullBooleanField(
         verbose_name=_(u'photo is wider than it is tall'),
         default=None,
@@ -510,7 +510,7 @@ class Bed(models.Model):
     plot = models.ForeignKey(
         Plot,
         null=True, blank=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_(u'plot'))
     name = models.CharField(
         max_length=80,
@@ -540,7 +540,7 @@ class Label(models.Model):
     photo = models.ForeignKey(
         'photologue.Photo',
         null=True, blank=True,
-        on_delete=models.CASCADE)
+        on_delete=models.SET_NULL)
     visible = models.BooleanField(default=True)
 
     def __unicode__(self):
@@ -607,6 +607,7 @@ class Planting(models.Model):
         Label,
         null=True,
         blank=True,
+        # Every nullable ForeignKey in this file uses SET_NULL (issue 072).
         on_delete=models.SET_NULL,
         verbose_name=_(u'label'),
     )
