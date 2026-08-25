@@ -10,8 +10,10 @@
 # it into INSTALLED_APPS. `runserver_plus` is also what replaced the removed
 # `django-pserver` (issue 033) -- reach it with
 # `dev/kasvimuseo app manage runserver_plus`; `app run` serves with gunicorn
-# (issue 044).
-django-extensions==1.7.9
+# (issue 044). 2.2.9 is the last release that supports both Python 2.7 and
+# Django 1.11 (upgrade plan Stage 9), so it is the pin until the Python 3
+# flip.
+django-extensions==2.2.9
 Werkzeug==0.8.3
 
 # django-extensions' own dependency -- `six>=1.2` in its metadata, imported by
@@ -19,3 +21,10 @@ Werkzeug==0.8.3
 # `production.txt` with it. Pinned rather than resolved because
 # `dev/Containerfile` installs this file with `--no-deps`.
 six==1.11.0
+
+# django-extensions' as well, and only below Python 3.5: 2.2.9 declares
+# `typing ; python_version < "3.5"`, and its admin module imports it, so the
+# `--no-deps` install needs the pin. 3.10.0.0 is the last release, and its
+# own metadata stops at Python 3.5 -- delete this backport at the Python 3
+# flip (upgrade plan Stage 10) with the interpreter that needs it.
+typing==3.10.0.0

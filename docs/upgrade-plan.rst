@@ -1978,23 +1978,87 @@ What the list did not have
 Stage 9 — Django 1.10.8 → 1.11.29 (LTS) — the staging point
 -----------------------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 89f08e8, 76d0da8
 
-This is where the project should sit until it is fully Python-3 clean.
+**Done.** The suite ends where it started: 525 tests, 99.16 % coverage.
+The project now sits on an LTS, and it sits here until it is fully
+Python-3 clean -- Stage 10 flips the interpreter and moves no version.
+Every pin this stage chose is chosen to survive that flip unchanged.
 
-* ``django-grappelli`` → 2.10.4.
-* ``django-photologue`` → 3.7 (needs ``django-sortedm2m >= 1.3.3``).
-* ``django-extensions`` → 2.2.9 (the last release supporting both Python 2.7
-  and Django 1.11).
-* ``pytest-django`` → 3.10.0, ``pytest`` → 4.6.11 (both the last with Python 2.7).
-* Switch ``ylaneenkasvit/urls.py`` from ``auth.views.login``/``logout`` to
-  ``LoginView``/``LogoutView`` — they arrive in 1.11 and the function views are
-  deleted in 2.1, so do it while both exist.
+**What this changes for the garden.** Nothing visible, on purpose. The
+warning list is one measurement better than unchanged: the suite prints
+113 lines before this stage and 113 after, the same categories in the
+same counts, every one a Django 2.0 removal notice from the list at the
+end of the Stage 8 section. Stage 11's work list rides through this
+stage untouched. The seven warnings the stage created itself -- the
+``login``/``logout`` deprecations the bump switched on -- left with the
+refactor below.
+
+**Order of landing, and why.** The reverse of Stage 8's order, and
+forced: ``LoginView`` and ``LogoutView`` do not exist before 1.11, so
+the pins moved first (89f08e8) with the function views still in place --
+1.11 keeps them until 2.1, which is why the switch belongs to this
+stage -- and the refactor followed alone (76d0da8), measured by the
+warning count: 120 lines with the function views, 113 without.
+
+* ``django-grappelli`` → 2.10.4, the 1.11 series (issue 035), and
+  ``django-photologue`` → 3.7, the release that added Django 1.11
+  support (89f08e8). 3.7's metadata raises the sortedm2m floor, so
+  ``django-sortedm2m`` → 1.3.3 in the same commit -- the floor the
+  Stage 7 section predicted here. The 3.7 sdist ships the same
+  migrations 0001 to 0010 that 3.6 shipped: ``makemigrations kasvimuseo
+  --dry-run`` answers "No changes detected", and a fresh database takes
+  all 28 migrations cleanly.
+* **One pin the list above did not name: ``pytz``.** Django 1.11 is the
+  first Django that declares a dependency of its own, and
+  ``production.txt`` installs with ``--no-deps``, so the file gains
+  ``pytz==2021.3`` to stay a complete lock -- the version Appendix A
+  resolves for Stages 10 to 12, so the flip keeps it. Part 3b.4 already
+  argued that any release works.
+* The test pins moved in all three files that carry them, as the
+  Stage 7 section warns: ``requirements/testing.txt``,
+  ``dev/Containerfile`` and ``setup.py``. pytest-django 3.10.0 and
+  pytest 4.6.11 are the last releases that run on Python 2.7, so
+  ``testing.txt`` is done moving until Stage 13. pytest-django 3.10.0
+  reads marks through ``node.iter_markers()``, so ``pytest.ini``'s
+  ``MarkInfo`` ignore -- its only ``filterwarnings`` entry -- is
+  deleted, as Stage 7 scheduled.
+* ``django-extensions`` → 2.2.9, the last release for both Python 2.7
+  and Django 1.11. **Its metadata is why ``dev.txt`` gains a second
+  backport pin**: 2.2.9 declares ``typing`` below Python 3.5, its admin
+  module imports it, and ``dev.txt`` installs with ``--no-deps``.
+  ``typing`` leaves at Stage 10 with the interpreter that needs it.
+* ``login``/``logout`` → ``LoginView``/``LogoutView`` in
+  ``ylaneenkasvit/urls.py`` (76d0da8). Same URL names, same templates;
+  the template names moved from the extra-context dict to ``as_view()``
+  arguments. Stage 12's list already records the 2.1 removal as handled
+  here.
+
+What the list did not have
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Two tests pinned 1.10 behaviour that 1.11 changed. Both changes are in
+the 1.11 release notes as behaviour changes, not removals, so Stage 8's
+lesson applies again: no grep against a table of deleted names could
+find them, and only running the stage did. Both cost a test edit and no
+application change (89f08e8):
+
+* **A failed admin action redirects now.**
+  ``test_planted_species_report_action_without_selection`` asserted the
+  200 redisplay; 1.11 answers an action with nothing selected with a
+  redirect back to the changelist, so a reload cannot post the form
+  again.
+* **The cached template loader is on by default.** With ``DEBUG`` off
+  and no ``loaders`` override, 1.11 wraps the two default loaders in
+  one ``cached.Loader``, so ``engine.template_loaders`` is a list of
+  one. ``test_the_app_template_loader_is_active`` now pins the wrapper
+  and finds the app-directories loader inside it.
 
 Stage 10 — **Python 2.7 → 3.7**, staying on Django 1.11.29
 -----------------------------------------------------------
 
-:Status: Planned
+:Status: Next
 
 The one irreversible step. Nothing else changes version in this stage.
 

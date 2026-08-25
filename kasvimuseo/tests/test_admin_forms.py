@@ -344,14 +344,20 @@ def test_planted_species_report_action_from_changelist(admin_client):
 
 @pytest.mark.django_db
 def test_planted_species_report_action_without_selection(admin_client):
-    """With nothing selected the changelist is redisplayed, not redirected."""
+    """With nothing selected, the admin redirects back to the changelist.
+
+    Django 1.10 redisplayed the changelist under the posted URL with a 200.
+    Django 1.11 answers the failed action with a redirect instead, so a
+    reload cannot post the form again (upgrade plan Stage 9).
+    """
     factories.create_species(external_id=11)
 
     response = admin_client.post(admin_url(Species, 'changelist'),
                                  {'action': 'planted_species_report',
                                   'index': '0'})
 
-    assert response.status_code == 200
+    assert response.status_code == 302
+    assert response['Location'].endswith(admin_url(Species, 'changelist'))
 
 
 # -- photo upload ------------------------------------------------------------
