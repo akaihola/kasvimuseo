@@ -2,7 +2,7 @@
 Issue 072: Deleting a photo deletes the plant species
 ==============================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: High
 :Area: models / data safety
 :Reported: 2026-08-17
@@ -26,9 +26,15 @@ Issue 072: Deleting a photo deletes the plant species
     fields and defers the ruling to here. Also ``Planting.label``, in the same
     model file, which is the precedent: it is the one nullable foreign key that
     already says ``SET_NULL``, and nobody wrote down why it differs
-:Decision: undecided
-:Resolution: (none yet) -- the three fields are declared ``CASCADE`` in the tree
-    and stay that way until the ``Decision`` field above is filled in
+:Decision: Change the three fields to ``SET_NULL``. ``null=True`` already says
+    the application handles an empty value, and ``SET_NULL`` produces exactly
+    that value. A delete on a photo or a plot must not remove rows the editor
+    did not choose
+:Resolution: d5a4a48 -- the three fields say ``SET_NULL`` in
+    ``kasvimuseo/models.py`` and in ``kasvimuseo/migrations/0001_initial.py``,
+    and three tests in ``kasvimuseo/tests/test_models.py`` pin the rule. The
+    tests fail against ``CASCADE``. ``makemigrations kasvimuseo --dry-run``
+    reports no changes, so the commit adds no migration
 
 What happens
 ============
