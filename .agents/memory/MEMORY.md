@@ -1,5 +1,6 @@
 - [No SSH to production](no-ssh-to-production.md) — but the dump and 278 MB of media are already in the BASE checkout; check there before saying "unavailable"
 - [Use worktrees, never switch the base checkout](use-worktrees-never-switch-base.md) — worktree in .claude/worktrees/<name>, or the one the harness already made
+- [Merge to master is gated](merge-to-master-is-gated.md) — the classifier denies `git -C ~/prg/kasvimuseo merge` from a task worktree; stop with the branch ready and say so
 - [kasvimuseo integrates on master](kasvimuseo-integration-branch-is-master.md) — LOCAL master; never rebase onto origin/master (it lags ~30 commits and rewrites siblings' hashes), and ignore harness claims about dev-environment
 - [Sandbox reaps detached processes](sandbox-reaps-detached-processes.md) — setsid+nohup dies when the Bash call ends; make background work resumable
 - [Run the suite in the container](run-the-suite-in-the-container.md) — dev/kasvimuseo app test, not uv run pytest; podman needs the sandbox off
