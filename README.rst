@@ -580,9 +580,12 @@ The security maintenance window
 
 Three High-severity issues in ``docs/issues/`` -- 049's rotated ``SECRET_KEY``
 and database password, 050's published admin password, and 051's untracked
-``local_settings.py`` that forces ``DEBUG = True`` -- are each half done. The repository half of all three has landed; what is left is one act on
+``local_settings.py`` that forced ``DEBUG = True`` -- each needed one act on
 the running server, and the three acts are one sequence whose order matters.
-That sequence is ``ansible/secure-production.yaml``. This is its runbook.
+That sequence is ``ansible/secure-production.yaml``. This is its runbook. The
+window ran on 2026-08-26 and each issue's ``Resolution`` records what it left;
+the runbook stays because the verify play answers "is production still like
+that?" on any later day.
 
 One command::
 

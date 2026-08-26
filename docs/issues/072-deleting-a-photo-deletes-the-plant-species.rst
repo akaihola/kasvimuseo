@@ -30,7 +30,7 @@ Issue 072: Deleting a photo deletes the plant species
     the application handles an empty value, and ``SET_NULL`` produces exactly
     that value. A delete on a photo or a plot must not remove rows the editor
     did not choose
-:Resolution: d5a4a48 -- the three fields say ``SET_NULL`` in
+:Resolution: 6cec6eb -- the three fields say ``SET_NULL`` in
     ``kasvimuseo/models.py`` and in ``kasvimuseo/migrations/0001_initial.py``,
     and three tests in ``kasvimuseo/tests/test_models.py`` pin the rule. The
     tests fail against ``CASCADE``. ``makemigrations kasvimuseo --dry-run``
