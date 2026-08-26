@@ -16,13 +16,13 @@
   nginx stopped and started around it, whose failures go to cron's mail on the
   host and are read by nobody. Today an expired certificate is a warning a
   visitor can click through; under a year-long max-age it is a page no browser
-  will open. So stage 1 is 300 seconds -- long enough for one deploy to prove
-  all three names are genuinely HTTPS-only, short enough that backing out costs
-  a playbook run and five minutes -- and stage 2, max-age=31536000, is a commit
-  of its own. What has to be true before that commit is made is written down in
-  docs/issues/060-nginx-sends-no-strict-transport-security-header.rst, and the
-  deploy that carries either stage is in README.rst under "The security
-  maintenance window".
+  will open. Stage 1 was 300 seconds -- long enough for one deploy to prove
+  all three names are genuinely HTTPS-only, short enough that backing out cost
+  a playbook run and five minutes. The 2026-08-26 maintenance window deployed
+  it, every condition written in
+  docs/issues/060-nginx-sends-no-strict-transport-security-header.rst held the
+  same evening, and the value below is stage 2: the year. The deploy that
+  carries it is in README.rst under "The security maintenance window".
 
   Two directives are deliberately absent, as rulings rather than omissions;
   060 argues both. `includeSubDomains` would commit every future name under
@@ -49,15 +49,14 @@ server {
     ssl_certificate /etc/letsencrypt/live/{{ server.domain }}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{{ server.domain }}/privkey.pem;
 
-    # HSTS stage 1 of two (issue 060): five minutes, not a year. This promise
-    # cannot be withdrawn faster than it expires, and it makes the certbot
-    # renewal cron load-bearing for the site opening at all -- a certificate
-    # that silently fails to renew stops being a warning a visitor can click
-    # through. Five minutes is the value you can back out of. Advancing it to
-    # 31536000 is a deliberate commit against issue 060, which says what has to
-    # be true first; the reasoning, includeSubDomains and preload included, is
-    # in the template this file is rendered from.
-    add_header Strict-Transport-Security "max-age=300" always;
+    # HSTS stage 2 of two (issue 060): a year. This promise cannot be
+    # withdrawn faster than it expires, so the certificate renewal is
+    # load-bearing for the site opening at all; the verification play makes
+    # its failure loud (issue 071), and stage 1 -- max-age=300, deployed and
+    # read back from all three names on 2026-08-26 -- proved this exact path.
+    # The reasoning, includeSubDomains and preload included, is in the
+    # template this file is rendered from.
+    add_header Strict-Transport-Security "max-age=31536000" always;
 
 {% for path, alias in (server.static_paths|default({})).items() %}
     location {{ path }} {
