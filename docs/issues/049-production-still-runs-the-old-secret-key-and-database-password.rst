@@ -2,7 +2,7 @@
 Issue 049: Production still runs the old SECRET_KEY and database password
 =============================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: High
 :Area: deployment / security
 :Reported: 2026-07-30
@@ -16,12 +16,20 @@ Issue 049: Production still runs the old SECRET_KEY and database password
 :Related: 025 -- where the values came out of the tracked files, and where the
     disclosure this issue ends is described
     026 -- the other thing only a look at the running server can settle
-:Decision: undecided -- **not** whether to do it, which is agreed, but when.
-    The maintainer wants it agreed with the customer first, because the visible
-    cost lands on them: everybody logged in is logged out once, outstanding
+:Decision: run it in a window the customer agrees to, because the visible cost
+    lands on them: everybody logged in is logged out once, outstanding
     password-reset links stop working, and the site is briefly down while uWSGI
-    restarts. Ruling this means picking a time, not choosing between options.
-:Resolution: (none yet)
+    restarts. The customer agreed on 2026-08-24, and the window ran on
+    2026-08-26.
+:Resolution: deployed in the 2026-08-26 maintenance window, from the
+    repository at 2e30f17 with the fix in 7ea4dc0 applied. Play 1 of
+    ``ansible/secure-production.yaml`` installed the code, set the database
+    password and wrote both values into ``uwsgi.ini``; the verify play
+    asserted that the file carries what the vault holds and that uWSGI
+    started after the file was written; the recap was ``failed=0``. The
+    maintainer's open admin session asked for the password again -- the
+    observable evidence the key changed -- and neither value is named here,
+    exactly as "How to tell it worked" asks
 
 Problem
 =======
@@ -85,11 +93,10 @@ values the vault holds, and that uWSGI *started after* that file was written,
 which is what distinguishes a process signing with the new key from one still
 signing with the old.
 
-This changes nothing about the state of the disclosure, which is why ``Status``
-still says ``Accepted``. What was missing was never the knowledge of what to
-type; it was the decision this issue's ``Decision`` field names, and that is
-still the customer's to give. The mechanism is ready, and the disclosure is live
-until somebody runs it.
+When that was written the disclosure was still live and ``Status`` said
+``Accepted``: the mechanism was ready, and what was missing was the decision
+this issue's ``Decision`` field names. The customer gave it, and
+``Resolution`` records the run that ended the disclosure.
 
 What to expect afterwards
 =========================

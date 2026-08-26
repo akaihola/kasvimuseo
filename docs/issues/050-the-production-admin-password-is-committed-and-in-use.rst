@@ -2,7 +2,7 @@
 Issue 050: A production admin password is committed and in use
 ==============================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: High
 :Area: security / deployment
 :Reported: 2026-07-31
@@ -15,11 +15,23 @@ Issue 050: A production admin password is committed and in use
     ends the disclosure is somewhere else
     049 -- the other half of 025, waiting on the same kind of decision
     017 -- the file this was found in, and which deleted it
-:Decision: undecided -- the password has to be changed on the running server,
-    and when to spend the logout is the maintainer's call. Filed separately
-    from 017 rather than inside it, on 025 and 049's precedent: 017 could take
-    the secret out of the tracked files and nothing more.
-:Resolution: (none yet)
+:Decision: rotate ``akaihola`` in the same customer-agreed window as 049; it
+    ran on 2026-08-26. On this issue's third point -- whether to treat the
+    disclosure as exploited -- ruled on the only record there is, read by the
+    audit below: the account has no admin action after 2025-04-08, and
+    ``LogEntry`` does not record logins or their origin. So the ruling is "no
+    observed misuse, and a silent sign-in cannot be excluded"; the rotation
+    ends the question rather than answers it. Filed separately from 017 on
+    025 and 049's precedent: 017 could take the secret out of the tracked
+    files and nothing more.
+:Resolution: rotated in the 2026-08-26 window by Play 2 of
+    ``ansible/secure-production.yaml`` -- rerun with the fix in 7ea4dc0,
+    after the first run died in ``AppRegistryNotReady`` before it changed
+    anything. The report named ``akaihola`` under ``changed`` and nothing
+    under ``missing``; the verify play's dry run then confirmed every
+    vaulted account holds the vaulted password; and the maintainer confirmed
+    in the browser that ``123`` no longer signs in. The audit's reading is
+    the last section below
 
 Problem
 =======
@@ -111,6 +123,32 @@ sentences worth reading here are about what it does and does not settle:
   record there is. Reading it and ruling is a person's job; ``Decision`` is
   still ``undecided`` for exactly that reason.
 
-``Status`` is unchanged. The password on the running server is still ``123``
-until somebody runs the playbook, and when to spend the logout is still the
-maintainer's call.
+That described the state before the window. The playbook ran on 2026-08-26;
+``Resolution`` records what it did, and the audit it printed reads as follows.
+
+The audit, 2026-08-26
+=====================
+
+Play 2 read every ``auth_user`` row on the production server after the
+rotation. The saved play output is the full record; these are the facts it
+settles.
+
+===================== =========== ======= ============ ==================
+ Account               Privilege   Active  Last login   Last admin action
+===================== =========== ======= ============ ==================
+ ``akaihola`` (id 1)   superuser   yes     2026-08-14   2025-04-08
+ ``hl`` (id 2)         staff       yes     2026-08-10   2026-08-06
+ ``anja`` (id 3)       staff       no      2023-08-06   2023-08-06
+ ``sirkku`` (id 4)     superuser   yes     2026-06-15   2022-06-14
+ ``tuula`` (id 5)      staff       yes     2025-04-08   never
+===================== =========== ======= ============ ==================
+
+* The rotation changed ``akaihola`` and nothing else, which is exactly what
+  the vault covers. The three other active privileged accounts keep their
+  old passwords -- ``docs/issues/incoming.rst`` carries that report onward.
+* Every hash is PBKDF2-SHA256. The four untouched ones sit at 10 000
+  iterations, the strength of the Django that last wrote them.
+* ``akaihola`` has 120 admin actions, the last on 2025-04-08. Between the
+  disclosure (2020) and the rotation, nothing in the admin's own history was
+  done through the account after that date. Logins leave no trace of their
+  origin, which is as far as this record can see.
