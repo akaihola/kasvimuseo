@@ -28,6 +28,9 @@ for _name, _value in PARAMS['environment'].items():
     os.environ[_name] = _value
 
 try:
+    import django
+    if hasattr(django, 'setup'):
+        django.setup()
     from django.contrib.admin.models import LogEntry
     from django.contrib.auth.models import User
 except ImportError as error:
