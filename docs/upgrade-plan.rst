@@ -1979,7 +1979,7 @@ Stage 9 — Django 1.10.8 → 1.11.29 (LTS) — the staging point
 -----------------------------------------------------------
 
 :Status: Done
-:Resolution: 89f08e8, 76d0da8
+:Resolution: eb33c9a, 7f75d60
 
 **Done.** The suite ends where it started: 525 tests, 99.16 % coverage.
 The project now sits on an LTS, and it sits here until it is fully
@@ -1997,14 +1997,14 @@ refactor below.
 
 **Order of landing, and why.** The reverse of Stage 8's order, and
 forced: ``LoginView`` and ``LogoutView`` do not exist before 1.11, so
-the pins moved first (89f08e8) with the function views still in place --
+the pins moved first (eb33c9a) with the function views still in place --
 1.11 keeps them until 2.1, which is why the switch belongs to this
-stage -- and the refactor followed alone (76d0da8), measured by the
+stage -- and the refactor followed alone (7f75d60), measured by the
 warning count: 120 lines with the function views, 113 without.
 
 * ``django-grappelli`` → 2.10.4, the 1.11 series (issue 035), and
   ``django-photologue`` → 3.7, the release that added Django 1.11
-  support (89f08e8). 3.7's metadata raises the sortedm2m floor, so
+  support (eb33c9a). 3.7's metadata raises the sortedm2m floor, so
   ``django-sortedm2m`` → 1.3.3 in the same commit -- the floor the
   Stage 7 section predicted here. The 3.7 sdist ships the same
   migrations 0001 to 0010 that 3.6 shipped: ``makemigrations kasvimuseo
@@ -2030,7 +2030,7 @@ warning count: 120 lines with the function views, 113 without.
   module imports it, and ``dev.txt`` installs with ``--no-deps``.
   ``typing`` leaves at Stage 10 with the interpreter that needs it.
 * ``login``/``logout`` → ``LoginView``/``LogoutView`` in
-  ``ylaneenkasvit/urls.py`` (76d0da8). Same URL names, same templates;
+  ``ylaneenkasvit/urls.py`` (7f75d60). Same URL names, same templates;
   the template names moved from the extra-context dict to ``as_view()``
   arguments. Stage 12's list already records the 2.1 removal as handled
   here.
@@ -2042,7 +2042,7 @@ Two tests pinned 1.10 behaviour that 1.11 changed. Both changes are in
 the 1.11 release notes as behaviour changes, not removals, so Stage 8's
 lesson applies again: no grep against a table of deleted names could
 find them, and only running the stage did. Both cost a test edit and no
-application change (89f08e8):
+application change (eb33c9a):
 
 * **A failed admin action redirects now.**
   ``test_planted_species_report_action_without_selection`` asserted the
@@ -2354,15 +2354,15 @@ Two security questions, independent of the upgrade
 Both concern ``ylaneenkasvit_settings.py``, which the upgrade will touch
 repeatedly, so they were worth deciding first: the committed production
 ``SECRET_KEY`` and database password (``docs/issues/025``) — out of the file the
-upgrade edits, read from the environment, and rotated in the vault but not yet
-deployed, which is ``docs/issues/049`` — and the fact that
+upgrade edits, read from the environment, and rotated in the vault, deployed by
+``docs/issues/049``'s maintenance window — and the fact that
 ``ALLOWED_HOSTS`` was set nowhere in the repository at all
 (``docs/issues/026``), which, given that Django 1.5 rejects every request when
 it is empty and ``DEBUG`` is off, meant production was relying on something this
 repository did not contain. It was: an untracked ``local_settings.py`` on the
 server that turns ``DEBUG`` on, so the check has never been reached.
 ``ALLOWED_HOSTS`` now comes from the environment like the secrets, supplied by
-Ansible from ``ansible/vars/main.yml``; deleting that file, which is what turns
+Ansible from ``ansible/vars/main.yml``; deleting that file, which is what turned
 ``DEBUG`` off, is ``docs/issues/051``.
 
 Suggested checkpointing
