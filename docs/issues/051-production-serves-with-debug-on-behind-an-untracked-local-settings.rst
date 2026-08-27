@@ -2,7 +2,7 @@
 Issue 051: Production serves with DEBUG on, from an untracked file
 ==================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: High
 :Area: deployment / security
 :Reported: 2026-07-31
@@ -16,11 +16,15 @@ Issue 051: Production serves with DEBUG on, from an untracked file
     thing: the server's ``uwsgi.ini`` predates 025
     025 -- where this split between a repository half and a server half started
     050 -- the other server-side act still outstanding
-:Decision: undecided -- not whether to do it, which follows from what it is, but
-    when and in what order. The order is fixed: the deploy that sets
-    ``ALLOWED_HOSTS`` (026) has to be in place before the file goes, or the site
-    answers 400 to everything. The timing is the maintainer's, as 049's is.
-:Resolution: (none yet)
+:Decision: do it in the same window as 049, after the deploy that sets
+    ``ALLOWED_HOSTS`` -- the order is fixed, or the site answers 400 to
+    everything, and the playbook's gate enforces it rather than trusting
+    whoever types. The window ran on 2026-08-26.
+:Resolution: done in the 2026-08-26 maintenance window. Play 2 deleted
+    ``local_settings.py`` and its ``.pyc`` (no ``.pyo`` existed) and restarted
+    uWSGI; the verify play asserted that nothing of the file remains, that an
+    ordinary page still answers, and that a forged ``Host`` gets a plain 400
+    and not a debug page. The same 400 was read from outside the same evening
 
 Problem
 =======
@@ -113,9 +117,8 @@ things about it are this issue's:
   debug page, and that neither the file nor its bytecode is left behind. It can
   be run on its own afterwards with ``-t verify``.
 
-Nothing about the state of the server has changed, and ``Status`` says so. The
-site still serves with ``DEBUG`` on until the window is run, and when to run it
-is the timing this issue's ``Decision`` field leaves to the maintainer.
+That described the state before the window: the site served with ``DEBUG`` on
+until the window ran, on 2026-08-26, and ``Resolution`` records what it left.
 
 See also
 ========
