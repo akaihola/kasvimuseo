@@ -11,7 +11,7 @@ Issue 076: Model text needs Python 3 methods
 :Blocks: 077 -- prepare model text before the interpreter transition
 :Related: 036 -- the runtime upgrade programme
 :Decision: Follow issue 036's Decision for this bounded source change.
-:Resolution: The source preparation and checks are complete; the commit reference follows.
+:Resolution: 72b1a99 implements the source preparation and its tests.
 
 Work
 ----
