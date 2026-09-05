@@ -2,7 +2,7 @@
 Issue 074: Production runs a newer Django than the pin
 ===============================================================================
 
-:Status: Open
+:Status: Fixed
 :Severity: High
 :Area: deployment / dependencies
 :Reported: 2026-08-26
@@ -17,8 +17,13 @@ Issue 074: Production runs a newer Django than the pin
 :Related: 036 -- Stage 9 pins Django 1.11.29 and the upgrade depends on a
     known starting version
     068 -- restored passwords depend on the Django password hasher
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Keep Django at ``1.11.29`` and make the Ansible code deployment
+    reinstall the application and its exact runtime dependencies. The
+    repository's Stage 9 pin remains the supported Python 2.7 staging point.
+:Resolution: fa6e1ac -- ``ansible/install.yaml`` now passes ``--upgrade
+    --force-reinstall`` to pip2 for the application install. The documented
+    ``-t code`` deployment repairs an existing newer Django before traffic
+    resumes. Django 1.11.29 adds no application migration.
 
 Problem
 -------
@@ -26,9 +31,10 @@ Problem
 Production does not match the Django version that the repository declares.
 The drift can change password hashing, migrations and supported Grappelli code.
 
-What remains
-------------
+Result
+------
 
-The deployment owner must record the installed Django version and its package
-set. The owner must then choose whether to restore the pin or update the
-repository after checking migrations and dependency support.
+The production deployment now restores the repository pin through the
+documented ``ansible-playbook -t code ansible/install.yaml`` command. The
+runtime lock remains ``django==1.11.29``. This correction alone needs no
+database migration.
