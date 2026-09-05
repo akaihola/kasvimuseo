@@ -70,9 +70,9 @@ Issue 063: The dragged museum number cannot be seen on the iPad
     ``font-size`` and rectangle of ``#drag-number`` mid-drag from Safari's Web
     Inspector attached to the tablet. No fix is written for that, because an
     untestable change to this template is exactly how 056's second half got its
-    second life, so this issue stays ``Accepted`` -- with one question left
-    instead of three, and a named instrument to answer it
-:Resolution: ``203587a`` -- the drag copy uses fixed positioning and viewport
+    second life. The measured device evidence instead supports the small iPad
+    path fix recorded above.
+:Resolution: ``e65771d`` -- the drag copy uses fixed positioning and viewport
     coordinates on iPad, and the focused browser assertion checks that path.
     The application suite and documentation build pass. The browser harness
     remains blocked before collection because its seed script raises Django's
