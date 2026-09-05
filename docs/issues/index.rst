@@ -160,6 +160,9 @@ prerequisite for 051.
       deleting the handler. Like 060 it is a ruling before it is
       configuration, and unlike 060 the ruling is about what the maintainer
       wants rather than about a promise that cannot be withdrawn.
+   075: Four privileged production accounts are not covered by the vault.
+      Decide their account and staff status, then rotate approved passwords
+      during the security maintenance window without storing them here.
 
 2. Broken on real data
 -----------------------
@@ -450,6 +453,9 @@ that 032 comes before 031, which it partly resolves.
    015: Mixed integer and float division in generated CSS. Valid output either
       way; last because it is the only item on this page with no consequence
       at all.
+   073: The project admin change list differs from Grappelli in 139 of 244
+      lines after its known fork was removed. Decide whether the override can
+      be deleted before the next Grappelli change.
 
 8. Make the work verifiable
 ---------------------------
@@ -559,6 +565,9 @@ late.
       once it starts.
    035: Nothing to do now. Revisit once the upgrade lands, while the cost of
       being paced by two third-party packages is fresh.
+   074: Production appears to run a newer Django than the repository pin.
+      Record the installed package set before choosing whether to restore the
+      pin or update the upgrade starting point.
 
 All issues
 ==========
