@@ -17,7 +17,7 @@ Issue 036: The runtime stack is end-of-life and unpatched
 :Decision: Prepare the working model text methods for Stage 10 on the current runtime.
     The agent selected this reversible step under the autonomous task instruction.
     Keep the interpreter and package pins unchanged until the transition passes its own checks.
-:Resolution: Source preparation is complete; the commit reference follows.
+:Resolution: 72b1a99 completes the bounded source preparation.
     See :doc:`076-model-text-needs-python-3-methods`, Checks.
     The interpreter transition remains in issue 077.
 
