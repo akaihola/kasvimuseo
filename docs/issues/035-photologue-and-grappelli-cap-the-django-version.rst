@@ -2,8 +2,7 @@
 Issue 035: photologue and grappelli cap which Django can ever be used
 =====================================================================
 
-:Status: In progress
-:Claimed: task cef902ee-037c-455a-892c-53449e26a3b5 on feature/resolve-the-django-d-u0g
+:Status: Fixed
 :Severity: Low
 :Area: dependencies / architecture
 :Reported: 2026-07-28
@@ -14,7 +13,7 @@ Issue 035: photologue and grappelli cap which Django can ever be used
 :Related: 036 -- the ceiling that will make it recur
     028 -- the same two packages
 :Decision: Accept Django 6.0.x as the current ceiling. Photologue 3.20 declares ``Django>=5.2,<6.1``. Grappelli 5.0.0 supports Django 6.x, so Photologue imposes the lower ceiling. Keep both packages and track their upstream releases. Revisit Django 6.1 only after Photologue declares support for it.
-:Resolution: (none yet)
+:Resolution: 53c7462 -- accepted Django 6.0.x as the ceiling because Photologue 3.20 declares ``Django<6.1``; Grappelli 5.0.0 supports Django 6.x.
 
 Problem
 =======
