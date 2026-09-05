@@ -2062,16 +2062,26 @@ Stage 10 — **Python 2.7 → 3.7**, staying on Django 1.11.29
 
 The one irreversible step. Nothing else changes version in this stage.
 
-Do the source work first, keeping the code running on 2.7 (``six`` and
-``python_2_unicode_compatible`` are the tools; both are still available in
-Django 1.11):
+Source preparation
+~~~~~~~~~~~~~~~~~~
 
-* ``__unicode__`` → ``__str__`` (12 sites)
-* ``unicode(...)`` → ``str(...)`` (3 sites)
-* the ``filter()`` bug in ``kasvimuseo/forms.py`` -- already done, issue 016
-  (see Part 3)
-* ``force_unicode``/``smart_str`` → ``force_text``/``smart_text``: **nothing to
-  do.** Both appeared only in ``kasvimuseo_admin_list.py``, deleted in Stage 5.
+This step prepares model text while the application still uses Python 2.7.
+Issue :doc:`issues/076-model-text-needs-python-3-methods` records the bounded change.
+
+The source contained eleven ``__unicode__`` methods, rather than the twelve listed here before.
+Ten now define ``__str__`` with Django's ``python_2_unicode_compatible`` decorator.
+The report action and nested planting text use ``force_text`` for the three former ``unicode`` calls.
+The interpreter and package pins do not change.
+
+The remaining method needs :doc:`issues/078-planting-photo-text-reads-a-missing-attribute`.
+Issue 016 already fixed the filter conversion.
+Stage 5 removed the old text helpers with the admin list fork.
+
+Interpreter transition
+~~~~~~~~~~~~~~~~~~~~~~
+
+Issue :doc:`issues/077-python-3-runtime-needs-a-rehearsed-transition` owns the remaining checks.
+Python 3 execution is not part of the source preparation result.
 
 Then flip the base image ``python:2.7-alpine`` → ``python:3.7-alpine`` and the
 ceiling versions:
