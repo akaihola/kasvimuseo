@@ -7,7 +7,7 @@ Issue 035: photologue and grappelli cap which Django can ever be used
 :Area: dependencies / architecture
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
-:Evidence: ``docs/upgrade-plan.rst`` Parts 2.2 and 2.3 and its verified Stage 19 dependency stack; ``ylaneenkasvit/dashboard.py`` imports ``grappelli.dashboard``; ``ylaneenkasvit/common_settings.py`` installs it; ``ylaneenkasvit/urls.py`` includes both admin dependencies.
+:Evidence: ``docs/upgrade-plan.rst`` Parts 2.2 and 2.3 and its verified Stage 19 dependency stack; ``ylaneenkasvit/dashboard.py`` imports ``grappelli.dashboard``; ``ylaneenkasvit/common_settings.py`` installs it; ``ylaneenkasvit/urls.py`` includes the Grappelli admin route and Photologue gallery route.
 :Depends on: (none)
 :Blocks: (none)
 :Related: 036 -- the ceiling that will make it recur
