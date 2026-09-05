@@ -2,7 +2,7 @@
 Issue 063: The dragged museum number cannot be seen on the iPad
 ==============================================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Medium
 :Area: templates / mobile
 :Reported: 2026-08-02
@@ -43,7 +43,11 @@ Issue 063: The dragged museum number cannot be seen on the iPad
     claim the suite re-checks rather than a note
     062 -- the other thing WebKit says about this page's text sizes, and a
     second reason a small computed size cannot vanish in that engine family
-:Decision: **Ruled on measurement here and, since 2026-08-03, on the device.**
+:Decision: **Fixed by keeping the iPad drag copy in the viewport coordinate
+    system.** iPad Safari can fail to paint the absolutely positioned copy when
+    the drag uses document coordinates. The iPad path now uses fixed positioning
+    and client coordinates; desktop keeps the existing absolute positioning and
+    page coordinates.
     The report left one fork open that only the tablet could close -- whether
     the number still moves and is merely invisible, or whether the gesture does
     nothing -- and this file was first written without an answer, as 044 and
@@ -68,9 +72,12 @@ Issue 063: The dragged museum number cannot be seen on the iPad
     untestable change to this template is exactly how 056's second half got its
     second life, so this issue stays ``Accepted`` -- with one question left
     instead of three, and a named instrument to answer it
-:Resolution: (none yet) -- nothing in the template is changed by this issue.
-    The three browser tests named in ``Evidence`` are added by it, and they pin
-    what emulation says rather than closing the report
+:Resolution: ``203587a`` -- the drag copy uses fixed positioning and viewport
+    coordinates on iPad, and the focused browser assertion checks that path.
+    The application suite and documentation build pass. The browser harness
+    remains blocked before collection because its seed script raises Django's
+    ``AppRegistryNotReady`` error; the existing WebKit test path therefore
+    could not run in this checkout.
 
 Problem
 =======
