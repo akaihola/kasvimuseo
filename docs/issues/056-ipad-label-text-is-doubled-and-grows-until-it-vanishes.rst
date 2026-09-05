@@ -14,10 +14,10 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     ``test_the_ipad_fits_a_label_whose_photo_never_loads`` pin the first half
     on the desktop and on the iPad branch respectively, and
     ``test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed``
-    pins that the iPad branch is not handed to fitty and does not move on a
-    resize. All three fail against the template as it was before 746ce71 and
-    pass after it. The second half has no test and cannot have one here: see
-    "What emulation cannot see"
+    pins that every iPad label is not handed to fitty and does not move on
+    repeated resize events. All three fail against the template as it was
+    before 746ce71 and pass after it. The second half has no test and cannot
+    have one here: see "What emulation cannot see"
 :Depends on: (none -- 017's browser suite is what makes the first half
     testable at all, and it is ``Fixed``)
 :Blocks: (none)
