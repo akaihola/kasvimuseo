@@ -95,7 +95,10 @@
         # window that installed from it would deploy stale code.
         name: "git+ssh://git@github.com/akaihola/kasvimuseo.git"
         state: latest
-        extra_args: "--user"
+        # Reinstall the package and its exact install_requires pins. Without
+        # this, pip can leave a newer dependency when the package version is
+        # already current.
+        extra_args: "--user --upgrade --force-reinstall"
 
     - name: Create static assets directory
       tags:

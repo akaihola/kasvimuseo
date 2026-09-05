@@ -563,6 +563,11 @@ Updating code on the server
 
     ansible-playbook -t code ansible/install.yaml
 
+This command reinstalls the application dependencies from
+``requirements/production.txt``. Run it once after issue 074 before serving
+traffic if the host has a newer Django installed. Django 1.11.29 adds no
+application migration, so do not run ``migrate`` for this correction alone.
+
 Updating the nginx configuration
 --------------------------------
 
