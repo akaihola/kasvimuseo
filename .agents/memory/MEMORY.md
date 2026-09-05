@@ -24,3 +24,4 @@
 - [media symlink breaks app manage](media-symlink-breaks-app-manage.md) — photologue ≥3.4 writes CACHEDIR.TAG at import; in kandev worktrees swap the untracked symlink for a real dir during manage runs
 - [lead-1 is the staging rehearsal host](lead-1-is-the-staging-rehearsal-host.md) — 070's reduced run passed 2026-08-09; host lives on for the full rehearsal; secrets + working ansible invocation in base .dev/rehearsal
 - [Issue-register tests are in the suite](issue-register-tests-are-in-the-suite.md) — a new docs/issues/ file can turn a green `app test` red; `:Resolution:` is required even when Open
+- [Privileged account vault gate](privileged-account-vault-gate.md) — issue 075 audits active privileged accounts before admin password rotation
