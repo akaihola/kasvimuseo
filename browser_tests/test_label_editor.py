@@ -244,14 +244,12 @@ def test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed(
         return parseFloat(el.style.getPropertyValue('--fit-screen-size')) < 40;
     }""")
     fitted = page.evaluate("""() =>
-        parseFloat(document.querySelector('#labels li h1').style
-            .getPropertyValue('--fit-screen-size'))
+        Array.from(document.querySelectorAll('#labels li h1')).map(el => [
+            parseFloat(el.style.getPropertyValue('--fit-screen-size')),
+            parseFloat(el.style.getPropertyValue('--fit-print-size')),
+        ])
     """)
-    printed = page.evaluate("""() =>
-        parseFloat(document.querySelector('#labels li h1').style
-            .getPropertyValue('--fit-print-size'))
-    """)
-    assert printed == fitted * 2
+    assert all(printed == screen * 2 for screen, printed in fitted)
 
     chooser = page.locator('#labels li', has=page.locator(
         '.photo-chooser.next')).first
@@ -275,9 +273,12 @@ def test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed(
         page.wait_for_timeout(150)
 
     assert page.evaluate("""() =>
-        parseFloat(document.querySelector('#labels li h1').style
-            .getPropertyValue('--fit-screen-size'))
-    """) == fitted
+        Array.from(document.querySelectorAll('#labels li h1')).map(el => [
+            parseFloat(el.style.getPropertyValue('--fit-screen-size')),
+            parseFloat(el.style.getPropertyValue('--fit-print-size')),
+            el.style.fontSize,
+        ])
+    """) == [[screen, printed, ''] for screen, printed in fitted]
 
 
 def test_dragging_a_number_onto_the_background_splits_the_label(editor):
