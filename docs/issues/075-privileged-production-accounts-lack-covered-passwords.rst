@@ -2,7 +2,8 @@
 Issue 075: Privileged production accounts lack covered passwords
 ================================================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: feature/review-uncovered-pri-dac
 :Severity: High
 :Area: deployment / security
 :Reported: 2026-08-26

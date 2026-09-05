@@ -52,6 +52,51 @@
 
   tasks:
     # ---------------------------------------------------------------- 050 ---
+    - name: Audit privileged accounts before password rotation
+      tags:
+        - password
+        - audit
+      command:
+        cmd: "{{ app_python }} -"
+        stdin: "{{ lookup('template', 'audit_admin_accounts.py.j2') }}"
+      vars:
+        audit_params:
+          settings_module: "{{ django_settings_module }}"
+          environment:
+            KASVIMUSEO_SECRET_KEY: "{{ kasvimuseo_secret_key }}"
+            KASVIMUSEO_DB_PASSWORD: "{{ kasvimuseo_db_password }}"
+            KASVIMUSEO_ALLOWED_HOSTS: "{{ kasvimuseo_allowed_hosts | join(',') }}"
+          covered: "{{ kasvimuseo_admin_passwords | default({}) | list }}"
+      register: preflight_audit
+      no_log: true
+      check_mode: false
+      changed_when: false
+      failed_when: false
+
+    - name: Require a successful privileged account audit
+      tags:
+        - password
+        - audit
+      assert:
+        that:
+          - preflight_audit.rc == 0
+        msg: >-
+          The privileged account audit failed. Password rotation stopped before
+          it changed any account.
+
+    - name: Require vault coverage for active privileged accounts
+      tags:
+        - password
+        - audit
+      assert:
+        that:
+          - (preflight_audit.stdout | from_json).privileged_accounts_this_play_does_not_rotate | length == 0
+        msg: >-
+          These active privileged accounts are outside the vault:
+          {{ (preflight_audit.stdout | from_json).privileged_accounts_this_play_does_not_rotate | join(', ') }}.
+          Add approved passwords to the encrypted host variables before rotation.
+      when: preflight_audit.rc == 0
+
     - name: Check that the new admin passwords are in the vault
       tags:
         - password
