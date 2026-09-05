@@ -2,17 +2,18 @@
 Issue 035: photologue and grappelli cap which Django can ever be used
 =====================================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: task cef902ee-037c-455a-892c-53449e26a3b5 on feature/resolve-the-django-d-u0g
 :Severity: Low
 :Area: dependencies / architecture
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
-:Evidence: (none)
+:Evidence: ``docs/upgrade-plan.rst`` Parts 2.2 and 2.3 and its verified Stage 19 dependency stack; ``ylaneenkasvit/dashboard.py`` imports ``grappelli.dashboard``; ``ylaneenkasvit/common_settings.py`` installs it; ``ylaneenkasvit/urls.py`` includes both admin dependencies.
 :Depends on: (none)
 :Blocks: (none)
 :Related: 036 -- the ceiling that will make it recur
     028 -- the same two packages
-:Decision: undecided
+:Decision: Accept Django 6.0.x as the current ceiling. Photologue 3.20 declares ``Django>=5.2,<6.1``. Grappelli 5.0.0 supports Django 6.x, so Photologue imposes the lower ceiling. Keep both packages and track their upstream releases. Revisit Django 6.1 only after Photologue declares support for it.
 :Resolution: (none yet)
 
 Problem
