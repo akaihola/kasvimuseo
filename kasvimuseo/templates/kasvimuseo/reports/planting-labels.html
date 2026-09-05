@@ -312,6 +312,11 @@
             font-weight: bold;
             transition: none; /* it has to keep up with the pointer */
         }
+        @supports (-webkit-touch-callout: none) {
+            #drag-number {
+                position: fixed;
+            }
+        }
         #drag-wrapper {
             transform: scale(var(--screen-scale));
             transform-origin:top left;
@@ -751,9 +756,13 @@
                     // The number itself follows the pointer for the whole
                     // gesture, wherever it is: over a label, over the empty
                     // sheet, off the sheet altogether.
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+                        pointerX = isIOS ? event.clientX : event.pageX,
+                        pointerY = isIOS ? event.clientY : event.pageY;
                     this.dragNumberStyle =
-                        `transform: translate(${event.pageX - drag.grabX}px,`
-                        + ` ${event.pageY - drag.grabY}px) rotate(-3deg);`
+                        `transform: translate(${pointerX - drag.grabX}px,`
+                        + ` ${pointerY - drag.grabY}px) rotate(-3deg);`
                         + ` font-size: ${drag.fontSize}px;`;
                     // The whole label is drawn under the pointer only over the
                     // empty part of the sheet, where it is the "this becomes a
