@@ -2,7 +2,8 @@
 Issue 036: The runtime stack is end-of-life and unpatched
 =========================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: branch ``feature/plan-the-runtime-sta-sdz``
 :Severity: High
 :Area: platform / security
 :Reported: 2026-07-28
@@ -14,7 +15,9 @@ Issue 036: The runtime stack is end-of-life and unpatched
     040 -- option 3 there is to wait for this
     038 -- most of the documentation build's workarounds fall away at Stage 10
     018 -- CI has to run the project's own container until Stage 10
-:Decision: undecided
+:Decision: Prepare the working model text methods for Stage 10 on the current runtime.
+    The agent selected this reversible step under the autonomous task instruction.
+    Keep the interpreter and package pins unchanged until the transition passes its own checks.
 :Resolution: (none yet)
 
 Problem

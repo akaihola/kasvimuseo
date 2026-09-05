@@ -563,6 +563,9 @@ late.
    036: The programme itself: 20 stages, planned in :doc:`../upgrade-plan`.
       Everything above is either a prerequisite of it or work that gets harder
       once it starts.
+   076: Prepare model text before the interpreter transition.
+   078: Repair the planting photo label before converting its text method.
+   077: Check the interpreter transition and rehearse its deployment.
    035: Nothing to do now. Revisit once the upgrade lands, while the cost of
       being paced by two third-party packages is fresh.
    074: Production appears to run a newer Django than the repository pin.
