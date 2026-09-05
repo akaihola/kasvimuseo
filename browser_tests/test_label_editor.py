@@ -475,6 +475,8 @@ def assert_the_number_is_drawn(page, x, y):
     assert 4 <= drawn['fontSize'] <= 100, drawn
     assert drawn['box'][2] > 0 and drawn['box'][3] > 0, drawn
     assert drawn['onScreen'], drawn
+    if 'iPad' in page.evaluate('navigator.userAgent'):
+        assert drawn['position'] == 'fixed', drawn
     assert holds({'x': drawn['box'][0], 'y': drawn['box'][1],
                   'width': drawn['box'][2], 'height': drawn['box'][3]}, x, y), \
         drawn
