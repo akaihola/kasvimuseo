@@ -10,8 +10,8 @@ Issue 075: Privileged production accounts lack covered passwords
 :Evidence: The production audit lists active privileged accounts ``hl``,
     ``sirkku`` and ``tuula`` whose passwords are absent from the vault. The
     inactive staff account ``anja`` still has its staff flag. The deployment
-    data named ``kasvimuseo_admin_passwords`` can rotate the passwords, but the
-    account and flag decisions remain open.
+    data named ``kasvimuseo_admin_passwords`` can rotate the passwords, and the
+    maintenance playbook now checks both account conditions before rotation.
 :Depends on: (none)
 :Blocks: (none)
 :Related: 050 -- the existing admin password rotation
@@ -20,9 +20,9 @@ Issue 075: Privileged production accounts lack covered passwords
     the encrypted vault. Remove ``anja``'s stale staff privilege during the
     controlled production maintenance window. The playbook must audit active
     privileged accounts before it rotates any password.
-:Resolution: ``dd9478c`` adds the pre-rotation audit gate. The production owner
-    must add approved passwords to the encrypted host variables and apply the
-    ``anja`` account decision during the maintenance window. No password is
+:Resolution: ``2405e8a`` adds the pre-rotation account gates. The production
+    owner must add approved passwords to the encrypted host variables and apply
+    the ``anja`` account decision during the maintenance window. No password is
     stored in this repository.
 
 Problem
