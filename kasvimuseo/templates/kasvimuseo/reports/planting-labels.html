@@ -763,6 +763,7 @@
                     this.dragNumberStyle =
                         `transform: translate(${pointerX - drag.grabX}px,`
                         + ` ${pointerY - drag.grabY}px) rotate(-3deg);`
+                        + (isIOS ? ' position: fixed;' : '')
                         + ` font-size: ${drag.fontSize}px;`;
                     // The whole label is drawn under the pointer only over the
                     // empty part of the sheet, where it is the "this becomes a
