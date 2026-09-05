@@ -97,6 +97,19 @@
           Add approved passwords to the encrypted host variables before rotation.
       when: preflight_audit.rc == 0
 
+    - name: Require inactive accounts to have no privileged access
+      tags:
+        - password
+        - audit
+      assert:
+        that:
+          - (preflight_audit.stdout | from_json).inactive_privileged_accounts | length == 0
+        msg: >-
+          These inactive accounts still have privileged access:
+          {{ (preflight_audit.stdout | from_json).inactive_privileged_accounts | join(', ') }}.
+          Remove their staff or superuser flag before rotation.
+      when: preflight_audit.rc == 0
+
     - name: Check that the new admin passwords are in the vault
       tags:
         - password

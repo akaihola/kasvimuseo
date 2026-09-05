@@ -83,7 +83,14 @@ privileged = [
     and not account['rotated_by_this_play']
 ]
 
+inactive_privileged = [
+    account['username'] for account in accounts
+    if not account['is_active']
+    and (account['is_staff'] or account['is_superuser'])
+]
+
 print(json.dumps({
     'accounts': accounts,
+    'inactive_privileged_accounts': inactive_privileged,
     'privileged_accounts_this_play_does_not_rotate': privileged,
 }, indent=2, sort_keys=True))
