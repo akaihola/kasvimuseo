@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import datetime
 
 import pytest
+from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.translation import override
 
@@ -330,15 +331,35 @@ def test_species_flowering_time():
 
 
 # --------------------------------------------------------------------------
-# __unicode__
+# Model text
 # --------------------------------------------------------------------------
 
+@pytest.mark.django_db
+def test_model_strings_preserve_finnish_text():
+    species = create_species(name_fi='päivänkakkara')
+    location = create_location(name='Mäkelä')
+    contact = models.Contact(last_name='Hämäläinen', first_name='Päivi')
+    observation = create_observation(species=species, origin=location)
+    planting = create_planting(observation=observation)
+    plot = models.Plot(name='Yläpiha')
+    objects = [species, location, contact, observation, planting, plot,
+               models.LocationContact(location=location, contact=contact),
+               models.Bed(plot=plot, name='itä'),
+               models.Label(species=species),
+               create_care(planting, count=1, date=DATE, description='lisäys')]
+    for obj in objects:
+        text = force_text(obj)
+        assert 'ä' in text
+        expected = text.encode('utf-8') if six.PY2 else text
+        assert str(obj) == expected
+
+
 def test_species_unicode():
-    assert force_text(models.Species(name_fi='kielo')) == 'kielo'
+    assert force_text(models.Species(name_fi='päivänkakkara')) == 'päivänkakkara'
 
 
 def test_plot_unicode():
-    assert force_text(models.Plot(name='Piha')) == 'Piha'
+    assert force_text(models.Plot(name='Yläpiha')) == 'Yläpiha'
 
 
 def test_bed_unicode_without_plot():
@@ -346,53 +367,53 @@ def test_bed_unicode_without_plot():
 
 
 def test_bed_unicode_with_plot():
-    assert force_text(models.Bed(plot=models.Plot(name='Piha'),
-                                 name='1')) == 'Piha/1'
+    assert force_text(models.Bed(plot=models.Plot(name='Yläpiha'),
+                                 name='1')) == 'Yläpiha/1'
 
 
 def test_contact_unicode():
-    assert force_text(models.Contact(last_name='Virtanen',
-                                     first_name='Maija')) == 'Virtanen, Maija'
+    assert force_text(models.Contact(last_name='Hämäläinen',
+                                     first_name='Maija')) == 'Hämäläinen, Maija'
 
 
 def test_location_unicode():
-    assert force_text(models.Location(name='Talo')) == 'Talo'
+    assert force_text(models.Location(name='Mäkelä')) == 'Mäkelä'
 
 
 @pytest.mark.django_db
 def test_location_contact_unicode():
-    location = create_location(name='Talo')
-    contact = models.Contact.objects.create(last_name='Virtanen',
+    location = create_location(name='Mäkelä')
+    contact = models.Contact.objects.create(last_name='Hämäläinen',
                                             first_name='Maija')
     link = models.LocationContact.objects.create(location=location,
                                                  contact=contact)
-    assert force_text(link) == 'Talo/Virtanen, Maija'
+    assert force_text(link) == 'Mäkelä/Hämäläinen, Maija'
 
 
 @pytest.mark.django_db
 def test_observation_unicode_without_variation():
-    observation = create_observation(species=create_species(name_fi='kielo'),
-                                     origin=create_location(name='Talo'))
-    assert force_text(observation) == 'kielo (Talo)'
+    observation = create_observation(species=create_species(name_fi='päivänkakkara'),
+                                     origin=create_location(name='Mäkelä'))
+    assert force_text(observation) == 'päivänkakkara (Mäkelä)'
 
 
 @pytest.mark.django_db
 def test_observation_unicode_with_variation():
-    observation = create_observation(species=create_species(name_fi='kielo'),
-                                     origin=create_location(name='Talo'),
+    observation = create_observation(species=create_species(name_fi='päivänkakkara'),
+                                     origin=create_location(name='Mäkelä'),
                                      variation='valkoinen')
-    assert force_text(observation) == 'kielo/valkoinen (Talo)'
+    assert force_text(observation) == 'päivänkakkara/valkoinen (Mäkelä)'
 
 
 @pytest.mark.django_db
 def test_planting_unicode():
-    planting = create_planted(name_fi='kielo')
+    planting = create_planted(name_fi='päivänkakkara')
     assert force_text(planting) == force_text(planting.observation)
 
 
 @pytest.mark.django_db
 def test_care_unicode():
-    planting = create_planted(name_fi='kielo')
+    planting = create_planted(name_fi='päivänkakkara')
     care = create_care(planting, count=1, date=DATE, description='kastelu')
     assert force_text(care) == '{0}: {1} / kastelu'.format(
         DATE, force_text(planting))
@@ -400,33 +421,33 @@ def test_care_unicode():
 
 @pytest.mark.django_db
 def test_label_unicode_without_photo():
-    label = models.Label.objects.create(species=create_species(name_fi='kielo'))
-    assert force_text(label) == 'kielo'
+    label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'))
+    assert force_text(label) == 'päivänkakkara'
 
 
 @pytest.mark.django_db
 def test_label_unicode_hidden_without_photo():
-    label = models.Label.objects.create(species=create_species(name_fi='kielo'),
+    label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'),
                                         visible=False)
     with override(None):
-        assert force_text(label) == 'kielo [hidden]'
+        assert force_text(label) == 'päivänkakkara [hidden]'
 
 
 @pytest.mark.django_db
 def test_label_unicode_with_photo(photo_factory):
-    photo = photo_factory(title='kielo kukassa')
-    label = models.Label.objects.create(species=create_species(name_fi='kielo'),
+    photo = photo_factory(title='päivänkakkara kukassa')
+    label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'),
                                         photo=photo)
-    assert force_text(label) == 'kielo / {0}'.format(photo.image_filename())
+    assert force_text(label) == 'päivänkakkara / {0}'.format(photo.image_filename())
 
 
 @pytest.mark.django_db
 def test_label_unicode_with_photo_hidden(photo_factory):
-    photo = photo_factory(title='kielo kukassa')
-    label = models.Label.objects.create(species=create_species(name_fi='kielo'),
+    photo = photo_factory(title='päivänkakkara kukassa')
+    label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'),
                                         photo=photo, visible=False)
     with override(None):
-        assert force_text(label) == 'kielo / {0} [hidden]'.format(
+        assert force_text(label) == 'päivänkakkara / {0} [hidden]'.format(
             photo.image_filename())
 
 
