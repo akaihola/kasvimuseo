@@ -2,7 +2,8 @@
 Issue 056: iPad label text is doubled, and grows until it vanishes
 ==========================================================================
 
-:Status: Accepted
+:Status: In progress
+:Claimed: feature/fix-ipad-label-text-4ic
 :Severity: Medium
 :Area: templates / mobile
 :Reported: 2026-07-31
