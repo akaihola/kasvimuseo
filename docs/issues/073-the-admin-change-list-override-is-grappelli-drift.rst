@@ -19,8 +19,8 @@ Issue 073: The admin change list override is Grappelli drift
     removed in Stage 5, and the installed Grappelli 2.10.4 template supplies
     the required changelist behavior.
 :Resolution: c1f72b3 -- deleted the obsolete project override. The docs build
-    passed. The application test could not start PostgreSQL, and the browser
-    test stopped in its existing Django app-initialization setup.
+    and full application suite passed. The browser test stopped in its
+    existing Django app-initialization setup.
 
 Problem
 -------
