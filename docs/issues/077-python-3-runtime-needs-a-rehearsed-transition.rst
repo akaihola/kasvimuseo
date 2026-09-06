@@ -7,7 +7,7 @@ Issue 077: The Python 3 runtime needs a rehearsed transition
 :Reported: 2026-09-05
 :Source: Backlog refill from upgrade plan Stage 10
 :Evidence: ``requirements/production.txt`` pins Django 1.11.29; both images use Python 2.7.
-:Depends on: 076 -- prepare model text first
+:Depends on: 076, 078 -- finish model text before the interpreter transition
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: undecided

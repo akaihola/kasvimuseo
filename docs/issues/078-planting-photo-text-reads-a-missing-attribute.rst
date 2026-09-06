@@ -8,8 +8,8 @@ Issue 078: Planting photo text reads a missing attribute
 :Source: Stage 10 source inspection
 :Evidence: ``PlantingPhoto.__unicode__`` reads ``self.observation``, but the model has no such attribute.
 :Depends on: (none)
-:Blocks: (none)
-:Related: 077 -- finish this method before the interpreter transition
+:Blocks: 077 -- finish this method before the interpreter transition
+:Related: 036 -- the runtime upgrade programme
 :Decision: undecided
 :Resolution: (none yet)
 
