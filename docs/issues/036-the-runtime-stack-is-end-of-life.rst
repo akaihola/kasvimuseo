@@ -2,32 +2,34 @@
 Issue 036: The runtime stack is end-of-life and unpatched
 =========================================================
 
-:Status: Open
+:Status: Accepted
 :Severity: High
 :Area: platform / security
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
-:Evidence: (none)
+:Evidence: See :doc:`076-model-text-needs-python-3-methods`, Checks.
 :Depends on: 016, 019, 020, 021, 022, 023, 024, 027, 028, 029, 030, 031, 032, 033, 034 -- the individual obstacles, listed by stage under Progress below
 :Blocks: (none)
 :Related: 035 -- the ceiling that will make this recur
     040 -- option 3 there is to wait for this
     038 -- most of the documentation build's workarounds fall away at Stage 10
     018 -- CI has to run the project's own container until Stage 10
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: Prepare the working model text methods for Stage 10 on the current runtime.
+    The agent selected this reversible step under the autonomous task instruction.
+    Keep the interpreter and package pins unchanged until the transition passes its own checks.
+:Resolution: 72b1a99 completes the bounded source preparation.
+    See :doc:`076-model-text-needs-python-3-methods`, Checks.
+    The interpreter transition remains in issue 077.
 
 Problem
 =======
 
-The application runs on **Python 2.7** and **Django 1.5.1**.
+This issue is for the implementation agent. It tracks the runtime upgrade programme.
+See :doc:`../upgrade-plan`, Stage 10, for the current runtime and next step.
 
 * Python 2.7 reached end of life on 1 January 2020.
-* Django 1.5 stopped receiving security support in 2014. The current release is
-  6.0.7; the pinned version was 1.5.1, and even 1.5.12 -- the last patch in that
-  series, with the security fixes -- had never been applied. Stage 1 applied it,
-  so the pin is 1.5.12 now: the eleven patch releases are in, and the series is
-  still eleven years past its last security fix.
+* Stage 1 applied Django 1.5.12 after the original Django 1.5.1 pin.
+  Later stages continue in :doc:`../upgrade-plan`.
 * ``python:2.7-alpine``, the base image, has had no updates since 2020, which
   includes the C libraries it links against.
 * ``psycopg2-binary``, ``Pillow`` and the rest are pinned at similarly old
@@ -66,8 +68,8 @@ Stages 11-19 Django 2.0 to 6.0, one version at a time
 ============ ======================================================
 
 Suggested holding points are the LTS releases: 1.11 (before the Python flip),
-2.2, 3.2, 4.2 and 5.2. Each is somewhere the project can sit indefinitely if
-the work has to pause.
+2.2, 3.2, 4.2 and 5.2. These are historical staging points.
+Check support status before choosing a runtime for deployment.
 
 The effort is concentrated in four places: the South migration conversion
 against real data, the Python 2 to 3 flip, the photologue ``title_slug`` rename
@@ -77,9 +79,20 @@ plus sites framework, and the recurring ``kasvimuseo_admin_list.py`` re-sync
 Progress
 ========
 
-**Stages 0 to 4 are done. This issue stays ``Open``:** five stages of twenty,
-the application is still Python 2.7 and still unpatched everywhere but Django,
-and nothing about that is finished. It closes when the programme does.
+See :doc:`../upgrade-plan`, Stage 10, for the current source preparation.
+The following paragraphs retain the evidence from stages 0 through 4.
+This issue remains Accepted until the upgrade programme ends.
+The agent checked all fifteen listed dependencies on 2026-09-05; each status was Fixed.
+
+What remains
+------------
+
+The next implementation agent owns :doc:`077-python-3-runtime-needs-a-rehearsed-transition`.
+That issue defines the interpreter and deployment checks.
+:doc:`078-planting-photo-text-reads-a-missing-attribute` tracks the remaining model defect.
+
+Historical stage evidence
+-------------------------
 
 Stage 0 went in three changes. First, with 020, 021 and 033 ``Fixed``
 together, the dead weight it lists went -- ``django-indexer``,
@@ -177,7 +190,7 @@ Django 6.0.7 with grappelli 5.0.0 and photologue 3.20 starts, passes
 ``manage.py check`` and has no pending migrations, as does the Django 5.2
 equivalent.
 
-**Not** verified: any of it against this project's own code or database.
+**At the original planning date**, the agent did not check the project code or database.
 ``podman`` was unavailable when this was written, so the container was never
 built, no migration was run and no page was rendered. Stage 0 should be treated
 as a test of the reasoning, not as a foregone conclusion.
