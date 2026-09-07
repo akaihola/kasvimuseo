@@ -3,17 +3,13 @@
 from __future__ import unicode_literals
 from django.db import models
 from django.utils.dates import MONTHS
+from django.utils.encoding import force_text, python_2_unicode_compatible
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 import operator
 from photologue.models import Photo
 
 from kasvimuseo import photo_matching
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 
 PLANT_TYPE_CHOICES = ((1, u'Yksi/kaksiv. koristekasvi'),
@@ -122,6 +118,7 @@ class SpeciesManager(models.Manager):
         return base_qs.filter(pk__in=species_pks)
 
 
+@python_2_unicode_compatible
 class Species(models.Model):
     external_id = models.IntegerField(
         verbose_name=_(u'LajiNro'),
@@ -217,7 +214,7 @@ class Species(models.Model):
             self.photo_is_horizontal = measured
         super(Species, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name_fi
 
     def name_with_subspecies(self):
@@ -240,6 +237,7 @@ class Species(models.Model):
         ordering = 'name_fi',
 
 
+@python_2_unicode_compatible
 class Contact(models.Model):
     last_name = models.CharField(
         max_length=40,
@@ -282,7 +280,7 @@ class Contact(models.Model):
         verbose_name=_(u'Lisätieto'),
         blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s, %s' % (self.last_name, self.first_name)
 
     class Meta:
@@ -291,6 +289,7 @@ class Contact(models.Model):
         ordering = 'last_name',
 
 
+@python_2_unicode_compatible
 class Location(models.Model):
     external_id = models.IntegerField(
         verbose_name=_(u'YhteysNro'),
@@ -338,7 +337,7 @@ class Location(models.Model):
         Contact,
         through='LocationContact')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -347,11 +346,12 @@ class Location(models.Model):
         ordering = 'name',
 
 
+@python_2_unicode_compatible
 class LocationContact(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s/%s' % (self.location, self.contact)
 
     class Meta:
@@ -413,6 +413,7 @@ class ObservationManager(models.Manager):
         return base_qs.filter(pk__in=observation_pks)
 
 
+@python_2_unicode_compatible
 class Observation(models.Model):
     external_id = models.IntegerField(
         null=True, blank=True,
@@ -465,7 +466,7 @@ class Observation(models.Model):
 
     objects = ObservationManager()
 
-    def __unicode__(self):
+    def __str__(self):
         if self.variation:
             return u'%s/%s (%s)' % (self.name_fi(),
                                     self.variation,
@@ -494,11 +495,12 @@ class Observation(models.Model):
         ordering = 'species__name_fi',
 
 
+@python_2_unicode_compatible
 class Plot(models.Model):
     name = models.CharField(max_length=80,
                             verbose_name=_(u'name'))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -506,6 +508,7 @@ class Plot(models.Model):
         verbose_name_plural = _(u'garden plots')
 
 
+@python_2_unicode_compatible
 class Bed(models.Model):
     plot = models.ForeignKey(
         Plot,
@@ -522,7 +525,7 @@ class Bed(models.Model):
         default=False,
         verbose_name=_(u'public'))
 
-    def __unicode__(self):
+    def __str__(self):
         if self.plot:
             return u'%s/%s' % (self.plot, self.name)
         return self.name
@@ -532,6 +535,7 @@ class Bed(models.Model):
         verbose_name_plural = _(u'beds')
 
 
+@python_2_unicode_compatible
 class Label(models.Model):
     species = models.ForeignKey(
         Species,
@@ -543,7 +547,7 @@ class Label(models.Model):
         on_delete=models.SET_NULL)
     visible = models.BooleanField(default=True)
 
-    def __unicode__(self):
+    def __str__(self):
         photo = u' / {}'.format(self.photo.image_filename()) if self.photo else u''
         hidden = u'' if self.visible else ' [{}]'.format(_(u'hidden'))
         return u'{}{}{}'.format(self.species, photo, hidden)
@@ -571,6 +575,7 @@ class PlantingManager(models.Manager):
         return base_qs.filter(pk__in=planting_pks)
 
 
+@python_2_unicode_compatible
 class Planting(models.Model):
     observation = models.ForeignKey(
         Observation,
@@ -614,8 +619,8 @@ class Planting(models.Model):
 
     objects = PlantingManager()
 
-    def __unicode__(self):
-        return unicode(self.observation)
+    def __str__(self):
+        return force_text(self.observation)
 
     @property
     def last_care(self):
@@ -698,6 +703,7 @@ class PlantingPhoto(models.Model):
         verbose_name_plural = _(u'plantings')
 
 
+@python_2_unicode_compatible
 class Care(models.Model):
     planting = models.ForeignKey(
         Planting,
@@ -711,7 +717,7 @@ class Care(models.Model):
     count = models.IntegerField(
         verbose_name=_(u'number of plants after care'))
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s: %s / %s' % (self.date, self.planting, self.description)
 
     class Meta:
