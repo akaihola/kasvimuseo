@@ -681,6 +681,7 @@ class Planting(models.Model):
         ordering = 'observation__species__name_fi',
 
 
+@python_2_unicode_compatible
 class PlantingPhoto(models.Model):
     planting = models.ForeignKey(
         Planting,
@@ -695,8 +696,8 @@ class PlantingPhoto(models.Model):
         max_length=80,
         verbose_name=_(u'name of photographer'))
 
-    def __unicode__(self):
-        return u'%s: %s' % (self.planting, self.observation)
+    def __str__(self):
+        return u'%s: %s' % (self.planting, self.planting.observation)
 
     class Meta:
         verbose_name = _(u'planting')

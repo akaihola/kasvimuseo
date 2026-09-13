@@ -412,6 +412,18 @@ def test_planting_unicode():
 
 
 @pytest.mark.django_db
+def test_planting_photo_unicode():
+    planting = create_planted(name_fi='päivänkakkara')
+    photo = models.PlantingPhoto.objects.create(
+        planting=planting,
+        photo='planting.jpg',
+        date=DATE,
+        photographer='Maija')
+    assert force_text(photo) == '{0}: {1}'.format(
+        force_text(planting), force_text(planting.observation))
+
+
+@pytest.mark.django_db
 def test_care_unicode():
     planting = create_planted(name_fi='päivänkakkara')
     care = create_care(planting, count=1, date=DATE, description='kastelu')
