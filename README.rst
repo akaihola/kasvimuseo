@@ -880,21 +880,26 @@ Before running it
 Running it
 ----------
 
-The one command, against staging rather than production::
+This procedure is for deployment operators. It runs the security checks against an isolated staging host.
+
+Set ``REHEARSAL_APP_PACKAGE`` to a Git URL with an exact commit, or an archive path on the target.
+Use ``git+ssh://git@github.com/akaihola/kasvimuseo.git@<commit>`` for a published revision.
+Then run::
 
     export ANSIBLE_VAULT_PASS=***********
     ansible-playbook -i ansible/hosts.staging \
       -e @ansible/vars/staging.yml \
+      -e "app_package=$REHEARSAL_APP_PACKAGE" \
       ansible/secure-production.yaml
 
 ``-e @ansible/vars/staging.yml`` wins over the playbook's ``vars_files``, so it
 points ``ALLOWED_HOSTS``, the nginx server blocks and the certbot certificate at
 ``staging_domain`` while every other value comes from ``vars/main.yml``
-unchanged. The database is seeded from ``.dev/backups/production-migrated.sql``
--- the production dump *after* the "Crossing the South cut" catch-up above --
-because ``database_backup_to_restore`` is set in the staging file. The comment
-there says why the raw dump no longer serves: ``install.yaml`` deploys current
-master, and current code over the pre-cut schema answers 500.
+unchanged.
+For initial seeding only, add ``-e database_backup_to_restore=../.dev/backups/production-migrated.sql``.
+See "Crossing the South cut" before using an older dump.
+Omit this variable on later runs to preserve the database.
+
 
 Run the playbook twice. The first run installs everything and proves 049's
 order. A fresh install has no ``local_settings.py``, so before the second run,
@@ -903,7 +908,7 @@ plant the file production has. Its shape matters:
 so a file without a ``modify`` function crashes every settings import::
 
     ssh kasvimuseo@<the-staging-name> "cat > \
-      /home/kasvimuseo/.local/lib/python2.7/site-packages/ylaneenkasvit/local_settings.py" <<'EOF'
+      /home/kasvimuseo/venv-python3.7/lib/python3.7/site-packages/ylaneenkasvit/local_settings.py" <<'EOF'
     def modify(settings):
         settings['DEBUG'] = True
         settings['TEMPLATE_DEBUG'] = True
@@ -912,8 +917,7 @@ so a file without a ``modify`` function crashes every settings import::
 The second run proves the rest: 050's password step reports no change, and
 051's gate lets the deletion through, deletes the file and restarts uWSGI.
 
-When you are done, **delete the server** -- that, not power-off, is what stops
-the charge.
+Delete a server only if you created it as a disposable target for this rehearsal.
 
 Without staging DNS
 -------------------
@@ -923,6 +927,7 @@ whole playbook, minus what only a public name provides::
 
     ansible-playbook -i ansible/hosts.staging \
       -e @ansible/vars/staging.yml \
+      -e "app_package=$REHEARSAL_APP_PACKAGE" \
       -e nginx_start=false \
       --skip-tags nginx,certbot,https \
       ansible/secure-production.yaml
