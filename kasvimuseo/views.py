@@ -98,7 +98,10 @@ class PlantedSpeciesLabelsApi(View):
         what ``kasvimuseo_model_tags.external_ids`` and the editor's own
         ``insort`` do with it.
         """
-        observations = sorted(observation_set, key=attrgetter('external_id'))
+        observations = sorted(
+            observation_set,
+            key=lambda observation: (observation.external_id is not None,
+                                     observation.external_id))
         photo_pk, photo_alternatives = get_species_photo_info(
             species, photo_pks_and_urls_by_title,
             photo=label.photo if label else None)
