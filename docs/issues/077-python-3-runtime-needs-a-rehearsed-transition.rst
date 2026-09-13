@@ -11,7 +11,7 @@ Issue 077: The Python 3 runtime needs a rehearsed transition
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 10 with the compatible Python 3.7 runtime and an isolated rehearsal. Keep the later upgrades in issue 036.
-:Resolution: 51fe8ba changes the runtime; c32c664 repairs archive assets; ce3bc43 changes and rehearses Ansible.
+:Resolution: 51fe8ba changes the runtime; c32c664 repairs archive assets; ce3bc43 changes and rehearses Ansible; 5a9c76f repairs code-only updates.
 
 Checks
 ------
@@ -117,6 +117,19 @@ The principal logs are ``python3-tests.log``, ``image-smoke.log``, ``deploy3.log
 The candidate archive's SHA-256 is ``61f1d13eb619d2c9535bfff49b1f651d0d8d00af5c63e21e44c26c8df917090f``.
 The database backup's SHA-256 is ``84ccc446d08797445bb618df944c51b0a03e10503dd2fd44038a02bc85f94d35``.
 The media backup's SHA-256 is ``225560e53544829557e7bbcff40b8672286f527aa4264552934803d94ba67e49``.
+
+Review checks
+-------------
+
+The review found that ``--tags code`` omitted the uWSGI role and its restart condition.
+The corrected code-only deployment passed with Ansible using Python 2.7 and the application using Python 3.7.
+The service timestamp changed, and the data, media, and HTTP checks passed again.
+The log is ``.dev/rehearsal/review-code.log``.
+
+The focused regression suite passed 204 tests.
+Both images still matched the runtime lock, and the stored backup hashes matched the recorded evidence.
+The register parser and both rendered tables contained 78 issues, each under exactly one heading per page.
+Only this issue file differs from ``master`` in the issue tracker.
 
 What remains
 ------------
