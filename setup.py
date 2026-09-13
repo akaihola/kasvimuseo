@@ -26,9 +26,8 @@ setup(
                   'jqm': ['README.rst',
                           'static/**/*',
                           'templates/**/*']},
-    install_requires=[line for line in open('requirements/production.txt')],
-    tests_require=['mock==2.0.0',
-                   'pbr==4.0.2',
-                   'pytest==4.6.11',
+    install_requires=[line.strip() for line in open('requirements/production.txt')
+                      if line.strip() and not line.lstrip().startswith('#')],
+    tests_require=['pytest==4.6.11',
                    'pytest-django==3.10.0']
 )
