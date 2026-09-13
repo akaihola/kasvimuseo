@@ -40,40 +40,44 @@
           not be reused -- see
           docs/issues/025-production-secret-key-and-database-password-are-committed.rst.
 
-    - name: Install Python 2.7
-      tags:
-        - python
+    - name: Check the application source
+      tags: [python, code]
+      assert:
+        that:
+          - app_package is defined
+          - app_package | length > 0
+        msg: "Set app_package to an immutable Git revision URL or a candidate archive on the target."
+
+    - name: Install Python 3.7 and build dependencies
+      tags: [python]
       apt:
-        name: python-minimal
+        name:
+          - python3.7
+          - python3.7-venv
+          - python3-distutils
+          - python3-packaging
+          - python3.7-dev
+          - build-essential
+          - libpq-dev
+          - libjpeg-dev
+          - zlib1g-dev
         state: present
       become: yes
 
-    - name: Install pip 19.3.1 with a patch for issue 5780
-      tags:
-        - python
+    - name: Create the application environment
+      tags: [python]
+      command: "{{ app_base_python }} -m venv {{ app_virtualenv }}"
+      args:
+        creates: "{{ app_virtualenv }}/bin/pip"
+
+    - name: Install compatible packaging tools
+      tags: [python]
       pip:
-        name: https://github.com/rouge8/pip/archive/gh-5780.zip
-        extra_args: "--user"
-
-    - name: Remove OS package of old pip for Python 2.7
-      tags:
-        - python
-      apt:
-        name: python-pip
-        state: absent
-      become: yes
-
-#    - name: Download new pip for Python 2.7
-#      tags:
-#        - python
-#      get_url:
-#        url: https://bootstrap.pypa.io/get-pip.py
-#        dest: /tmp/
-#
-#    - name: Install new pip for Python 2.7
-#      tags:
-#        - python
-#      command: python2.7 /tmp/get-pip.py --user
+        executable: "{{ app_virtualenv }}/bin/pip"
+        name:
+          - pip==23.1.2
+          - setuptools==57.5.0
+          - wheel==0.41.3
 
     - name: Install git, which pip needs to clone the application
       # The 070 rehearsal caught this on a fresh host: nothing here installed
@@ -89,16 +93,11 @@
       tags:
         - code
       pip:
-        executable: "/home/{{ app_user }}/.local/bin/pip2"
-        # GitHub, not Bitbucket: the repository moved, and the Bitbucket copy
-        # stopped receiving pushes. The 070 rehearsal caught the old URL: a
-        # window that installed from it would deploy stale code.
-        name: "git+ssh://git@github.com/akaihola/kasvimuseo.git"
-        state: latest
-        # Reinstall the package and its exact install_requires pins. Without
-        # this, pip can leave a newer dependency when the package version is
-        # already current.
-        extra_args: "--user --upgrade --force-reinstall"
+        executable: "{{ app_virtualenv }}/bin/pip"
+        name: "{{ app_package }}"
+        state: present
+        extra_args: "--upgrade --force-reinstall"
+      register: app_install
 
     - name: Create static assets directory
       tags:
@@ -127,6 +126,7 @@
       django_manage:
         command: collectstatic
         app_path: "{{ django_dir }}"
+        virtualenv: "{{ app_virtualenv }}"
         settings: "{{ django_settings_module }}"
       # Importing the settings needs both secrets, so any manage.py command run
       # from here needs them in its environment too (issue 025) -- and the host

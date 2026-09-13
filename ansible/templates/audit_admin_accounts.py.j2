@@ -1,10 +1,8 @@
 """Report every account in ``auth_user``, and what the admin log says it did.
 
-Rendered by ``ansible/secure-production.yaml`` and handed to the server's
-Python 2.7 on standard input, the same way and for the same reason as
-``rotate_admin_passwords.py.j2``: the settings it has to import read the
-``SECRET_KEY`` and the database password from the environment, and this keeps
-both off the command line.
+The playbook ``ansible/secure-production.yaml`` runs this script with ``app_python``.
+It supplies the parameters through standard input.
+See ``rotate_admin_passwords.py.j2`` for input handling.
 
 It reads and writes nothing. It exists for the two things issue 050 asks for
 beyond the one password: *look at the other four accounts while there*, and
@@ -14,8 +12,6 @@ beyond the one password: *look at the other four accounts while there*, and
 It never prints a password hash. The algorithm and the iteration count are
 enough to see that an account is on the same 2020-era hasher as the one whose
 password turned out to be ``123``.
-
-Python 2.7, in the subset that also parses on Python 3.
 """
 import json
 import os
