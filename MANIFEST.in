@@ -1,3 +1,9 @@
 recursive-include */locale *.po
 recursive-include */locale *.mo
 recursive-include ylaneenkasvit/templates *.html
+include requirements/production.txt
+recursive-include kasvimuseo/templates *.html
+graft kasvimuseo/static
+graft jqm/templates
+graft jqm/static
+include jqm/README.rst
