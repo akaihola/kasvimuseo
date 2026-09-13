@@ -498,8 +498,14 @@ and run::
 Deployment
 ==========
 
+This procedure is for deployment operators. It selects the application release and installs its runtime.
+
+Set ``APP_PACKAGE`` to a Git URL with an exact commit, or an archive path on the target.
+A published revision uses ``git+ssh://git@github.com/akaihola/kasvimuseo.git@<commit>``.
+Then run::
+
     ansible-playbook ansible/bootstrap.yaml
-    ansible-playbook ansible/install.yaml
+    ansible-playbook -e "app_package=$APP_PACKAGE" ansible/install.yaml
 
 .. _`Crossing the South cut`:
 
@@ -519,7 +525,7 @@ the deployment window -- the server never runs a historical revision:
    fails silently.
 5. Dump the migrated database and restore it on the server (`Restoring the
    database on the server`_ below).
-6. Deploy the upgraded application (``ansible-playbook -t code``).
+6. Deploy the application with the runtime using the "Deployment" commands above.
 
 This toll is paid once, at the South/Django boundary. From this baseline on,
 the database half of every later upgrade stage is one ``manage.py migrate``
@@ -538,7 +544,7 @@ Restoring the database on the server
 Updating the software
 ---------------------
 
-    ansible-playbook -t code ansible/install.yaml
+Use "Updating code on the server" below after installing the runtime.
 
 
 Maintenance
@@ -561,12 +567,12 @@ Restoring the database in a development environment
 Updating code on the server
 ---------------------------
 
-    ansible-playbook -t code ansible/install.yaml
+    ansible-playbook -t code -e "app_package=$APP_PACKAGE" ansible/install.yaml
 
-This command reinstalls the application dependencies from
-``requirements/production.txt``. Run it once after issue 074 before serving
-traffic if the host has a newer Django installed. Django 1.11.29 adds no
-application migration, so do not run ``migrate`` for this correction alone.
+Set ``APP_PACKAGE`` as "Deployment" describes.
+This command reinstalls the application and its locked dependencies, then restarts uWSGI.
+Use the full deployment command for the initial Python 3 transition.
+
 
 Updating the nginx configuration
 --------------------------------
@@ -801,13 +807,9 @@ and 2 GB sufficed for the reduced run. For a server created for this, charging
 stops only on delete, not on power-off. A reused server just keeps costing
 what it did.
 
-One faithfulness limit binds any provider: ``install.yaml`` installs
-``python-minimal`` and runs ``/usr/bin/python2.7``, which exist as stock only on
-Debian 10 / Ubuntu 18.04 or earlier, and no provider still ships those as an
-image (the end-of-life runtime issue 036 tracks). So you write a **Debian 10
-image onto the server yourself**, from Hetzner's rescue system. Cloudflare and
-Fly.io are ruled out: neither gives an SSH-reachable systemd host that keeps
-what ``apt`` installs.
+See ``docs/issues/077-python-3-runtime-needs-a-rehearsed-transition.rst``, "Rehearsal evidence", for the isolated container alternative.
+The historical server preparation follows below.
+
 
 Writing the Debian 10 image
 ---------------------------
@@ -882,14 +884,13 @@ Running it
 
 This procedure is for deployment operators. It runs the security checks against an isolated staging host.
 
-Set ``REHEARSAL_APP_PACKAGE`` to a Git URL with an exact commit, or an archive path on the target.
-Use ``git+ssh://git@github.com/akaihola/kasvimuseo.git@<commit>`` for a published revision.
+Set ``APP_PACKAGE`` as "Deployment" describes.
 Then run::
 
     export ANSIBLE_VAULT_PASS=***********
     ansible-playbook -i ansible/hosts.staging \
       -e @ansible/vars/staging.yml \
-      -e "app_package=$REHEARSAL_APP_PACKAGE" \
+      -e "app_package=$APP_PACKAGE" \
       ansible/secure-production.yaml
 
 ``-e @ansible/vars/staging.yml`` wins over the playbook's ``vars_files``, so it
@@ -927,7 +928,7 @@ whole playbook, minus what only a public name provides::
 
     ansible-playbook -i ansible/hosts.staging \
       -e @ansible/vars/staging.yml \
-      -e "app_package=$REHEARSAL_APP_PACKAGE" \
+      -e "app_package=$APP_PACKAGE" \
       -e nginx_start=false \
       --skip-tags nginx,certbot,https \
       ansible/secure-production.yaml

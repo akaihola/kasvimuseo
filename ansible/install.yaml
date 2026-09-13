@@ -236,6 +236,7 @@
 
     - name: uWSGI
       tags:
+        - code
         - web
         - uwsgi
       become: yes
