@@ -2,6 +2,7 @@ Issue 078: Planting photo text reads a missing attribute
 ============================================================
 
 :Status: Open
+:Claimed: KAN fc7b0c9c-41cb-4ef6-9d3e-4a8f47816206
 :Severity: Low
 :Area: models / text
 :Reported: 2026-09-05
