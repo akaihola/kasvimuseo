@@ -376,7 +376,7 @@ def get_next_observation_extid():
                 .values_list('external_id', flat=True)[:1])
     next_id = last_ids[0] + 1 if last_ids else 1
     return _(u'Next available ID: %s') % next_id
-get_next_observation_extid = lazy(get_next_observation_extid, unicode)
+get_next_observation_extid = lazy(get_next_observation_extid, str)
 
 
 class ObservationManager(models.Manager):

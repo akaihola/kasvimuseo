@@ -12,7 +12,7 @@
 # The three keys below are exactly the web-layer values that vars/main.yml ties
 # to kasvit.ambitone.com -- the ALLOWED_HOSTS the settings insist on, the nginx
 # server blocks, and the certbot certificate. Everything else a staging run
-# needs (PostgreSQL, the app_user, the Python 2.7 paths, uWSGI) is identical to
+# needs (PostgreSQL, the app_user, the application paths, uWSGI) is identical to
 # production and comes from vars/main.yml unchanged.
 
 # The one public DNS name you control and have already pointed at the throwaway
@@ -58,14 +58,5 @@ certbot_certs:
   - domains:
       - "media.{{ staging_domain }}"
 
-# Seed the throwaway database from the production dump (issue 070), so the
-# rehearsal runs against real data rather than an empty schema. The path is
-# relative to the playbook in ansible/. install.yaml only restores when this is
-# defined, so it is set here and absent from production's vars.
-#
-# The dump must have crossed the South cut first. install.yaml deploys current
-# master, and the 2026-08-09 full rehearsal proved that current code over the
-# raw pre-cut dump answers 500: Django 1.7 queries tables the old schema does
-# not have. README.rst, "Crossing the South cut", is the catch-up that turns
-# production.sql into this file.
-database_backup_to_restore: ../.dev/backups/production-migrated.sql
+# Pass database_backup_to_restore explicitly for initial seeding or rollback.
+# See README.rst, "Crossing the South cut", before using an older dump.

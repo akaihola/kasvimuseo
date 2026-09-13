@@ -257,17 +257,17 @@ unrenamed, and the application breaks later, not here. README.rst says why
 South cut", under Deployment).'
 }
 
-# The printable and compact species views make Django open the image files to
-# read their dimensions, which no URL can satisfy. The media host serves the
-# photos publicly, so fetch exactly the ones the database references. Python 2
-# code, so it runs in the app container, not on the host.
+# The printable views need local image files to read their dimensions.
+# Fetch the referenced photos with the application interpreter.
 #
 # The host to fetch from is MEDIA_FALLBACK_URL, not MEDIA_URL: since issue 048
 # the development MEDIA_URL is this server's own /media/, and fetching from
 # there would ask the dev server for the files it is being given.
 media_fetch() {
     with_db app_run_container "" python -c '
-import os, sys, urllib, urllib2
+import os, sys
+from urllib.parse import quote
+from urllib.request import urlopen
 import django
 django.setup()
 from django.conf import settings
@@ -286,10 +286,9 @@ for name in Photo.objects.values_list("image", flat=True).order_by("image"):
         present += 1
         continue
     try:
-        data = urllib2.urlopen(base + urllib.quote(name.encode("utf-8")),
-                               timeout=60).read()
+        data = urlopen(base + quote(name), timeout=60).read()
     except Exception as error:
-        print("FAILED {0}: {1}".format(name.encode("utf-8"), error))
+        print("FAILED {0}: {1}".format(name, error))
         failed += 1
         continue
     directory = os.path.dirname(destination)

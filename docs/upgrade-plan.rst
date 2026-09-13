@@ -2058,70 +2058,49 @@ application change (eb33c9a):
 Stage 10 — **Python 2.7 → 3.7**, staying on Django 1.11.29
 -----------------------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 51fe8ba, c32c664, ce3bc43
 
-The one irreversible step. Nothing else changes version in this stage.
+This stage is for the implementation agent. It changes the interpreter while Django stays at 1.11.29.
+Issue :doc:`issues/077-python-3-runtime-needs-a-rehearsed-transition` owns the version decision, checks, and rehearsal evidence.
 
 Source preparation
 ~~~~~~~~~~~~~~~~~~
 
-This step prepares model text while the application still uses Python 2.7.
-Issue :doc:`issues/076-model-text-needs-python-3-methods` records the bounded change.
-
-The source contained eleven ``__unicode__`` methods, rather than the twelve listed here before.
-Ten now define ``__str__`` with Django's ``python_2_unicode_compatible`` decorator.
-The report action and nested planting text use ``force_text`` for the three former ``unicode`` calls.
-The interpreter and package pins do not change.
-
-The remaining method needs :doc:`issues/078-planting-photo-text-reads-a-missing-attribute`.
-Issue 016 already fixed the filter conversion.
-Stage 5 removed the old text helpers with the admin list fork.
+Issue 076 converted ten model text methods to ``__str__`` with Django's ``python_2_unicode_compatible`` decorator.
+Issue 078 converted ``PlantingPhoto`` and repaired its missing attribute.
+The report action and nested planting text use ``force_text``.
+The runtime checks also found a lazy ``unicode`` reference and implicit sorting between missing and numeric museum numbers.
+The transition replaces those Python 2 behaviors and the media command's ``urllib2`` imports.
 
 Interpreter transition
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Issue :doc:`issues/077-python-3-runtime-needs-a-rehearsed-transition` owns the remaining checks.
-Python 3 execution is not part of the source preparation result.
+Both images use ``python:3.7.17-alpine3.18``.
+Ansible installs the application into a separate Python 3.7 environment and selects the matching uWSGI plugin.
+The previous environment remains available for rollback.
 
-Then flip the base image ``python:2.7-alpine`` → ``python:3.7-alpine`` and the
-ceiling versions:
+The production pins change as follows:
 
-* ``Pillow`` 6.2.2 → **9.5.0** — the highest that still has ``Image.ANTIALIAS``,
-  which photologue needs until 3.16 (3b.1), and the highest that supports
-  Python 3.7. This is the decided pin for every stage from here to 16, not an
-  upper limit to be relaxed if a resolver offers more (issue 028).
-* ``psycopg2-binary`` stays 2.8.6 (still the ceiling until Django 3.1)
-* ``gunicorn`` → **21.2.0**, skipping 19.x and 20.x entirely — **decided**,
-  issue 029. It needs only Python ≥3.5, is independent of Django, and is the
-  first release free of ``pkg_resources`` (3b.2). Sitting on gunicorn 20 buys
-  nothing and costs a ``setuptools<82`` constraint for the next eight stages,
-  so no stage carries one. This is the stage where gunicorn moves at all: it
-  stays on 0.17.4 through Stage 9, where Python 2.7 makes the question moot.
-* ``selenium`` and ``Fabric`` are both moot here, and neither is a requirement
-  any more: ``selenium`` went with ``requirements/integration-tests.txt`` in
-  issue 017, and ``Fabric`` was deleted rather than ported (issue 032, Part 5).
-  This bullet used to read "``selenium`` 3.141.0 → 4.x, ``Fabric`` 1.6 → 3.x
-  *or* delete both" — both were deleted, and by the two issues rather than by
-  this stage.
+* Pillow moves from 6.2.2 to 9.5.0, as issue 028 requires.
+* Gunicorn moves from 0.17.4 to 21.2.0, as issue 029 requires.
+* psycopg2-binary moves from 2.8.4 to 2.8.6 and remains below 2.9.
+* ExifRead stays at 2.1.2; this transition does not require its proposed Appendix A upgrade.
 
-The full resolved lock for this stage — and every stage after it — is in
-`Appendix A — Resolved lock set per stage`_.
+The generated locks live in ``requirements/production.txt``, ``requirements/dev.txt``, and ``requirements/testing.txt``.
+Their matching ``.in`` files define the direct requirements.
+The test code uses ``unittest.mock``.
+The Python 2 backports leave the locks, but Python 3.7 compatibility dependencies remain where package metadata requires them.
+The development and test locks retain ``six``.
 
-And delete: ``six``, ``mock``, ``pbr`` and ``funcsigs``. The eleven Python-2
-backports this used to name as well went with ``integration-tests.txt`` in issue
-017, before this stage rather than at it.
+Python 3.7 and Django 1.11 are historical compatibility steps, not supported deployment endpoints.
+Continue the remaining upgrade stages after this rehearsal.
 
-Why 3.7 and not 3.6: Django 1.11 supports 3.4–3.7 and 3.7 is the highest, which
-minimises the number of Python bumps still to come. Pin Django ≥ **1.11.17** —
-that is the exact release that added Python 3.7 support ("Django 1.11.17 fixes
-several bugs in 1.11.16 and adds compatibility with Python 3.7", and it is the
-first 1.11 whose ``setup.py`` carries the ``Python :: 3.7`` classifier).
-Stage 9 already lands on 1.11.29, so this is satisfied.
 
 Stage 11 — Django 1.11 → 2.0.13
 -------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``patterns()`` gone → plain lists of ``url()``.
 * ``django.core.urlresolvers`` gone (Stage 8 handled it).
@@ -2457,25 +2436,10 @@ By Stage 19 that has collapsed to nine packages total::
 Stage 10 — Django 1.11.29 (LTS), Python 3.7
 -------------------------------------------
 
-::
+.. literalinclude:: ../requirements/production.txt
+   :language: text
 
-    django-grappelli==2.10.4
-    django-photologue==3.7
-    django-sortedm2m==1.3.3
-    django==1.11.29
-    exifread==3.5.1
-    gunicorn==21.2.0
-    importlib-metadata==6.7.0
-    packaging==24.0
-    pillow==9.5.0
-    psycopg2-binary==2.8.6
-    pytz==2021.3
-    typing-extensions==4.7.1
-    zipp==3.15.0
-
-``django-sortedm2m==1.3.3`` is pinned by hand — it is sdist-only and modern setuptools cannot
-build it, so a resolver cannot select it (see 3b.3), but photologue's floor for
-this stage requires it.
+Issue :doc:`issues/077-python-3-runtime-needs-a-rehearsed-transition`, "Support checks", records the resolver and build toolchain.
 
 Stage 11 — Django 2.0.13, Python 3.7
 ------------------------------------

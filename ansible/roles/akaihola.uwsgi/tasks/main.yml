@@ -5,7 +5,7 @@
     state: present
   with_items:
     - uwsgi
-    - uwsgi-plugin-python
+    - uwsgi-plugin-python3
 
 - name: Create uWSGI config
   become_user: kasvimuseo
@@ -46,4 +46,4 @@
 # We can't use a handler for this, because handlers don't work well with dynamic parameters.
 - name: Restart uWSGI service
   service: "name={{ uwsgi_service }} state=restarted"
-  when: wsgi_service.changed or wsgi_config.changed
+  when: wsgi_service.changed or wsgi_config.changed or (app_install is defined and app_install.changed)

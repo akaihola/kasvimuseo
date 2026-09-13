@@ -1,0 +1,5 @@
+# This file adds development tools to the runtime lock.
+-r production.txt
+django-extensions==2.2.9
+Werkzeug==0.8.3
+six==1.11.0
