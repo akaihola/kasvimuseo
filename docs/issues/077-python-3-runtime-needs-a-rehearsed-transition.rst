@@ -1,7 +1,8 @@
 Issue 077: The Python 3 runtime needs a rehearsed transition
 ============================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: 968b9f6b-5754-4c1a-bc25-1662d75ed012, feature/rehearse-python-3-ru-tw8
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-05
