@@ -1,8 +1,7 @@
 Issue 078: Planting photo text reads a missing attribute
 ============================================================
 
-:Status: Open
-:Claimed: KAN fc7b0c9c-41cb-4ef6-9d3e-4a8f47816206
+:Status: Fixed
 :Severity: Low
 :Area: models / text
 :Reported: 2026-09-05
@@ -11,8 +10,8 @@ Issue 078: Planting photo text reads a missing attribute
 :Depends on: (none)
 :Blocks: 077 -- finish this method before the interpreter transition
 :Related: 036 -- the runtime upgrade programme
-:Decision: undecided
-:Resolution: (none yet)
+:Decision: use planting.observation as the photo label and expose the method through the project's Python 2/Python 3 text pattern
+:Resolution: c8026bb
 
 Work
 ----
