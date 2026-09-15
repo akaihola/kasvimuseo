@@ -163,8 +163,8 @@ def staff_client(client, db):
     user = User.objects.create_user('puutarhuri', 'p@invalid', PASSWORD)
     user.is_staff = True
     user.save()
-    user.user_permissions = Permission.objects.filter(
-        content_type__app_label__in=('kasvimuseo', 'photologue'))
+    user.user_permissions.set(Permission.objects.filter(
+        content_type__app_label__in=('kasvimuseo', 'photologue')))
     client.login(username=user.username, password=PASSWORD)
     return client
 

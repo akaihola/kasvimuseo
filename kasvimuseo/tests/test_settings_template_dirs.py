@@ -62,9 +62,11 @@ def test_the_app_template_loader_is_active():
 def test_photologue_templates_are_found_inside_the_installed_package():
     # The loader itself rather than the engine's ``find_template``, which
     # reports the file a template came from only under template debug mode
-    # -- and the file is the whole point here.
-    source, filename = Loader(engines['django'].engine).load_template_source(
+    # -- and the file is the whole point here. Django 2.0 removed the loader's
+    # ``load_template_source``; the template's ``origin`` names the same file.
+    template = Loader(engines['django'].engine).get_template(
         'photologue/gallery_archive.html')
+    filename = template.origin.name
 
     assert filename.startswith(os.path.dirname(photologue.__file__) + os.sep)
 
