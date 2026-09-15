@@ -50,4 +50,4 @@ Results on 2026-09-15:
 * The suite passed 531 tests in 22 seconds. The 10 remaining warnings are Python and Pillow deprecations inside Django and photologue.
 * Both images report Django 2.0.13, grappelli 2.11.2, photologue 3.8.1, sortedm2m 1.5.0 and Python 3.7.17.
 * ``check`` found no issues. ``makemigrations --check`` found no change in ``kasvimuseo``. photologue 3.8.1 ships the same ten migrations as 3.7.
-* The locks were regenerated with issue 077's ``pip-compile`` command inside ``kasvimuseo-077-dev``.
+* The branch regenerated the locks with issue 077's ``pip-compile`` command inside ``kasvimuseo-077-dev``.

@@ -2106,7 +2106,7 @@ Stage 11 — Django 1.11 → 2.0.13
 **Done.** Issue :doc:`issues/079-django-2-0-removes-the-last-1-x-apis` records the checks.
 The suite ends at 531 tests, the Stage 10 count, and prints no ``RemovedInDjango`` warning.
 Three application changes covered the list below: ``format_html`` replaced ``allow_tags``,
-``ObservationManager`` lost ``use_for_related_fields``, and ``admin.site.urls`` is passed without ``include()``.
+``ObservationManager`` lost ``use_for_related_fields``, and ``url()`` takes ``admin.site.urls`` without ``include()``.
 Two more removals were in the tests: direct many-to-many assignment and the loader's ``load_template_source``.
 photologue 3.8.1 declares ``app_name``, so the namespaced include needed no change.
 sortedm2m 1.5.0 built and ran under Django 2.0 in the ``python:3.7`` image, as 3b.3 predicts.
