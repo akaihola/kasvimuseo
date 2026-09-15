@@ -4,15 +4,15 @@
 #
 #    pip-compile --no-build-isolation --no-emit-index-url --no-emit-trusted-host --output-file=requirements/production.txt --resolver=backtracking requirements/production.in
 #
-django==1.11.29
+django==2.0.13
     # via
     #   -r requirements/production.in
     #   django-photologue
-django-grappelli==2.10.4
+django-grappelli==2.11.2
     # via -r requirements/production.in
-django-photologue==3.7
+django-photologue==3.8.1
     # via -r requirements/production.in
-django-sortedm2m==1.3.3
+django-sortedm2m==1.5.0
     # via
     #   -r requirements/production.in
     #   django-photologue
