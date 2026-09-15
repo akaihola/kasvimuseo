@@ -7,6 +7,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.utils.encoding import force_text
+from django.utils.html import format_html
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from .forms import ObservationForm, PhotoForm, SpeciesForm
@@ -207,11 +208,10 @@ class PlantingAdmin(EditColumnAdmin):
     ordering = 'observation__external_id',
 
     def coordinates(self, obj):
-        return u'({0}cm,{1}cm)<br>{2}×{3}cm'.format(
-            obj.distance_left, obj.distance_front,
-            obj.width, obj.depth)
+        return format_html(u'({0}cm,{1}cm)<br>{2}×{3}cm',
+                           obj.distance_left, obj.distance_front,
+                           obj.width, obj.depth)
     coordinates.short_description = _(u'(left,front) width×depth')
-    coordinates.allow_tags = True
 
     class Media:
         css = CSS
@@ -250,9 +250,8 @@ class ObservationAdmin(EditColumnAdmin):
         if obj.external_id is None:
             return u''
         url = reverse('planted-observation', args=[obj.external_id])
-        return u'<a href="{0}">{1}</a>'.format(url, _(u'page'))
+        return format_html(u'<a href="{0}">{1}</a>', url, _(u'page'))
     page.short_description = _(u'show page')
-    page.allow_tags = True
 
     fieldsets = ((_(u'Basic information'),
                   {'fields': ('external_id',
@@ -354,9 +353,8 @@ class BedAdmin(EditColumnAdmin):
     def map(self, obj):
         url = reverse('bed-map', kwargs={'pk': obj.pk})
         label = _(u'map')
-        return u'<a href="{0}">{1}</a>'.format(url, label)
+        return format_html(u'<a href="{0}">{1}</a>', url, label)
     map.short_description = _(u'show map')
-    map.allow_tags = True
 
     class Media:
         css = CSS

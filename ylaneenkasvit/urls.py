@@ -13,7 +13,9 @@ admin.autodiscover()
 
 urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
-    url(r'^admin/', include(admin.site.urls)),
+    # ``admin.site.urls`` is a 3-tuple, which ``include()`` stops accepting
+    # at Django 2.0 (upgrade plan Stage 11); the tuple is passed directly.
+    url(r'^admin/', admin.site.urls),
     # (r'^sentry/', include('sentry.web.urls')),
     # Photologue's own gallery index is a date archive with ``allow_empty``
     # off, so it raises ``Http404`` until the first gallery exists. Same path

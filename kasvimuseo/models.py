@@ -380,8 +380,6 @@ get_next_observation_extid = lazy(get_next_observation_extid, str)
 
 
 class ObservationManager(models.Manager):
-    use_for_related_fields = True
-
     def public_planted(self):
         """Returns public currently planted observations
 
