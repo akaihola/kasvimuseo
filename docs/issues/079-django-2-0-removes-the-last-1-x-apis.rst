@@ -51,3 +51,39 @@ Results on 2026-09-15:
 * Both images report Django 2.0.13, grappelli 2.11.2, photologue 3.8.1, sortedm2m 1.5.0 and Python 3.7.17.
 * ``check`` found no issues. ``makemigrations --check`` found no change in ``kasvimuseo``. photologue 3.8.1 ships the same ten migrations as 3.7.
 * The branch regenerated the locks with issue 077's ``pip-compile`` command inside ``kasvimuseo-077-dev``.
+
+Staging deployment
+------------------
+
+This section is for runtime maintainers. It records where Stage 11 ran and what the deployment proved.
+
+The recorded staging host ``kasvimuseo-staging.vempai.men`` did not answer on 2026-09-18.
+It refused ping and connections on ports 22, 80 and 443.
+Hetzner Cloud still reported the server as running, and another server in the same location answered at once.
+A reboot is the remedy, and this environment refuses to run one, so the host waits for the maintainer.
+An isolated Debian 10 container supplied the target instead, as Stage 10 did for :doc:`077-python-3-runtime-needs-a-rehearsed-transition`.
+
+Build the candidate archive and start the target::
+
+    podman run --rm -v "$PWD:/src" -w /src kasvimuseo-dev-stage11 python setup.py sdist --dist-dir .dev/staging
+    podman run -d --name kasvimuseo-staging-s11 -v "$PWD/.dev/staging:/rehearsal" kasvimuseo-077-ansible-host /sbin/init
+
+Then deploy the archive with the repository's own play::
+
+    ansible-playbook -i .dev/staging/hosts.container --tags python,code,static,database,uwsgi \
+      -e app_package=/rehearsal/ylaneenkasvit-0.2.1.dev0.tar.gz ansible/install.yaml
+
+The image lacks three things the play needs.
+Give the application user passwordless ``sudo``.
+Install ``python3-psycopg2`` for Ansible's PostgreSQL modules.
+Install ``acl`` so Ansible can become the ``postgres`` user.
+
+Results on 2026-09-18:
+
+* The target reported Debian 10.13 and Python 3.7.3, an older release than the images' 3.7.17.
+* The environment holds Django 2.0.13, grappelli 2.11.2, photologue 3.8.1, sortedm2m 1.5.0, Pillow 9.5.0 and psycopg2-binary 2.8.6.
+* ``collectstatic`` wrote the static tree, and ``migrate`` applied 29 migrations to an empty database.
+* ``check --deploy`` reported no error. It warned about the throwaway key's length and the project's frame policy.
+* The uWSGI service started and answered ``/admin/login/`` and ``/kasvimuseo/planted-species/`` with HTTP 200.
+* The run left out nginx and certbot. Both need a reachable host and real DNS.
+* The candidate archive's SHA-256 is ``316af75251a66e2cd669476112d4f06cd7484cc8b3b7fbf98cc8eb3ca99e27a4``.
