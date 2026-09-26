@@ -2100,7 +2100,17 @@ Continue the remaining upgrade stages after this rehearsal.
 Stage 11 — Django 1.11 → 2.0.13
 -------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: d1b5f89, c07bab2, 3d4e3f1
+
+**Done.** Issue :doc:`issues/079-django-2-0-removes-the-last-1-x-apis` records the checks.
+The suite ends at 531 tests, the Stage 10 count, and prints no ``RemovedInDjango`` warning.
+Three application changes covered the list below: ``format_html`` replaced ``allow_tags``,
+``ObservationManager`` lost ``use_for_related_fields``, and ``url()`` takes ``admin.site.urls`` without ``include()``.
+Two more removals were in the tests: direct many-to-many assignment and the loader's ``load_template_source``.
+photologue 3.8.1 declares ``app_name``, so the namespaced include needed no change.
+sortedm2m 1.5.0 built and ran under Django 2.0 in the ``python:3.7`` image, as 3b.3 predicts.
+ExifRead stays at 2.1.2: photologue 3.8.1 requires only that version.
 
 * ``patterns()`` gone → plain lists of ``url()``.
 * ``django.core.urlresolvers`` gone (Stage 8 handled it).
@@ -2113,7 +2123,7 @@ Stage 11 — Django 1.11 → 2.0.13
 Stage 12 — Django 2.0 → 2.1.15
 ------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``django.contrib.auth.views.login``/``logout`` deleted (Stage 9 handled it).
 * ``django-grappelli`` → 2.12.4; ``django-photologue`` → 3.9.
