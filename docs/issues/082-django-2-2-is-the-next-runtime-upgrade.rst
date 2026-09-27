@@ -1,7 +1,8 @@
 Issue 082: Django 2.2 is the next runtime upgrade step
 ======================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: feature/upgrade-django-to-2-4u5
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-27
