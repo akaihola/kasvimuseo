@@ -570,6 +570,7 @@ late.
    078: Repair the planting photo label before converting its text method.
    077: Check the interpreter transition and rehearse its deployment.
    079: Move to Django 2.0 and remove the last 1.x APIs.
+   081: Django 2.1 is the next safe step after Stage 11, with Python 3.7 held.
    035: Nothing to do now. Revisit once the upgrade lands, while the cost of
       being paced by two third-party packages is fresh.
    074: Production appears to run a newer Django than the repository pin.
