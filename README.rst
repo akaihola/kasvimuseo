@@ -884,6 +884,8 @@ Running it
 
 This procedure is for deployment operators. It runs the security checks against an isolated staging host.
 
+Read ``docs/issues/082-django-2-2-is-the-next-runtime-upgrade.rst``, "Deployment prerequisite", before selecting the target.
+
 Set ``APP_PACKAGE`` as "Deployment" describes.
 Then run::
 
@@ -909,7 +911,7 @@ plant the file production has. Its shape matters:
 so a file without a ``modify`` function crashes every settings import::
 
     ssh kasvimuseo@<the-staging-name> "cat > \
-      /home/kasvimuseo/venv-python3.7/lib/python3.7/site-packages/ylaneenkasvit/local_settings.py" <<'EOF'
+      /home/kasvimuseo/venv-python3.9/lib/python3.9/site-packages/ylaneenkasvit/local_settings.py" <<'EOF'
     def modify(settings):
         settings['DEBUG'] = True
         settings['TEMPLATE_DEBUG'] = True
