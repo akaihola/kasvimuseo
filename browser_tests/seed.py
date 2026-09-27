@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Build the data the label editor tests arrange, inside the app container.
+"""This script prepares browser test data inside the application container.
 
-Python 2.7 and Django 1.7, because it runs where the application runs -- the
-browser tests themselves are Python 3 on the host, and never import Django.
+The browser tests run on the host and do not import Django.
 ``dev/kasvimuseo app browser-test`` runs this against a throwaway database of
 its own, so it drops what it made first and can be re-run.
 
@@ -28,6 +27,10 @@ import os
 import shutil
 
 import django
+
+# Initialize Django before importing models.
+django.setup()
+
 from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -102,8 +105,8 @@ def create_staff_user():
     # without ``change`` on the model gets a 403 instead of one. A gardener is
     # what this account stands for, so the grant stops at ``kasvimuseo`` --
     # not a superuser, which would also hide a missing permission.
-    user.user_permissions = Permission.objects.filter(
-        content_type__in=ContentType.objects.filter(app_label='kasvimuseo'))
+    user.user_permissions.set(Permission.objects.filter(
+        content_type__in=ContentType.objects.filter(app_label='kasvimuseo')))
     return user
 
 
@@ -165,8 +168,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # A plain script, not a management command, so Django 1.7's application
-    # registry has to be filled by hand before a model is used (upgrade plan
-    # Stage 5).
-    django.setup()
     main()

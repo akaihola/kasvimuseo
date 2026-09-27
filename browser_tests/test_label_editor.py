@@ -448,6 +448,7 @@ DRAWN_NUMBER = """() => {
     return {fontSize: parseFloat(style.fontSize),
             opacity: parseFloat(style.opacity),
             visibility: style.visibility,
+            position: style.position,
             zIndex: style.zIndex,
             box: [rect.x, rect.y, rect.width, rect.height],
             onScreen: rect.x >= 0 && rect.y >= 0
