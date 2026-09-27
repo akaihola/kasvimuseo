@@ -39,7 +39,7 @@ Run these commands from the repository root::
 
 Results on 2026-09-27:
 
-* The browser check passed four cases in Chromium and WebKit. Both orientations passed in each engine. The run needed a temporary ``django.setup()`` before model imports in ``browser_tests/seed.py``. That file remains unchanged. See ``.agents/memory/browser-test-seed-needs-django-setup.md``.
+* The browser check passed four cases in Chromium and WebKit. Both orientations passed in each engine. The run needed a temporary ``django.setup()`` before model imports in ``browser_tests/seed.py``. That file remains unchanged.
 * The template suite passed 56 tests.
 * The documentation build passed.
 * The full suite stopped during collection. ``test_media_fetch.py`` has a Python 2 encoding error, and ``test_photos.py`` cannot import ``mock``.
