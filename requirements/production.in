@@ -1,11 +1,11 @@
-# This file defines the Stage 14 runtime pins for package maintainers.
-# See docs/issues/083-django-3-0-is-the-next-runtime-upgrade.rst for the decision.
-django==3.0.14
+# This file defines the Stage 15 runtime pins for package maintainers.
+# See docs/issues/084-django-3-1-is-the-next-runtime-upgrade.rst for the decision.
+django==3.1.14
 pytz==2021.3
-django-grappelli==2.14.2
+django-grappelli==2.14.4
 gunicorn==21.2.0
-psycopg2-binary==2.8.6
-django-photologue==3.11
+psycopg2-binary==2.9.5
+django-photologue==3.13
 django-sortedm2m==3.0.0
 ExifRead==2.1.2
 Pillow==9.5.0

@@ -1,26 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Tests for the session serializer being JSON, not pickle (issue 057).
+"""These tests let maintainers check that stored sessions contain JSON.
 
-Django 1.5's default is ``PickleSerializer``, so a session payload is unpickled
-as soon as its ``SECRET_KEY``-keyed HMAC verifies. This repository disclosed
-that key (issue 025) and production still runs it (issue 049), which turns the
-disclosure into arbitrary code execution rather than session forgery alone.
-
-The setting is asserted, because one line is what stands between here and the
-default -- but the test that matters is the behavioural one: it logs in and
-reads what was actually written to ``django_session``, so it fails on the
-pickle default whatever the setting says.
+Issue 057 records why the project requires JSON serialization.
 """
 
 from __future__ import unicode_literals
-
-import base64
-import json
 
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
+from django.core import signing
 from django.urls import reverse
 from django.test.utils import override_settings
 
@@ -35,15 +25,10 @@ def user(db):
 
 
 def stored_payload(client):
-    """The bytes the session backend wrote, with the signature stripped.
-
-    ``SessionBase.encode`` is ``b64encode(hexdigest + ':' + serialized)``, so
-    what is left after the first colon is whatever the configured serializer
-    produced. Read from the row rather than from ``client.session``, which
-    hands back the decoded dictionary and would hide the encoding entirely.
-    """
+    """Read the stored session with JSON, independent of the configured serializer."""
     row = Session.objects.get(session_key=client.session.session_key)
-    return base64.b64decode(row.session_data.encode('ascii')).split(b':', 1)[1]
+    return signing.loads(row.session_data, salt=client.session.key_salt,
+                         serializer=signing.JSONSerializer)
 
 
 def test_the_configured_serializer_is_the_json_one():
@@ -56,7 +41,7 @@ def test_a_logged_in_session_is_stored_as_json(client, user):
     the setting."""
     assert client.login(username=user.username, password=PASSWORD)
 
-    payload = json.loads(stored_payload(client).decode('utf-8'))
+    payload = stored_payload(client)
 
     # A string since Django 1.8, which serializes the pk field's value.
     assert payload['_auth_user_id'] == str(user.pk)
@@ -87,7 +72,7 @@ def test_messages_round_trip_through_a_json_session(admin_client):
              'observation_set-MAX_NUM_FORMS': ''})
 
         assert response.status_code == 302, 'the add form did not save'
-        payload = json.loads(stored_payload(admin_client).decode('utf-8'))
+        payload = stored_payload(admin_client)
         assert '_messages' in payload
 
         body = admin_client.get(response['Location']).content.decode('utf-8')
