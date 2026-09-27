@@ -1,7 +1,8 @@
 Issue 084: Django 3.1 is the next runtime upgrade step
 ======================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: feature/upgrade-to-django-3-ol6; task 851a2d01-b476-4aab-a778-da1459c1f7b2
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-27
