@@ -144,3 +144,42 @@ Only this issue differs from ``master`` in ``docs/issues/``.
 
 The focused browser checks passed four cases in Chromium and three in WebKit.
 WebKit skipped one Chromium-only touch case.
+
+Deployment attempt
+------------------
+
+This section records the live deployment check for the deployment operator.
+
+The check ran against ``kasvimuseo-staging.vempai.men`` on 2026-09-27.
+Use the staging connection and Ansible 9 environment from
+``.agents/memory/lead-1-is-the-staging-rehearsal-host.md``::
+
+    uvx --python 3.12 --from 'ansible==9.*' ansible-playbook \
+      -i ansible/hosts.staging --check \
+      --tags python,code,static,uwsgi ansible/install.yaml
+
+The live host reports Debian 10, Python 3.7.3 and Django 2.1.15.
+Its installed uWSGI plugin is 2.0.18-1 and depends on ``libpython3.7``.
+Its configured repositories offer no Python 3.9 package.
+The host has no Python 3.9 interpreter or Docker or Podman executable.
+
+The deployment guard rejected the host with exit code 2.
+Ansible reported ``ok=1 changed=0 failed=1``.
+The existing uWSGI service remained active, and the public species page returned HTTP 200.
+Logs live in ``.dev/issue082/deploy/`` in the task checkout.
+
+The deployment operator must complete the target transition described in "Deployment prerequisite" before installing this revision.
+The deployment check changed no application, database, service or operating system.
+
+User checks
+~~~~~~~~~~~
+
+These checks are for gardeners after deployment to a compatible target.
+
+#. Sign in at ``/admin/``.
+#. Filter the species list and check that the rows match the selected filter.
+#. Select a species and run its printable report with the action menu and submit button.
+#. Open the photo and gallery lists and check the photographs.
+#. Open ``/kasvimuseo/planting-labels/`` and move a museum number between labels.
+#. Save the labels and reload the page to check that the change remains.
+#. Sign out at ``/accounts/logout/``.
