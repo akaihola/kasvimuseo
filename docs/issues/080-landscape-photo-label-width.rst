@@ -11,7 +11,7 @@ Issue 080: The label under a landscape photo is too narrow
 :Blocks: (none)
 :Related: (none)
 :Decision: Set the compact image to the header width. Keep each orientation's existing header width.
-:Resolution: 7bf8910 sets the compact image width to its header width.
+:Resolution: 91efc41 aligns the outer label border with both photo edges.
 
 Problem
 =======
