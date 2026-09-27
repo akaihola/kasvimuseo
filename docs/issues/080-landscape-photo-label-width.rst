@@ -1,7 +1,7 @@
 Issue 080: The label under a landscape photo is too narrow
 ==========================================================
 
-:Status: Accepted
+:Status: In progress
 :Claimed: 0b0a8ad8-79f0-4346-85f9-946bc52db68c
 :Severity: Medium
 :Area: templates / public species
