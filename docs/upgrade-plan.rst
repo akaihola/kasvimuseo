@@ -2135,7 +2135,10 @@ Issue :doc:`issues/081-django-2-1-is-the-next-runtime-upgrade`, "Checks", record
 Stage 13 — Django 2.1 → 2.2.28 (LTS)
 ------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 41e207e, 8a97f5f, dc78466
+
+Issue :doc:`issues/082-django-2-2-is-the-next-runtime-upgrade`, "Checks", records the versions and validation results.
 
 * ``django-grappelli`` → 2.13.4; ``django-photologue`` → 3.10;
   ``django-sortedm2m`` → 2.0.0; ``pytest-django`` → 3.10.0 or 4.5.2.
@@ -2145,7 +2148,7 @@ Stage 13 — Django 2.1 → 2.2.28 (LTS)
 Stage 14 — Django 2.2 → 3.0.14
 ------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``render_to_response`` gone → ``render(request, …)`` in ``kasvimuseo/views.py``
   (3 call sites; the ``RequestContext`` import goes with it).
