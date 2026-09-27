@@ -8,7 +8,7 @@ Issue 084: Django 3.1 is the next runtime upgrade step
 :Source: Backlog refill from upgrade plan Stage 15
 :Evidence: Stage 15 identifies the psycopg2 boundary and compatible package versions.
 :Depends on: 083
-:Blocks: (none)
+:Blocks: 085
 :Related: 036 -- the runtime upgrade programme
 :Decision: undecided
 :Resolution: (none)

@@ -574,6 +574,8 @@ late.
    082: Stage 13 is next. Move to Django 2.2 LTS and Python 3.9.
    083: Stage 14 follows 082 and removes the Django 3.0 APIs.
    084: Stage 15 follows 083 and updates the PostgreSQL driver boundary.
+   085: Stage 16 follows the Django 3.1 driver boundary. Pin AutoField before the
+      Django 6.0 default change and move to Django 3.2 LTS.
    035: Nothing to do now. Revisit once the upgrade lands, while the cost of
       being paced by two third-party packages is fresh.
    074: Production appears to run a newer Django than the repository pin.
