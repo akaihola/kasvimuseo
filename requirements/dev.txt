@@ -4,15 +4,19 @@
 #
 #    pip-compile --no-build-isolation --no-emit-index-url --no-emit-trusted-host --output-file=requirements/dev.txt --resolver=backtracking requirements/dev.in
 #
-django==2.2.28
+asgiref==3.11.1
+    # via
+    #   -r requirements/production.txt
+    #   django
+django==3.0.14
     # via -r requirements/production.txt
 django-extensions==2.2.9
     # via -r requirements/dev.in
-django-grappelli==2.13.4
+django-grappelli==2.14.2
     # via -r requirements/production.txt
-django-photologue==3.10
+django-photologue==3.11
     # via -r requirements/production.txt
-django-sortedm2m==2.0.0
+django-sortedm2m==3.0.0
     # via
     #   -r requirements/production.txt
     #   django-photologue
@@ -37,13 +41,14 @@ pytz==2021.3
     #   -r requirements/production.txt
     #   django
 six==1.17.0
-    # via
-    #   -r requirements/production.txt
-    #   django-extensions
-    #   django-sortedm2m
+    # via django-extensions
 sqlparse==0.4.4
     # via
     #   -r requirements/production.txt
     #   django
+typing-extensions==4.16.0
+    # via
+    #   -r requirements/production.txt
+    #   asgiref
 werkzeug==0.8.3
     # via -r requirements/dev.in

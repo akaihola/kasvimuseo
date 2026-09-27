@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 from django.db import models
 from django.utils.dates import MONTHS
-from django.utils.encoding import force_text, python_2_unicode_compatible
+from django.utils.encoding import force_text
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 import operator
@@ -118,7 +118,6 @@ class SpeciesManager(models.Manager):
         return base_qs.filter(pk__in=species_pks)
 
 
-@python_2_unicode_compatible
 class Species(models.Model):
     external_id = models.IntegerField(
         verbose_name=_(u'LajiNro'),
@@ -237,7 +236,6 @@ class Species(models.Model):
         ordering = 'name_fi',
 
 
-@python_2_unicode_compatible
 class Contact(models.Model):
     last_name = models.CharField(
         max_length=40,
@@ -289,7 +287,6 @@ class Contact(models.Model):
         ordering = 'last_name',
 
 
-@python_2_unicode_compatible
 class Location(models.Model):
     external_id = models.IntegerField(
         verbose_name=_(u'YhteysNro'),
@@ -346,7 +343,6 @@ class Location(models.Model):
         ordering = 'name',
 
 
-@python_2_unicode_compatible
 class LocationContact(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
@@ -411,7 +407,6 @@ class ObservationManager(models.Manager):
         return base_qs.filter(pk__in=observation_pks)
 
 
-@python_2_unicode_compatible
 class Observation(models.Model):
     external_id = models.IntegerField(
         null=True, blank=True,
@@ -493,7 +488,6 @@ class Observation(models.Model):
         ordering = 'species__name_fi',
 
 
-@python_2_unicode_compatible
 class Plot(models.Model):
     name = models.CharField(max_length=80,
                             verbose_name=_(u'name'))
@@ -506,7 +500,6 @@ class Plot(models.Model):
         verbose_name_plural = _(u'garden plots')
 
 
-@python_2_unicode_compatible
 class Bed(models.Model):
     plot = models.ForeignKey(
         Plot,
@@ -533,7 +526,6 @@ class Bed(models.Model):
         verbose_name_plural = _(u'beds')
 
 
-@python_2_unicode_compatible
 class Label(models.Model):
     species = models.ForeignKey(
         Species,
@@ -573,7 +565,6 @@ class PlantingManager(models.Manager):
         return base_qs.filter(pk__in=planting_pks)
 
 
-@python_2_unicode_compatible
 class Planting(models.Model):
     observation = models.ForeignKey(
         Observation,
@@ -679,7 +670,6 @@ class Planting(models.Model):
         ordering = 'observation__species__name_fi',
 
 
-@python_2_unicode_compatible
 class PlantingPhoto(models.Model):
     planting = models.ForeignKey(
         Planting,
@@ -702,7 +692,6 @@ class PlantingPhoto(models.Model):
         verbose_name_plural = _(u'plantings')
 
 
-@python_2_unicode_compatible
 class Care(models.Model):
     planting = models.ForeignKey(
         Planting,

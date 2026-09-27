@@ -2148,14 +2148,13 @@ Issue :doc:`issues/082-django-2-2-is-the-next-runtime-upgrade`, "Checks", record
 Stage 14 — Django 2.2 → 3.0.14
 ------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: Issue 083
 
-* ``render_to_response`` gone → ``render(request, …)`` in ``kasvimuseo/views.py``
-  (3 call sites; the ``RequestContext`` import goes with it).
+* Issue :doc:`issues/083-django-3-0-is-the-next-runtime-upgrade`,
+  "Compatibility changes", records the removed API checks and the rendering work completed in Stage 8.
 * ``ENGINE`` ``django.db.backends.postgresql_psycopg2`` gone →
   ``django.db.backends.postgresql``.
-* ``django.utils.six`` gone — nothing here imports it, but check that no
-  remaining third-party package does.
 * ``django-photologue`` → 3.11 (**Python 3 only**, ``django-sortedm2m >= 3.0.0``,
   ``Pillow >= 6``); ``django-grappelli`` → 2.14.2.
 * ``psycopg2-binary`` **still < 2.9** — this is the last version where the
@@ -2164,7 +2163,7 @@ Stage 14 — Django 2.2 → 3.0.14
 Stage 15 — Django 3.0 → 3.1.14
 ------------------------------
 
-:Status: Planned
+:Status: Next
 
 * The ``tzinfo_factory`` fix lands → ``psycopg2-binary`` 2.9.x becomes safe.
 * ``django-grappelli`` → 2.14.4; ``django-photologue`` → 3.13.
