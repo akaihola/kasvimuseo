@@ -120,3 +120,29 @@ This section records the completed checks on 2026-09-28, Helsinki time.
 
 The development image is ``e3595ba82173``; the production image is ``0e1579914fb8``.
 Later runtime stages own the Django and Pillow deprecations.
+
+Review checks
+-------------
+
+This section records the implementation review for maintainers.
+Use the environment from "Checks" and run::
+
+    dev/kasvimuseo app test kasvimuseo/tests/test_database_timezone.py kasvimuseo/tests/test_settings_session_serializer.py kasvimuseo/tests/test_admin.py kasvimuseo/tests/test_photologue_galleries.py kasvimuseo/tests/test_photos_integration.py kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py --disable-warnings
+    python3 .dev/issue084/check_packages.py
+    python3 .dev/issue084/review_tracker.py
+    dev/kasvimuseo app manage check --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app manage makemigrations --check --dry-run kasvimuseo --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app manage migrate --check --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo docs --clean
+
+All 125 focused tests passed.
+Both image package comparisons passed again.
+The Django checks passed with the recorded deprecation warning and no pending migrations.
+The review found no implementation defect.
+
+The register contains 85 issue files and 85 ranking entries.
+Each issue appears under exactly one ranking heading.
+The generated queue contains two ready issues and 83 parked issues, with no overlap.
+Issue 084 appears only in the parked section.
+Every other tracker file matches ``master`` exactly.
+The audit script and its results live in ``.dev/issue084/review_tracker.py`` and ``.dev/issue084/review-tracker.log``.
