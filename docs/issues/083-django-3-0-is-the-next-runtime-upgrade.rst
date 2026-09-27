@@ -112,3 +112,23 @@ The later upgrade stages own those changes.
 
 The tracker diff against ``master`` changes only this issue.
 The branch contains separate runtime and validation commits.
+
+Review checks
+-------------
+
+This section records the implementation review for maintainers.
+Use the environment from "Checks" and run::
+
+    dev/kasvimuseo app test kasvimuseo/tests/test_models.py kasvimuseo/tests/test_dev_login.py kasvimuseo/tests/test_settings_logging.py kasvimuseo/tests/test_views.py kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py
+    python3 .dev/issue083/review_tracker.py
+
+All 174 focused tests passed.
+The review repeated the package comparisons and Django checks from "Checks" successfully.
+It found no implementation defect.
+
+The register contains 84 issue files and 84 ranking entries.
+Each issue appears under exactly one ranking heading.
+The generated queue contains two ready issues and 82 parked issues, with no overlap.
+Issue 083 appears only in the parked section.
+The tracker comparison against ``master`` found no changes to other issues.
+The audit script and its results live in ``.dev/issue083/review_tracker.py`` and ``.dev/issue083/review-tracker.log``.
