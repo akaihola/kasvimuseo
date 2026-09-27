@@ -1,7 +1,7 @@
 Issue 081: Django 2.1 is the next runtime upgrade step
 ======================================================
 
-:Status: Open
+:Status: In progress
 :Claimed: Kandev task 2dc5f07e-9976-4268-acb9-d7cdd9a2f6f6
 :Severity: Medium
 :Area: platform / compatibility
@@ -11,7 +11,7 @@ Issue 081: Django 2.1 is the next runtime upgrade step
 :Depends on: (none)
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
-:Decision: undecided
+:Decision: Complete Stage 12 with Django 2.1.15, Grappelli 2.12.4 and Photologue 3.9. Keep Python 3.7.
 :Resolution: (none yet)
 
 Problem
