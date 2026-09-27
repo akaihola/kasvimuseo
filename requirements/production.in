@@ -1,12 +1,11 @@
-# This file defines the Stage 12 runtime pins for package maintainers.
-# See docs/issues/081-django-2-1-is-the-next-runtime-upgrade.rst for the decision.
-# django-sortedm2m 1.5.0 is sdist-only; the image's setuptools 57.5.0 builds it (upgrade plan 3b.3).
-django==2.1.15
+# This file defines the Stage 13 runtime pins for package maintainers.
+# See docs/issues/082-django-2-2-is-the-next-runtime-upgrade.rst for the decision.
+django==2.2.28
 pytz==2021.3
-django-grappelli==2.12.4
+django-grappelli==2.13.4
 gunicorn==21.2.0
 psycopg2-binary==2.8.6
-django-photologue==3.9
-django-sortedm2m==1.5.0
+django-photologue==3.10
+django-sortedm2m==2.0.0
 ExifRead==2.1.2
 Pillow==9.5.0

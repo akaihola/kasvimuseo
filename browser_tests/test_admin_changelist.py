@@ -1,19 +1,8 @@
 # -*- coding: utf-8 -*-
-"""The two admin changelist features issue 013's ``FIXME`` comments deny.
+"""These browser tests check the admin filter and action controls.
 
-``kasvimuseo/tests/test_admin_changelist.py`` and ``test_admin_forms.py``
-already drive both of them through the test client, so what is left to check is
-the half a test client cannot see: Grappelli replaces two of the admin's own
-controls with JavaScript, and neither the filter pulldown nor the action
-dropdown does anything until that JavaScript runs.
-
-The answer is that both work, which is why the comments are gone. The
-interesting part is *how* the action runs, since it is why somebody once wrote
-that action selection does not work: Grappelli's ``actions.js`` (its own copy,
-shadowing Django's -- see the ``GRAPPELLI CUSTOM: submit on select`` comment in
-it) deletes the "Go" button and submits the form when the dropdown changes
-instead. There is no button to press, so an action looks inert until you notice
-it has already run.
+Grappelli opens the filter with JavaScript. Its action form requires the submit button.
+The tests check both controls against the report and species data.
 """
 
 CHANGELIST = '/admin/kasvimuseo/species/'
@@ -51,7 +40,7 @@ def test_species_changelist_filter_narrows_the_rows(page, base_url):
     assert species_names(page) == ['kevätesikko']
 
 
-def test_species_changelist_action_runs_from_the_dropdown(page, base_url):
+def test_species_changelist_action_runs_from_the_submit_button(page, base_url):
     """``# FIXME: action selection doesn't work in admin!``, twice over.
 
     "Create Species Sheets" is ``planted_species_report``, which redirects to
@@ -61,14 +50,8 @@ def test_species_changelist_action_runs_from_the_dropdown(page, base_url):
     page.goto(base_url + CHANGELIST + YRTTI)
     page.check('tr input.action-select')
 
-    # Nothing on the page submits it: Grappelli's actions.js drops the "Go"
-    # button and hangs the submit on the dropdown's ``change`` instead, so this
-    # assertion is the reason the feature looks broken to a reader.
-    assert page.eval_on_selector_all(
-        '#grp-changelist-form button, #grp-changelist-form input[type=submit]',
-        'found => found.length') == 0
-
     page.select_option('select[name=action]', 'planted_species_report')
+    page.click('#grp-changelist-form button[name=index]')
     page.wait_for_url(base_url + '/kasvimuseo/planted-species-printable/2/')
 
     assert 'kevätesikko' in page.content()
