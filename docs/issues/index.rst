@@ -285,6 +285,9 @@ Small, self-contained, each visible to a visitor or to the gardeners.
       (-webkit-touch-callout: none)`` and neither Playwright engine
       implements it. **Accepted**, and what is left is five minutes with the
       device rather than a change to the template.
+   080: A label under a landscape photo is too narrow on the public compact
+      species page. It is a visible defect with a direct CSS fix, so it belongs
+      here and can follow the tablet label work without depending on it.
    062: WebKit will not draw text inside 046's ``zoom: 0.5`` smaller than nine
       used pixels, so a species name fitty fits to anything under 18px is
       drawn at 18px -- up to twice the size it was fitted to, on the engine
