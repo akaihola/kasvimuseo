@@ -425,9 +425,8 @@ There is one non-obvious ceiling. Django ≤ 3.0 ships::
             raise AssertionError("database connection isn't set to UTC")
         return utc
 
-psycopg2 2.9 stopped forcing the session to UTC, so with ``USE_TZ = True``
-(which this project sets) that assertion fires. Django 3.1 replaced it with
-``def tzinfo_factory(self, offset): return self.timezone``. Therefore:
+Issue :doc:`issues/084-django-3-1-is-the-next-runtime-upgrade`, "Timezone compatibility",
+records the callback change and its PostgreSQL check. The version boundary is:
 
     **psycopg2-binary must stay < 2.9 until Django ≥ 3.1.**
 
@@ -2163,7 +2162,8 @@ Stage 14 — Django 2.2 → 3.0.14
 Stage 15 — Django 3.0 → 3.1.14
 ------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: Issue 084
 
 * The ``tzinfo_factory`` fix lands → ``psycopg2-binary`` 2.9.x becomes safe.
 * ``django-grappelli`` → 2.14.4; ``django-photologue`` → 3.13.
@@ -2171,7 +2171,7 @@ Stage 15 — Django 3.0 → 3.1.14
 Stage 16 — Django 3.1 → 3.2.25 (LTS)
 ------------------------------------
 
-:Status: Planned
+:Status: Next
 
 * Set ``DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'`` explicitly.
   It is new in 3.2 and the default flips to ``BigAutoField`` in **6.0**;
@@ -2539,21 +2539,8 @@ Stage 14 — Django 3.0.14, Python 3.9
 Stage 15 — Django 3.1.14, Python 3.9
 ------------------------------------
 
-::
-
-    asgiref==3.11.1
-    django==3.1.14
-    django-grappelli==2.14.4
-    django-photologue==3.13
-    django-sortedm2m==3.0.2
-    exifread==3.5.1
-    gunicorn==21.2.0
-    packaging==26.2
-    pillow==9.5.0
-    psycopg2-binary==2.9.5
-    pytz==2026.3.post1
-    sqlparse==0.5.5
-    typing-extensions==4.16.0
+The generated runtime lock is ``requirements/production.txt``.
+Issue :doc:`issues/084-django-3-1-is-the-next-runtime-upgrade`, "Checks", records its validation.
 
 Stage 16 — Django 3.2.25 (LTS), Python 3.10
 -------------------------------------------
