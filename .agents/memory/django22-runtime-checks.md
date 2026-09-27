@@ -4,3 +4,4 @@ This note is for runtime maintainers. It locates the Stage 13 validation and dep
 
 Read `docs/issues/082-django-2-2-is-the-next-runtime-upgrade.rst`, "Checks", for lock generation and browser test repairs.
 Read its "Deployment prerequisite" section before selecting a deployment target.
+Read its "Review checks" section before changing Ansible deployment tags.

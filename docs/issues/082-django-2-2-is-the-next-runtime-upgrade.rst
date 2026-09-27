@@ -11,7 +11,7 @@ Issue 082: Django 2.2 is the next runtime upgrade step
 :Blocks: 083
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 13 with separate Django and Python commits. Use Debian 11 for the matching deployment interpreter.
-:Resolution: 41e207e upgrades Django; 8a97f5f upgrades Python; dc78466 repairs the browser checks.
+:Resolution: 41e207e upgrades Django; 8a97f5f upgrades Python; dc78466 repairs the browser checks; 3bc707f guards web-only deployments.
 
 Work
 ----
@@ -122,3 +122,25 @@ The syntax check passed with existing NGINX role deprecation warnings.
 A temporary local play exercised the deployment assertion with four distribution cases.
 Debian 11 passed; Debian 10, Debian 12 and Ubuntu 22 failed before mutations.
 The play ended with four successful checks, three expected rejections and no failed checks.
+
+Review checks
+-------------
+
+This section records the implementation review for maintainers.
+
+Check the web deployment tasks with the same local Ansible environment::
+
+    uvx --from ansible ansible-playbook -i 'localhost,' ansible/install.yaml --list-tasks --tags web
+
+The review found that ``--tags web`` selected uWSGI but skipped the runtime guard.
+The guard now carries that tag and runs before uWSGI installation.
+Local checks accept Debian 11 and reject Debian 10 under each application tag: ``python``, ``code``, ``static``, ``web`` and ``uwsgi``.
+
+All 164 focused tracker, commit-reference, admin, photo and routing tests passed.
+Both images still match their locks and pass ``pip check``.
+The register contains 84 issue files and 84 unique ranking entries across all headings.
+Its generated queue contains two ready issues and 82 parked issues, with no overlap.
+Only this issue differs from ``master`` in ``docs/issues/``.
+
+The focused browser checks passed four cases in Chromium and three in WebKit.
+WebKit skipped one Chromium-only touch case.
