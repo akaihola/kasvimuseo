@@ -2123,7 +2123,10 @@ ExifRead stays at 2.1.2: photologue 3.8.1 requires only that version.
 Stage 12 — Django 2.0 → 2.1.15
 ------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: 1b9b93e
+
+Issue :doc:`issues/081-django-2-1-is-the-next-runtime-upgrade`, "Checks", records the dependency decision and validation results.
 
 * ``django.contrib.auth.views.login``/``logout`` deleted (Stage 9 handled it).
 * ``django-grappelli`` → 2.12.4; ``django-photologue`` → 3.9.
@@ -2132,7 +2135,7 @@ Stage 12 — Django 2.0 → 2.1.15
 Stage 13 — Django 2.1 → 2.2.28 (LTS)
 ------------------------------------
 
-:Status: Planned
+:Status: Next
 
 * ``django-grappelli`` → 2.13.4; ``django-photologue`` → 3.10;
   ``django-sortedm2m`` → 2.0.0; ``pytest-django`` → 3.10.0 or 4.5.2.

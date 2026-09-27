@@ -26,3 +26,5 @@ the new file's dependencies name only migrations that exist in the installed
 package (3.4.1 ships 0001…0008). Stage 6's `0003_contact_email_length` came
 out clean, depending only on `('kasvimuseo', '0002_photo_sizes')`.
 Related: [[verify-a-stage-against-the-dump]].
+
+For Photologue 3.9 migration evidence, see `docs/issues/081-django-2-1-is-the-next-runtime-upgrade.rst`, "Checks".
