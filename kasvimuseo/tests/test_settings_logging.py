@@ -36,6 +36,7 @@ list: the suite breaks requests on purpose and pytest already reports each one.
 from __future__ import unicode_literals
 
 import copy
+from io import StringIO
 import logging
 import logging.config
 
@@ -44,7 +45,6 @@ from django.conf import settings
 from django.conf.urls import url
 from django.urls import clear_url_caches
 from django.test.utils import override_settings
-from django.utils.six import StringIO
 
 from ylaneenkasvit import common_settings
 

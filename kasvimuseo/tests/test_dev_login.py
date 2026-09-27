@@ -17,7 +17,7 @@ afterwards; ``dev_login_urls`` is that fixture.
 
 from __future__ import unicode_literals
 
-from importlib import import_module
+from importlib import import_module, reload as reload_module
 
 import pytest
 from django.conf import settings
@@ -26,7 +26,6 @@ from django.urls import (Resolver404, clear_url_caches, resolve,
                                       reverse)
 from django.http import Http404
 from django.test.utils import override_settings
-from django.utils.six.moves import reload_module
 
 from ylaneenkasvit import common_settings
 from ylaneenkasvit.dev_login import dev_login

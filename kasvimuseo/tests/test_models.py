@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import datetime
 
 import pytest
-from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.translation import override
 
@@ -350,8 +349,7 @@ def test_model_strings_preserve_finnish_text():
     for obj in objects:
         text = force_text(obj)
         assert 'ä' in text
-        expected = text.encode('utf-8') if six.PY2 else text
-        assert str(obj) == expected
+        assert str(obj) == text
 
 
 def test_species_unicode():
