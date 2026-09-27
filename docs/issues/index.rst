@@ -571,6 +571,9 @@ late.
    077: Check the interpreter transition and rehearse its deployment.
    079: Move to Django 2.0 and remove the last 1.x APIs.
    081: Django 2.1 is the next safe step after Stage 11, with Python 3.7 held.
+   082: Stage 13 is next. Move to Django 2.2 LTS and Python 3.9.
+   083: Stage 14 follows 082 and removes the Django 3.0 APIs.
+   084: Stage 15 follows 083 and updates the PostgreSQL driver boundary.
    035: Nothing to do now. Revisit once the upgrade lands, while the cost of
       being paced by two third-party packages is fresh.
    074: Production appears to run a newer Django than the repository pin.
