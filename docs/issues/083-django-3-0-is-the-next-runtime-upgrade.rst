@@ -2,6 +2,7 @@ Issue 083: Django 3.0 is the next runtime upgrade step
 ======================================================
 
 :Status: Open
+:Claimed: 81080e17-d089-4bc6-be79-f85243380f9e
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-27
