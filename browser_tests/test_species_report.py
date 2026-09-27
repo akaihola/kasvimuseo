@@ -11,5 +11,10 @@ def test_compact_photo_label_matches_photo_width(page, base_url, species_id,
     photo = page.locator('.header .photo img')
 
     assert f'header {orientation}' in header.get_attribute('class')
-    assert header.evaluate('(node) => node.clientWidth') == photo.evaluate(
-        '(node) => Math.round(node.getBoundingClientRect().width)')
+    assert header.evaluate('''node => {
+        const header = node.getBoundingClientRect();
+        return [header.left, header.right];
+    }''') == photo.evaluate('''node => {
+        const photo = node.getBoundingClientRect();
+        return [photo.left, photo.right];
+    }''')
