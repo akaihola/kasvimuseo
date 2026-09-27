@@ -65,6 +65,11 @@ body.printable {
 .header .species-name {
     padding: .5em;
 }
+body:not(.printable) .header .photo img {
+    display: block;
+    width: calc(100% + 2px);
+    margin-left: -1px;
+}
 .header .species-name .local-names {
     font-style: italic;
 }
