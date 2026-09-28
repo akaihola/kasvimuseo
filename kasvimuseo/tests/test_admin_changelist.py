@@ -15,7 +15,7 @@ import re
 
 import pytest
 from django.urls import reverse
-from django.utils.translation import ugettext
+from django.utils.translation import gettext
 
 from kasvimuseo import admin
 from kasvimuseo.models import Care, Observation, Planting, Species
@@ -267,8 +267,8 @@ def test_observation_add_page_fieldsets(admin_client, db):
         r'<fieldset class="module grp-module ([^"]*)">'
         r'(?:<h2[^>]*>([^<]*)</h2>)?', html)
 
-    assert fieldsets[:2] == [('fieldset_column', ugettext('Basic information')),
-                             ('', ugettext('Extra information'))]
+    assert fieldsets[:2] == [('fieldset_column', gettext('Basic information')),
+                             ('', gettext('Extra information'))]
     # the declared fields of the first group are the ones rendered in it
     first = search(r'<fieldset class="module grp-module fieldset_column">.*?'
                    r'</fieldset>', html).group(0)

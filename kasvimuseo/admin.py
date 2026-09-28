@@ -6,9 +6,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.html import format_html
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
 from .forms import ObservationForm, PhotoForm, SpeciesForm
 from kasvimuseo.models import (
@@ -80,15 +80,15 @@ def planted_species_report(modeladmin, request, queryset):
     if skipped:
         modeladmin.message_user(
             request,
-            ugettext(u'Left out of the report, having no LajiNro: %s')
-            % u', '.join(force_text(species) for species in skipped))
+            gettext(u'Left out of the report, having no LajiNro: %s')
+            % u', '.join(force_str(species) for species in skipped))
     if not external_ids:
         modeladmin.message_user(
             request,
-            ugettext(u'None of the selected species has a LajiNro, '
+            gettext(u'None of the selected species has a LajiNro, '
                      u'so there is no report to create.'))
         return
-    external_ids_param = u','.join(force_text(external_id)
+    external_ids_param = u','.join(force_str(external_id)
                                    for external_id in external_ids)
     url = reverse('planted-species',
                   kwargs={'species_external_ids': external_ids_param})
