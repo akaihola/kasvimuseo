@@ -136,3 +136,33 @@ Each issue appears under exactly one ranking heading.
 The rendered queue contains one ready issue and 84 parked issues, with no overlap or duplicate rows.
 Only issue 085 moved from "Ready now" to "Not in the queue" against local ``master``.
 The audit script and logs live in ``.dev/issue085/review_tracker.py`` and ``.dev/issue085/review-*.log``.
+
+Deployment attempt
+------------------
+
+This section records the staging deployment check for the deployment operator.
+
+The check ran against ``kasvimuseo-staging.vempai.men`` on 2026-09-28, Helsinki time.
+Use ``.agents/memory/running-ansible-from-this-checkout.md`` for the Ansible environment.
+Use ``.agents/memory/lead-1-is-the-staging-rehearsal-host.md`` for the staging credentials and connection.
+Run::
+
+    export SHELL="$(command -v bash)"
+    uvx --python 3.12 --from 'ansible==9.*' ansible-playbook \
+      -i ansible/hosts.staging -e @ansible/vars/staging.yml \
+      -e @/home/agent/prg/kasvimuseo/.dev/rehearsal/staging-rehearsal \
+      -e app_package=git+ssh://git@github.com/akaihola/kasvimuseo.git@33a132a38e987e01faffb83667a5c9e7ba309f26 \
+      --become-password-file /home/agent/prg/kasvimuseo/.dev/rehearsal/become-pass \
+      --check --tags python,code,static,uwsgi ansible/install.yaml
+
+The deployment guard rejected Debian 10.13 with exit code 2.
+Ansible reported ``ok=1 changed=0 failed=1``.
+The host runs Python 3.7.3 and Django 2.1.15.
+It has no Python 3.10 or Python 3.9 interpreter, and no Docker or Podman executable.
+The uWSGI service remained active, and ``/kasvimuseo/planted-species/`` returned HTTP 200 over HTTPS.
+The check changed no application, database, service, or operating system.
+
+The first connection attempt used a nonexistent local ``/bin/bash``.
+The retry used the installed Bash executable and reached the deployment guard.
+Logs live in ``.dev/issue085/deploy/`` in the task checkout.
+The deployment operator owns the remaining work defined in "Deployment prerequisite".
