@@ -1,4 +1,4 @@
-FROM python:3.10.19-alpine3.22 AS base
+FROM python:3.12.12-alpine3.22 AS base
 
 FROM base AS builder
 
@@ -6,10 +6,10 @@ RUN mkdir /install
 
 RUN apk add gcc jpeg-dev musl-dev postgresql-dev zlib-dev
 ENV LIBRARY_PATH=/lib:/usr/lib
-ENV PYTHONPATH=/install/lib/python3.10/site-packages
+ENV PYTHONPATH=/install/lib/python3.12/site-packages
 
 # Keep the packaging tools consistent with the lock resolver.
-RUN pip install --no-cache-dir pip==23.1.2 setuptools==57.5.0 wheel==0.41.3
+RUN pip install --no-cache-dir pip==24.0 setuptools==75.8.0 wheel==0.45.1
 
 COPY requirements /kasvimuseo/requirements
 # Install the runtime lock before the application package.
@@ -19,7 +19,7 @@ RUN pip install --prefix=/install -r /kasvimuseo/requirements/production.txt
 # Issue 040 records why these files need a build check.
 RUN set -e; \
     prefix=/install; \
-    pkg=$prefix/lib/python3.10/site-packages/django; \
+    pkg=$prefix/lib/python3.12/site-packages/django; \
     if [ -d "$prefix/django" ]; then \
         cp -a "$prefix/django"/. "$pkg"/; \
         rm -rf "$prefix/django"; \
@@ -66,7 +66,7 @@ RUN pip install --prefix=/install /kasvimuseo
 # and it is one grappelli 2.5 requests on every admin page (upgrade plan Stage
 # 3), so dropping it is a 404 per page and an English date picker.
 RUN set -e; \
-    site=/install/lib/python3.10/site-packages; \
+    site=/install/lib/python3.12/site-packages; \
     for f in ylaneenkasvit/templates/base.html \
              ylaneenkasvit/templates/404.html \
              ylaneenkasvit/templates/500.html \
@@ -83,7 +83,7 @@ RUN set -e; \
         }; \
     done
 
-FROM python:3.10.19-alpine3.22
+FROM python:3.12.12-alpine3.22
 RUN apk add libjpeg-turbo libpq && rm -rf /var/cache/apk
 COPY --from=builder /install /usr/local
 CMD ["manage", \

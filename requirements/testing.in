@@ -1,5 +1,5 @@
 # This file defines test tools for the development image.
 -c dev.txt
-pytest==6.2.5
-pytest-django==4.5.2
-coverage==7.2.7
+pytest==8.3.5
+pytest-django==4.8.0
+coverage==7.6.1

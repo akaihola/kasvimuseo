@@ -251,6 +251,12 @@ TEMPLATES = [
 ROOT_URLCONF = 'ylaneenkasvit.urls'
 
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 # specify in site specific settings:
 #STATIC_URL = 'http://STATIC_URL/'
