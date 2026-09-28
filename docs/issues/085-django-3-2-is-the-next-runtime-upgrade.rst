@@ -11,7 +11,7 @@ Issue 085: Django 3.2 is the next runtime upgrade step
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 16 on Python 3.10.19 with the requested package pins. Keep implicit primary keys as AutoField.
-:Resolution: 3cc84c2 upgrades the runtime and pins the implicit primary-key type.
+:Resolution: 0e277fa upgrades the runtime and pins the implicit primary-key type.
 
 Work
 ----
@@ -92,12 +92,16 @@ This section records the completed runtime checks on 2026-09-28, Helsinki time.
   The scoped migration check found no model changes.
   All 34 migrations applied, with none pending.
 * Chromium passed all 35 checks. WebKit passed 28 checks and skipped seven Chromium-only checks.
-* All 78 issue-register and commit-reference tests passed.
+* All 78 issue-register and commit-reference tests passed again after rebasing onto local ``master``.
 * The documentation build passed with warnings treated as errors and produced ``.dev/docs/html/index.html``.
 
 The development image is ``d1b93349de6a``; the production image is ``633ba8d8f63d``.
 The package audit initially expected the builder's packaging tools in the production image.
 The base image inventory established the correct versions, and the corrected audit passed.
+
+The rebase changed the runtime commit identifier, so the resolution field names its rewritten commit.
+The tracker audit found only this issue changed against local ``master``.
+Every other issue document matches ``master`` exactly.
 
 Deployment prerequisite
 ------------------------
