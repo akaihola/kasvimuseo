@@ -27,4 +27,3 @@
 - [Privileged account vault gate](privileged-account-vault-gate.md) — issue 075 audits active privileged accounts before admin password rotation
 - [Management checks with test settings](manage-checks-with-test-settings.md). Use temporary media without changing the development link.
 - [Python 3 runtime rehearsal](python3-runtime-rehearsal.md) points to the lock commands and deployment evidence.
-- [Click version for the lock resolver](pip-tools-click-compatibility.md) identifies the compatible pip-tools dependency.
