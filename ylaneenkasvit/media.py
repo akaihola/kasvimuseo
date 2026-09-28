@@ -21,7 +21,7 @@ records.
 
 from django.conf import settings
 from django.http import Http404, HttpResponseRedirect
-from django.utils.http import urlquote
+from urllib.parse import quote
 from django.views.static import serve
 
 
@@ -40,4 +40,4 @@ def serve_media(request, path):
         if not settings.MEDIA_FALLBACK_URL:
             raise
         return HttpResponseRedirect(
-            settings.MEDIA_FALLBACK_URL + urlquote(path))
+            settings.MEDIA_FALLBACK_URL + quote(path))

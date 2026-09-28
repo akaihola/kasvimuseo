@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.clickjacking import xframe_options_exempt
 
@@ -26,7 +26,7 @@ urlpatterns = [
     # nothing worth having: both are public, read-only reports with no form to
     # submit and no session to act on, so there is nothing on them to trick a
     # logged-in user into clicking.
-    url(regex=(r'^planted-species/$'),
+    re_path(route=(r'^planted-species/$'),
         view=xframe_options_exempt(PlantedSpeciesList.as_view()),
         name='planted-species-list'),
 
@@ -38,11 +38,11 @@ urlpatterns = [
     # own -- a login form in place of the page -- while the endpoint answers
     # 403, because a login form behind a 200 is not something axios can tell
     # from a saved sheet.
-    url(regex=r'^planting-labels/$',
+    re_path(route=r'^planting-labels/$',
         view=staff_member_required(PlantedSpeciesLabels.as_view()),
         name='planting-label'),
 
-    url(regex=r'^planting-labels/data/$',
+    re_path(route=r'^planting-labels/data/$',
         view=staff_only_api(PlantedSpeciesLabelsApi.as_view()),
         name='planting-label-data'),
 
@@ -50,21 +50,21 @@ urlpatterns = [
     # ``planted-species-base-compact.html``, loads the same
     # ``iframe-height-fix.js``, which exists only to tell a parent frame how
     # tall to be. Reason as above.
-    url(regex=(r'^planted-species-compact/'
+    re_path(route=(r'^planted-species-compact/'
                r'(?P<species_external_ids>[\d,]+)/$'),
         view=xframe_options_exempt(PlantedSpeciesCompact.as_view()),
         name='planted-species-compact'),
 
-    url(regex=(r'^planted-species-printable/'
+    re_path(route=(r'^planted-species-printable/'
                r'(?P<species_external_ids>[\d,]+)/$'),
         view=PlantedSpeciesPrintable.as_view(),
         name='planted-species'),
 
-    url(regex=r'^planted-observation/(\d+)/$',
+    re_path(route=r'^planted-observation/(\d+)/$',
         view=planted_observation,
         name='planted-observation'),
 
-    url(regex=r'^map/(?P<pk>\d+)/$',
+    re_path(route=r'^map/(?P<pk>\d+)/$',
         view=BedMap.as_view(),
         name='bed-map'),
 ]

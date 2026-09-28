@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import datetime
 
 import pytest
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import override
 
 from kasvimuseo import models
@@ -267,7 +267,7 @@ def test_observation_external_id():
 def test_next_observation_extid_on_empty_table():
     assert models.Observation.objects.count() == 0
     with override(None):
-        assert force_text(models.get_next_observation_extid()) == \
+        assert force_str(models.get_next_observation_extid()) == \
             'Next available ID: 1'
 
 
@@ -275,7 +275,7 @@ def test_next_observation_extid_on_empty_table():
 def test_next_observation_extid_with_only_null_external_ids():
     create_observation(external_id=None)
     with override(None):
-        assert force_text(models.get_next_observation_extid()) == \
+        assert force_str(models.get_next_observation_extid()) == \
             'Next available ID: 1'
 
 
@@ -285,7 +285,7 @@ def test_next_observation_extid_ignores_nulls_among_rows():
     create_observation(external_id=7)
     create_observation(external_id=3)
     with override(None):
-        assert force_text(models.get_next_observation_extid()) == \
+        assert force_str(models.get_next_observation_extid()) == \
             'Next available ID: 8'
 
 
@@ -301,7 +301,7 @@ def test_observation_add_form_help_text_renders_on_empty_database():
 
     form = ObservationForm()
     with override(None):
-        assert force_text(form.fields['external_id'].help_text) == \
+        assert force_str(form.fields['external_id'].help_text) == \
             'Next available ID: 1'
 
 
@@ -347,35 +347,35 @@ def test_model_strings_preserve_finnish_text():
                models.Label(species=species),
                create_care(planting, count=1, date=DATE, description='lisäys')]
     for obj in objects:
-        text = force_text(obj)
+        text = force_str(obj)
         assert 'ä' in text
         assert str(obj) == text
 
 
 def test_species_unicode():
-    assert force_text(models.Species(name_fi='päivänkakkara')) == 'päivänkakkara'
+    assert force_str(models.Species(name_fi='päivänkakkara')) == 'päivänkakkara'
 
 
 def test_plot_unicode():
-    assert force_text(models.Plot(name='Yläpiha')) == 'Yläpiha'
+    assert force_str(models.Plot(name='Yläpiha')) == 'Yläpiha'
 
 
 def test_bed_unicode_without_plot():
-    assert force_text(models.Bed(name='1')) == '1'
+    assert force_str(models.Bed(name='1')) == '1'
 
 
 def test_bed_unicode_with_plot():
-    assert force_text(models.Bed(plot=models.Plot(name='Yläpiha'),
+    assert force_str(models.Bed(plot=models.Plot(name='Yläpiha'),
                                  name='1')) == 'Yläpiha/1'
 
 
 def test_contact_unicode():
-    assert force_text(models.Contact(last_name='Hämäläinen',
+    assert force_str(models.Contact(last_name='Hämäläinen',
                                      first_name='Maija')) == 'Hämäläinen, Maija'
 
 
 def test_location_unicode():
-    assert force_text(models.Location(name='Mäkelä')) == 'Mäkelä'
+    assert force_str(models.Location(name='Mäkelä')) == 'Mäkelä'
 
 
 @pytest.mark.django_db
@@ -385,14 +385,14 @@ def test_location_contact_unicode():
                                             first_name='Maija')
     link = models.LocationContact.objects.create(location=location,
                                                  contact=contact)
-    assert force_text(link) == 'Mäkelä/Hämäläinen, Maija'
+    assert force_str(link) == 'Mäkelä/Hämäläinen, Maija'
 
 
 @pytest.mark.django_db
 def test_observation_unicode_without_variation():
     observation = create_observation(species=create_species(name_fi='päivänkakkara'),
                                      origin=create_location(name='Mäkelä'))
-    assert force_text(observation) == 'päivänkakkara (Mäkelä)'
+    assert force_str(observation) == 'päivänkakkara (Mäkelä)'
 
 
 @pytest.mark.django_db
@@ -400,13 +400,13 @@ def test_observation_unicode_with_variation():
     observation = create_observation(species=create_species(name_fi='päivänkakkara'),
                                      origin=create_location(name='Mäkelä'),
                                      variation='valkoinen')
-    assert force_text(observation) == 'päivänkakkara/valkoinen (Mäkelä)'
+    assert force_str(observation) == 'päivänkakkara/valkoinen (Mäkelä)'
 
 
 @pytest.mark.django_db
 def test_planting_unicode():
     planting = create_planted(name_fi='päivänkakkara')
-    assert force_text(planting) == force_text(planting.observation)
+    assert force_str(planting) == force_str(planting.observation)
 
 
 @pytest.mark.django_db
@@ -417,22 +417,22 @@ def test_planting_photo_unicode():
         photo='planting.jpg',
         date=DATE,
         photographer='Maija')
-    assert force_text(photo) == '{0}: {1}'.format(
-        force_text(planting), force_text(planting.observation))
+    assert force_str(photo) == '{0}: {1}'.format(
+        force_str(planting), force_str(planting.observation))
 
 
 @pytest.mark.django_db
 def test_care_unicode():
     planting = create_planted(name_fi='päivänkakkara')
     care = create_care(planting, count=1, date=DATE, description='kastelu')
-    assert force_text(care) == '{0}: {1} / kastelu'.format(
-        DATE, force_text(planting))
+    assert force_str(care) == '{0}: {1} / kastelu'.format(
+        DATE, force_str(planting))
 
 
 @pytest.mark.django_db
 def test_label_unicode_without_photo():
     label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'))
-    assert force_text(label) == 'päivänkakkara'
+    assert force_str(label) == 'päivänkakkara'
 
 
 @pytest.mark.django_db
@@ -440,7 +440,7 @@ def test_label_unicode_hidden_without_photo():
     label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'),
                                         visible=False)
     with override(None):
-        assert force_text(label) == 'päivänkakkara [hidden]'
+        assert force_str(label) == 'päivänkakkara [hidden]'
 
 
 @pytest.mark.django_db
@@ -448,7 +448,7 @@ def test_label_unicode_with_photo(photo_factory):
     photo = photo_factory(title='päivänkakkara kukassa')
     label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'),
                                         photo=photo)
-    assert force_text(label) == 'päivänkakkara / {0}'.format(photo.image_filename())
+    assert force_str(label) == 'päivänkakkara / {0}'.format(photo.image_filename())
 
 
 @pytest.mark.django_db
@@ -457,7 +457,7 @@ def test_label_unicode_with_photo_hidden(photo_factory):
     label = models.Label.objects.create(species=create_species(name_fi='päivänkakkara'),
                                         photo=photo, visible=False)
     with override(None):
-        assert force_text(label) == 'päivänkakkara / {0} [hidden]'.format(
+        assert force_str(label) == 'päivänkakkara / {0} [hidden]'.format(
             photo.image_filename())
 
 
@@ -498,3 +498,16 @@ def test_delete_plot_keeps_the_bed():
 
     bed = models.Bed.objects.get(pk=bed.pk)
     assert bed.plot is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('orientation', [None, True, False])
+def test_species_orientation_remains_nullable(orientation):
+    """The orientation field must retain unknown, landscape, and portrait values."""
+    species = create_species()
+    field = models.Species._meta.get_field('photo_is_horizontal')
+    assert field.clean(orientation, species) is orientation
+    models.Species.objects.filter(pk=species.pk).update(
+        photo_is_horizontal=orientation)
+    species.refresh_from_db()
+    assert species.photo_is_horizontal is orientation

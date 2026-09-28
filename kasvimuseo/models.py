@@ -3,9 +3,9 @@
 from __future__ import unicode_literals
 from django.db import models
 from django.utils.dates import MONTHS
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.functional import lazy
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 import operator
 from photologue.models import Photo
 
@@ -186,7 +186,8 @@ class Species(models.Model):
         'photologue.Photo',
         null=True, blank=True,
         on_delete=models.SET_NULL)
-    photo_is_horizontal = models.NullBooleanField(
+    photo_is_horizontal = models.BooleanField(
+        null=True, blank=True,
         verbose_name=_(u'photo is wider than it is tall'),
         default=None,
         editable=False)
@@ -609,7 +610,7 @@ class Planting(models.Model):
     objects = PlantingManager()
 
     def __str__(self):
-        return force_text(self.observation)
+        return force_str(self.observation)
 
     @property
     def last_care(self):

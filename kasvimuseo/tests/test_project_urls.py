@@ -18,7 +18,7 @@ from django.contrib.auth.models import Permission, User
 from django.contrib.staticfiles import finders
 from django.urls import resolve, reverse
 from django.test.utils import override_settings
-from django.utils.translation import ugettext
+from django.utils.translation import gettext
 
 from kasvimuseo.tests.conftest import jpeg_bytes
 from kasvimuseo.models import Bed, Care, Contact, Location, Observation
@@ -130,7 +130,7 @@ def test_dashboard_links_to_every_configured_model(admin_client, model):
 
 def module_title(title, collapsible=False):
     return '<h2 class="module_title{0}">{1}</h2>'.format(
-        ' grp-collapse-handler' if collapsible else '', ugettext(title))
+        ' grp-collapse-handler' if collapsible else '', gettext(title))
 
 
 # The reports and tools the "Reports and tools" module links to. Every custom
@@ -191,7 +191,7 @@ def test_dashboard_describes_the_reports(admin_client):
     body = content(admin_client.get(reverse('admin:index')))
 
     assert ('<p class="grp-help">{0}</p>'
-            .format(ugettext('The public Photologue galleries'))) in body
+            .format(gettext('The public Photologue galleries'))) in body
 
 
 def test_dashboard_links_to_the_map_of_every_bed(admin_client, db):

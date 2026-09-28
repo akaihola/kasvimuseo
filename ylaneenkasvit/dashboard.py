@@ -6,8 +6,8 @@ To activate your index dashboard add the following to your settings.py::
     GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
 """
 
-from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.encoding import force_str
+from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 
 from grappelli.dashboard import modules, Dashboard
@@ -17,6 +17,8 @@ from kasvimuseo.models import Bed
 
 class CustomIndexDashboard(Dashboard):
     """Custom index dashboard for kasvit.ambitone.com"""
+
+    columns = 3
 
     def init_with_context(self, context):
         # The three groups below were generated without titles, which left the
@@ -104,7 +106,7 @@ class CustomIndexDashboard(Dashboard):
             _('Bed maps'),
             column=2,
             collapsible=True,
-            children=[(force_text(bed),
+            children=[(force_str(bed),
                        reverse('bed-map', kwargs={'pk': bed.pk}))
                       for bed in (Bed.objects
                                   .select_related('plot')
