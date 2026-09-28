@@ -2184,7 +2184,8 @@ Stage 16 — Django 3.1 → 3.2.25 (LTS)
 Stage 17 — Django 3.2 → 4.0.10 → 4.1.13 → 4.2.30 (LTS)
 -------------------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: Issue 086
 
 * **4.0 removes** ``ugettext_lazy`` → ``gettext_lazy`` and
   ``force_text``/``smart_text`` → ``force_str``/``smart_str``. Eight sites
@@ -2203,7 +2204,7 @@ Stage 17 — Django 3.2 → 4.0.10 → 4.1.13 → 4.2.30 (LTS)
 Stage 18 — Django 4.2 → 5.0.14 → 5.1.15 → 5.2.16 (LTS)
 -------------------------------------------------------
 
-:Status: Planned
+:Status: Next
 
 * Python ≥ 3.10.
 * 5.1 removes ``DEFAULT_FILE_STORAGE``, ``STATICFILES_STORAGE`` and
