@@ -183,3 +183,45 @@ Only issue 086 moves from "Ready now" to "Not in the queue" against local ``mast
 Every other issue document matches ``master`` exactly.
 The audit saves each issue's heading in ``.dev/issue086/review-tracker.json``.
 Review logs use the ``review-`` prefix in ``.dev/issue086/``.
+
+Deployment check
+----------------
+
+This section records the staging deployment check for the deployment operator.
+The check ran against ``kasvimuseo-staging.vempai.men`` on 2026-09-28.
+Use ``.agents/memory/running-ansible-from-this-checkout.md`` for the Ansible environment.
+The staging credentials remain in the base checkout's ``.dev/rehearsal/`` directory.
+Run::
+
+    uvx --python 3.12 --from 'ansible==9.*' ansible-playbook \
+      -i ansible/hosts.staging -e @ansible/vars/staging.yml \
+      -e @/home/agent/prg/kasvimuseo/.dev/rehearsal/staging-rehearsal \
+      -e app_package=git+ssh://git@github.com/akaihola/kasvimuseo.git@3fd066f5d2b342edb2c798fbcad746f0c0066044 \
+      --become-password-file /home/agent/prg/kasvimuseo/.dev/rehearsal/become-pass \
+      --check --tags python,code,static,uwsgi ansible/install.yaml
+
+Ansible rejected the target at its Debian 11 platform guard with exit code 2.
+It reported ``ok=1 changed=0 failed=1``.
+The host runs Debian 10, Python 3.7.3, and Django 2.1.15.
+It has no Python 3.9, 3.10, 3.11, or 3.12 executable, and no Docker or Podman executable.
+The existing uWSGI service remains active.
+The planted-species page returns HTTP 200 over HTTPS.
+
+The deployment remains blocked before any remote application change.
+The Ansible configuration still installs Python 3.9 and its matching uWSGI plugin.
+The operator must prepare a compatible host and update that configuration for this Python 3.12 runtime.
+Changing the platform guard alone cannot supply the missing interpreter or matching uWSGI runtime.
+The local image checks do not update the staging website.
+Logs live in ``.dev/issue086/deploy/`` in the task checkout.
+
+Manual checks
+-------------
+
+This checklist is for testers of an instance running the upgraded release.
+The staging instance still runs the older release described under "Deployment check".
+
+1. Sign in to the administration site.
+2. Check that the dashboard shows recent actions after you add a garden plot.
+3. Upload a landscape photo and a portrait photo through the photo form.
+4. Open the planted-species report and check that both photos render correctly.
+5. Save a planting label and open its print view.
