@@ -1,8 +1,8 @@
 Issue 085: Django 3.2 is the next runtime upgrade step
 ======================================================
 
-:Status: Open
-:Claimed: Kandev task d087b0fc-2e0d-45c4-bec5-2d297910fa85
+:Status: In progress
+:Claimed: Task d087b0fc-2e0d-45c4-bec5-2d297910fa85 on feature/upgrade-django-to-3-g5f
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-28
@@ -11,7 +11,7 @@ Issue 085: Django 3.2 is the next runtime upgrade step
 :Depends on: 084
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
-:Decision: undecided
+:Decision: Complete Stage 16 as requested. The Work section defines the runtime target.
 :Resolution: (none)
 
 Work
