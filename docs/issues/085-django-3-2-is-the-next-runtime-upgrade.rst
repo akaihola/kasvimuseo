@@ -2,6 +2,7 @@ Issue 085: Django 3.2 is the next runtime upgrade step
 ======================================================
 
 :Status: Open
+:Claimed: Kandev task d087b0fc-2e0d-45c4-bec5-2d297910fa85
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-28
