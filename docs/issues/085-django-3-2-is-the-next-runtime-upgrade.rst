@@ -112,3 +112,27 @@ The current Ansible configuration still selects Debian 11 and Python 3.9.
 Issue 084, "Deployment attempt", records the staging host's older runtime and rejected deployment check.
 The deployment operator owns target preparation and the Ansible transition.
 These local image checks do not establish a successful live deployment.
+
+Review checks
+-------------
+
+This section records the implementation review for maintainers.
+Use the environment from "Checks" and run::
+
+    dev/kasvimuseo app test kasvimuseo/tests/test_database_timezone.py kasvimuseo/tests/test_settings_session_serializer.py kasvimuseo/tests/test_admin.py kasvimuseo/tests/test_photologue_galleries.py kasvimuseo/tests/test_photos_integration.py kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py --disable-warnings
+    python3 .dev/issue085/review_tracker.py
+    podman run --rm kasvimuseo-prod-issue085 python -c 'from ylaneenkasvit import common_settings; assert vars(common_settings)["DEFAULT_AUTO_FIELD"] == "django.db.models.AutoField"'
+
+All 125 focused tests passed.
+Both image package comparisons passed again.
+The repeated Django checks found no model changes or pending migrations.
+The primary-key checks passed in the development environment and the installed production package.
+The system check retained only the deprecation warning recorded in "Results".
+The documentation build passed again.
+The review found no implementation defect.
+
+The register contains 85 issue files and 85 ranking entries.
+Each issue appears under exactly one ranking heading.
+The rendered queue contains one ready issue and 84 parked issues, with no overlap or duplicate rows.
+Only issue 085 moved from "Ready now" to "Not in the queue" against local ``master``.
+The audit script and logs live in ``.dev/issue085/review_tracker.py`` and ``.dev/issue085/review-*.log``.
