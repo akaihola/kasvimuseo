@@ -73,6 +73,7 @@ DATABASES = {'default': {
 LANGUAGE_CODE = 'fi'
 TIME_ZONE = 'Europe/Helsinki'
 USE_TZ = True
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 INSTALLED_APPS = (
     # Not for fixtures any more: the photo sizes that were its
