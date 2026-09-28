@@ -146,3 +146,14 @@ The branch contains no merge commits above ``master``.
 Run ``python3 .dev/issue087/review_tracker.py`` to repeat the tracker comparison.
 The check stores each issue's heading in ``.dev/issue087/review-tracker.json``.
 Review logs use the ``review-`` prefix under ``.dev/issue087/``.
+
+Manual checks
+-------------
+
+This checklist is for testers of an instance running the upgraded release.
+
+1. Sign in to the administration site.
+2. Open the planted-species list and select its logout button.
+3. Check that the page confirms logout.
+4. Open the administration site and check that it requests another login.
+5. Sign in again and check that you can upload photos, open reports, and edit planting labels.
