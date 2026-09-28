@@ -1,6 +1,6 @@
-# Development image: Python 3.9 + the app's dependencies, but NO app code.
+# Development image: Python 3.10 + the app's dependencies, but NO app code.
 # The working copy is bind-mounted at /src so edits take effect immediately.
-FROM docker.io/library/python:3.9.25-alpine3.22
+FROM docker.io/library/python:3.10.19-alpine3.22
 
 RUN apk add --no-cache jpeg-dev zlib-dev libpq postgresql-dev gcc musl-dev
 
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir --no-deps -r /tmp/requirements/dev.txt
 # fails instead of shipping an English admin.
 RUN set -e; \
     prefix=/usr/local; \
-    pkg=$prefix/lib/python3.9/site-packages/django; \
+    pkg=$prefix/lib/python3.10/site-packages/django; \
     if [ -d "$prefix/django" ]; then \
         cp -a "$prefix/django"/. "$pkg"/; \
         rm -rf "$prefix/django"; \
