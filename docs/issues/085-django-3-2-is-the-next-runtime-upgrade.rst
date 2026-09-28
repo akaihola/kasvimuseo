@@ -1,18 +1,17 @@
 Issue 085: Django 3.2 is the next runtime upgrade step
 ======================================================
 
-:Status: In progress
-:Claimed: Task d087b0fc-2e0d-45c4-bec5-2d297910fa85 on feature/upgrade-django-to-3-g5f
+:Status: Fixed
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-28
 :Source: Backlog refill from upgrade plan Stage 16
-:Evidence: Stage 16 names Django 3.2 LTS and its package compatibility requirements.
+:Evidence: Both images match their locks. The suite, browser checks, and migration checks pass; see "Checks".
 :Depends on: 084
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
-:Decision: Complete Stage 16 as requested. The Work section defines the runtime target.
-:Resolution: (none)
+:Decision: Complete Stage 16 on Python 3.10.19 with the requested package pins. Keep implicit primary keys as AutoField.
+:Resolution: 3cc84c2 upgrades the runtime and pins the implicit primary-key type.
 
 Work
 ----
@@ -28,6 +27,84 @@ Move Python to 3.10 and keep the package locks in step with the pins.
 Checks
 ------
 
-Run the repository test suite, build both images, check their installed package
-sets, run Django's system and migration checks, and build the documentation.
-Record the commands and results here.
+This section records commands and results for reviewers.
+Run these commands from the task checkout::
+
+    export SHELL=/bin/bash
+    export KASVIMUSEO_IMAGE=kasvimuseo-dev-issue085
+    export KASVIMUSEO_PG_PORT=5785
+    export KASVIMUSEO_DB_NAME=issue085
+    dev/kasvimuseo app build
+    podman build -t kasvimuseo-prod-issue085 -f Dockerfile .
+    python3 .dev/issue085/check_packages.py
+    dev/kasvimuseo app coverage
+    dev/kasvimuseo app manage check --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app manage shell --settings=ylaneenkasvit.test_settings -c 'import runpy; runpy.run_path(".dev/issue085/check_primary_keys.py")'
+    dev/kasvimuseo app manage makemigrations --check --dry-run kasvimuseo --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app manage migrate --noinput --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app manage migrate --check --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app manage showmigrations --plan --settings=ylaneenkasvit.test_settings
+    dev/kasvimuseo app browser-test --engine chromium
+    dev/kasvimuseo app browser-test --engine webkit
+    dev/kasvimuseo app test kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py
+    dev/kasvimuseo docs --clean
+    python3 .dev/issue085/check_tracker.py
+    git diff --check
+    git diff master --name-only -- docs/issues/
+    git status --short --untracked-files=all -- docs/issues/
+
+The checks use this checkout's PostgreSQL cluster and temporary test media.
+The scripts, inventories, and logs live in ``.dev/issue085/``.
+The package comparison checks exact versions, missing packages, and unexpected packages.
+It permits only packaging tools and the installed production application as extras.
+
+Lock generation
+~~~~~~~~~~~~~~~
+
+This section records the resolver environment for package maintainers.
+Issue 077, "Checks", owns the lock generation command and order.
+
+The disposable resolver uses ``python:3.10.19-alpine3.22`` and the development image's build dependencies.
+It installs pip 23.1.2, setuptools 57.5.0, wheel 0.41.3, pip-tools 6.14.0, and Click 8.1.8.
+Click 8.5.0 generated false command options, including ``--no-index`` and ``--cert=None``.
+Click 8.1.8 generated the correct command headers.
+
+All three locks were regenerated on Python 3.10.19.
+The generated locks own the installed versions.
+The runtime pins also include django-sortedm2m 3.1.1, as Stage 16 requires.
+The development lock drops ``six`` because django-extensions no longer requires it.
+The test package versions remain unchanged.
+
+Results
+~~~~~~~
+
+This section records the completed runtime checks on 2026-09-28, Helsinki time.
+
+* The full suite passed through ``app coverage``. Coverage reached 99.52%, above the 97% gate.
+* Both images built and report Python 3.10.19. Both passed ``pip check``.
+* All 13 production packages and 23 development/test packages match their locks.
+  The development image contains the packaging tools named in "Lock generation".
+  The production image retains its base's pip 23.0.1, setuptools 79.0.1, and wheel 0.45.1.
+  Its only other extra package is the installed application.
+* Django's system check passed with the existing ``NullBooleanField`` deprecation warning.
+  It emitted no ``models.W042`` warning.
+* The settings check found the explicit ``AutoField`` value and checked all 11 implicit application primary keys.
+  The scoped migration check found no model changes.
+  All 34 migrations applied, with none pending.
+* Chromium passed all 35 checks. WebKit passed 28 checks and skipped seven Chromium-only checks.
+* All 78 issue-register and commit-reference tests passed.
+* The documentation build passed with warnings treated as errors and produced ``.dev/docs/html/index.html``.
+
+The development image is ``d1b93349de6a``; the production image is ``633ba8d8f63d``.
+The package audit initially expected the builder's packaging tools in the production image.
+The base image inventory established the correct versions, and the corrected audit passed.
+
+Deployment prerequisite
+------------------------
+
+This section identifies the remaining work for the deployment operator.
+Prepare a Python 3.10 target with a matching uWSGI interpreter before deploying this runtime.
+The current Ansible configuration still selects Debian 11 and Python 3.9.
+Issue 084, "Deployment attempt", records the staging host's older runtime and rejected deployment check.
+The deployment operator owns target preparation and the Ansible transition.
+These local image checks do not establish a successful live deployment.

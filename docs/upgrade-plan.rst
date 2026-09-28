@@ -2171,7 +2171,8 @@ Stage 15 — Django 3.0 → 3.1.14
 Stage 16 — Django 3.1 → 3.2.25 (LTS)
 ------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: Issue 085
 
 * Set ``DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'`` explicitly.
   It is new in 3.2 and the default flips to ``BigAutoField`` in **6.0**;
@@ -2183,7 +2184,7 @@ Stage 16 — Django 3.1 → 3.2.25 (LTS)
 Stage 17 — Django 3.2 → 4.0.10 → 4.1.13 → 4.2.30 (LTS)
 -------------------------------------------------------
 
-:Status: Planned
+:Status: Next
 
 * **4.0 removes** ``ugettext_lazy`` → ``gettext_lazy`` and
   ``force_text``/``smart_text`` → ``force_str``/``smart_str``. Eight sites
@@ -2545,21 +2546,8 @@ Issue :doc:`issues/084-django-3-1-is-the-next-runtime-upgrade`, "Checks", record
 Stage 16 — Django 3.2.25 (LTS), Python 3.10
 -------------------------------------------
 
-::
-
-    asgiref==3.12.1
-    django==3.2.25
-    django-grappelli==2.15.7
-    django-photologue==3.14
-    django-sortedm2m==3.1.1
-    exifread==3.5.1
-    gunicorn==21.2.0
-    packaging==26.2
-    pillow==9.5.0
-    psycopg2-binary==2.9.9
-    pytz==2026.3.post1
-    sqlparse==0.5.5
-    typing-extensions==4.16.0
+The generated runtime lock is ``requirements/production.txt``.
+Issue :doc:`issues/085-django-3-2-is-the-next-runtime-upgrade`, "Checks", records its validation.
 
 Stage 17 — Django 4.2.30 (LTS), Python 3.12
 -------------------------------------------
