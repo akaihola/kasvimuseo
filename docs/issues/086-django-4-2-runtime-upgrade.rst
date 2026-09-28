@@ -1,7 +1,8 @@
 Issue 086: Django 4.2 is the next runtime upgrade step
 ======================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: feature/upgrade-django-to-4-bq0
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-28
@@ -10,7 +11,7 @@ Issue 086: Django 4.2 is the next runtime upgrade step
 :Depends on: 085
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
-:Decision: undecided
+:Decision: Complete Stage 17 through Django 4.0 and 4.1, then move to Django 4.2 on Python 3.12.
 :Resolution: (none)
 
 Work
