@@ -149,3 +149,37 @@ This section identifies work outside the runtime acceptance checks for the deplo
 Issue 085, "Deployment prerequisite", records the older staging operating system and interpreter.
 The operator must prepare a compatible target before deploying this runtime.
 These local checks do not establish a live deployment.
+
+Review checks
+-------------
+
+This section records the implementation review for maintainers.
+Use the environment from "Checks" and run::
+
+    dev/kasvimuseo app test \
+      kasvimuseo/tests/test_models.py \
+      kasvimuseo/tests/test_forms.py \
+      kasvimuseo/tests/test_project_urls.py \
+      kasvimuseo/tests/test_photos_integration.py \
+      kasvimuseo/tests/test_database_timezone.py \
+      kasvimuseo/tests/test_settings_storage.py \
+      kasvimuseo/tests/test_settings_logging.py \
+      kasvimuseo/tests/test_admin_changelist.py \
+      kasvimuseo/tests/test_issue_register.py \
+      kasvimuseo/tests/test_commit_pointers.py
+    python3 .dev/issue086/check_packages.py
+    python3 .dev/issue086/review_tracker.py
+
+All 242 focused tests pass.
+Django warns that logout through GET requests will stop working in Django 5.0.
+The repeated package, system, migration, and installed-production static checks pass.
+The three seeded orientation values remain unchanged.
+The review found no implementation defect.
+
+The register contains 86 issue files and 86 ranking entries across nine headings.
+Each issue appears under exactly one ranking heading.
+The rendered queue contains one ready issue and 85 parked issues, without duplicates or overlap.
+Only issue 086 moves from "Ready now" to "Not in the queue" against local ``master``.
+Every other issue document matches ``master`` exactly.
+The audit saves each issue's heading in ``.dev/issue086/review-tracker.json``.
+Review logs use the ``review-`` prefix in ``.dev/issue086/``.
