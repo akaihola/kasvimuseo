@@ -1,7 +1,8 @@
 Issue 087: Django 5.2 is the next runtime upgrade step
 ======================================================
 
-:Status: Open
+:Status: In progress
+:Claimed: feature/upgrade-to-django-5-530
 :Severity: Medium
 :Area: platform / compatibility
 :Reported: 2026-09-28
