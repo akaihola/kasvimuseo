@@ -125,3 +125,24 @@ This section identifies the remaining deployment work for the operator.
 The private deployment repository owns the staging host check.
 The operator must prepare a compatible host before deployment.
 These checks establish local runtime compatibility.
+
+Review checks
+-------------
+
+This section records the implementation review for maintainers.
+The review found no implementation defect.
+All 199 focused application and tracker checks pass.
+The logout browser check passes in Chromium and WebKit.
+Both package audits, system checks, migration checks, and the installed-production static check pass again.
+The production logout template matches the committed source byte-for-byte.
+
+The register contains 87 issue files and 87 ranking entries across nine headings.
+Each issue appears under exactly one ranking heading and one generated queue heading.
+The rendered queue contains one ready issue and 86 parked issues, with no duplicates or overlap.
+Only issue 087 moves from "Ready now" to "Not in the queue" against local ``master``.
+Every other tracker file matches ``master`` exactly.
+The branch contains no merge commits above ``master``.
+
+Run ``python3 .dev/issue087/review_tracker.py`` to repeat the tracker comparison.
+The check stores each issue's heading in ``.dev/issue087/review-tracker.json``.
+Review logs use the ``review-`` prefix under ``.dev/issue087/``.
