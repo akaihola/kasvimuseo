@@ -113,6 +113,10 @@ Chromium passes all 36 browser checks.
 WebKit passes 29 checks and skips seven Chromium-only checks.
 
 All 78 issue-register and commit-reference checks pass.
+The register contains 88 issue files and 88 ranking entries.
+Each issue appears under exactly one ranking heading and one generated queue heading.
+Above the issue 087 branch, only issue 088 changes; it enters "Not in the queue".
+Run ``python3 .dev/issue088/review_tracker.py`` to repeat this comparison.
 The documentation build passes with warnings treated as errors and produces ``.dev/docs/html/index.html``.
 The browser containers and the task's PostgreSQL cluster stop after the checks.
 
