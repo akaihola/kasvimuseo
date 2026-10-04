@@ -1,12 +1,12 @@
 # AGENTS.md
 
-For every agent and every person who writes text in this repository. It decides
-how we write, and how the issue backlog stays filled. It does not describe the
-software: `docs/index.rst` does that, and `docs/issues/next.rst` is where you go
-to pick up work.
+This file guides contributors and coding agents. It defines writing rules and points to the task workflow.
 
-This file is the only source for the rules below. State a rule here once. In any
-other file, name this file instead of restating it.
+Issues are tracked in [TASKS.md](TASKS.md).
+
+Read the rules at the bottom of `TASKS.md` before changing issue status.
+Completed work stays unchecked until the user explicitly accepts it.
+Tests and deployment are not acceptance.
 
 ## How to write here
 
@@ -79,50 +79,9 @@ Write instead:
 3. The path, and the heading, of each thing you changed.
 4. What is still open, and who owes it.
 
-## The issue backlog
+## Existing issue records
 
-The register is `docs/issues/`. Its conventions, its metadata fields and its
-build checks are in `docs/issues/README.rst`. Read `docs/issues/next.rst` to
-pick up work.
-
-### Reports arrive in `incoming.rst`
-
-`docs/issues/incoming.rst` holds reports that wait, and nothing else. A report
-leaves that page when it becomes a numbered issue file, and it leaves in the
-same commit that creates the file. A report that earns no fix still becomes a
-file, closed `Rejected` with the reasoning in `:Resolution:`. Do not write the
-history of a report that left. Git holds it.
-
-### Refill the backlog before it empties
-
-Count the work that is free to start. The `Ready now` table of
-`docs/issues/next.rst` is generated, so the source file shows a directive and no
-rows. Count one of these two ways:
-
-- cheap and approximate: count the issue files whose `:Status:` is `Open` or
-  `Accepted` and that carry no `:Claimed:` field. An unmet dependency can still
-  hold one of them back, so this is an upper bound;
-- exact: build the documentation and read the rendered `Ready now` table.
-
-When fewer than three are free, file new issues before you do anything else.
-Take the first source that has an item:
-
-1. `docs/issues/incoming.rst`, section `Waiting` — a person wrote it, so it
-   outranks the plans.
-2. `docs/test-coverage-plan.rst`, section `Work packages`, in the order that
-   its `Sequencing` section gives.
-3. `docs/upgrade-plan.rst` — the lowest-numbered stage that is not done.
-
-For each item:
-
-1. Write `docs/issues/NNN-<slug>.rst`. Give it every field that
-   `docs/issues/README.rst` defines under "Metadata fields". Set
-   `:Status: Open` and `:Decision: undecided`.
-2. Add its `issue-rank` line to `docs/issues/index.rst`. The documentation
-   build fails when an issue file has no ranking entry.
-3. When the item came from `incoming.rst`, delete the report there in the same
-   commit.
-4. Run the documentation build. `docs/issues/next.rst` says how.
-
-The issue file is the source. A task description carries one paragraph and the
-path of the issue file. It does not carry a copy of the issue.
+Existing issue records remain in `docs/issues/`.
+Follow `docs/issues/README.rst` when editing their metadata or generated register.
+Link relevant records from task descriptions instead of duplicating their contents.
+Use `TASKS.md` for new proposals and work status.
