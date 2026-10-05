@@ -22,3 +22,4 @@ This index helps contributors find durable development facts. Deployment memorie
 - [Issue-register tests are in the suite](issue-register-tests-are-in-the-suite.md). a new docs/issues/ file can turn a green `app test` red; `:Resolution:` is required even when Open
 - [Management checks with test settings](manage-checks-with-test-settings.md). Use temporary media without changing the development link.
 - [Private deployment records](private-deployment-records.md) explains the source and deployment repository boundary.
+- [Ready-now may be done on a branch](ready-now-may-be-done-on-a-branch.md). master lists issues that unmerged branches already finished; check `git branch --no-merged master` first
