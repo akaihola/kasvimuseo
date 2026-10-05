@@ -24,4 +24,4 @@ tracked).
 
 **How to apply:** for manage runs, `rm media && mkdir media`, work, then
 `rm -rf media && ln -s ../../../../prg/kasvimuseo/media media` to restore.
-Related: [[verify-a-stage-against-the-dump]], [[no-ssh-to-production]].
+See `private-deployment-records.md` for operations records.

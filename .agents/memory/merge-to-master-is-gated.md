@@ -10,8 +10,8 @@ metadata:
 
 A kandev task worktree cannot finish the `merge --no-ff` step of the
 integration flow ([[repoint-repairs-rebased-hashes]]). `git checkout master`
-fails in the worktree ("already used by worktree at /home/agent/prg/kasvimuseo"),
-and running the merge via `git -C /home/agent/prg/kasvimuseo` is denied by the
+fails in the worktree ("already used by worktree at ~/prg/kasvimuseo"),
+and running the merge via `git -C ~/prg/kasvimuseo` is denied by the
 permission classifier.
 
 **Why:** the merge mutates the base checkout, which sits outside the task
@@ -19,5 +19,5 @@ sandbox; the denial is intentional, not a flake.
 
 **How to apply:** rebase, repair pointers, verify, and stop with the branch
 ready. Say in the report that the merge into local master is the step the user
-must run or permit: `git -C /home/agent/prg/kasvimuseo merge --no-ff <branch>`.
+must run or permit: `git -C ~/prg/kasvimuseo merge --no-ff <branch>`.
 Do not retry variations of the merge.

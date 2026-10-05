@@ -103,66 +103,7 @@ The rebase changed the runtime commit identifier, so the resolution field names 
 The tracker audit found only this issue changed against local ``master``.
 Every other issue document matches ``master`` exactly.
 
-Deployment prerequisite
-------------------------
-
-This section identifies the remaining work for the deployment operator.
-Prepare a Python 3.10 target with a matching uWSGI interpreter before deploying this runtime.
-The current Ansible configuration still selects Debian 11 and Python 3.9.
-Issue 084, "Deployment attempt", records the staging host's older runtime and rejected deployment check.
-The deployment operator owns target preparation and the Ansible transition.
-These local image checks do not establish a successful live deployment.
-
-Review checks
--------------
-
-This section records the implementation review for maintainers.
-Use the environment from "Checks" and run::
-
-    dev/kasvimuseo app test kasvimuseo/tests/test_database_timezone.py kasvimuseo/tests/test_settings_session_serializer.py kasvimuseo/tests/test_admin.py kasvimuseo/tests/test_photologue_galleries.py kasvimuseo/tests/test_photos_integration.py kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py --disable-warnings
-    python3 .dev/issue085/review_tracker.py
-    podman run --rm kasvimuseo-prod-issue085 python -c 'from ylaneenkasvit import common_settings; assert vars(common_settings)["DEFAULT_AUTO_FIELD"] == "django.db.models.AutoField"'
-
-All 125 focused tests passed.
-Both image package comparisons passed again.
-The repeated Django checks found no model changes or pending migrations.
-The primary-key checks passed in the development environment and the installed production package.
-The system check retained only the deprecation warning recorded in "Results".
-The documentation build passed again.
-The review found no implementation defect.
-
-The register contains 85 issue files and 85 ranking entries.
-Each issue appears under exactly one ranking heading.
-The rendered queue contains one ready issue and 84 parked issues, with no overlap or duplicate rows.
-Only issue 085 moved from "Ready now" to "Not in the queue" against local ``master``.
-The audit script and logs live in ``.dev/issue085/review_tracker.py`` and ``.dev/issue085/review-*.log``.
-
-Deployment attempt
+Deployment records
 ------------------
 
-This section records the staging deployment check for the deployment operator.
-
-The check ran against ``kasvimuseo-staging.vempai.men`` on 2026-09-28, Helsinki time.
-Use ``.agents/memory/running-ansible-from-this-checkout.md`` for the Ansible environment.
-Use ``.agents/memory/lead-1-is-the-staging-rehearsal-host.md`` for the staging credentials and connection.
-Run::
-
-    export SHELL="$(command -v bash)"
-    uvx --python 3.12 --from 'ansible==9.*' ansible-playbook \
-      -i ansible/hosts.staging -e @ansible/vars/staging.yml \
-      -e @/home/agent/prg/kasvimuseo/.dev/rehearsal/staging-rehearsal \
-      -e app_package=git+ssh://git@github.com/akaihola/kasvimuseo.git@33a132a38e987e01faffb83667a5c9e7ba309f26 \
-      --become-password-file /home/agent/prg/kasvimuseo/.dev/rehearsal/become-pass \
-      --check --tags python,code,static,uwsgi ansible/install.yaml
-
-The deployment guard rejected Debian 10.13 with exit code 2.
-Ansible reported ``ok=1 changed=0 failed=1``.
-The host runs Python 3.7.3 and Django 2.1.15.
-It has no Python 3.10 or Python 3.9 interpreter, and no Docker or Podman executable.
-The uWSGI service remained active, and ``/kasvimuseo/planted-species/`` returned HTTP 200 over HTTPS.
-The check changed no application, database, service, or operating system.
-
-The first connection attempt used a nonexistent local ``/bin/bash``.
-The retry used the installed Bash executable and reached the deployment guard.
-Logs live in ``.dev/issue085/deploy/`` in the task checkout.
-The deployment operator owns the remaining work defined in "Deployment prerequisite".
+The private deployment repository owns deployment checks and operations results.

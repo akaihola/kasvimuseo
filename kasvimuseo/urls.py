@@ -19,7 +19,7 @@ urlpatterns = [
     # ``X-Frame-Options: SAMEORIGIN`` that ``XFrameOptionsMiddleware`` now puts
     # on every other response (issue 059). ``static/js/kasvimuseo/
     # planted-species-iframe.js`` is the script the museum's other site loads:
-    # it writes an ``<iframe src="//kasvit.ambitone.com/kasvimuseo/
+    # it writes an ``<iframe src="//plants.example.invalid/kasvimuseo/
     # planted-species/">`` and resizes it from the ``postMessage`` that this
     # page's ``iframe-height-fix.js`` sends. ``SAMEORIGIN`` would leave that
     # frame blank. Exempting the two pages that are meant to be embedded costs

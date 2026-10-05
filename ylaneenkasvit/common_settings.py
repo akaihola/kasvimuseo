@@ -4,60 +4,25 @@ import os
 
 from django.core.exceptions import ImproperlyConfigured
 
-PROJECT_ROOT = '/www/ylaneenkasvit'
+PROJECT_ROOT = os.environ.get(
+    'KASVIMUSEO_SITE_ROOT', os.path.dirname(os.path.dirname(__file__)))
 here = lambda *args: os.path.join(os.path.dirname(__file__), *args)
 
 
-def _from_env(name, source):
-    """Return environment variable ``name``, or refuse to start without it.
-
-    ``source`` says where the value comes from in production, so the message
-    tells whoever hit it what to go and look at.
-    """
+def secret_from_env(name):
+    """Read a required environment variable or name the missing variable."""
     try:
         return os.environ[name]
     except KeyError:
         raise ImproperlyConfigured(
-            '{0} is not set. This deployment reads its configuration from the'
-            ' environment and has no default for it; set {0} in the process'
-            ' environment (in production, uwsgi.ini writes it from {1}) and'
-            ' start again.'.format(name, source))
-
-
-def secret_from_env(name):
-    """Return environment variable ``name``, or refuse to start without it.
-
-    For a secret there is deliberately no default. A fallback would let a
-    deployment that forgot to set the variable come up signing cookies and
-    password-reset tokens with a value anybody who has ever cloned this
-    repository knows, and it would do so silently -- see
-    ``docs/issues/025-production-secret-key-and-database-password-are-committed.rst``.
-    The test settings supply their own literals instead of calling this.
-    """
-    return _from_env(name, 'Ansible Vault')
+            '{0} is not set. Set {0} in the process environment and restart.'
+            .format(name))
 
 
 def hosts_from_env(name):
-    """Return the comma-separated host names in ``name``, or refuse to start.
-
-    ``ALLOWED_HOSTS`` is the whole of Django's defence against a forged
-    ``Host`` header once ``DEBUG`` is off, and it used to be set in no tracked
-    file at all (issue 026). It is read the way the secrets are, and for the
-    same reason: neither possible default is safe to have. An empty list makes
-    every request a ``SuspiciousOperation``, so the site would be down without
-    saying why, and ``['*']`` would switch the check off in exactly the
-    deployment that forgot to configure it. A deployment that has not been told
-    its host names therefore stops, naming the variable.
-
-    The value is a comma-separated list, because a process environment holds
-    strings: ``KASVIMUSEO_ALLOWED_HOSTS=kasvit.example.com,www.kasvit.example.com``.
-    The test settings name their hosts literally instead of calling this.
-    """
-    # Not from the vault: host names are not secret, and keeping them in
-    # ``ansible/vars/main.yml`` is what makes the deployment reproducible from
-    # the tracked files.
-    hosts = _from_env(name, 'ansible/vars/main.yml')
-    return [host.strip() for host in hosts.split(',') if host.strip()]
+    """Read a required comma-separated list of allowed host names."""
+    return [host.strip() for host in secret_from_env(name).split(',')
+            if host.strip()]
 
 # specify SITE_ROOT in site specific settings
 
@@ -92,20 +57,9 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.sessions',
-    # photologue 2.8 gave ``Photo`` and ``Gallery`` a ``sites`` many-to-many
-    # and filters its own gallery and photo views by ``SITE_ID`` (upgrade plan
-    # Stage 2), so the framework has to be installed and the setting has to
-    # have a value -- see ``SITE_ID`` below. Nothing in this repository asks
-    # for it otherwise: one site, one deployment per settings module.
     'django.contrib.sites',
     'django.contrib.staticfiles',
 
-    # ``django_extensions`` is deliberately not here: it is a development tool
-    # -- ``runserver_plus``, ``shell_plus`` -- that nothing in this repository
-    # imports, and these settings are the ones production runs on (upgrade plan
-    # Stage 0). ``local_settings.development.py`` appends it, so a development
-    # checkout still has it and a production install does not have to install
-    # it.
 
     'jqm',
     # photologue 2.8's ``Gallery.photos`` is a ``SortedManyToManyField``, whose
@@ -158,26 +112,6 @@ MIDDLEWARE = (
 # weakening this (issue 059).
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# The deployment is TLS-only -- ``ansible/templates/nginx-site.conf.j2`` listens
-# on 443 and answers port 80 with a 301 -- but a browser that reaches
-# ``http://`` first sends its cookies *with the request that gets redirected*,
-# so a typed address or an old bookmark leaks the logged-in session in
-# cleartext before the 301 arrives. Django 1.5 defaults both of these to
-# ``False``, which is the setting for a site that also serves plain HTTP; this
-# one does not (issue 059).
-#
-# Development and the test suite do serve plain HTTP, so both override these to
-# ``False``: ``local_settings.development.py`` for the development server and
-# ``test_settings.py`` for the suite and the browser tests. Neither override is
-# precautionary; both were measured, and what they prevent differs (issue 059).
-# A client reaching this application by a name that is not loopback keeps no
-# cookie at all over ``http://`` and simply cannot log in -- which is the
-# development case, since the browser is often on another machine (issue 044).
-# A client on ``127.0.0.1`` mostly can, because current browsers treat a
-# loopback origin as trustworthy, but only mostly: without the override in
-# ``test_settings`` one browser test fails, on a request Playwright makes
-# outside the page. The production value is the one that lives here, so a
-# deployment that has no override is secure rather than the other way round.
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
@@ -264,85 +198,17 @@ STORAGES = {
 #MEDIA_URL = 'http://MEDIA_URL/'
 #MEDIA_ROOT = os.path.join(SITE_ROOT, 'MEDIA_ROOT')
 
-# Where to send a request for a media file this installation does not have.
-# Only consulted when ``MEDIA_URL`` is a local path, which is what makes
-# ``ylaneenkasvit.media.serve_media`` a route at all; the development settings
-# point it at the production media host so a fresh clone shows photos it has
-# not downloaded. Empty means a missing file is a 404, which is what production
-# and the test suite want.
 MEDIA_FALLBACK_URL = ''
 
 GRAPPELLI_INDEX_DASHBOARD = 'ylaneenkasvit.dashboard.CustomIndexDashboard'
 DATE_FORMAT = 'Y-m-d'
 
-# The one site every deployment of these settings is. ``django.contrib.sites``
-# arrived with photologue 2.8 (upgrade plan Stage 2) and its
-# ``create_default_site`` receiver writes row 1 on the first ``syncdb``, so 1
-# is the row that exists in a database bootstrapped here, in the test database
-# and in the restored production dump alike -- ``django_site`` is a table this
-# application had never had, so there was no other row it could be. Nothing
-# here renders ``Site.domain``: what reads this setting is photologue, which
-# filters its gallery and photo views by it, and the receiver that puts every
-# saved photo on the current site.
 SITE_ID = 1
 
-# Django's stock block with one handler added and one taken away: a stream
-# handler, so that an unhandled exception is written down somewhere (issue
-# 065), and no ``mail_admins``, because nothing was ever able to deliver what
-# it sent (issue 066).
-#
-# What the stock block does on its own is send a 500's traceback to
-# ``mail_admins`` and nowhere else. Django's own ``DEFAULT_LOGGING`` is applied
-# first and puts a console handler on the ``django`` logger, but filtered by
-# ``RequireDebugTrue`` -- so with ``DEBUG`` on, as production still runs
-# (issue 051), the traceback does reach stderr and this looks fine. Turn
-# ``DEBUG`` off, which is the whole of 051, and it stops: the filter drops the
-# console copy, ``AdminEmailHandler`` mails ``localhost:25``, no MTA is
-# installed by ``ansible/`` and no ``EMAIL_*`` setting points anywhere else,
-# and ``mail.mail_admins(..., fail_silently=True)`` swallows the refused
-# connection.
-# The visitor gets ``templates/500.html`` and the traceback exists nowhere at
-# all -- not in the response, not on stderr, not in a file. Measured, not
-# reasoned: see the issue.
-#
-# So ``console`` is unconditional -- no ``RequireDebugTrue`` -- and goes on
-# stderr, which is where both of this project's servers keep it: uWSGI writes
-# it to ``/home/<app_user>/uwsgi.error.log`` (``logger = file:`` in
-# ``ansible/roles/akaihola.uwsgi/templates/uwsgi.ini``) and the development
-# gunicorn writes it to the container's output.
-#
-# There is deliberately no ``mail_admins`` handler, and this comment is the
-# decision rather than the absence being an oversight (issue 066). Django's
-# stock block has one -- ``AdminEmailHandler``, behind a ``RequireDebugFalse``
-# filter -- and this project carried it until the maintainer ruled that
-# ``uwsgi.error.log`` is enough: they are content to *look* at a 500 rather
-# than be *told* about one.
-#
-# What it was doing until then was nothing, silently. Django's default is the
-# SMTP backend on ``localhost:25``; nothing in ``ansible/`` installs an MTA, so
-# the connection was refused, and ``AdminEmailHandler.emit`` passes
-# ``fail_silently=True``, which swallows the refusal without an exception,
-# without ``handleError`` and without a line in any log saying a handler had
-# failed. The two alternatives to deleting it were an MTA on a host whose whole
-# point is that it is small, and an ``EMAIL_HOST`` pointing at a relay that
-# would have had to exist; both were declined.
-#
-# So stderr is the only place a production error is recorded, which is a
-# smaller promise than the one this block used to make and a true one. If a
-# notification is ever wanted, the handler comes back with an ``EMAIL_HOST``
-# beside it -- and ``kasvimuseo/tests/test_settings_logging.py`` asserts the
-# absence, so putting it back is a decision somebody takes rather than a
-# default that creeps in.
-#
-# ``RequireDebugFalse`` goes with it: that filter existed only to keep the mail
-# from being sent while ``DEBUG`` was on, and nothing else here uses it.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        # uWSGI writes what a worker puts on stderr through verbatim, so the
-        # timestamp and the logger name have to come from here or they are not
-        # in ``uwsgi.error.log`` at all.
         'stderr': {
             'format': '%(asctime)s %(levelname)s %(name)s: %(message)s',
         },
@@ -416,21 +282,4 @@ LOGGING = {
 
 DEBUG = bool(os.environ.get('KASVIMUSEO_DEBUG'))
 
-# The password-free ``/dev-login/<username>/`` route, off unless something asks
-# for it (issue 068). ``dev/kasvimuseo`` sets the variable for the containers it
-# starts and nothing else does, so a deployment -- which gets its environment
-# from ``uwsgi.ini``, written by Ansible -- never registers the route at all.
-#
-# An environment variable rather than a line in
-# ``ylaneenkasvit/development_settings.py``, which is where a development-only
-# value has belonged since issue 069, because this one has to be switchable
-# without editing a tracked file: it is a password-free admin login for anyone
-# who can reach the port, so a session that should not offer it is
-# ``KASVIMUSEO_DEV_LOGIN= dev/kasvimuseo app run``. The variable also reaches
-# whichever settings module the harness runs, which is why ``test_settings``
-# turns it off by hand rather than inheriting it.
-#
-# What it is deliberately not is a reading of ``DEBUG``. Production ran with
-# ``DEBUG`` on behind an untracked ``local_settings.py`` for an unknown length
-# of time (issue 051), so a gate that trusted it would have been open there.
 DEV_LOGIN = bool(os.environ.get('KASVIMUSEO_DEV_LOGIN'))

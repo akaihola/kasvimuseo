@@ -1,248 +1,84 @@
+Kasvimuseo
+==========
+
+This guide helps developers run and test the plant catalogue locally.
+Private deployment configuration and operations records live in the separate ``kasvimuseo-deployment`` repository.
+
 Development setup
-=================
+-----------------
 
-Before you change anything here, read ``AGENTS.md``. It holds the rules this
-repository writes and works by, for people and for agents.
+Install Podman, PostgreSQL command-line tools, and uv.
+Run these commands from the checkout::
 
-The app is Django 1.7 on Python 2.7, which no longer exists in current
-distributions, so it runs in a container. The database runs natively as a
-throwaway PostgreSQL cluster inside the working copy. Everything is driven by
-one script, ``dev/kasvimuseo``; all its state lives under ``.dev/`` and can be
-deleted at any time.
+    dev/kasvimuseo app build
+    dev/kasvimuseo db bootstrap
+    dev/kasvimuseo app manage createsuperuser
+    dev/kasvimuseo app run
 
-Requirements: ``podman`` and a PostgreSQL client/server installation (any
-version from 9.x up; 15 is known to work).
+Open http://localhost:8000/.
+The development database and generated documentation live under ``.dev/``.
+The application stores uploaded photos under ``media/``.
 
-Build the app image once::
+Use ``dev/kasvimuseo app run --runserver`` for automatic Python reloads.
+Use ``dev/kasvimuseo app manage <command>`` for Django management commands.
+The helper starts PostgreSQL when needed and stops it when the command exits.
 
-    $ dev/kasvimuseo app build
+Restore a database supplied by its owner::
 
-Copy the production database and load it locally::
+    dev/kasvimuseo db restore /path/to/backup.sql
 
-    $ dev/kasvimuseo db fetch                        # -> .dev/backups/production.sql
-    $ dev/kasvimuseo db restore .dev/backups/production.sql
+Use ``db development <input.sql> <output.sql>`` to create a copy with development passwords.
+Keep database backups and uploaded media outside Git.
+The private repository owns remote backup commands.
 
-``db fetch`` runs ``pg_dump`` over SSH. It needs an account on
-``kasvit.ambitone.com`` whose key is authorised; override the default with
-``KASVIMUSEO_PROD_SSH=user@host``. Without SSH access, produce the dump with
-Ansible instead and restore that file::
+Local media
+-----------
 
-    $ ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml
-    $ dev/kasvimuseo db restore /backup-dir/production.host.invalid/tmp/backup.sql
+The development server serves local files under ``/media/``.
+Missing files return HTTP 404 by default.
+Set ``KASVIMUSEO_MEDIA_FALLBACK_URL`` to an authorized media source when you need a fallback.
+The ``media fetch`` command downloads images referenced by the local database::
 
-A restored dump is a database nobody can sign into: the passwords in it are
-production's, they are hashes, and a hash cannot be reversed. ``db
-development`` writes the same dump beside the original with every account's
-password replaced by one that is known, and that copy is the one to restore::
+    KASVIMUSEO_MEDIA_FALLBACK_URL=https://media.example.invalid/ dev/kasvimuseo media fetch
 
-    $ dev/kasvimuseo db development                  # -> .dev/backups/development.sql
-    $ dev/kasvimuseo db restore .dev/backups/development.sql
+Development login
+-----------------
 
-Every account, not just yours, so the derived file also carries no production
-password hash at all -- which matters, because ``.dev/backups/`` is where dumps
-sit around and one of those hashes is a three-digit password (issue 050). The
-password is ``development``, hashed by the application's own hasher inside the
-container; ``KASVIMUSEO_DEV_PASSWORD`` changes it. It touches the ``auth_user``
-password column and nothing else, so the names, the addresses and every plant
-record are still the real ones.
+The development helper enables ``/dev-login/<username>/`` for existing active users.
+This route grants access without a password to anyone who can reach the development server.
+Set ``KASVIMUSEO_DEV_LOGIN=`` to disable it::
 
-A restored dump needs one more command before this code will serve it. The
-dump records South's migration history; upgrade plan Stage 5 replaced South
-with Django's own migrations, and their bookkeeping starts empty::
+    KASVIMUSEO_DEV_LOGIN= dev/kasvimuseo app run
 
-    $ dev/kasvimuseo app manage migrate
+Site configuration
+------------------
 
-On a database whose tables exist -- which is what a restored dump is -- Django
-1.7 records the initial migrations as applied instead of running them, runs
-the data migrations, whose writes are all ``get_or_create``, and alters
-``photologue_galleryupload.title`` to what the South history had already made
-it. Production pays this once too -- see `Crossing the South cut`_ under
-Deployment. Running it again does nothing.
+``ylaneenkasvit.ylaneenkasvit_settings`` reads these required environment variables:
 
-A dump taken before upgrade plan Stage 2 -- photologue 2.6.1 -- is different:
-**do not run** ``migrate`` **on it**. Django 1.7 fakes an initial migration
-when its tables merely *exist*; it does not compare their shape. On that old
-schema it records photologue as migrated while ``title_slug`` is still
-unrenamed, and the application breaks later, not there (the Stage 5 record in
-``docs/upgrade-plan.rst`` has the details). Such a dump needs the South-era
-migration chain first, and South left at Stage 5, so the chain runs from a
-worktree of the last South commit. Run ``dev/kasvimuseo db
-upgrade-photologue``: it refuses and prints the exact worktree recipe,
-including the ``.dev`` symlink that points the worktree at this checkout's
-cluster. Then ``dev/kasvimuseo app manage migrate`` here brings the database
-the rest of the way.
+* ``KASVIMUSEO_DB_NAME`` and ``KASVIMUSEO_DB_USER`` select the database and its account.
+* ``KASVIMUSEO_DB_PASSWORD`` supplies the database password.
+* ``KASVIMUSEO_SECRET_KEY`` supplies the Django signing key.
+* ``KASVIMUSEO_ALLOWED_HOSTS`` supplies a comma-separated list of accepted host names.
 
-To work without any production data, build an empty database from the
-migrations instead, and give yourself an admin account::
+Optional variables configure installation-specific values:
 
-    $ dev/kasvimuseo db bootstrap
-    $ dev/kasvimuseo app manage createsuperuser
+* ``KASVIMUSEO_SITE_ROOT`` selects the directory containing static files and media.
+* ``KASVIMUSEO_DB_HOST`` and ``KASVIMUSEO_DB_PORT`` select the database connection.
+* ``KASVIMUSEO_STATIC_URL`` and ``KASVIMUSEO_MEDIA_URL`` select public asset paths.
+* ``KASVIMUSEO_SITE_TITLE`` selects the administration title.
+* ``KASVIMUSEO_ADMIN_EMAIL`` and ``KASVIMUSEO_ADMIN_NAME`` select the error-report recipient.
 
-``db bootstrap`` takes no dump -- it is the command for having none. Given one
-anyway it says so and stops, rather than building the empty database and
-leaving you at a login screen with no account behind it (issue 067).
+The development helper and test settings supply their own local values.
+Private inventories, site settings, account records, and deployment instructions belong in ``kasvimuseo-deployment``.
 
-Run the site at http://localhost:8000/ ::
-
-    $ dev/kasvimuseo app run
-
-That serves through **gunicorn**, the WSGI server ``requirements/production.txt``
-pins, rather than through ``manage.py runserver``. ``runserver`` is ``wsgiref``:
-single-threaded, documented as unfit for anything but local use, and -- the part
-that mattered -- it answers HTTP/1.0 with no ``Content-Length``, so the end of
-the response is whatever arrived before the connection closed. A page cut short
-on the way to the browser then looks complete to the browser and to ``curl``
-alike; that is issue 044, where a change form lost its save buttons because the
-last 10 KB never arrived and nothing anywhere said so. gunicorn frames its
-responses (chunked, HTTP/1.1), so the same cut is reported instead of rendered.
-
-``runserver`` is still there, and is the right choice when you are editing
-Python over a loopback-only session::
-
-    $ dev/kasvimuseo app run --runserver
-
-The difference in practice is the autoreloader: ``runserver`` restarts itself
-when a module changes and gunicorn 0.17.4 has no ``--reload``. Under gunicorn,
-templates and static files are still re-read per request; changed Python needs
-either a restart of ``app run`` or a reload of the workers in place::
-
-    $ podman kill --signal HUP $(podman ps -qf name=kasvimuseo-dev-)
-
-The container shares the host's network namespace instead of publishing a port,
-which is the other half of issue 044. Rootless podman publishes a port with
-pasta, and pasta -- over a connection with real latency -- forwards about 43 KB
-of a response and then closes it, losing the rest. Sharing the namespace takes
-that layer out: gunicorn listens on the host's port itself. To watch the old
-behaviour, or if host networking is unwanted::
-
-    $ dev/kasvimuseo app run --publish
-
-An SSH tunnel also avoids it, by making the remote request a loopback one on
-this side, and is the right answer for a ``--runserver`` session::
-
-    $ ssh -N -L 8000:127.0.0.1:8000 <this host>
-
-``/static/`` is served by the app itself in both cases, and only while ``DEBUG``
-is on: ``runserver`` does it by magic, and ``ylaneenkasvit/urls.py`` wires the
-same staticfiles view up explicitly for every other server. Production serves
-``/static/`` from its web server and is unaffected.
-
-Other commands::
-
-    $ dev/kasvimuseo app run --runserver      # the old wsgiref server instead
-    $ dev/kasvimuseo app run --publish        # a published port instead of the host's
-    $ dev/kasvimuseo db start|stop|status     # PostgreSQL by hand
-    $ dev/kasvimuseo db psql                  # psql on the local database
-    $ dev/kasvimuseo db development           # a dump whose passwords are known
-    $ dev/kasvimuseo db upgrade-photologue    # an old database -> photologue 2.8.3
-    $ dev/kasvimuseo media fetch              # photos the database references
-    $ dev/kasvimuseo db reset                 # delete the cluster entirely
-    $ dev/kasvimuseo app manage <args>        # any manage.py command
-    $ dev/kasvimuseo app test                 # unit tests; needs no database
-    $ dev/kasvimuseo app browser-test         # the label editor, in two browsers
-    $ dev/kasvimuseo app shell                # shell in the Python 2.7 container
-
-``app run`` and ``app manage`` start PostgreSQL if it is down and stop it again
-when they exit, so the cluster only runs while it is needed. Started by hand
-with ``db start``, it keeps running until ``db stop``.
-
-Logging in after a restore
+Embedding the species list
 --------------------------
 
-``db restore`` brings production's ``django_session`` with it, so whatever
-session the browser was carrying no longer names a row: every restore logs the
-developer out, and a restored dump that has not been through ``db development``
-above has no password anybody here knows either. Getting back in needs no
-password and no login form (issue 068)::
+The iframe loader uses the embedding page's origin by default.
+Set ``data-site-url`` on the script element when the catalogue runs on another origin::
 
-    $ xdg-open http://localhost:8000/dev-login/akaihola/
-
-Any existing, active username works in place of ``akaihola``. The route logs
-that user in, hands the browser a ``sessionid`` cookie and redirects to
-``/admin/``, which is where the site's root sends you anyway -- so from then on
-``http://localhost:8000/`` is a logged-in page and the admin is open. It is the
-whole answer on a dump restored as it came, and it saves the form on a
-``db development`` one.
-
-Django ships no management command that could do this, and none could: what
-logs a browser in is a cookie *in that browser*, and a process inside the
-container has no way to put one there. What a command can do is make the form
-usable -- ``db development``, or ``dev/kasvimuseo app manage changepassword
-akaihola`` -- and those are what to reach for when the route is turned off.
-
-Turned off is the other half. The route exists only where
-``KASVIMUSEO_DEV_LOGIN`` is set, ``dev/kasvimuseo`` sets it for the containers
-it starts, and nothing else does: a deployment takes its environment from
-``uwsgi.ini`` and the test settings turn it off by hand, so neither has the URL
-at all. For a session that should not have it either -- the development server
-answers on whatever interface it is published on, and this is a password-free
-admin login for anyone who can reach the port -- pass the variable empty::
-
-    $ KASVIMUSEO_DEV_LOGIN= dev/kasvimuseo app run
-
-Production still runs PostgreSQL 10, so ``db restore`` adapts the dump to a
-current server: it drops the PostGIS extension when PostGIS is not installed
-locally (no table uses a spatial type) and the one index over ``abstime``, a
-type removed in PostgreSQL 12. Both are reported as they are skipped.
-
-Development settings are tracked, in ``ylaneenkasvit/development_settings.py``:
-``dev/kasvimuseo`` runs the application on them, so a ``git pull`` is the whole
-of getting a change to them (issue 069). ``ylaneenkasvit/local_settings.py`` is
-still read, last and over the top, for whatever is particular to one machine --
-it is untracked, there is no longer a template to copy it from, and a checkout
-needs none. A copy left over from before 069 shadows the tracked values with the
-ones it was copied with; ``dev/kasvimuseo`` says so when it sees one.
-
-Secrets come from the environment and are in no tracked file (issue 025). The
-site settings read ``KASVIMUSEO_SECRET_KEY`` and ``KASVIMUSEO_DB_PASSWORD`` and
-raise ``ImproperlyConfigured`` naming the variable if either is unset -- there
-is no default, because a default would silently sign cookies with a value that
-is in the git history. ``dev/kasvimuseo`` passes development values for both
-into the container, so nothing needs setting to work locally; the test settings
-supply their own. In production the two live in the Ansible Vault file
-``ansible/host_vars/<host>`` as ``kasvimuseo_secret_key`` and
-``kasvimuseo_db_password``, and ``ansible/install.yaml`` writes them into
-``uwsgi.ini`` and refuses to run without them. The one thing that needs the
-real database password is ``db fetch``, which talks to production::
-
-    $ KASVIMUSEO_DB_PASSWORD=... dev/kasvimuseo db fetch
-
-``ALLOWED_HOSTS`` arrives the same way and refuses to start the same way, from
-``KASVIMUSEO_ALLOWED_HOSTS`` -- a comma-separated list of host names (issue
-026). It is not a secret, so production's list is tracked, in
-``ansible/vars/main.yml`` as ``kasvimuseo_allowed_hosts``, and ``uwsgi.ini``
-writes it into the process environment beside the two secrets.
-``dev/kasvimuseo`` passes ``*`` into the container, since a development server
-is reached under whatever name it was published under, and the test settings
-name their own hosts -- so, again, nothing needs setting to work locally. There
-is deliberately no default: an empty list makes Django refuse every request and
-``['*']`` switches the ``Host`` header check off, so either fallback would
-answer a misconfigured deployment silently.
-
-Photos are served by this server, under ``/media/``, and the ones this machine
-does not have are redirected to ``media.kasvit.ambitone.com``. So a fresh clone
-shows every photo the database references without downloading anything, and a
-photo uploaded here is served from here rather than 404ing on a host that never
-saw it. The printable and compact species views no longer need the actual files
--- they used to open every one to decide a header class, and raised ``IOError``
-when one was missing (issue 011); the orientation is measured once on save and
-stored, so browsing the reports against a fresh dump and no local media now
-works. Downloading them is worth it anyway if you want to *see* the photos
-rather than the redirect, and if you are going to run the migrations over a dump
-taken before this change: ``0021_backfill_species_photo_is_horizontal``
-measures whatever is on disk when it runs, and leaves the rest portrait until
-it is run again with the files there. No SSH needed, the media host is
-public::
-
-    $ dev/kasvimuseo media fetch
-
-That is 137 files and about 260 MB at the time of writing, and it skips what is
-already there, so it is safe to re-run after restoring a newer dump. The whole
-directory, including material no row points at, still needs SSH::
-
-    $ rsync -a akaihola@kasvit.ambitone.com:/www/ylaneenkasvit/media/ media/
-
-
+    <script src="/static/js/kasvimuseo/planted-species-iframe.js"
+            data-site-url="https://plants.example.invalid/"></script>
 
 Testing
 =======
@@ -484,470 +320,3 @@ need no restart. It serves what has been built and nothing else: a checkout
 whose docs are missing says so, and building it is ``dev/kasvimuseo docs``
 *in that checkout*. Stdlib Python 3 only -- ``--port`` and ``--bind`` override
 the defaults.
-
-
-Using Ansible for deployment, update and maintenance
-====================================================
-
-Before running ``ansible-playbook``, get the vault password from your password manager
-and run::
-
-    export ANSIBLE_VAULT_PASS=***********
-
-
-Deployment
-==========
-
-This procedure is for deployment operators. It selects the application release and installs its runtime.
-
-Set ``APP_PACKAGE`` to a Git URL with an exact commit, or an archive path on the target.
-A published revision uses ``git+ssh://git@github.com/akaihola/kasvimuseo.git@<commit>``.
-Then run::
-
-    ansible-playbook ansible/bootstrap.yaml
-    ansible-playbook -e "app_package=$APP_PACKAGE" ansible/install.yaml
-
-.. _`Crossing the South cut`:
-
-Crossing the South cut (upgrade plan Stage 5)
----------------------------------------------
-
-The production database still predates upgrade plan Stage 2, and the current
-code migrates with Django, not South. The catch-up runs **locally, once**, in
-the deployment window -- the server never runs a historical revision:
-
-1. Stop writes to the site.
-2. Take a fresh dump: ``dev/kasvimuseo db fetch``.
-3. Restore it locally: ``dev/kasvimuseo db restore .dev/backups/production.sql``.
-4. Bring it current: ``dev/kasvimuseo db upgrade-photologue`` prints the
-   worktree recipe, and ``dev/kasvimuseo app manage migrate`` finishes it.
-   Do not skip to ``migrate`` -- "Development setup" above says why that
-   fails silently.
-5. Dump the migrated database and restore it on the server (`Restoring the
-   database on the server`_ below).
-6. Deploy the application with the runtime using the "Deployment" commands above.
-
-This toll is paid once, at the South/Django boundary. From this baseline on,
-the database half of every later upgrade stage is one ``manage.py migrate``
-on the new code -- also when a deployment jumps several stages at once.
-
-.. _`Restoring the database on the server`:
-
-Restoring the database on the server
-------------------------------------
-
-    ansible-playbook \
-      -t restore \
-      -e database_backup_to_restore=local/path/to/backup.sql \
-      ansible/install.yaml
-
-Updating the software
----------------------
-
-Use "Updating code on the server" below after installing the runtime.
-
-
-Maintenance
-===========
-
-Backing up the database
-------------------------
-
-    ansible-playbook \
-      -t backup \
-      -e backup_database=/backup-dir \
-      ansible/install.yaml
-
-Restoring the database in a development environment
----------------------------------------------------
-
-    sudo -u postgres createdb -O ylaneenkasvit ylaneenkasvit
-    sudo -u postgres psql -f /backup-dir/production.host.invalid/tmp/backup.sql ylaneenkasvit
-
-Updating code on the server
----------------------------
-
-    ansible-playbook -t code -e "app_package=$APP_PACKAGE" ansible/install.yaml
-
-Set ``APP_PACKAGE`` as "Deployment" describes.
-This command reinstalls the application and its locked dependencies, then restarts uWSGI.
-Use the full deployment command for the initial Python 3 transition.
-
-
-Updating the nginx configuration
---------------------------------
-
-    ansible-playbook -t nginx ansible/install.yaml
-
-``-t code`` above does not touch it: the site configuration is rendered from
-``ansible/templates/nginx-site.conf.j2`` by the ``nginx`` tag, and a change to
-that template is on the server only after this command or a whole run. The
-``Strict-Transport-Security`` header (issue 060) is one such change -- see
-"What the HSTS header commits you to" below before you run it the first time.
-
-
-The security maintenance window
-===============================
-
-Three High-severity issues in ``docs/issues/`` -- 049's rotated ``SECRET_KEY``
-and database password, 050's published admin password, and 051's untracked
-``local_settings.py`` that forced ``DEBUG = True`` -- each needed one act on
-the running server, and the three acts are one sequence whose order matters.
-That sequence is ``ansible/secure-production.yaml``. This is its runbook. The
-window ran on 2026-08-26 and each issue's ``Resolution`` records what it left;
-the runbook stays because the verify play answers "is production still like
-that?" on any later day.
-
-One command::
-
-    export ANSIBLE_VAULT_PASS=***********
-    ansible-playbook ansible/secure-production.yaml
-
-Before running it
------------------
-
-* **Agree the time with the customer.** The cost lands on them, and issue 049's
-  ``Decision`` field says the timing is theirs. Everything under "What the
-  customer sees" below happens whenever this is run.
-* **Three variables have to be in the vault**
-  (``ansible-vault edit ansible/host_vars/production.host.invalid``):
-  ``kasvimuseo_secret_key``, ``kasvimuseo_db_password`` and
-  ``kasvimuseo_admin_passwords``. The first two are the values the maintainer
-  has already rotated; the third is new, and is a mapping of user name to new
-  password::
-
-      kasvimuseo_admin_passwords:
-        akaihola: ...
-
-  It must name ``akaihola``, the account whose password this repository
-  published. Any other account named there is rotated with it; every privileged
-  account *not* named there is listed by the play's audit step, so the four
-  other accounts issue 050 asks about are visible either way. The playbook stops
-  before touching anything if any of the three is missing.
-* Nothing else. Do not put any of those values in a tracked file, a commit
-  message or a ticket: naming the commit that deployed them is what the issues'
-  ``Resolution`` field is for.
-
-What it does, in order
-----------------------
-
-#. ``ansible/install.yaml``, imported whole -- the ordinary deploy. It installs
-   the current code, sets the PostgreSQL password from the vault, writes
-   ``SECRET_KEY``, the database password and ``ALLOWED_HOSTS`` into
-   ``/home/kasvimuseo/uwsgi.ini`` and restarts uWSGI. That is issue 049 in its
-   entirety, and it is also the step 051 has to happen after. The two values
-   land together, which is why the whole playbook is the unit rather than
-   ``-t database`` or ``-t web`` on their own. The same step re-renders the
-   nginx site configuration, so it also carries the
-   ``Strict-Transport-Security`` header of issue 060 -- see "What the HSTS
-   header commits you to" below, which is the one thing in this run that
-   outlives it.
-#. The admin passwords, from the vault (050).
-#. A report of every account in ``auth_user`` and what the admin log says it
-   did (050 again -- see "What it leaves for you" below).
-#. The untracked ``local_settings.py`` and any ``.pyc`` beside it, deleted, and
-   uWSGI restarted so the deletion takes effect (051). This step refuses to run
-   unless it can see, on the server, that ``ALLOWED_HOSTS`` is already in
-   ``uwsgi.ini`` and that the installed settings read the environment. Deleting
-   the file before that turns every request into a 400, which is the one
-   ordering mistake this playbook exists to make unreachable.
-#. Verification, as a play of its own -- see below.
-
-What the customer sees
-----------------------
-
-The site is down for as long as one uWSGI restart takes, twice: once when the
-deploy rewrites ``uwsgi.ini``, once after ``local_settings.py`` goes. Seconds
-each, back to back, so plan for a minute rather than an hour and do it outside
-the garden's working day.
-
-Then, and these are consequences of a new ``SECRET_KEY``, not signs of a
-problem:
-
-* everybody who is logged in is logged out once, and logs back in normally;
-* password-reset links issued before the run stop working -- requesting a new
-  one works;
-* whoever uses the ``akaihola`` admin account needs the new password.
-
-What the HSTS header commits you to
------------------------------------
-
-Any run of ``install.yaml`` -- this playbook, or ``-t nginx`` on its own --
-deploys ``Strict-Transport-Security: max-age=300`` on all three sites (issue
-060). A browser that has seen it will not make a plain ``http://`` request to
-that name for five minutes, which is the point: it closes the cleartext window
-issue 059 emptied of cookies.
-
-The consequence to know about before you run it is that **the certificate
-renewal becomes load-bearing**. Renewal is the root cron job at 03:30 that
-``geerlingguy.certbot`` installs; nothing here monitors it, and its output goes
-to ``root``'s mail on the host. While the promise lasts five minutes, an
-expired certificate is what it has always been -- a warning a visitor can click
-through. It stops being that if the value is ever raised, so:
-
-* **After the first run**, read the header back from outside the host::
-
-      curl -sI https://kasvit.ambitone.com/ | grep -i strict-transport
-      curl -sI https://static.kasvit.ambitone.com/ | grep -i strict-transport
-      curl -sI https://media.kasvit.ambitone.com/ | grep -i strict-transport
-
-  Three ``max-age=300`` lines. A missing one is a site that would break under a
-  longer value, and is worth fixing before anybody raises it.
-* **Raising it to a year** (``max-age=31536000``) is a deliberate one-line
-  commit against issue 060, not something a deploy does by itself, and that
-  issue lists what has to be true first -- including that a failed renewal
-  reaches a person. Until then the deployed configuration says which stage it
-  is on, in a comment beside the directive.
-* **Backing it out** is deleting the ``add_header`` line and running
-  ``-t nginx``; browsers forget the promise five minutes later.
-
-``includeSubDomains`` and ``preload`` are deliberately not sent. Issue 060 says
-why, and ``preload`` in particular is not this repository's to add.
-
-What to check afterwards
-------------------------
-
-The playbook checks, and says so rather than leaving it to be checked by hand.
-The last play asserts, on the server:
-
-* ``uwsgi.ini`` carries the three values the vault holds -- printed as three
-  booleans, never as the values;
-* uWSGI *started after* that file was written, which is the only thing that
-  distinguishes a running process signing with the new key from one still
-  signing with the old one;
-* no ``local_settings.py`` and no ``local_settings.pyc`` is left in the
-  installed package (on Python 2 a leftover ``.pyc`` is imported even with no
-  ``.py`` beside it, and would turn ``DEBUG`` straight back on);
-* an ordinary page still answers 200;
-* a request with a host name the site does not answer to gets a 400, and one
-  that is not Django's debug page;
-* every account named in the vault has the vaulted password. A Django hash
-  verifies exactly one plaintext, so that is also the statement that the
-  password published in this repository no longer signs anybody in;
-* every name nginx serves has a certificate with more than a fortnight left.
-  The renewal cron mails its failures to a mailbox nobody reads, so this
-  assertion is the only thing that reports one. Issue 071 says why it lives
-  here, and issue 060 is what waits for it.
-
-It is a separate play so it can be run on its own, later, without changing
-anything::
-
-    ansible-playbook ansible/secure-production.yaml -t verify
-
-Running it twice
-----------------
-
-Safe. An account that already has the vaulted password is left alone, the
-deleted file is already gone, and uWSGI is restarted only if something actually
-changed -- so a second run reports no change and does not interrupt the site.
-The one exception is ``collectstatic``, which reports itself changed on every
-run of ``install.yaml`` and always has.
-
-If it stops half way
---------------------
-
-Every step is safe to re-run, so the answer is almost always to fix what it
-named and run the same command again. Two failures have a specific meaning:
-
-* *"The deploy this step depends on has not landed"* -- the ``uwsgi`` tag has
-  not run, or the installed code predates issues 025 and 026. Nothing has been
-  deleted. Run the whole playbook rather than ``-t localsettings``.
-* *the database refuses the password from the vault* -- PostgreSQL still has
-  the old one, so the deploy has not run either. Same answer.
-
-What it leaves for you
-----------------------
-
-Three decisions the playbook deliberately does not make:
-
-* **when to run it** -- 049's, and the customer's;
-* **the other accounts** -- it rotates exactly the accounts the vault names,
-  and lists the privileged ones it does not, with their hash algorithm, their
-  last login and their admin activity. Choosing new passwords for them, or
-  deactivating them, is a judgement about who still needs an account;
-* **whether to treat the disclosure as exploited** -- the audit step prints the
-  ``LogEntry`` history because it is the only record there is, but reading it
-  is a person's job.
-
-Try it without running it
--------------------------
-
-``--check`` is honest here: the password step reports what it *would* set
-without writing, the deletion reports the files it would remove without
-removing them, and the read-only checks run for real::
-
-    ansible-playbook ansible/secure-production.yaml --check
-
-
-Rehearsing the window on a throwaway host
-=========================================
-
-Issue 070 asks for proof, before the real window opens, that
-``ansible/secure-production.yaml`` does what its files claim -- that 049's
-database and web tasks land together, that 051 will not delete
-``local_settings.py`` before ``ALLOWED_HOSTS`` is deployed, that 050's password
-step is idempotent, and that the verify play's post-conditions hold. A rehearsal
-does not *close* 049, 050, 051 or 060 -- each of those lives on the real
-production process and only the real run touches it -- but it turns every "must"
-in the runbook above from a claim into a checked fact.
-
-The repository half of that rehearsal is in place: a separate staging inventory
-(``ansible/hosts.staging``) and a staging override file
-(``ansible/vars/staging.yml``). Neither is loaded unless you name it, so nothing
-here changes a production run. What is left is the two acts a checkout cannot do
-for you -- standing up a host and pointing DNS at it.
-
-The target
-----------
-
-Any Hetzner Cloud x86 server with 2 GB of memory carries the stack. The
-maintainer first confirmed a CX22 (2026-08-08); a day later none was on offer,
-and the 2026-08-09 rehearsal reused the idle CX11 ``lead-1`` instead -- 1 vCPU
-and 2 GB sufficed for the reduced run. For a server created for this, charging
-stops only on delete, not on power-off. A reused server just keeps costing
-what it did.
-
-See ``docs/issues/077-python-3-runtime-needs-a-rehearsed-transition.rst``, "Rehearsal evidence", for the isolated container alternative.
-The historical server preparation follows below.
-
-
-Writing the Debian 10 image
----------------------------
-
-The 2026-08-09 rehearsal proved this sequence. Boot the server into rescue::
-
-    hcloud ssh-key create --name rehearsal --public-key-from-file ~/.ssh/id_rsa.pub
-    hcloud server enable-rescue <server> --ssh-key rehearsal
-    hcloud server reboot <server>
-
-In the rescue system, write the archived Debian 10 cloud image to the disk::
-
-    curl -LO https://cloud.debian.org/images/cloud/buster/latest/debian-10-genericcloud-amd64.qcow2
-    curl -LO https://cloud.debian.org/images/cloud/buster/latest/SHA512SUMS
-    sha512sum --ignore-missing -c SHA512SUMS
-    qemu-img convert -f qcow2 -O host_device debian-10-genericcloud-amd64.qcow2 /dev/sda
-
-Still in rescue, mount ``/dev/sda1`` and prepare three things the first boot
-will not do for you:
-
-* Write your public key to ``/root/.ssh/authorized_keys``. cloud-init only
-  re-applies the keys the server was *created* with.
-* Replace ``/etc/apt/sources.list``: buster moved to
-  ``http://archive.debian.org/debian`` (and ``archive.debian.org/debian-security``
-  for ``buster/updates``).
-* Write ``Acquire::Check-Valid-Until "false";`` into
-  ``/etc/apt/apt.conf.d/99archive``. The archive's release files are expired
-  on purpose.
-
-Reboot. Then install what this playbook's era of Ansible assumes on the host:
-``apt-get install python-apt python-pip``. The staging inventory sets
-``ansible_python_interpreter=/usr/bin/python2.7``, and the ``apt`` and ``pip``
-modules need those two packages under that interpreter.
-
-Before running it
------------------
-
-* **Stand up the CX22** from a Debian 10 image, and put its public DNS name in
-  ``ansible/hosts.staging`` in place of ``staging.example.invalid``.
-* **Bootstrap the fresh host**, so the ``kasvimuseo`` user every playbook
-  connects as exists::
-
-      ansible-playbook -i ansible/hosts.staging ansible/bootstrap.yaml
-
-  The header of ``ansible/bootstrap.yaml`` says how to reach the host as root
-  the first time.
-* **Give Ansible a way to become root.** ``bootstrap.yaml`` gives
-  ``kasvimuseo`` a password whose plaintext is not written anywhere. Set your
-  own as root (``echo 'kasvimuseo:<a-throwaway>' | chpasswd``), write it to a
-  file, and pass ``--become-password-file <that-file>`` on every run.
-* **Point a throwaway DNS name you control** at the host -- the name itself and
-  its ``static.`` and ``media.`` subdomains -- and set it as ``staging_domain``
-  in ``ansible/vars/staging.yml``. certbot needs it to issue a trusted
-  certificate, and the verify play checks HTTPS against it. A variable cannot
-  supply a real domain; this is the one precondition inventory does not hold.
-* **Vault throwaway secrets for the host**, exactly as production does but with
-  values that are not production's::
-
-      ansible-vault edit ansible/host_vars/<the-staging-name>
-
-  holding ``kasvimuseo_secret_key``, ``kasvimuseo_db_password`` and
-  ``kasvimuseo_admin_passwords`` (a mapping naming ``akaihola``). The playbook
-  stops before installing anything if any is missing.
-* **The staging host needs read access to the GitHub repository**;
-  ``install.yaml`` installs the app from
-  ``git+ssh://git@github.com/akaihola/kasvimuseo.git``. Add the host's
-  generated public key (``/home/kasvimuseo/.ssh/id_rsa.pub``) as a read-only
-  deploy key on GitHub.
-
-Running it
-----------
-
-This procedure is for deployment operators. It runs the security checks against an isolated staging host.
-
-Read ``docs/issues/082-django-2-2-is-the-next-runtime-upgrade.rst``, "Deployment prerequisite", before selecting the target.
-
-Set ``APP_PACKAGE`` as "Deployment" describes.
-Then run::
-
-    export ANSIBLE_VAULT_PASS=***********
-    ansible-playbook -i ansible/hosts.staging \
-      -e @ansible/vars/staging.yml \
-      -e "app_package=$APP_PACKAGE" \
-      ansible/secure-production.yaml
-
-``-e @ansible/vars/staging.yml`` wins over the playbook's ``vars_files``, so it
-points ``ALLOWED_HOSTS``, the nginx server blocks and the certbot certificate at
-``staging_domain`` while every other value comes from ``vars/main.yml``
-unchanged.
-For initial seeding only, add ``-e database_backup_to_restore=../.dev/backups/production-migrated.sql``.
-See "Crossing the South cut" before using an older dump.
-Omit this variable on later runs to preserve the database.
-
-
-Run the playbook twice. The first run installs everything and proves 049's
-order. A fresh install has no ``local_settings.py``, so before the second run,
-plant the file production has. Its shape matters:
-``ylaneenkasvit_settings.py`` calls ``modify(globals())`` after importing it,
-so a file without a ``modify`` function crashes every settings import::
-
-    ssh kasvimuseo@<the-staging-name> "cat > \
-      /home/kasvimuseo/venv-python3.9/lib/python3.9/site-packages/ylaneenkasvit/local_settings.py" <<'EOF'
-    def modify(settings):
-        settings['DEBUG'] = True
-        settings['TEMPLATE_DEBUG'] = True
-    EOF
-
-The second run proves the rest: 050's password step reports no change, and
-051's gate lets the deletion through, deletes the file and restarts uWSGI.
-
-Delete a server only if you created it as a disposable target for this rehearsal.
-
-Without staging DNS
--------------------
-
-If wiring a public DNS name is not wanted, run the reduced rehearsal -- the
-whole playbook, minus what only a public name provides::
-
-    ansible-playbook -i ansible/hosts.staging \
-      -e @ansible/vars/staging.yml \
-      -e "app_package=$APP_PACKAGE" \
-      -e nginx_start=false \
-      --skip-tags nginx,certbot,https \
-      ansible/secure-production.yaml
-
-Do not use ``--skip-tags web``: that also skips the uWSGI role, so
-``uwsgi.ini`` is never written and 051's gate refuses everything after it.
-Each extra argument removes one thing only a public name provides:
-
-* ``nginx`` and ``certbot`` skip the two roles that need a trusted
-  certificate. The uWSGI role still runs, so 051's gate has a ``uwsgi.ini``
-  to read.
-* ``https`` skips the verify tasks that request pages over HTTPS and read the
-  certificates.
-* ``-e nginx_start=false`` keeps the uWSGI role's "reload nginx" notification
-  from failing on a host that has no nginx.
-
-That run still proves every ordering above -- 049's tasks landing together,
-051's gate, 050's idempotence -- except the one thing the web layer carries,
-issue 060's ``Strict-Transport-Security`` header. That is most of what makes
-049's timing hard to take.

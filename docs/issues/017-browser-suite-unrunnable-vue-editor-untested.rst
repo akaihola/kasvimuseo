@@ -29,7 +29,7 @@ Issue 017: Browser test suite is unrunnable, so the Vue label editor is untested
 :Resolution: Fixed in b378bbf. The old suite and
     ``requirements/integration-tests.txt`` are gone, and with them the
     committed production password -- which turned out to be live, and is issue
-    :doc:`050 <050-the-production-admin-password-is-committed-and-in-use>`.
+    :doc:`050 <050-deployment-record>`.
 
 Problem
 =======

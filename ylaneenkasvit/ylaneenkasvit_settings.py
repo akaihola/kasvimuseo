@@ -1,38 +1,23 @@
 # -*- encoding: utf-8 -*-
+"""Settings for operators who configure a site through environment variables."""
 
-from .common_settings import *
+from .common_settings import *  # noqa
 
-SITE_ROOT = '/www/ylaneenkasvit'
-
-ADMINS = (('Antti Kaihola', 'akaihol+ylaneenkasvit@ambitone.com'),)
+SITE_ROOT = PROJECT_ROOT  # noqa: F405
+DATABASES['default'].update({  # noqa: F405
+    'NAME': secret_from_env('KASVIMUSEO_DB_NAME'),  # noqa: F405
+    'USER': secret_from_env('KASVIMUSEO_DB_USER'),  # noqa: F405
+    'PASSWORD': secret_from_env('KASVIMUSEO_DB_PASSWORD'),  # noqa: F405
+    'HOST': os.environ.get('KASVIMUSEO_DB_HOST', '/var/run/postgresql'),  # noqa: F405
+    'PORT': os.environ.get('KASVIMUSEO_DB_PORT', ''),  # noqa: F405
+})
+SECRET_KEY = secret_from_env('KASVIMUSEO_SECRET_KEY')  # noqa: F405
+ALLOWED_HOSTS = hosts_from_env('KASVIMUSEO_ALLOWED_HOSTS')  # noqa: F405
+STATIC_URL = os.environ.get('KASVIMUSEO_STATIC_URL', '/static/')  # noqa: F405
+MEDIA_URL = os.environ.get('KASVIMUSEO_MEDIA_URL', '/media/')  # noqa: F405
+MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')  # noqa: F405
+GRAPPELLI_ADMIN_TITLE = os.environ.get('KASVIMUSEO_SITE_TITLE', 'Kasvimuseo')  # noqa: F405
+ADMINS = ((os.environ.get('KASVIMUSEO_ADMIN_NAME', 'Admin'),  # noqa: F405
+           os.environ['KASVIMUSEO_ADMIN_EMAIL']),) if os.environ.get(  # noqa: F405
+               'KASVIMUSEO_ADMIN_EMAIL') else ()
 MANAGERS = ADMINS
-
-# The password and the secret key are read from the environment and are not in
-# this file: they were committed here in plain text, and are still in the
-# history, so both are disclosed until the maintainer rotates them (issue 025).
-# ``secret_from_env`` has no default on purpose -- see common_settings.
-DATABASES['default'].update({
-    'NAME': 'ylaneenkasvit',
-    'USER': 'ylaneenkasvit',
-    'PASSWORD': secret_from_env('KASVIMUSEO_DB_PASSWORD')})
-
-SECRET_KEY = secret_from_env('KASVIMUSEO_SECRET_KEY')
-
-# The names this site answers to, from the environment and with no default
-# (issue 026). Ansible writes them into uwsgi.ini from ``kasvimuseo_allowed_hosts``
-# in ``ansible/vars/main.yml``; unlike the secrets these are not vaulted, since a
-# host name is not a secret and the deployment should be reproducible from what
-# is tracked here.
-ALLOWED_HOSTS = hosts_from_env('KASVIMUSEO_ALLOWED_HOSTS')
-
-STATIC_URL = '//static.kasvit.ambitone.com/'
-
-GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit'
-MEDIA_URL = '//media.kasvit.ambitone.com/'
-MEDIA_ROOT = os.path.join(SITE_ROOT, 'media')
-
-try:
-    from local_settings import *
-    modify(globals())
-except ImportError:
-    pass

@@ -1,29 +1,22 @@
 #!/usr/bin/env bash
-# Development helper for Kasvimuseo: throwaway PostgreSQL cluster + Python 2.7
-# app container. All state lives under .dev/ and is safe to delete.
-#
+# Local development commands for application contributors.
 # Usage: dev/kasvimuseo <command> [args]
-#   db start|stop|status|psql|reset     local PostgreSQL cluster
-#   db fetch [file]                     dump the production database over SSH
-#   db development [in] [out]           a dump with every password set to a known one
-#   db restore <file>                   load a dump into the local database
-#   db bootstrap                        empty database from the migrations
-#   db upgrade-photologue               says how to modernise a pre-2026 dump
-#   media fetch                         download the photos the database uses
-#   app build                           build the Python 2.7 dev image
-#   app run [--runserver] [--publish]   serve the site (on $KASVIMUSEO_PORT)
-#   app manage <args...>                run a manage.py command
-#   app test [args]                     run the test suite
-#   app browser-test [args]             the label editor, in Chromium and WebKit
-#   app browser-seed                    reset their data (they call this)
-#   app coverage [args]                 the suite again, with the coverage gate
-#   app shell                           shell inside the app container
-#   docs [--open] [--clean]             build the Sphinx docs (on the host)
-#   docs serve [--port N]               serve every checkout's docs on the tailnet
-#
-# `app run`, `app manage` and `app test` start PostgreSQL if it is down and stop
-# it again on exit, so the cluster only runs while it is actually needed. The
-# tests build their own data, so they need no production dump and no media.
+#   db start|stop|status|psql|reset     manage the local PostgreSQL cluster
+#   db development [in] [out]          copy a dump with development passwords
+#   db restore <file>                  restore a supplied dump
+#   db bootstrap                       create an empty database
+#   db upgrade-photologue              show historical migration instructions
+#   media fetch                        download referenced photos from a configured source
+#   app build                          build the development container
+#   app run [--runserver] [--publish]   serve the application
+#   app manage <args...>                run a Django management command
+#   app test [args]                     run the application tests
+#   app browser-test [args]             run the browser tests
+#   app browser-seed                    create browser test records
+#   app coverage [args]                run tests with the coverage gate
+#   app shell                          open a shell in the application container
+#   docs [--open] [--clean]             build the documentation
+#   docs serve [--port N]               serve the built documentation
 set -euo pipefail
 
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -34,37 +27,18 @@ PGPORT=${KASVIMUSEO_PG_PORT:-5432}
 PGLOG=$DEV/pg.log
 DB_NAME=${KASVIMUSEO_DB_NAME:-ylaneenkasvit}
 DB_USER=${KASVIMUSEO_DB_USER:-ylaneenkasvit}
-# Local-only credentials: the throwaway cluster trusts local connections, so
-# this password authenticates nothing. It used to be production's, which is why
-# it is not any more (issue 025). `db fetch`, the one command that talks to
-# production, insists on being given the real one.
+# Local connections use trust authentication in this development cluster.
 DB_PASSWORD=${KASVIMUSEO_DB_PASSWORD:-development}
 # The site password `db development` puts on every account of the dump it
 # derives. Local-only by construction: it is written into a file under .dev/
 # and no command here sends that file anywhere.
 DEV_PASSWORD=${KASVIMUSEO_DEV_PASSWORD:-development}
-# Development key for a development server. The production key comes from
-# Ansible Vault and is never in this repository; the settings refuse to start
-# without KASVIMUSEO_SECRET_KEY, so something has to be passed here.
+# The development helper supplies a key that signs only local sessions.
 SECRET_KEY=${KASVIMUSEO_SECRET_KEY:-development-only-not-a-production-key}
-# The site settings refuse to start without KASVIMUSEO_ALLOWED_HOSTS too (issue
-# 026), and a development server is reached under whatever name its developer
-# published it -- localhost, a container IP, a tailnet name. Production's list
-# comes from ansible/vars/main.yml and is never this.
+# Developers can restrict the host names accepted by their local server.
 ALLOWED_HOSTS=${KASVIMUSEO_ALLOWED_HOSTS:-*}
-# On for every container this script starts, which is what puts
-# `/dev-login/<username>/` on the development server (issue 068): `db
-# development` above makes the restored passwords knowable, and this makes the
-# login form unnecessary at all -- including on a dump restored as it came.
-# Set KASVIMUSEO_DEV_LOGIN= (empty) for a session that should not have the
-# route; it is a password-free admin login for anyone who can reach the port,
-# and this server is published on whatever interface ALLOWED_HOSTS above
-# implies. Only `dev/kasvimuseo` sets this: a deployment's environment comes
-# from uwsgi.ini, and `ylaneenkasvit/test_settings.py` turns it off for the
-# suite whatever is exported here.
 DEV_LOGIN=${KASVIMUSEO_DEV_LOGIN-1}
 IMAGE=${KASVIMUSEO_IMAGE:-kasvimuseo-dev}
-PROD_SSH=${KASVIMUSEO_PROD_SSH:-kasvimuseo@kasvit.ambitone.com}
 
 die() { echo "$*" >&2; exit 1; }
 
@@ -100,43 +74,13 @@ db_start() {
 
 db_stop() { pg_running && pg_ctl -D "$PGDATA" -w -m fast stop >/dev/null || true; }
 
-db_fetch() {
-    local out=${1:-$DEV/backups/production.sql}
-    # The only command here that authenticates against production, and the
-    # production password is no longer in this repository (issue 025), so the
-    # local default cannot stand in for it.
-    [ -n "${KASVIMUSEO_DB_PASSWORD:-}" ] || die \
-        "db fetch needs the production database password:
-  KASVIMUSEO_DB_PASSWORD=... dev/kasvimuseo db fetch
-It is in Ansible Vault, under ansible/host_vars/, and nowhere in this
-repository in plain text. Without it, take the backup with Ansible instead:
-  ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml"
-    mkdir -p "$(dirname "$out")"
-    echo "Dumping $DB_NAME from $PROD_SSH ..." >&2
-    ssh "$PROD_SSH" \
-        "PGPASSWORD='$DB_PASSWORD' pg_dump -h /var/run/postgresql -U $DB_USER \
-         --no-owner --no-privileges $DB_NAME | gzip -9" | gunzip > "$out" || {
-        rm -f "$out"
-        die "Dump failed. This needs an SSH account on the production host whose
-key is authorised; set KASVIMUSEO_PROD_SSH=user@host to pick another one. If you
-have no SSH access, take the backup with Ansible instead and restore that file:
-  ansible-playbook -t backup -e backup_database=/backup-dir ansible/install.yaml"
-    }
-    grep -q 'PostgreSQL database dump complete' "$out" || \
-        die "$out looks truncated -- the dump did not finish."
-    echo "Wrote $out ($(wc -l < "$out") lines)" >&2
-}
-
-# Makes a production dump loadable into a plain, current PostgreSQL. With
-# skip_postgis=1 it also drops the PostGIS extension and the spatial_ref_sys
-# table PostGIS owns.
 sanitize_dump() {
     awk -v skip_postgis="${1:-0}" '
         skip_postgis && /^(CREATE|COMMENT ON) EXTENSION.*postgis/ { next }
         skip_postgis && /^COPY public\.spatial_ref_sys/ { skip = 1; next }
         skip { if ($0 == "\\.") skip = 0; next }
         # abstime was removed in PostgreSQL 12, so an index over it cannot be
-        # recreated. Production is still on 10.
+        # recreated for PostgreSQL 12 and later.
         /^CREATE INDEX .*abstime/ {
             print "Skipping index " $3 ": it uses abstime, removed in PostgreSQL 12." \
                 > "/dev/stderr"
@@ -152,9 +96,6 @@ db_restore() {
     psql -h "$PGSOCK" -p "$PGPORT" -U "$USER" -d postgres -q \
          -c "DROP DATABASE IF EXISTS $DB_NAME" \
          -c "CREATE DATABASE $DB_NAME OWNER $DB_USER"
-    # Production enables PostGIS, but no table uses a spatial type, so a plain
-    # PostgreSQL without it can still take the dump -- skip the extension rather
-    # than make every developer install PostGIS.
     local skip_postgis=0
     if grep -qi 'EXTENSION.*postgis' "$file" && ! psql -h "$PGSOCK" -p "$PGPORT" \
             -U "$USER" -d postgres -tAc \
@@ -169,26 +110,14 @@ db_restore() {
     [ "$started" = 1 ] && db_stop || true
 }
 
-# A production dump with every `auth_user` password replaced by one the person
-# restoring it knows, written beside the original as `development.sql`.
-#
-# It exists because a password hash cannot be reversed. A fetched dump is a
-# database nobody can sign into unless they already know an account's
-# production password -- and after issue 050's change on the server, nobody
-# developing here will. Rewriting the column is the only way back in that does
-# not involve the production password at all.
-#
-# Every row, not just the one account: the derived dump then carries no
-# production password hash whatsoever, and that is the second reason for it.
-# The hashes in the dump are real credentials -- one of them is `123` (issue
-# 050) -- and this is the file that gets restored, opened in psql and copied
-# between machines.
+# Create a local dump with development passwords for every account.
+# The output retains all other data, so keep it outside Git.
 db_development() {
     local src=${1:-$DEV/backups/production.sql}
     local out=${2:-$DEV/backups/development.sql}
     [ -f "$src" ] || die "usage: dev/kasvimuseo db development [dump.sql] [out.sql]
 $src does not exist. Take a dump first:
-  dev/kasvimuseo db fetch"
+  Provide a dump file as the first argument."
     # Django's own hasher rather than this script's idea of the format: the
     # algorithm and the iteration count belong to the application and move with
     # the Django it runs. -t would put a carriage return in the captured hash.
@@ -226,15 +155,6 @@ print(make_password(sys.argv[1]))' "$DEV_PASSWORD")
   dev/kasvimuseo db restore $out" >&2
 }
 
-# This command needed South, and upgrade plan Stage 5 removed South, so it now
-# says what to do instead of doing it. It took an existing database -- a
-# restored production dump, or any database this project was running before
-# upgrade plan Stage 2 -- from photologue 2.6.1's schema to photologue 2.8.3's,
-# and it is still the step such a database has to be given, once, before this
-# code can serve it. Its four non-obvious points -- why `syncdb` came first,
-# why nothing was faked back to 0001, why `kasvimuseo` moved before photologue
-# and why photologue's 0002 must be faked, never run -- are in the Stage 4
-# checkout this message names, above this same function.
 photologue_upgrade() {
     die 'db upgrade-photologue needs South, and upgrade plan Stage 5 removed South.
 Give the database the South-era chain from a worktree of the last South
@@ -252,9 +172,7 @@ Set KASVIMUSEO_IMAGE as shown: a plain `app build` in the worktree would
 re-tag kasvimuseo-dev with the old dependencies. Do NOT skip to `migrate`:
 Django 1.7 fakes an initial migration when its tables merely exist, so on a
 pre-Stage-2 schema it records photologue as migrated with title_slug still
-unrenamed, and the application breaks later, not here. README.rst says why
-("Development setup") and what this means for production ("Crossing the
-South cut", under Deployment).'
+unrenamed, and the application breaks later, not here. Read the original migration instructions in the private deployment repository.'
 }
 
 # The printable views need local image files to read their dimensions.
@@ -317,8 +235,7 @@ TEST_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
 warn_about_local_settings() {
     local settings=$REPO/ylaneenkasvit/local_settings.py
     # Python 2.7 imports a .pyc that has no .py beside it, so deleting only the
-    # source leaves the old settings in force -- which is why the production
-    # playbook deletes both (ansible/secure-production.yaml, issue 050), and why
+    # source leaves the old settings in force, which is why
     # the note below would otherwise be advice that does not work.
     if [ ! -f "$settings" ] && [ -f "$settings"c ]; then
         echo "Note: ylaneenkasvit/local_settings.pyc has no .py beside it and" >&2
@@ -347,6 +264,16 @@ app_run_container() {
 It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
     warn_about_local_settings
     local extra=$1; shift
+    local path target
+    local linked_mounts=()
+    # External local state must remain reachable through the checkout's links.
+    for path in "$DEV" "$REPO/media" "$REPO/static" "$REPO/ylaneenkasvit/local_settings.py"; do
+        if [ -L "$path" ]; then
+            [ -e "$path" ] || die "Local state link is broken: $path"
+            target=$(realpath "$path")
+            linked_mounts+=(-v "$target:$target")
+        fi
+    done
     # Named so the exit trap can reap it: podman leaves the container running if
     # its client process is killed rather than interrupted.
     #
@@ -355,7 +282,7 @@ It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
     # suite and the browser tests name `test_settings` in $extra, which podman
     # applies after this and which therefore wins.
     podman run --rm --name "$CONTAINER" ${TTY_FLAGS:-} \
-        -v "$REPO:/src" \
+        -v "$REPO:/src" "${linked_mounts[@]}" \
         -v "$PGSOCK:/var/run/postgresql" \
         -e "DJANGO_SETTINGS_MODULE=ylaneenkasvit.development_settings" \
         -e "KASVIMUSEO_DB_PORT=$PGPORT" \
@@ -364,39 +291,12 @@ It takes about a minute and a half. Set KASVIMUSEO_IMAGE to use another one."
         -e "KASVIMUSEO_DB_PASSWORD=$DB_PASSWORD" \
         -e "KASVIMUSEO_SECRET_KEY=$SECRET_KEY" \
         -e "KASVIMUSEO_ALLOWED_HOSTS=$ALLOWED_HOSTS" \
+        -e "KASVIMUSEO_MEDIA_FALLBACK_URL=${KASVIMUSEO_MEDIA_FALLBACK_URL:-}" \
         -e "KASVIMUSEO_TEST_SUFFIX=${KASVIMUSEO_TEST_SUFFIX:-}" \
         -e "KASVIMUSEO_DEV_LOGIN=$DEV_LOGIN" \
         $extra "$IMAGE" "$@"
 }
 
-# The development site is served by gunicorn, the same WSGI server the
-# production requirements pin, and not by `manage.py runserver`: runserver is
-# wsgiref, which answers HTTP/1.0 without a Content-Length, so the length of a
-# response is whatever arrived before the connection closed. A truncated page
-# is then indistinguishable from a complete one for both the browser and curl
-# -- which is how issue 044 stayed a mystery for as long as it did. gunicorn
-# sends a Content-Length and a client notices a short read.
-#
-# What is lost is the autoreloader: gunicorn 0.17.4 has no --reload, so after
-# editing Python either restart this command or reload the workers in place:
-#
-#     podman kill --signal HUP $(podman ps -qf name=kasvimuseo-dev-)
-#
-# Templates and static files are re-read per request either way. `--runserver`
-# brings the old server back for a session that wants the autoreloader; see
-# README.rst.
-#
-# The container shares the host's network namespace rather than publishing a
-# port, because publishing it is what truncated the responses in issue 044.
-# Rootless podman publishes with pasta, and pasta -- on this host, over a
-# connection with real latency -- forwards about 43 KB of a response and then
-# closes it cleanly, losing the rest. A packet capture on the receiving machine
-# shows the server's own FIN riding the segment that ends at byte 43,140, with
-# every segment before it acknowledged and nothing retransmitted. Responses
-# small enough to be forwarded before the application closes its socket survive,
-# and so do ones too large to be buffered at all, which is why the failure looked
-# like a size threshold with exceptions at both ends. `--publish` restores the
-# published port for anyone who wants to see that happen.
 app_serve() {
     local runserver=0 network=--network=host bind=${KASVIMUSEO_PORT:-8000}
     while [ $# -gt 0 ]; do
@@ -446,12 +346,6 @@ BROWSER_DB=${KASVIMUSEO_BROWSER_DB_NAME:-${DB_NAME}_browsertest}
 BROWSER_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
 BROWSER_ENV="$BROWSER_ENV -e KASVIMUSEO_MEDIA_ROOT=/src/.dev/browser-test-media"
 
-# The label editor is staff-only (issue 052), so the tests log in, so the
-# seeded database needs an account. Its password is made here, once per run,
-# and passed to both halves through the environment: `browser-seed` creates
-# the user with it and the tests type it in. Nothing tracked in this
-# repository is ever a working credential -- that rule is issue 050, which
-# came from a password in a test file that turned out to be production's.
 BROWSER_PASSWORD=${KASVIMUSEO_BROWSER_TEST_PASSWORD:-$(
     od -An -N16 -tx1 /dev/urandom | tr -d ' \n')}
 BROWSER_ENV="$BROWSER_ENV -e KASVIMUSEO_BROWSER_TEST_PASSWORD=$BROWSER_PASSWORD"
@@ -545,7 +439,6 @@ case "${1:-}" in
       stop)    db_stop; echo "PostgreSQL stopped" ;;
       status)  pg_ctl -D "$PGDATA" status ;;
       psql)    shift 2; with_db psql -h "$PGSOCK" -p "$PGPORT" -U "$DB_USER" -d "$DB_NAME" "$@" ;;
-      fetch)   db_fetch "${3:-}" ;;
       bootstrap)
                # It takes no dump, and being handed one used to be silent: the
                # argument was dropped and the empty database that came out had
@@ -555,14 +448,6 @@ case "${1:-}" in
                  "db bootstrap takes no arguments: it builds an empty database from
 the migrations. To load the dump instead:
   dev/kasvimuseo db restore $3"
-               # Empty database from the migrations, for working without a
-               # production dump. One command since upgrade plan Stage 5:
-               # Django's own migrations order themselves -- kasvimuseo
-               # depends on photologue, whose tables its 0014 used to have to
-               # wait for -- and the photo sizes arrive with
-               # kasvimuseo/migrations/0002_photo_sizes.py, a data migration
-               # since Django 1.7 loads no initial_data fixture for a
-               # migrated application (issue 055).
                with_db app_run_container "" \
                  python ylaneenkasvit/manage.py migrate --noinput ;;
       development)
@@ -571,7 +456,7 @@ the migrations. To load the dump instead:
       upgrade-photologue)
                photologue_upgrade ;;
       reset)   db_stop; rm -rf "$PGDATA"; echo "Cluster deleted" ;;
-      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|fetch|development|restore|bootstrap|upgrade-photologue|reset" ;;
+      *)       die "usage: dev/kasvimuseo db start|stop|status|psql|development|restore|bootstrap|upgrade-photologue|reset" ;;
     esac ;;
   media)
     case "${2:-}" in
@@ -583,11 +468,6 @@ the migrations. To load the dump instead:
       build)   podman build -f "$REPO/dev/Containerfile" -t "$IMAGE" "$REPO" ;;
       run)     shift 2; app_serve "$@" ;;
       manage)  shift 2; with_db app_run_container "" python ylaneenkasvit/manage.py "$@" ;;
-      # Most tests build their own data in a test database, so unlike the app
-      # itself they need the cluster but never a production dump or media.
-      # The container gets DJANGO_SETTINGS_MODULE for the app, and pytest-django
-      # lets the environment outrank pytest.ini, so point it at the test
-      # settings explicitly.
       test)    shift 2; with_db app_run_container "$TEST_ENV" \
                    python -m pytest "$@" ;;
       browser-test)
@@ -623,5 +503,5 @@ the migrations. To load the dump instead:
       serve)   shift 2; exec "$REPO/dev/docs-serve" "$@" ;;
       *)       shift; "$REPO/dev/docs-build" "$@" ;;
     esac ;;
-  *) sed -n '2,23p' "${BASH_SOURCE[0]}" | cut -c3- ;;
+  *) sed -n '2,/^set /{ /^#/p; }' "${BASH_SOURCE[0]}" | cut -c3- ;;
 esac

@@ -86,15 +86,7 @@ two sub-decisions it needed:
 agree, and the one the maintainer actually sorts photos on already does the
 right thing:
 
-* production creates ``ylaneenkasvit`` through ``geerlingguy.postgresql``, and
-  ``ansible/vars/main.yml`` sets no ``lc_collate``, so it takes the role's
-  default ``en_US.UTF-8`` (``roles/geerlingguy.postgresql/tasks/databases.yml``).
-  Under that collation case is not the first thing compared, so ``Kuva.jpg``
-  and ``kuva.jpg`` land together, which is what somebody looking for a file
-  wants.
-* the development cluster is ``initdb --locale=C.UTF-8``
-  (``dev/kasvimuseo``, ``db_init``), which is byte order: every upper-case
-  initial sorts before every lower-case one.
+The private deployment repository owns the installation evidence.
 
 Forcing case-insensitivity would mean ordering by ``lower(image)``, and on
 Django 1.5 -- no ``Lower()`` before 1.8 -- that is a ``queryset()`` override

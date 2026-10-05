@@ -13,3 +13,15 @@ static/
 # reads the working copy from the /src bind mount, which is where its
 # local_settings.py is supposed to come from.
 ylaneenkasvit/local_settings.py
+# Exclude private files from container build contexts.
+ansible/
+ansible.cfg
+.agents/
+.claude/
+.serena/
+.codegraph/
+*.sql
+*.sql.gz
+*.dump
+.env
+.env.*

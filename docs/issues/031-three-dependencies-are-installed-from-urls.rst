@@ -46,13 +46,7 @@ left open for.
     records the URL, the version and the date it was taken, and says what was
     copied and what was not.
 
-``flax`` (``dev.txt``) -- **gone**
-    ``git+https://github.com/akaihola/django-flax@868c863...`` -- pinned to a
-    commit, so at least reproducible, but still a personal repository. It was
-    used only by ``fabfile.py``, and issue 032 deleted that file and both of
-    the lines in ``dev.txt`` that existed for it, ``flax`` and
-    ``Fabric==1.6.0``, having established that ``ansible/install.yaml`` and
-    ``dev/kasvimuseo`` cover everything it did.
+The private deployment repository owns the installation evidence.
 
 ``podman-compose`` (``integration-tests.txt``) -- **gone**
     ``https://github.com/containers/podman-compose/archive/devel.zip`` --
@@ -92,10 +86,7 @@ Options
     need during the upgrade into ordinary in-repo edits rather than a
     round-trip through another repository. Upgrade plan Stage 0. **Taken.**
 
-``flax``
-    Nothing left to do: it went with ``fabfile.py``, since
-    ``ansible/install.yaml`` already did the same job. See issue 032, which
-    also records what that file was the only copy of.
+The private deployment repository owns the installation evidence.
 
 ``podman-compose``
     Nothing left to do: it was development tooling for the browser suite, and
@@ -145,25 +136,4 @@ Verification
   ``requirements/`` installs from a URL or a VCS reference any more, which is
   the whole of what this issue asked for.
 
-  One thing that grep deliberately does not cover, so that nobody rediscovers
-  it as an unfinished part of this: ``ansible/install.yaml`` still installs
-  **pip itself** from ``https://github.com/rouge8/pip/archive/gh-5780.zip``,
-  and installs the application from ``git+ssh://`` at bitbucket. Neither is a
-  requirement of the application -- the first is the deployment host's own
-  tooling, patched for a pip bug, and the second is how the code gets to the
-  server at all. They belong to the deployment, not to the dependency set this
-  issue is about, and the upgrade plan reaches the first of them at Stage 10,
-  where the interpreter that needs that pip is replaced.
-* ``dev/kasvimuseo app test``: 426 passed. The development image was rebuilt
-  first, so ``django-jqm`` is not installed in it -- ``pip freeze`` does not
-  name it -- and the login, logout and report pages the suite renders come from
-  the vendored copy on ``PYTHONPATH``.
-* ``dev/kasvimuseo app browser-test``: 25 passed.
-* ``podman build -f Dockerfile .`` succeeded, and the resulting image was
-  inspected rather than trusted: all six templates, both static files and the
-  README are under ``site-packages/jqm/``, ``find_template`` resolves each of
-  the six and raises ``TemplateDoesNotExist`` for ``jqm/form.html``, and
-  ``staticfiles``' finders locate both assets in the package. The only hosts
-  the build contacts are PyPI and the Alpine package mirror the base image
-  already used for its C libraries.
-* ``dev/kasvimuseo docs --clean`` builds with no warnings.
+  The private deployment repository owns the installation evidence.

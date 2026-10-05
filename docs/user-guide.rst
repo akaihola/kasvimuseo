@@ -37,7 +37,7 @@ Muutokset
 Kylttien tulostus
 -----------------
 
-Osoite: https://kasvit.ambitone.com/kasvimuseo/planting-labels/
+Osoite: https://plants.example.invalid/kasvimuseo/planting-labels/
 
 Ohjeita:
 
@@ -138,7 +138,7 @@ Kentät tällä hetkellä:
 Projektin muistilista
 ---------------------
 
-Osoite: https://trello.com/b/6aY3VxJJ/kasvimuseo
+Kysy projektin ylläpitäjältä pääsy työn seurantaan.
 
 Antti käyttää tätä tehtävä- ja muisti listana, jossa näkyvät tekemistä
 odottamat, tekeillä olevat sekä valmiit muutokset.

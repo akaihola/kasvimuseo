@@ -15,7 +15,7 @@ photo appears at all.
 
 So: serve what is there, and redirect the rest to ``MEDIA_FALLBACK_URL``. Both
 halves are needed, which is what :doc:`issue 048
-</issues/048-the-dev-server-loads-photos-from-the-production-media-host>`
+</issues/048-serve-local-media-before-a-configured-fallback>`
 records.
 """
 

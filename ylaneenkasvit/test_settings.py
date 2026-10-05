@@ -27,9 +27,6 @@ ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 DATABASES['default'].update({  # noqa: F405
     'NAME': os.environ.get('KASVIMUSEO_DB_NAME', 'ylaneenkasvit'),
     'USER': os.environ.get('KASVIMUSEO_DB_USER', 'ylaneenkasvit'),
-    # Empty rather than any real password: the local development cluster
-    # trusts local connections, and a default here is exactly how the
-    # production password used to reach a tracked file (issue 025).
     'PASSWORD': os.environ.get('KASVIMUSEO_DB_PASSWORD', ''),
     'PORT': os.environ.get('KASVIMUSEO_DB_PORT', ''),
     # Lets concurrent test runs against one cluster use separate databases.
@@ -40,31 +37,9 @@ DATABASES['default'].update({  # noqa: F405
         os.environ.get('KASVIMUSEO_TEST_SUFFIX', ''))},
 })
 
-# ``common_settings`` marks both cookies ``Secure``, because production is
-# TLS-only (issue 059). Nothing here is: the suite's own client speaks to
-# ``http://testserver`` and the browser tests serve these same settings from
-# gunicorn on ``http://127.0.0.1`` and log into the admin. Chromium treats that
-# loopback origin as trustworthy and keeps the cookies anyway, so most of the
-# browser suite survives the production value -- but not all of it, and the
-# exception was measured rather than guessed: with these two lines removed,
-# ``test_the_editor_and_its_endpoint_are_staff_only`` fails, because the
-# request Playwright makes outside the page sends no secure cookie and the
-# endpoint answers with a CSRF failure instead of the staff refusal the test is
-# about. Turned off here rather than in ``common_settings``, so that the value
-# a deployment inherits is the safe one;
-# ``kasvimuseo/tests/test_settings_cookie_security.py`` asserts the production
-# value by reading ``common_settings`` directly and switching it back on for
-# the tests that need it.
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
-# Off here whatever the environment says, so the suite's URLconf is the one a
-# deployment has (issue 068). ``dev/kasvimuseo`` exports
-# ``KASVIMUSEO_DEV_LOGIN`` to every container it starts, this suite's included,
-# and ``common_settings`` would otherwise read it and add the route -- which
-# would make the tests below assert the development server's URL list while
-# claiming to assert Django's. The dev-login tests reload
-# ``ylaneenkasvit.urls`` with the setting on instead, one test at a time.
 DEV_LOGIN = False
 
 # The default hasher is deliberately slow; tests create users constantly.
