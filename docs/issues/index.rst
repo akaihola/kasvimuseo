@@ -98,6 +98,8 @@ The private deployment repository owns operational reports behind deployment rec
    086: Keep the established priority.
    087: Keep the established priority.
    088: Stage 19 moves from Django 5.2 to Django 6.0.7 on Python 3.12 or later.
+   089: Photologue 3.20 from 088 leaves a phone photo sideways when it has an
+      effect. No production data has an effect, so the decision can wait.
    035: Keep the established priority.
    074: Keep the established priority.
 
