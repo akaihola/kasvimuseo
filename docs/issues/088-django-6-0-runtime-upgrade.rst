@@ -119,12 +119,3 @@ Above the issue 087 branch, only issue 088 changes; it enters "Not in the queue"
 Run ``python3 .dev/issue088/review_tracker.py`` to repeat this comparison.
 The documentation build passes with warnings treated as errors and produces ``.dev/docs/html/index.html``.
 The browser containers and the task's PostgreSQL cluster stop after the checks.
-
-Integration boundary
---------------------
-
-This section tells the maintainer what must happen before this branch merges.
-This branch contains the unmerged issue 087 commits from ``feature/upgrade-to-django-5-530``.
-Merge that branch into local ``master`` first, then rebase this branch onto ``master``.
-The base checkout holds uncommitted copies of this issue file and its ranking entry.
-The owner of those edits must commit or discard them before either merge.
