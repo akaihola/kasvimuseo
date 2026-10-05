@@ -73,7 +73,7 @@ def test_a_login_issues_a_secure_session_cookie(client, user):
 
     Django 1.5 defaults ``SESSION_COOKIE_SECURE`` to ``False``, so without the
     setting this is a cookie with no ``Secure`` attribute and a browser sends it
-    to ``http://kasvit.ambitone.com/`` in cleartext. The production value is
+    to ``http://plants.example.invalid/`` in cleartext. The production value is
     read from ``common_settings`` rather than written out again, so this fails
     if that value is removed or turned off.
     """

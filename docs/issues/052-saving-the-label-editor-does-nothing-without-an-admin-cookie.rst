@@ -134,9 +134,7 @@ What it cost, and it is the cost the ruling accepted: the browser suite now
 logs in. ``browser_tests/seed.py`` creates one staff account,
 ``dev/kasvimuseo`` generates its password per run and passes it to both halves
 in ``KASVIMUSEO_BROWSER_TEST_PASSWORD``, and the ``page`` fixture goes through
-the admin's login form. No password is written into a tracked file -- that rule
-is issue 050, which is what a password in ``conftest.py`` turned out to be
-worth. ``docs/user-guide.rst`` gains the sentence that the page is staff-only,
+the admin's login form. The suite creates its credentials for each run. ``docs/user-guide.rst`` gains the sentence that the page is staff-only,
 and ``README.rst`` the paragraph about the generated one.
 
 The suite: 419 passing in the container (``dev/kasvimuseo app test``) and 16 in

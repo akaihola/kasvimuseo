@@ -34,3 +34,15 @@
 # writable root and cannot be orphaned somewhere outside it.
 /.worktrees/
 /.claude/worktrees/
+# Private deployment files belong in the separate deployment repository.
+/ansible/
+/ansible.cfg
+/ylaneenkasvit/kajala_settings.py
+*.sql
+*.sql.gz
+*.dump
+.env
+.env.*
+/.serena/
+/.codegraph/
+/.claude/settings.local.json

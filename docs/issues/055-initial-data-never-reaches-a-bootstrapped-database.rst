@@ -120,13 +120,7 @@ one ``git mv``: ``kasvimuseo`` has 22 migrations, so South loads
 ``kasvimuseo/fixtures/initial_data.json`` after running them, when
 ``photologue_photosize`` exists.
 
-**It is the only one of the three that a hand-built installation gets.**
-Nothing in ``ansible/install.yaml`` runs ``syncdb`` or ``migrate`` -- the
-deployment installs code and runs ``collectstatic`` -- so the schema on a new
-server is built by hand, by somebody typing the same two commands
-``db bootstrap`` types. Option 3 fixes the script that person is not running.
-Option 1 needs ``syncdb --no-initial-data`` beside it to stop the error, which
-is another thing to type and another thing to forget.
+The private deployment repository owns the installation evidence.
 
 **Option 1 also leaves the trap that produced 054.** A fixture that no
 migrated database ever loads is a file whose next new row silently reaches the

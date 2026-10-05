@@ -230,7 +230,7 @@ runs on rather than about this repository:
 1. **That machine has not fetched the media**, so every photo is a redirect to
    the public host and the failures are whatever the tablet's route to it is.
 2. **That machine has a** ``local_settings.py`` **that predates 048**, in which
-   case ``MEDIA_URL`` is still ``//media.kasvit.ambitone.com/`` and no photo is
+   case ``MEDIA_URL`` is still ``//media.example.invalid/`` and no photo is
    served locally at all. ``dev/kasvimuseo`` prints a note when it finds such a
    file, which is easy to miss in a page of gunicorn output.
 
@@ -266,7 +266,7 @@ what is actually left:
    reports, which is the premise above.
 5. **Half done.** Answer the photo question while the tablet is out: the
    maintainer confirms photos are still missing, so what is left of this one is
-   *which* -- a local 200 or a redirect to ``media.kasvit.ambitone.com``.
+   *which* -- a local 200 or a redirect to ``media.example.invalid``.
 
 With 1 done, this becomes ``Fixed`` with 746ce71 in ``Resolution`` as soon as 2
 holds, and nothing else changes.

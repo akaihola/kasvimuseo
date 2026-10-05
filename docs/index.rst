@@ -2,11 +2,9 @@
 Kasvimuseo
 ==========
 
-A catalogue of heritage garden plants: where a plant was found, who grew it,
-what it is, and which bed it now lives in. The ``kasvimuseo`` application runs
-two sites from one codebase -- *Yläneen perinnekasvit* and *Kajalan kasvimaat*,
-each with its own settings module, database and media host. Most of the work
-happens in the Django admin; a handful of public pages render the result.
+This documentation helps developers understand and change the plant catalogue.
+The Django administration pages manage records, and public pages display the collection.
+Private site configuration and operations records live in the separate deployment repository.
 
 Provenance, not just plants
 ===========================

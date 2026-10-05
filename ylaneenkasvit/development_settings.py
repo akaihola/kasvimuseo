@@ -27,36 +27,12 @@ import os
 
 from .common_settings import *  # noqa
 
-# ``dev/kasvimuseo`` passes a development key, and the image sets
-# ``KASVIMUSEO_DEBUG``; the production key is in the Ansible Vault and is in no
-# tracked file (issue 025), so this is read rather than written out.
 SECRET_KEY = secret_from_env('KASVIMUSEO_SECRET_KEY')  # noqa: F405
 
-# A development server is reached under whatever name its developer published
-# it -- localhost, a container IP, a tailnet name -- and it is on a machine
-# that is not on the internet. Production's list comes from the environment
-# (issue 026) and is never this.
 ALLOWED_HOSTS = ['*']
 
-# ``django-extensions`` is in ``requirements/dev.txt`` alone since upgrade plan
-# Stage 0, so a production install has neither the package nor this entry. It
-# is what ``runserver_plus`` and ``shell_plus`` come from
-# (``dev/kasvimuseo app manage runserver_plus``), and ``runserver_plus`` is what
-# replaced ``django-pserver`` (issue 033).
 INSTALLED_APPS += ('django_extensions',)  # noqa: F405
 
-# ``common_settings`` marks both cookies ``Secure``, because production is
-# TLS-only (issue 059). This server is plain HTTP, and a browser keeps a secure
-# cookie from a plain-HTTP response only when the origin is loopback, which it
-# treats as trustworthy anyway. ``http://localhost:8000`` is therefore the case
-# that would *hide* this; the case that does not is the one this project
-# actually has, a browser on another machine reaching the server by name (issue
-# 044). Measured with these two lines removed: such a client keeps no session
-# cookie, so the admin login form comes back instead of the dashboard however
-# right the password is, with nothing on screen to say why -- which is issue
-# 069, reported after the same two lines sat unreachable in a template for two
-# weeks. Relaxed here, in the file that already knows it is development, rather
-# than by weakening the value production inherits.
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
@@ -90,27 +66,13 @@ PROJECT_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
 
-# Serve photos from this server, and fall back to the production media host for
-# the ones this machine does not have -- so a fresh clone shows every photo
-# without downloading 260 MB, while a photo uploaded here is the local file
-# rather than a 404 from a host that never saw it (issue 048).
-#
-# Two views still open the image files to read their dimensions, which no URL
-# can satisfy, so for those:
-#
-#   $ dev/kasvimuseo media fetch
-#
+# Missing local photos return 404 unless the developer supplies a fallback.
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
-MEDIA_FALLBACK_URL = 'https://media.kasvit.ambitone.com/'
+MEDIA_FALLBACK_URL = os.environ.get('KASVIMUSEO_MEDIA_FALLBACK_URL', '')
 
 GRAPPELLI_ADMIN_TITLE = u'Yläneen perinnekasvit (kehitys)'
 
-# Whatever is particular to this one machine, applied last, exactly as
-# ``ylaneenkasvit_settings`` does it in production: a ``modify(globals())``
-# function in an untracked ``ylaneenkasvit/local_settings.py``. Nothing needs
-# one -- ``dev/kasvimuseo`` no longer writes it, and everything it used to hold
-# is above.
 try:
     from local_settings import *  # noqa
     modify(globals())  # noqa: F405

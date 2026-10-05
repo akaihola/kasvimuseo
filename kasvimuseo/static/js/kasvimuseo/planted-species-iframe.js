@@ -1,7 +1,17 @@
 if (document.location.search == '?debug=1') {
     document.write('<div id="planted-species-iframe-debug" style="position:absolute;width:233px;height:10em;overflow:scroll;margin-left:-233px;background:#cff;"></div>');
 };
-document.write('<iframe src="//kasvit.ambitone.com/kasvimuseo/planted-species/" width="547px" height="10000px" frameborder="0" scrolling="no" id="kasvit-iframe" style="border: none;"></iframe>');
+var plantedSpeciesScript = document.currentScript;
+var plantedSpeciesFrame = document.createElement('iframe');
+plantedSpeciesFrame.src = new URL('/kasvimuseo/planted-species/',
+    plantedSpeciesScript.getAttribute('data-site-url') || window.location.origin).href;
+plantedSpeciesFrame.width = '547px';
+plantedSpeciesFrame.height = '10000px';
+plantedSpeciesFrame.frameBorder = '0';
+plantedSpeciesFrame.scrolling = 'no';
+plantedSpeciesFrame.id = 'kasvit-iframe';
+plantedSpeciesFrame.style.border = 'none';
+plantedSpeciesScript.insertAdjacentElement('afterend', plantedSpeciesFrame);
 
 (function() {
     var debug = document.getElementById("planted-species-iframe-debug"),

@@ -16,7 +16,7 @@ from kasvimuseo.models import Bed
 
 
 class CustomIndexDashboard(Dashboard):
-    """Custom index dashboard for kasvit.ambitone.com"""
+    """Custom index dashboard for plants.example.invalid"""
 
     columns = 3
 

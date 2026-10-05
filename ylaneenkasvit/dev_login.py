@@ -15,7 +15,7 @@ Django ships no management command for this and no command could be the whole
 answer: what logs a browser in is a ``sessionid`` cookie *in that browser*, and
 a process in a container has no way to put one there. A URL can. This is that
 URL, which is what :doc:`issue 068
-</issues/068-logging-in-after-a-restore-needs-a-password-nobody-has>` records::
+</issues/068-provide-an-optional-development-login>` records::
 
     $ xdg-open http://localhost:8000/dev-login/akaihola/
 

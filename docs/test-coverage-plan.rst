@@ -67,9 +67,7 @@ There are two existing suites:
     SeleniumBase browser tests. They hardcoded ``http://localhost:8000/`` and a
     real username/password, and ``conftest.py`` asserted the login page URL was
     ``/admin/`` before logging in. Effectively unrunnable, which is why this
-    plan excluded them; see `Out of scope`_. Issue 017 replaced them with
-    ``browser_tests/``, on the host's Python 3, and the password turned out to
-    be production's (issue 050).
+    plan excluded them; see `Out of scope`_. Issue 017 replaced them with ``browser_tests/``, which creates its own test accounts.
 
 
 What the Django 1.5 testing docs give us

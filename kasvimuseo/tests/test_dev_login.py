@@ -2,7 +2,7 @@
 """Tests for the development login route (issue 068).
 
 Two halves, and the second is the one that matters. That
-``/dev-login/akaihola/`` logs akaihola in is a three-line view. That the route
+``/dev-login/editor/`` logs editor in is a three-line view. That the route
 exists nowhere but on a development server is the whole reason the view is
 allowed to exist, so it is asserted from both ends: the URLconf does not carry
 it with ``DEV_LOGIN`` off, and the view refuses even when something has reached
@@ -39,7 +39,7 @@ def user(db):
     known to nobody here (issues 049 and 050). Whatever this view does, it must
     not need one.
     """
-    account = User.objects.create_user('akaihola', 'a@invalid')
+    account = User.objects.create_user('editor', 'a@invalid')
     account.set_unusable_password()
     account.is_staff = True
     account.is_superuser = True
@@ -105,15 +105,15 @@ def test_an_inactive_user_is_a_404(client, user, dev_login_urls):
 def test_the_route_is_absent_without_the_setting(client, db):
     """The suite's own settings are the ones a deployment has."""
     assert settings.DEV_LOGIN is False
-    assert client.get('/dev-login/akaihola/').status_code == 404
+    assert client.get('/dev-login/editor/').status_code == 404
     with pytest.raises(Resolver404):
-        resolve('/dev-login/akaihola/')
+        resolve('/dev-login/editor/')
 
 
 def test_the_view_refuses_without_the_setting(rf, user):
     """The second gate, for a caller that did not come through the URLconf."""
     with pytest.raises(Http404):
-        dev_login(rf.get('/dev-login/akaihola/'), user.username)
+        dev_login(rf.get('/dev-login/editor/'), user.username)
 
 
 @pytest.fixture

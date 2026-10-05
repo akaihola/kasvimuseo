@@ -24,3 +24,6 @@ Removed
   report the page had ever held. Each of those reports is a numbered issue file
   now. Each issue file carries its own reasoning, so the entries were a second
   copy that nobody updated. Read the page at that commit to see them.
+
+* ``README.rst`` @ ``b39ce70`` -- records the documentation before the deployment split.
+  The private deployment repository now owns operations instructions and the imported source snapshots.

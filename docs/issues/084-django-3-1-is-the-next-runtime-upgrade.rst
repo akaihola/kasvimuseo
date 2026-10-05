@@ -147,30 +147,7 @@ Issue 084 appears only in the parked section.
 Every other tracker file matches ``master`` exactly.
 The audit script and its results live in ``.dev/issue084/review_tracker.py`` and ``.dev/issue084/review-tracker.log``.
 
-Deployment attempt
+Deployment records
 ------------------
 
-This section records the staging deployment check for the deployment operator.
-
-The check ran against ``kasvimuseo-staging.vempai.men`` on 2026-09-28, Helsinki time.
-Use ``.agents/memory/running-ansible-from-this-checkout.md`` for the Ansible environment.
-Use ``.agents/memory/lead-1-is-the-staging-rehearsal-host.md`` for the staging credentials and connection.
-Run::
-
-    export SHELL="$(command -v bash)"
-    uvx --python 3.12 --from 'ansible==9.*' ansible-playbook \
-      -i ansible/hosts.staging -e @ansible/vars/staging.yml \
-      -e @/home/agent/prg/kasvimuseo/.dev/rehearsal/staging-rehearsal \
-      -e app_package=git+ssh://git@github.com/akaihola/kasvimuseo.git@6debc8733da0396b8f9463ba1892377c373aa1cc \
-      --become-password-file /home/agent/prg/kasvimuseo/.dev/rehearsal/become-pass \
-      --check --tags python,code,static,uwsgi ansible/install.yaml
-
-The deployment guard rejected Debian 10.13 with exit code 2.
-Ansible reported ``ok=1 changed=0 failed=1``.
-The host still runs Python 3.7.3 and Django 2.1.15.
-It has no Python 3.9 interpreter or Docker or Podman executable.
-The uWSGI service remained active, and ``/kasvimuseo/planted-species/`` returned HTTP 200 over HTTPS.
-The check changed no application, database, service, or operating system.
-
-Logs live in ``.dev/issue084/deploy/`` in the task checkout.
-The deployment operator must prepare the target described in issue 082, "Deployment prerequisite", before installing this revision.
+The private deployment repository owns deployment checks and operations results.
