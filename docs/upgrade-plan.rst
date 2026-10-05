@@ -969,7 +969,8 @@ Use the dependency constraints above and the resolved locks in Appendix A.
 Stage 18 — Django 4.2 → 5.0.14 → 5.1.15 → 5.2.16 (LTS)
 ------------------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: Issue 087
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -977,7 +978,8 @@ Use the dependency constraints above and the resolved locks in Appendix A.
 Stage 19 — Django 5.2 → 6.0.7 (current)
 ---------------------------------------
 
-:Status: Planned
+:Status: Done
+:Resolution: Issue 088
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
