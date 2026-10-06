@@ -34,3 +34,7 @@ A separate prepared checkout and base checkout also contained different unrelate
 ## Dependencies
 
 Complete proposals 01 through 08 before declaring the public cleanup ready. Coordinate external publication work with the maintainer.
+
+Update of 2026-10-06: local `master` contains the cleanup as merge `ea274ee`, so step 1 is done.
+Before publication, coordinate with tasks 3 and 4 of the private deployment repository.
+Those tasks rotate exposed credentials and remove sensitive public history.

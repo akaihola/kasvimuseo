@@ -1,5 +1,5 @@
 ---
-depends-on: [2, 3, 5, 6, 7]
+depends-on: [2, 3, 5, 6, 7, 10]
 ---
 
 # 08. Refresh public documentation after the repository split
@@ -34,3 +34,6 @@ The prepared issue register retains ten deployment-only stubs, and [docs/archive
 ## Dependencies
 
 Use the final content from proposals 02, 03, 05, 06, and 07. Coordinate commit-reference changes with the maintainer.
+
+Update of 2026-10-06: task 10 lands the Django 6.0 runtime that this documentation must describe.
+`docs/issues/next.rst` and `docs/issues/README.rst` still describe the backlog refill rule that `AGENTS.md` no longer contains.

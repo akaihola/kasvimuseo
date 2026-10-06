@@ -1,31 +1,44 @@
 # Issue tracking for Kasvimuseo
 
 Rules for TASKS.md usage are at the bottom of the file.
-The current proposals come from the repository review on 2026-10-04.
+The maintainer verified the proposals of the repository review of 2026-10-04 on 2026-10-06.
+Tasks 10 to 14 come from the integration of the deployment split and the Django 6.0 upgrade.
 
 ## Unverified proposals
 
+## Ordered backlog
+
+- [10] Integrate the Django 5.2 and 6.0 upgrade
+
+- [11] Move the browser tests to Playwright 1.63
+
 - [1] Exclude private settings from release packages
+
+- [6] Declare the project license
+
+- [4] Track exclusions for private local state
 
 - [2] Keep contributor memories portable
 
 - [3] Replace operational data and personal examples
 
-- [4] Track exclusions for private local state
+- [7] Preserve vendored dependency license notices
 
 - [5] Document and test iframe origin configuration
 
-- [6] Declare the project license
-
-- [7] Preserve vendored dependency license notices
+- [14] Close the runtime upgrade programme (issue 036)
+    - Depends on: [10]
 
 - [8] Refresh public documentation after the repository split
-    - Depends on: [2], [3], [5], [6], [7]
+    - Depends on: [2], [3], [5], [6], [7], [10]
 
 - [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
 
-## Ordered backlog
+- [13] Finish the iPad label checks (issue 056)
+
+- [12] Decide the photo effect rotation regression (issue 089)
+    - Depends on: [10]
 
 ## Scheduled
 
@@ -42,9 +55,14 @@ The current proposals come from the repository review on 2026-10-04.
 [7]: docs/tasks/07-preserve-vendored-license-notices.md
 [8]: docs/tasks/08-refresh-public-documentation.md
 [9]: docs/tasks/09-integrate-and-publish-public-cleanup.md
+[10]: docs/tasks/10-integrate-the-django-5-2-and-6-0-upgrade.md
+[11]: docs/tasks/11-move-the-browser-tests-to-playwright-1-63.md
+[12]: docs/tasks/12-decide-the-photo-effect-rotation-regression.md
+[13]: docs/tasks/13-finish-the-ipad-label-checks.md
+[14]: docs/tasks/14-close-the-runtime-upgrade-programme.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14 -->
 
 ---
 
