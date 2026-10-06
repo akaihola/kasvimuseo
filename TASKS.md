@@ -1,8 +1,11 @@
 # Issue tracking for Kasvimuseo
 
 Rules for TASKS.md usage are at the bottom of the file.
+This file is for the maintainer and the contributors who pick up work.
+It sets the order of the open work.
 The maintainer verified the proposals of the repository review of 2026-10-04 on 2026-10-06.
-Tasks 10 to 14 come from the integration of the deployment split and the Django 6.0 upgrade.
+Tasks 10, 11, 12, and 14 come from the integration of the deployment split and the Django 6.0 upgrade.
+Task 13 carries over the open iPad checks of issue 056.
 
 ## Unverified proposals
 
@@ -21,6 +24,7 @@ Tasks 10 to 14 come from the integration of the deployment split and the Django 
 - [2] Keep contributor memories portable
 
 - [3] Replace operational data and personal examples
+    - Depends on: [10]
 
 - [7] Preserve vendored dependency license notices
 
@@ -37,7 +41,7 @@ Tasks 10 to 14 come from the integration of the deployment split and the Django 
 
 - [13] Finish the iPad label checks (issue 056)
 
-- [12] Decide the photo effect rotation regression (issue 089)
+- [12] Decide how to handle the rotation regression in photo effects (issue 089)
     - Depends on: [10]
 
 ## Scheduled

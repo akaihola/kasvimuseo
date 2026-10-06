@@ -26,10 +26,13 @@ On 2026-10-05 the branch passed these checks:
 
 - 547 application tests, and the coverage gate at 99.52 %;
 - a clean documentation build;
-- all 36 Chromium browser checks;
+- all 36 Chromium browser checks, with a temporary Playwright 1.63 pin;
 - a production image check of packages, settings, templates, and static files.
 
-One WebKit check failed because of a browser update. Task 11 owns that failure.
+With the committed `playwright~=1.61.0` pin, every browser check fails at browser launch.
+One WebKit check failed because of a browser update. Task 11 owns both problems.
+
+Merge this branch before private task 4 rewrites public history.
 
 ## Completion checks
 

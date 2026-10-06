@@ -2,7 +2,7 @@
 
 This file guides contributors and coding agents. It defines writing rules and points to the task workflow.
 
-Issues are tracked in [TASKS.md](TASKS.md).
+[TASKS.md](TASKS.md) tracks the work.
 
 Read the rules at the bottom of `TASKS.md` before changing issue status.
 Completed work stays unchecked until the user explicitly accepts it.

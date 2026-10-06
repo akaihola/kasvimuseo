@@ -21,7 +21,7 @@ This task helps the person with the garden's iPad confirm label behaviour that n
 Issue 056 is `In progress`.
 Its `:Claimed:` field names `feature/fix-ipad-label-text-4ic`, and no branch has that name.
 The branch `feature/fix-ipad-label-text-056` holds only a claim commit.
-Items 1 and 5 were done on the device on 2026-08-02.
+The maintainer did items 1 and 5 on the iPad on 2026-08-02.
 
 ## Completion checks
 
