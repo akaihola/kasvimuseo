@@ -23,3 +23,4 @@ This index helps contributors find durable development facts. Deployment memorie
 - [Management checks with test settings](manage-checks-with-test-settings.md). Use temporary media without changing the development link.
 - [Private deployment records](private-deployment-records.md) explains the source and deployment repository boundary.
 - [Ready-now may be done on a branch](ready-now-may-be-done-on-a-branch.md). master lists issues that unmerged branches already finished; check `git branch --no-merged master` first
+- [Task proposal register](task-proposal-register.md) points to proposed work and its descriptions.
