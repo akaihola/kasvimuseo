@@ -6,6 +6,7 @@ It sets the order of the open work.
 The maintainer verified the proposals of the repository review of 2026-10-04 on 2026-10-06.
 Tasks 10, 11, 12, and 14 come from the integration of the deployment split and the Django 6.0 upgrade.
 Task 13 carries over the open iPad checks of issue 056.
+On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogue origin without `data-site-url`; task 5 carries that.
 
 ## Unverified proposals
 
@@ -15,6 +16,8 @@ Task 13 carries over the open iPad checks of issue 056.
   <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-06T19:33:17.859Z"} -->
 
 - [10] Integrate the Django 5.2 and 6.0 upgrade
+
+- [5] Deduce the catalogue origin in the iframe loader
 
 - [11] Move the browser tests to Playwright 1.63
 
@@ -31,7 +34,6 @@ Task 13 carries over the open iPad checks of issue 056.
 
 - [7] Preserve vendored dependency license notices
 
-- [5] Document and test iframe origin configuration
 
 - [14] Close the runtime upgrade programme (issue 036)
     - Depends on: [10]
