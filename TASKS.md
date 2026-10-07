@@ -11,6 +11,9 @@ Task 13 carries over the open iPad checks of issue 056.
 
 ## Ordered backlog
 
+- [15] Use `main` base branch
+  <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-06T19:33:17.859Z"} -->
+
 - [10] Integrate the Django 5.2 and 6.0 upgrade
 
 - [11] Move the browser tests to Playwright 1.63
@@ -64,9 +67,10 @@ Task 13 carries over the open iPad checks of issue 056.
 [12]: docs/tasks/12-decide-the-photo-effect-rotation-regression.md
 [13]: docs/tasks/13-finish-the-ipad-label-checks.md
 [14]: docs/tasks/14-close-the-runtime-upgrade-programme.md
+[15]: docs/tasks/15-use-main-base-branch.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -->
 
 ---
 

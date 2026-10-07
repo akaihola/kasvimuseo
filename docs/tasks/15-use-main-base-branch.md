@@ -1,0 +1,1 @@
+Rename the `master` branch to `main` and fix all references to it in documentation, code, comments, Git configuration, GitHub configuration, GitHub workflows, and anywhere else where `master` is used or mentioned.
