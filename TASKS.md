@@ -50,10 +50,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [15] Use `main` base branch
-  <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-06T19:33:17.859Z"} -->
-
 ## Completed / Accepted
+
+- [ ] [15] Use `main` base branch
+  <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-06T19:33:17.859Z"} -->
 
 [1]: docs/tasks/01-exclude-private-settings-from-packages.md
 [2]: docs/tasks/02-keep-contributor-memory-portable.md

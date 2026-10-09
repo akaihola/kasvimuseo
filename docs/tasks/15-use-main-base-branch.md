@@ -34,17 +34,19 @@ One mention stays: `AGENTS.md` links to a file on the `master` branch of another
 Steps 1 to 4 are done, in merge `a2d5902`.
 The suite (543 tests) and a clean documentation build passed before the merge.
 
-Step 5 failed with HTTP 403, `Resource not accessible by personal access token`.
+Step 5 failed on `gogo` with HTTP 403, `Resource not accessible by personal access token`.
 The token on `gogo` does not have the Administration permission.
-The maintainer must rename the branch on `atom`, or in **Settings -> Branches** on GitHub:
+The maintainer then renamed the branch with this command:
 
     gh api -X POST repos/akaihola/kasvimuseo/branches/master/rename -f new_name=main
 
-Then do step 6 in the base checkout on `gogo`:
+The agent then did step 6 in the base checkout on `gogo`:
 
     git fetch origin --prune
     git branch -u origin/main main
     git remote set-head origin --auto
+
+Before step 6, `origin/HEAD` pointed to `dev-environment`. Now it points to `main`.
 
 ## Remove the alias
 
@@ -67,7 +69,7 @@ On 2026-10-09 these branches used it: `review/django-6-premerge`, `feature/separ
 
 ## Completion checks
 
-- [ ] `git symbolic-ref HEAD` in the base checkout prints `refs/heads/main`.
-- [ ] `git grep -w master` finds only `AGENTS.md`, this description, and the alias memory with its line in `MEMORY.md`.
-- [ ] The application suite and a clean documentation build pass on `main`.
-- [ ] The GitHub default branch is `main`, and pull requests 1 and 2 have `main` as their base.
+- [x] `git symbolic-ref HEAD` in the base checkout prints `refs/heads/main`.
+- [x] `git grep -w master` finds only `AGENTS.md`, this description, and the alias memory with its line in `MEMORY.md`.
+- [x] The application suite and a clean documentation build pass on `main`.
+- [x] The GitHub default branch is `main`, and pull requests 1 and 2 have `main` as their base.
