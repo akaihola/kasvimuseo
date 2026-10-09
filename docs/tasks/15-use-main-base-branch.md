@@ -29,6 +29,23 @@ One mention stays: `AGENTS.md` links to a file on the `master` branch of another
 5. Rename the GitHub branch with the branch rename API. GitHub then changes the default branch and the base of the open pull requests.
 6. Set the upstream of `main` to `origin/main`, and set `origin/HEAD` again.
 
+## Status on 2026-10-09
+
+Steps 1 to 4 are done, in merge `a2d5902`.
+The suite (543 tests) and a clean documentation build passed before the merge.
+
+Step 5 failed with HTTP 403, `Resource not accessible by personal access token`.
+The token on `gogo` does not have the Administration permission.
+The maintainer must rename the branch on `atom`, or in **Settings -> Branches** on GitHub:
+
+    gh api -X POST repos/akaihola/kasvimuseo/branches/master/rename -f new_name=main
+
+Then do step 6 in the base checkout on `gogo`:
+
+    git fetch origin --prune
+    git branch -u origin/main main
+    git remote set-head origin --auto
+
 ## Remove the alias
 
 Remove the alias when no task worktree on this machine uses `master`.
