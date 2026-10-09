@@ -58,9 +58,9 @@ On 2026-10-09 these branches used it: `review/django-6-premerge`, `feature/separ
 
 ## Outside this repository
 
-- The private deployment repository has memories that name `master` of this repository. Its owner must change them.
-- At the last fetch, the `bitbucket` remote had a `master` branch. Rename it in the Bitbucket settings, or remove the remote.
-- An older clone needs these commands:
+- The private deployment repository has memories that name `master` of this repository. Its task 14 changes them.
+- On 2026-10-09 the maintainer dropped the Bitbucket mirror. The agent removed the `bitbucket` remote from the base checkout on `gogo`.
+- An older clone needs these commands. The maintainer ran them on their own clone on 2026-10-09.
 
         git branch -m master main
         git fetch origin --prune
