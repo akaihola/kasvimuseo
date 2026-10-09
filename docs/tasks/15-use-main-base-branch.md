@@ -40,7 +40,7 @@ On 2026-10-09 these branches used it: `review/django-6-premerge`, `feature/separ
 ## Outside this repository
 
 - The private deployment repository has memories that name `master` of this repository. Its owner must change them.
-- The `bitbucket` remote still has a `master` branch. Rename it in the Bitbucket settings, or remove the remote.
+- At the last fetch, the `bitbucket` remote had a `master` branch. Rename it in the Bitbucket settings, or remove the remote.
 - An older clone needs these commands:
 
         git branch -m master main
@@ -51,6 +51,6 @@ On 2026-10-09 these branches used it: `review/django-6-premerge`, `feature/separ
 ## Completion checks
 
 - [ ] `git symbolic-ref HEAD` in the base checkout prints `refs/heads/main`.
-- [ ] `git grep -w master` finds only `AGENTS.md` and this description.
+- [ ] `git grep -w master` finds only `AGENTS.md`, this description, and the alias memory with its line in `MEMORY.md`.
 - [ ] The application suite and a clean documentation build pass on `main`.
 - [ ] The GitHub default branch is `main`, and pull requests 1 and 2 have `main` as their base.
