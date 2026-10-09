@@ -27,7 +27,7 @@ This replaces the plan of 2026-10-04, which documented the attribute and asked e
 
 ## Review evidence
 
-The loader on `master` builds the frame address from `data-site-url`, or from the embedding page's origin without it.
+The loader on `main` builds the frame address from `data-site-url`, or from the embedding page's origin without it.
 The embedding page is on a third origin, so the loader without the attribute requests the catalogue from the wrong origin.
 The private deployment repository records the check of 2026-10-07 and the inventory of embedding pages.
 The deployments serve the loader from `static.<catalogue host>` and the catalogue from `<catalogue host>`.
@@ -41,5 +41,5 @@ The deployments serve the loader from `static.<catalogue host>` and the catalogu
 
 ## Related work
 
-The private deployment repository deploys a revision with this loader only after this task lands on `master`.
+The private deployment repository deploys a revision with this loader only after this task lands on `main`.
 Its task 5 checks the live embed afterwards.

@@ -152,7 +152,7 @@ Continuous integration
 
 The suite runs on GitHub Actions, from
 ``.github/workflows/tests.yml`` (issue 018), on every pull request and on every
-push to ``master``. Those two triggers rather than a bare ``push:``: a branch
+push to ``main``. Those two triggers rather than a bare ``push:``: a branch
 with a pull request open matches both events, and would run everything twice.
 A branch pushed with no pull request open therefore runs nothing, which is what
 the hook below is for. The workflow is deliberately thin:
@@ -189,15 +189,15 @@ reported from. They run in parallel, so the wall clock of a run is unchanged and
 the price is again one more image build. WebKit's leg is green with six
 touch-drag tests skipped; the reason is in ``browser_tests/conftest.py``.
 
-A fourth job, ``pages``, runs only on a push to ``master`` and publishes what
+A fourth job, ``pages``, runs only on a push to ``main`` and publishes what
 ``sphinx`` built. A pull request builds the documentation and fails on a warning
 like any other check, and deploys nothing.
 
 **The workflow only sees the GitHub remote**, ``origin``, which has been the
-mirror rather than the one ``master`` tracks. Work that is only ever pushed to
+mirror rather than the one ``main`` tracks. Work that is only ever pushed to
 ``bitbucket`` is not tested by anything except the hook below::
 
-    $ git push origin master
+    $ git push origin main
 
 When a run goes red
 -------------------
@@ -288,12 +288,12 @@ later.
 Reading the published documentation
 -----------------------------------
 
-The docs as they stand on ``master`` are at
+The docs as they stand on ``main`` are at
 
     https://akaihola.github.io/kasvimuseo/
 
 published by the ``pages`` job of ``.github/workflows/tests.yml`` on every push
-to ``master``, from the same ``dev/kasvimuseo docs --clean`` build the ``sphinx``
+to ``main``, from the same ``dev/kasvimuseo docs --clean`` build the ``sphinx``
 job runs. Nothing else publishes: a pull request builds the documentation and
 fails on a warning, but deploys nothing, so the site is always what has landed.
 
@@ -301,7 +301,7 @@ fails on a warning, but deploys nothing, so the site is always what has landed.
 repository, so somebody with access has to set **Settings -> Pages -> Source**
 to *GitHub Actions*. Until that is done the ``pages`` job notices there is no
 Pages site, skips the deployment with a notice and leaves the run green, and the
-address above does not answer; afterwards the next push to ``master`` publishes
+address above does not answer; afterwards the next push to ``main`` publishes
 with no change to the workflow. This is the same class of step as registering the
 hook above, and for the same reason -- see the "Not done here" section of
 ``docs/issues/038-no-rendered-documentation.rst``.

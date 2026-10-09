@@ -117,7 +117,7 @@ Verification
 **The suite passes**: ``dev/kasvimuseo app test`` -- 426 passed. The branch
 adds two of those, the parameters of the new assertion; measured on its own
 tree before rebasing it was 415 against a baseline of 413, and the rest
-arrived with ``master``.
+arrived with ``main``.
 ``dev/kasvimuseo app browser-test`` passes too -- 16 passed -- which this
 change cannot reach but the pull request's CI runs anyway.
 
@@ -164,4 +164,4 @@ the queue" with "Status is Fixed" as the reason.
 
 ``actionlint`` on ``.github/workflows/tests.yml`` reports two ``SC2012``
 informational notes, on the two ``ls /usr/lib/postgresql`` lines. Both are on
-``master`` already and this branch does not touch the file.
+``main`` already and this branch does not touch the file.

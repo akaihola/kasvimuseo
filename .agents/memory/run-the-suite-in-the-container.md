@@ -23,4 +23,4 @@ read-only file system` before doing anything.
 that at face value costs a round trip and can read as "the suite is broken".
 
 **How to apply:** reach for `dev/kasvimuseo` first; see
-[[kasvimuseo-integration-branch-is-master]] for the branch side.
+[[kasvimuseo-integration-branch-is-main]] for the branch side.

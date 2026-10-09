@@ -72,10 +72,10 @@ was two commits withdrawn, not prose.
 So when an issue's options split into reversible and destructive, and the task
 says not to take the destructive one unmerged without a ruling, expect the
 ruling to be able to pick it anyway. Keep the interim work on its own branch or
-a tag (`git tag interim-<slug>` before `git reset --hard master`) rather than
+a tag (`git tag interim-<slug>` before `git reset --hard main`) rather than
 merged, so withdrawing it is one command and the issue file can point at the
 tag instead of carrying settings nothing reads. Rebuilding the branch cleanly
-beats landing "add X" then "remove X" on `master`.
+beats landing "add X" then "remove X" on `main`.
 
 **Never let the card order disagree with the options' own numbers.** Settling
 062 on 2026-08-04 I listed the issue's three options with my recommendation

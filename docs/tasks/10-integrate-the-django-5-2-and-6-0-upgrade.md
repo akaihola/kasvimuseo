@@ -7,11 +7,11 @@ depends-on: []
 This task helps the maintainer land the finished runtime upgrade and remove the branches that it replaces.
 
 - Priority: High.
-- Owner: Project maintainer. A merge into `master` needs the maintainer's approval.
+- Owner: Project maintainer. A merge into `main` needs the maintainer's approval.
 
 ## Work
 
-1. Merge `review/django-6-premerge` into local `master` with `git merge --no-ff`.
+1. Merge `review/django-6-premerge` into local `main` with `git merge --no-ff`.
 2. Run the application suite, the coverage gate, and a clean documentation build on the merge result.
 3. Remove the branches that the merge replaces: `feature/upgrade-to-django-5-530`, `feature/upgrade-django-to-6-0ao`, and `feature/separate-private-dep-5e9`. Remove their task worktrees too.
 4. Delete `refs/backup/base-worktree-2026-10-05` and `refs/backup/review-django-6-premerge-pre-rebase` when nobody needs them.
@@ -36,6 +36,6 @@ Merge this branch before private task 4 rewrites public history.
 
 ## Completion checks
 
-- [ ] `master` contains the upgrade, and `git branch --no-merged master` lists none of the replaced branches.
-- [ ] The application suite and a clean documentation build pass on `master`.
+- [ ] `main` contains the upgrade, and `git branch --no-merged main` lists none of the replaced branches.
+- [ ] The application suite and a clean documentation build pass on `main`.
 - [ ] `docs/upgrade-plan.rst` shows every stage as done.

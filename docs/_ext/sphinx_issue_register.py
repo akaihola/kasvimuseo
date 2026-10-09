@@ -124,7 +124,7 @@ def verify_commits(repo, references):
     A ``:Resolution:`` names the commit that fixed the issue and an archive
     entry names a commit that still holds a removed file, so both are promises
     about this repository's history. Both are written on a task branch whose
-    commits are rewritten when it is rebased onto ``master``, and a pointer that
+    commits are rewritten when it is rebased onto ``main``, and a pointer that
     died in that rebase reads exactly like a live one.
 
     The question is not whether the object is here. It is: the checkout that
@@ -135,7 +135,7 @@ def verify_commits(repo, references):
     for the whole register.
 
     Where the history is not there to check -- no ``git``, a shallow clone, no
-    ``master`` -- this reports that it skipped and passes: a checkout that
+    ``main`` -- this reports that it skipped and passes: a checkout that
     cannot answer the question has not answered "no".
     """
     if not references:
@@ -175,10 +175,10 @@ def _broken_message(broken):
         lines.append('  {0}: {1} -- {2}'.format(pointer.source, pointer.commit,
                                                 _why(pointer)))
     lines.append(
-        'A commit written before the branch was rebased onto master is on no '
+        'A commit written before the branch was rebased onto main is on no '
         'branch afterwards. Run ``dev/repoint`` to see what each one became, '
         'and ``dev/repoint --write`` to re-point them. A commit that is '
-        'deliberately off master needs a tag to hold it, as 062 does.')
+        'deliberately off main needs a tag to hold it, as 062 does.')
     return '\n'.join(lines)
 
 

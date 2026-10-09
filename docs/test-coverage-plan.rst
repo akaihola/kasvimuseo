@@ -533,7 +533,7 @@ honest. It is dated, and a date is the whole point: it is a measurement, not a
 target, and the gate described at the end is what keeps it from drifting far
 from the truth between measurements.
 
-**Measured 2026-08-03**, on ``master`` at ``aa4c39a``, with::
+**Measured 2026-08-03**, on ``main`` at ``aa4c39a``, with::
 
     $ dev/kasvimuseo app coverage
 

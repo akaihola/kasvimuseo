@@ -44,7 +44,7 @@ The dependency files own the final package versions.
 Issue 085 already completed the prerequisite runtime upgrade.
 The dependency field now names no unfinished prerequisite.
 This removes an asymmetric dependency without editing issue 085.
-Every other issue document must remain identical to local ``master``.
+Every other issue document must remain identical to local ``main``.
 
 Checks
 ------
@@ -75,7 +75,7 @@ Run these commands from the task checkout::
     dev/kasvimuseo app test kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py
     dev/kasvimuseo docs --clean
     git diff --check
-    git diff master --name-only -- docs/issues/
+    git diff main --name-only -- docs/issues/
     git status --short --untracked-files=all -- docs/issues/
 
 Scripts, inventories, and logs live in ``.dev/issue086/`` in this task checkout.
@@ -140,7 +140,7 @@ WebKit passed 28 checks and skipped seven Chromium-only checks.
 All 78 issue-register and commit-reference tests pass after the final metadata changes.
 The final documentation build passes with warnings treated as errors.
 Only issue 086 moves in the tracker, from Open to Fixed.
-Every other issue file matches local ``master`` exactly.
+Every other issue file matches local ``main`` exactly.
 
 Deployment records
 ------------------

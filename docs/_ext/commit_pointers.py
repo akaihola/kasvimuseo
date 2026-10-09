@@ -3,20 +3,20 @@
 
 A ``:Resolution:`` field, a ``Done`` stage and an archive entry all name a
 commit. Each one is written on a task branch, and that branch is rebased onto
-``master`` before it lands, so the commit the text names is rewritten and the
+``main`` before it lands, so the commit the text names is rewritten and the
 text is left pointing at a commit that is on no branch. A dead pointer reads
 exactly like a live one.
 
 This module answers two questions about such a pointer:
 
 ``classify``
-    Where the commit is: on ``master``, on some other reference, or on nothing
+    Where the commit is: on ``main``, on some other reference, or on nothing
     at all. Existence is not the question -- the checkout that wrote the dead
     pointer still holds the object, so ``git cat-file`` says yes to it for as
     long as ``git gc`` leaves it alone.
 
 ``successors``
-    Which commit on ``master`` the dead one became. Three sources, best first:
+    Which commit on ``main`` the dead one became. Three sources, best first:
     the rewrite log that ``dev/post-rewrite`` records, the patch identity, and
     the commit subject. A pointer this cannot map is reported, never guessed.
 
@@ -36,7 +36,7 @@ from issue_register import COMMIT_RE
 
 #: Where a pointer's commit is. The first is what the register promises; the
 #: last three are the ways it can break.
-LANDED = 'landed'      #: on ``master``, which is what a landed pointer means.
+LANDED = 'landed'      #: on ``main``, which is what a landed pointer means.
 PARKED = 'parked'      #: on another reference: a branch in flight, or a tag.
 LOST = 'lost'          #: the object is here, but no reference reaches it.
 GONE = 'gone'          #: ``git`` does not have the object at all.
@@ -44,11 +44,11 @@ MISSING_PATH = 'missing path'  #: the commit is here; the file it must hold is n
 
 #: The reference every landed pointer is measured against, and where to look
 #: for it. A fresh clone has checked out one branch and has the rest as
-#: remote-tracking references, so continuous integration has ``origin/master``
-#: and no ``master`` at all -- and a check that quietly skips there is a check
+#: remote-tracking references, so continuous integration has ``origin/main``
+#: and no ``main`` at all -- and a check that quietly skips there is a check
 #: that does not run where it matters most.
-INTEGRATION = 'master'
-INTEGRATION_REFS = ('master', 'origin/master')
+INTEGRATION = 'main'
+INTEGRATION_REFS = ('main', 'origin/main')
 
 #: ``dev/post-rewrite`` writes ``<old> <new>`` here, one pair per line, under
 #: the git directory. Read by :func:`parse_rewrite_log`.
@@ -145,7 +145,7 @@ def classify(pointers, git, integration=None):
     A build must not cost one process per pointer, so this asks in batches:
     ``cat-file`` finds the objects that are not here and ``rev-parse`` resolves
     the abbreviations of the rest, then one ``rev-list`` per question separates
-    the commits ``master`` reaches from the commits *any* reference reaches.
+    the commits ``main`` reaches from the commits *any* reference reaches.
 
     The middle answer is the one that matters. A commit on a branch that is
     still in flight is a pointer that has not landed yet, and a commit on a tag
@@ -175,12 +175,12 @@ def classify(pointers, git, integration=None):
         for pointer, line in zip(found, resolved.split('\n')):
             pointer.full = line.strip()
     hashes = sorted(set(pointer.full for pointer in found))
-    off_master = _rev_list_except(hashes, [integration], git)
+    off_main = _rev_list_except(hashes, [integration], git)
     unreferenced = _rev_list_except(hashes, ['--all'], git)
-    if off_master is None or unreferenced is None:
+    if off_main is None or unreferenced is None:
         return None
     for pointer in found:
-        if pointer.full not in off_master:
+        if pointer.full not in off_main:
             pointer.verdict = LANDED
         elif pointer.full in unreferenced:
             pointer.verdict = LOST
@@ -211,7 +211,7 @@ def successors(pointers, git, integration=None, rewrites=None):
     rewrote them. The patch identity and the subject are inferences, and both
     can fail honestly. A commit that was squashed, split, or dropped has no one
     successor; a conflict resolved during the rebase changes the patch; and a
-    subject that appears twice on ``master`` names nothing in particular.
+    subject that appears twice on ``main`` names nothing in particular.
     """
     broken = [pointer for pointer in pointers if pointer.verdict == LOST]
     if not broken:

@@ -100,7 +100,7 @@ This section records completed checks on 2026-09-27.
   The repository Python files also contain no remaining imports.
 * Django's system check passed. The scoped migration check found no model changes.
   All 33 migrations applied, with none pending.
-* All 78 issue-register and commit-reference checks passed after the rebase onto local ``master``.
+* All 78 issue-register and commit-reference checks passed after the rebase onto local ``main``.
 * Chromium passed all 35 browser checks.
   WebKit passed 28 checks and skipped seven Chromium-only touch checks.
 * The documentation build passed with warnings treated as errors.
@@ -110,7 +110,7 @@ The development image is ``49d1a73521ee``; the production image is ``206526cfc51
 The suite reports existing Pillow deprecations and Django APIs scheduled for later removal.
 The later upgrade stages own those changes.
 
-The tracker diff against ``master`` changes only this issue.
+The tracker diff against ``main`` changes only this issue.
 The branch contains separate runtime and validation commits.
 
 Review checks
@@ -130,7 +130,7 @@ The register contains 84 issue files and 84 ranking entries.
 Each issue appears under exactly one ranking heading.
 The generated queue contains two ready issues and 82 parked issues, with no overlap.
 Issue 083 appears only in the parked section.
-The tracker comparison against ``master`` found no changes to other issues.
+The tracker comparison against ``main`` found no changes to other issues.
 The audit script and its results live in ``.dev/issue083/review_tracker.py`` and ``.dev/issue083/review-tracker.log``.
 
 Deployment records

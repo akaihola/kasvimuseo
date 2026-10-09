@@ -5,7 +5,7 @@
 Usage: dev/repoint [--write] [--verbose]
 
 An issue's ``:Resolution:``, a plan stage's, and an archive entry each name a
-commit. The branch that wrote the pointer is rebased onto ``master`` before it
+commit. The branch that wrote the pointer is rebased onto ``main`` before it
 lands, which rewrites that commit, and the pointer is left naming a commit that
 is on no branch. This finds those, works out what each one became, and -- with
 ``--write`` -- edits the file.
@@ -56,7 +56,7 @@ def main(argv):
     lost = [pointer for pointer in broken
             if pointer.verdict == commit_pointers.LOST]
     if not broken:
-        print('Every commit the documentation names is on master, on a branch, '
+        print('Every commit the documentation names is on main, on a branch, '
               'or on a tag. Nothing to re-point.')
         return 0
 
@@ -108,7 +108,7 @@ def explain(pointer):
     if pointer.verdict == commit_pointers.MISSING_PATH:
         return ('the commit is here, but it does not hold ``{0}``. Name a '
                 'commit that still has the file'.format(pointer.path))
-    return ('no commit on master has its patch or its subject. It was '
+    return ('no commit on main has its patch or its subject. It was '
             'squashed, split or dropped -- or it never landed, in which case '
             'park it on a tag and say so')
 

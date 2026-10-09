@@ -11,7 +11,7 @@ This task helps maintainers end issue 036 after the last upgrade stage lands.
 
 ## Work
 
-1. Check that `docs/upgrade-plan.rst` on `master` shows every stage as done.
+1. Check that `docs/upgrade-plan.rst` on `main` shows every stage as done.
 2. Decide whether issue 036 ends with the source upgrade or with a deployment of the new runtime.
 3. Update the status, decision, and resolution of issue 036 to match that choice.
 

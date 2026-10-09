@@ -48,10 +48,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [15] Use `main` base branch
-  <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-06T19:33:17.859Z"} -->
-
 ## In Progress
+
+- [~] [15] Use `main` base branch
+  <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-06T19:33:17.859Z"} -->
 
 ## Completed / Accepted
 
@@ -138,8 +138,8 @@ Below, `<filename>@<branch>` means operate on the file in the specified branch.
 
 1. Choose issue and schedule work
 
-- Pick the first issue in `TASKS.md@master` with no dependency on uncompleted work.
-- Move it from `## Ordered backlog` to `## Scheduled` in `TASKS.md@master`, and commit
+- Pick the first issue in `TASKS.md@main` with no dependency on uncompleted work.
+- Move it from `## Ordered backlog` to `## Scheduled` in `TASKS.md@main`, and commit
   when the Git workflow applies.
 
 2. Work on the issue
@@ -153,7 +153,7 @@ Below, `<filename>@<branch>` means operate on the file in the specified branch.
 
 3. Merge and deploy
 
-- When Git applies, rebase the feature branch on `master`, resolve conflicts, merge it,
+- When Git applies, rebase the feature branch on `main`, resolve conflicts, merge it,
   and remove the worktree and branch.
 - Move the issue to `## Completed / Accepted` with `[ ]`, pending user acceptance, and
   commit when applicable.

@@ -13,7 +13,7 @@ Issue 038: The repository has no rendered docs
 :Related: 018 -- the build moves into CI once one exists
     036 -- each workaround has a stage at which it falls away
     016 -- the ``ur''`` prefix that blocks the parser
-:Decision: GitHub Pages, deployed from ``master`` alone, and inert until the
+:Decision: GitHub Pages, deployed from ``main`` alone, and inert until the
     repository's Pages source is set to "GitHub Actions" by hand. Read the Docs
     was the alternative and was not taken: it would build these documents a
     second way, on its own runner with its own invocation of Sphinx, and the
@@ -29,7 +29,7 @@ Issue 038: The repository has no rendered docs
     whether it is disclosed -- closing those three issues is what ends the
     disclosure.
 :Resolution: d95f545 -- the ``sphinx`` job builds with ``--clean`` and a
-    ``pages`` job deploys from ``master``. Neither has been seen on a runner:
+    ``pages`` job deploys from ``main``. Neither has been seen on a runner:
     the credentials available here cannot push to ``github.com``, so the
     workflow is validated by ``actionlint`` and by running its command locally,
     and the first real run is whatever pushes this.
@@ -237,8 +237,8 @@ Stage 11+ (Django 2.0)  Consider ``sphinxcontrib-django`` for model field tables
                         API reference. It requires Django >= 2.
 CI exists (issue 018)   **Done, with this issue.** ``dev/kasvimuseo docs
                         --clean`` runs on every pull request and every push to
-                        ``master``; a ``pages`` job publishes the HTML from
-                        ``master`` alone, so a pull request builds and fails on
+                        ``main``; a ``pages`` job publishes the HTML from
+                        ``main`` alone, so a pull request builds and fails on
                         a warning without deploying anything. ``-W`` was already
                         on locally. The hook is still the fast local loop, and
                         ``dev/docs-serve`` still shows unmerged branches, which
@@ -299,9 +299,9 @@ The published site needs the same kind of step, for the same reason. A workflow
 cannot switch GitHub Pages on for its own repository, so until somebody sets
 **Settings -> Pages -> Source** to "GitHub Actions" there is nowhere to deploy
 to. The ``pages`` job asks the API whether a Pages site exists and skips the
-deployment with a notice when it does not, so master stays green rather than
+deployment with a notice when it does not, so main stays green rather than
 going red over a switch nobody has flipped; the moment it is flipped, the next
-push to ``master`` publishes, with no change to the workflow. The site is
+push to ``main`` publishes, with no change to the workflow. The site is
 ``https://akaihola.github.io/kasvimuseo/``, and it is in ``README.rst``.
 ``actions/configure-pages`` can enable Pages itself with ``enablement: true``,
 which was deliberately not used: whether these documents are published is the

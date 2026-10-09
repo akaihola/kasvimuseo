@@ -67,7 +67,7 @@ written and is no longer the whole picture. The checkout has two remotes:
 ======================= ============================================ ===========
 Remote                  URL                                          State
 ======================= ============================================ ===========
-``bitbucket``           ``bitbucket.org/akaihola/kasvimuseo``        what ``master`` tracks
+``bitbucket``           ``bitbucket.org/akaihola/kasvimuseo``        what ``main`` tracks
 ``origin``              ``github.com/akaihola/kasvimuseo``           behind
 ======================= ============================================ ===========
 
@@ -177,7 +177,7 @@ for CI.
 
 The 245 in "Problem" above is the count when this was filed. It was 402 while
 this was being written, and it moved twice during the writing, as 016, 024 and
-045 landed on ``master``. The growth rather than the number is this issue's
+045 landed on ``main``. The growth rather than the number is this issue's
 point, which is why the table above counts seconds and not tests.
 
 It has run
@@ -197,8 +197,8 @@ That run also found the one defect in the first version of the workflow, and
 found it the way CI is supposed to: the maintainer saw it before anybody
 explained it. Every job ran twice, because a bare ``push:`` alongside
 ``pull_request:`` matches both events for a branch with a pull request open.
-The push trigger is now limited to ``master``, so a pull request builds its
-merge commit while it is open and ``master`` builds what lands. The gap that
+The push trigger is now limited to ``main``, so a pull request builds its
+merge commit while it is open and ``main`` builds what lands. The gap that
 leaves -- a branch pushed with no pull request open runs nothing -- is exactly
 what ``dev/pre-push`` covers, which is part of why both halves are here.
 

@@ -79,7 +79,7 @@ Run these commands from the task checkout::
     dev/kasvimuseo docs --clean
     python3 .dev/issue084/check_tracker.py
     git diff --check
-    git diff master --name-only -- docs/issues
+    git diff main --name-only -- docs/issues
 
 The checks use this checkout's PostgreSQL cluster and temporary test media.
 The scripts, package inventories, and logs live in ``.dev/issue084/``.
@@ -111,11 +111,11 @@ This section records the completed checks on 2026-09-28, Helsinki time.
 * Chromium passed all 35 browser checks.
   WebKit passed 28 checks and skipped seven Chromium-only touch checks.
 
-* All 78 issue-register and commit-reference tests passed after rebasing onto local ``master``.
+* All 78 issue-register and commit-reference tests passed after rebasing onto local ``main``.
 * The documentation build passed with warnings treated as errors.
   It produced ``.dev/docs/html/index.html``.
-* The tracker audit found only this issue changed against ``master``.
-  Every other tracker file matches ``master`` exactly, including the concurrent issue 085 addition.
+* The tracker audit found only this issue changed against ``main``.
+  Every other tracker file matches ``main`` exactly, including the concurrent issue 085 addition.
   The runtime resolution commit remains reachable from this branch.
 
 The development image is ``e3595ba82173``; the production image is ``0e1579914fb8``.
@@ -144,7 +144,7 @@ The register contains 85 issue files and 85 ranking entries.
 Each issue appears under exactly one ranking heading.
 The generated queue contains two ready issues and 83 parked issues, with no overlap.
 Issue 084 appears only in the parked section.
-Every other tracker file matches ``master`` exactly.
+Every other tracker file matches ``main`` exactly.
 The audit script and its results live in ``.dev/issue084/review_tracker.py`` and ``.dev/issue084/review-tracker.log``.
 
 Deployment records

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Serve the built documentation of every checkout of this repository.
 
-The main checkout and each ``git worktree`` get their own path -- ``/master/``,
+The main checkout and each ``git worktree`` get their own path -- ``/main/``,
 ``/sphinx-docs/``, ... -- served from that checkout's ``.dev/docs/html/``, with
 an index at ``/`` and a switcher on every page that keeps your place when you
 move between them. Checkouts are re-read on every request, so a worktree added
@@ -53,7 +53,7 @@ def checkouts():
     # Checkouts are named by branch, which is what one actually wants to read --
     # but the main checkout's branch changes under you, so it answers at the
     # fixed /main/ as well and a bookmark to it keeps working.
-    if found:
+    if found and found[0]["name"] != "main":
         found[0]["alias"] = "main"
     return found
 

@@ -38,7 +38,7 @@ the sibling layout does not — see the gotchas below.
 **How to apply:** prefer `EnterWorktree`. By hand:
 `git worktree add .claude/worktrees/<name> <branch>`. The branch must not be
 checked out in the base repo first, so if the base is sitting on it, move the
-base back to `master`/`main` before adding the worktree. Gotchas:
+base back to `main` before adding the worktree. Gotchas:
 
 - `git worktree add -b <name>` **creates the branch even when it then fails**.
   A retry dies with "a branch named … already exists"; `git branch -D <name>`
@@ -47,11 +47,11 @@ base back to `master`/`main` before adding the worktree. Gotchas:
   or touching the base checkout after `EnterWorktree` moved the session — needs
   `dangerouslyDisableSandbox: true`. Worktrees inside the repo avoid this.
 
-Rebase task branches onto `master`; never merge `master` into them. Merge the
+Rebase task branches onto `main`; never merge `main` into them. Merge the
 finished branch back with `--no-ff` (see `~/.config/coding-agents/git.md`).
 
 **Merging back does not need a checkout switch**, because the base repo is
-already sitting on `master`: run `git -C ~/prg/<repo> merge --no-ff <branch>`
+already sitting on `main`: run `git -C ~/prg/<repo> merge --no-ff <branch>`
 from the worktree. It needs `dangerouslyDisableSandbox: true` — the sandbox
 allows `~/prg/<repo>/.git` but not the base *working tree*, so the sandboxed
 attempt dies with `unable to unlink old '<file>': read-only file system` for

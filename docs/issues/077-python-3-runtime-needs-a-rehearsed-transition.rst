@@ -72,7 +72,7 @@ The log is ``.dev/rehearsal/review-code.log``.
 The focused regression suite passed 204 tests.
 Both images still matched the runtime lock, and the stored backup hashes matched the recorded evidence.
 The register parser and both rendered tables contained 78 issues, each under exactly one heading per page.
-Only this issue file differs from ``master`` in the issue tracker.
+Only this issue file differs from ``main`` in the issue tracker.
 
 Deployment records
 ------------------

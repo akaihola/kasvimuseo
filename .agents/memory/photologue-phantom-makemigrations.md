@@ -17,7 +17,7 @@ phantom is `photologue/0009_auto_*` altering `photo.date_taken` and
 container) and can be named as a dependency of anything generated beside it.
 
 **Why:** "no pending migrations" cannot be checked with `makemigrations
---dry-run`; use `migrate --list` instead (Django 1.10, on master since
+--dry-run`; use `migrate --list` instead (Django 1.10, on main since
 Stage 8, removed it: use `showmigrations`). Any newly generated kasvimuseo
 migration may carry a dead `('photologue', '0009_auto_…')` dependency.
 
