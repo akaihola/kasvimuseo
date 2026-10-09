@@ -30,7 +30,7 @@ import commit_pointers  # noqa: E402  (needs the path above)
 #: Every one of these has a letter in its first seven characters, because an
 #: abbreviation that does not is one :func:`abbreviate` deliberately
 #: lengthens -- see the test that pins that.
-MASTER = ['1a11111111111111111111111111111111111111',
+MAIN = ['1a11111111111111111111111111111111111111',
           '2b22222222222222222222222222222222222222']
 #: Rewritten by a rebase into ``2b22...``: same patch, same subject.
 OLD = '3c33333333333333333333333333333333333333'
@@ -43,22 +43,22 @@ IN_FLIGHT = '5e55555555555555555555555555555555555555'
 class FakeGit(object):
     """A history, as the questions :mod:`commit_pointers` asks about one.
 
-    ``objects`` is what exists at all, ``master`` what the branch reaches, and
+    ``objects`` is what exists at all, ``main`` what the branch reaches, and
     ``referenced`` what any branch or tag reaches. The rest is per-commit
     detail: its subject, its patch, and the file it holds.
     """
 
-    def __init__(self, objects=None, master=None, referenced=None,
+    def __init__(self, objects=None, main=None, referenced=None,
                  subjects=None, patches=None, files=None, rewrites='',
-                 integration='master'):
+                 integration='main'):
         #: Which name this checkout has the integration branch under. A fresh
-        #: clone has ``origin/master`` and no ``master``.
+        #: clone has ``origin/main`` and no ``main``.
         self.integration = integration
         self.objects = set(objects if objects is not None
-                           else MASTER + [OLD, TAGGED, IN_FLIGHT])
-        self.master = list(master if master is not None else MASTER)
+                           else MAIN + [OLD, TAGGED, IN_FLIGHT])
+        self.main = list(main if main is not None else MAIN)
         self.referenced = set(referenced if referenced is not None
-                              else self.master + [TAGGED, IN_FLIGHT])
+                              else self.main + [TAGGED, IN_FLIGHT])
         self.subjects = subjects or {}
         self.patches = patches or {}
         self.files = files or {}
@@ -77,7 +77,7 @@ class FakeGit(object):
         if args[:2] == ['rev-parse', '--git-path']:
             return '/dev/null/rewritten-commits'
         if args[:3] == ['rev-parse', '--verify', '--quiet']:
-            return (MASTER[0] if args[-1].startswith(self.integration + '^')
+            return (MAIN[0] if args[-1].startswith(self.integration + '^')
                     else None)
         if args[0] == 'rev-parse':
             return '\n'.join(self._resolve(query) for query in args[1:])
@@ -87,13 +87,13 @@ class FakeGit(object):
         if args[:2] == ['rev-list', '--no-walk']:
             return self._rev_list(args[2:])
         if args[:1] == ['rev-list']:
-            return '\n'.join(self.master)
+            return '\n'.join(self.main)
         if args[:2] == ['log', '-1']:
             return self.subjects.get(args[-1], '')
         if args[0] == 'log':
             return '\n'.join('{0} {1}'.format(commit,
                                               self.subjects.get(commit, ''))
-                             for commit in self.master)
+                             for commit in self.main)
         if args[0] == 'diff-tree':
             return self.patches.get(args[-1])
         if args[0] == 'patch-id':
@@ -125,7 +125,7 @@ class FakeGit(object):
     def _rev_list(self, args):
         wanted = args[:args.index('--not')]
         exclusions = args[args.index('--not') + 1:]
-        reached = self.referenced if '--all' in exclusions else set(self.master)
+        reached = self.referenced if '--all' in exclusions else set(self.main)
         return '\n'.join(commit for commit in wanted if commit not in reached)
 
 
@@ -137,14 +137,14 @@ def verdicts(pointers):
     return [item.verdict for item in pointers]
 
 
-def test_a_commit_on_master_has_landed():
-    assert verdicts(commit_pointers.classify([pointer(MASTER[0])],
+def test_a_commit_on_main_has_landed():
+    assert verdicts(commit_pointers.classify([pointer(MAIN[0])],
                                              FakeGit())) == \
         [commit_pointers.LANDED]
 
 
 def test_an_abbreviated_commit_is_resolved_first():
-    assert verdicts(commit_pointers.classify([pointer(MASTER[0][:7])],
+    assert verdicts(commit_pointers.classify([pointer(MAIN[0][:7])],
                                              FakeGit())) == \
         [commit_pointers.LANDED]
 
@@ -176,11 +176,11 @@ def test_a_commit_git_does_not_have_is_gone():
 
 
 def test_an_archive_entry_names_the_file_the_commit_holds():
-    git = FakeGit(files={MASTER[0]: ['docs/gone.rst']})
+    git = FakeGit(files={MAIN[0]: ['docs/gone.rst']})
     landed = commit_pointers.classify(
-        [pointer(MASTER[0], 'docs/gone.rst', 'docs/archive.rst')], git)
+        [pointer(MAIN[0], 'docs/gone.rst', 'docs/archive.rst')], git)
     missing = commit_pointers.classify(
-        [pointer(MASTER[0], 'docs/other.rst', 'docs/archive.rst')], git)
+        [pointer(MAIN[0], 'docs/other.rst', 'docs/archive.rst')], git)
     assert verdicts(landed) == [commit_pointers.LANDED]
     assert verdicts(missing) == [commit_pointers.MISSING_PATH]
 
@@ -195,11 +195,11 @@ def test_only_a_lost_pointer_is_broken():
 def test_the_whole_register_costs_four_questions():
     """A build must not cost one process per pointer."""
     git = FakeGit()
-    commit_pointers.classify([pointer(MASTER[0]), pointer(MASTER[1]),
+    commit_pointers.classify([pointer(MAIN[0]), pointer(MAIN[1]),
                               pointer(OLD), pointer(TAGGED)], git)
     batched = [call for call in git.calls
                if call[0] in ('cat-file', 'rev-list')
-               or call[:2] == ['rev-parse', '{0}^{{commit}}'.format(MASTER[0])]]
+               or call[:2] == ['rev-parse', '{0}^{{commit}}'.format(MAIN[0])]]
     assert len([call for call in git.calls if call[0] == 'rev-list']) == 2
     assert len([call for call in git.calls if call[:2]
                 == ['cat-file', '--batch-check']]) == 1
@@ -212,19 +212,19 @@ def test_a_checkout_that_cannot_answer_says_so_rather_than_failing():
     assert commit_pointers.unverifiable(no_git) is not None
 
 
-def test_a_fresh_clone_is_measured_against_origin_master():
+def test_a_fresh_clone_is_measured_against_origin_main():
     """Continuous integration checks out one branch and keeps the rest as
     ``origin/*``. A check that skipped there would skip where it matters."""
-    git = FakeGit(integration='origin/master')
+    git = FakeGit(integration='origin/main')
     assert commit_pointers.unverifiable(git) is None
-    assert commit_pointers.integration_ref(git) == 'origin/master'
+    assert commit_pointers.integration_ref(git) == 'origin/main'
     assert verdicts(commit_pointers.classify([pointer(OLD)], git)) == \
         [commit_pointers.LOST]
 
 
 def test_a_checkout_with_no_integration_branch_at_all_says_so():
     git = FakeGit(integration='something-else')
-    assert 'master' in commit_pointers.unverifiable(git)
+    assert 'main' in commit_pointers.unverifiable(git)
 
 
 def test_a_shallow_clone_cannot_answer():
@@ -242,8 +242,8 @@ def test_git_falling_over_mid_question_is_not_a_failed_check():
 # The rewrite log, and what a lost pointer became.
 
 def test_the_rewrite_log_is_pairs_of_hashes():
-    log = '{0} {1}\nnot a pair\n'.format(OLD, MASTER[1])
-    assert commit_pointers.parse_rewrite_log(log) == {OLD: MASTER[1]}
+    log = '{0} {1}\nnot a pair\n'.format(OLD, MAIN[1])
+    assert commit_pointers.parse_rewrite_log(log) == {OLD: MAIN[1]}
 
 
 def test_the_rewrite_log_is_followed_through_a_second_rebase():
@@ -252,8 +252,8 @@ def test_the_rewrite_log_is_followed_through_a_second_rebase():
     git = FakeGit()
     lost = commit_pointers.classify([pointer(OLD)], git)
     found = commit_pointers.successors(
-        lost, git, rewrites={OLD: middle, middle: MASTER[1]})
-    assert found == {OLD: (MASTER[1], commit_pointers.BY_LOG)}
+        lost, git, rewrites={OLD: middle, middle: MAIN[1]})
+    assert found == {OLD: (MAIN[1], commit_pointers.BY_LOG)}
 
 
 def test_a_rewrite_chain_that_never_lands_maps_to_nothing():
@@ -264,60 +264,60 @@ def test_a_rewrite_chain_that_never_lands_maps_to_nothing():
 
 
 def test_an_identical_patch_names_the_commit_that_landed():
-    git = FakeGit(patches={OLD: 'the patch', MASTER[1]: 'the patch',
-                           MASTER[0]: 'another patch'})
+    git = FakeGit(patches={OLD: 'the patch', MAIN[1]: 'the patch',
+                           MAIN[0]: 'another patch'})
     lost = commit_pointers.classify([pointer(OLD)], git)
     assert commit_pointers.successors(lost, git, rewrites={}) == \
-        {OLD: (MASTER[1], commit_pointers.BY_PATCH)}
+        {OLD: (MAIN[1], commit_pointers.BY_PATCH)}
 
 
 def test_a_patch_that_landed_twice_names_neither():
     """A cherry-pick, or a revert of a revert: no one successor."""
-    git = FakeGit(patches={OLD: 'the patch', MASTER[0]: 'the patch',
-                           MASTER[1]: 'the patch'})
+    git = FakeGit(patches={OLD: 'the patch', MAIN[0]: 'the patch',
+                           MAIN[1]: 'the patch'})
     lost = commit_pointers.classify([pointer(OLD)], git)
     assert commit_pointers.successors(lost, git, rewrites={}) == {}
 
 
 def test_the_subject_answers_when_the_conflict_changed_the_patch():
-    git = FakeGit(patches={OLD: 'the patch', MASTER[1]: 'resolved differently'},
-                  subjects={OLD: 'fix: the thing', MASTER[1]: 'fix: the thing',
-                            MASTER[0]: 'doc: something else'})
+    git = FakeGit(patches={OLD: 'the patch', MAIN[1]: 'resolved differently'},
+                  subjects={OLD: 'fix: the thing', MAIN[1]: 'fix: the thing',
+                            MAIN[0]: 'doc: something else'})
     lost = commit_pointers.classify([pointer(OLD)], git)
     assert commit_pointers.successors(lost, git, rewrites={}) == \
-        {OLD: (MASTER[1], commit_pointers.BY_SUBJECT)}
+        {OLD: (MAIN[1], commit_pointers.BY_SUBJECT)}
 
 
-def test_a_subject_used_twice_on_master_names_neither():
+def test_a_subject_used_twice_on_main_names_neither():
     """This register has written the same subject on two commits, twice."""
     git = FakeGit(subjects={OLD: 'doc: name the commit',
-                            MASTER[0]: 'doc: name the commit',
-                            MASTER[1]: 'doc: name the commit'})
+                            MAIN[0]: 'doc: name the commit',
+                            MAIN[1]: 'doc: name the commit'})
     lost = commit_pointers.classify([pointer(OLD)], git)
     assert commit_pointers.successors(lost, git, rewrites={}) == {}
 
 
 def test_a_squashed_commit_maps_to_nothing_rather_than_to_a_guess():
     """No patch and no subject match: a person has to read the issue."""
-    git = FakeGit(patches={OLD: 'the patch', MASTER[0]: 'other',
-                           MASTER[1]: 'other again'},
+    git = FakeGit(patches={OLD: 'the patch', MAIN[0]: 'other',
+                           MAIN[1]: 'other again'},
                   subjects={OLD: 'fix: the thing',
-                            MASTER[0]: 'feat: everything at once'})
+                            MAIN[0]: 'feat: everything at once'})
     lost = commit_pointers.classify([pointer(OLD)], git)
     assert commit_pointers.successors(lost, git, rewrites={}) == {}
 
 
 def test_a_pointer_that_is_not_lost_is_never_re_pointed():
-    git = FakeGit(patches={TAGGED: 'the patch', MASTER[1]: 'the patch'})
+    git = FakeGit(patches={TAGGED: 'the patch', MAIN[1]: 'the patch'})
     parked = commit_pointers.classify([pointer(TAGGED)], git)
     assert commit_pointers.successors(parked, git, rewrites={}) == {}
 
 
 def test_the_patch_index_is_built_once_and_only_when_it_is_asked():
-    """Two processes per commit on master is a price paid at most once."""
+    """Two processes per commit on main is a price paid at most once."""
     git = FakeGit(patches=dict((commit, commit) for commit in
-                               MASTER + [OLD]))
-    landed = commit_pointers.classify([pointer(MASTER[0])], git)
+                               MAIN + [OLD]))
+    landed = commit_pointers.classify([pointer(MAIN[0])], git)
     commit_pointers.successors(landed, git, rewrites={})
     assert [call for call in git.calls if call[0] == 'diff-tree'] == []
 
@@ -329,10 +329,10 @@ def test_the_patch_index_is_built_once_and_only_when_it_is_asked():
     ('Fixed in ``3c33333``.', 'Fixed in ``2b22222``.'),
     ('(commit ``3c333333333333``)', '(commit ``2b222222222222``)'),
     ('3c33333 and 3c33333', '2b22222 and 2b22222'),
-    ('Fixed in {0}.'.format(OLD), 'Fixed in {0}.'.format(MASTER[1])),
+    ('Fixed in {0}.'.format(OLD), 'Fixed in {0}.'.format(MAIN[1])),
 ])
 def test_a_pointer_is_rewritten_at_the_length_it_was_written(text, expected):
-    assert commit_pointers.replace_commit(text, OLD, MASTER[1]) == expected
+    assert commit_pointers.replace_commit(text, OLD, MAIN[1]) == expected
 
 
 def test_an_all_digit_abbreviation_is_written_long_enough_to_be_seen():
@@ -359,7 +359,7 @@ def test_an_abbreviation_that_already_reads_as_a_commit_is_left_short():
     'max-age=31536000 is not a commit.',
 ])
 def test_nothing_else_in_the_prose_is_touched(text):
-    assert commit_pointers.replace_commit(text, OLD, MASTER[1]) == text
+    assert commit_pointers.replace_commit(text, OLD, MAIN[1]) == text
 
 
 def test_the_file_to_edit_is_the_first_word_of_the_source():

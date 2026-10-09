@@ -16,7 +16,7 @@ upgrade branch (photologue 2.8.3) rebuilt it mid-session on 2026-08-02 and my
 either not been installed or is abstract` -- 2.8's `sites` m2m against an
 `INSTALLED_APPS` that has no `django.contrib.sites`. Nothing on my branch was
 wrong, and it reproduced on a clean `git stash`, which looks exactly like a
-pre-existing master failure.
+pre-existing main failure.
 
 **Why:** the symptom is a validation error in the application, not a container
 error, so it reads as a code problem.

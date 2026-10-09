@@ -1,8 +1,9 @@
 This index helps contributors find durable development facts. Deployment memories live in the private deployment repository.
 
 - [Use worktrees, never switch the base checkout](use-worktrees-never-switch-base.md). worktree in .claude/worktrees/<name>, or the one the harness already made
-- [Merge to master is gated](merge-to-master-is-gated.md). denied until the user asks; then needs the sandbox off, and must not collide with other sessions' uncommitted base edits
-- [kasvimuseo integrates on master](kasvimuseo-integration-branch-is-master.md). LOCAL master; never rebase onto origin/master (it lags ~30 commits and rewrites siblings' hashes), and ignore harness claims about dev-environment
+- [Merge to main is gated](merge-to-main-is-gated.md). denied until the user asks; then needs the sandbox off, and must not collide with other sessions' uncommitted base edits
+- [kasvimuseo integrates on main](kasvimuseo-integration-branch-is-main.md). LOCAL main; never rebase onto origin/main (it lags ~30 commits and rewrites siblings' hashes), and ignore harness claims about dev-environment
+- [master is an alias for main](master-is-an-alias-for-main.md). a symbolic ref kept for old worktrees since 2026-10-09; pushes to it are refused
 - [Sandbox reaps detached processes](sandbox-reaps-detached-processes.md). setsid+nohup dies when the Bash call ends; make background work resumable
 - [Run the suite in the container](run-the-suite-in-the-container.md). dev/kasvimuseo app test, not uv run pytest; podman needs the sandbox off
 - [Browser checks via a static harness](browser-checks-via-static-harness.md). for the label editor use `app browser-test`; for other pages dump the rendered pages, serve in-process, playwright==1.61.0
@@ -10,11 +11,11 @@ This index helps contributors find durable development facts. Deployment memorie
 - [pasta truncates remote responses](pasta-truncates-remote-responses.md). published container ports cut ~43 KB to a remote client; loopback can never show it
 - [A renumbered issue keeps its old title](renumbered-issue-keeps-its-old-title.md). line 2 says `Issue 058` in the 063 file; docs build and issue-register tests both pass anyway
 - [dev/repoint repairs rebased hashes](repoint-repairs-rebased-hashes.md). write the hash on the branch, re-point after the rebase, merge --no-ff
-- [:Resolution: hash dies in the rebase](resolution-hash-dies-in-the-rebase.md). the build checks object existence, not reachability, so 19 of 75 pointers on master are dead; patch-id recovers most
+- [:Resolution: hash dies in the rebase](resolution-hash-dies-in-the-rebase.md). the build checks object existence, not reachability, so 19 of 75 pointers on main are dead; patch-id recovers most
 - [Asking the maintainer may not land](asking-the-maintainer-may-not-land.md). ask_user_question_kandev may never answer; rule on the evidence and say so in :Decision:
 - [Stale dev image looks like a missing jqm](stale-dev-image-looks-like-a-missing-jqm.md). `ImportError: No module named jqm` means re-run `app build`, not a broken dependency
 - [Docs build lock exits 0](docs-build-lock-exits-zero.md). "a build is already running" is a skipped build reported as success; check for the index.html line
-- [Dev image tag is shared between workspaces](dev-image-tag-is-shared-between-workspaces.md). a sibling task rebuilding kasvimuseo-dev looks like a broken master; pin KASVIMUSEO_IMAGE
+- [Dev image tag is shared between workspaces](dev-image-tag-is-shared-between-workspaces.md). a sibling task rebuilding kasvimuseo-dev looks like a broken main; pin KASVIMUSEO_IMAGE
 - [Podman builds need a log file](podman-builds-need-a-log-file.md). a backgrounded build can end silently with a stale or dangling tag; wait for "Successfully tagged", then `pip list` the image
 - [Browser-test server dies under sibling load](browser-suite-server-dies-under-sibling-load.md). "Connection refused" mid-run is the host OOM-killing gunicorn, not a fixture bug
 - [photologue phantom makemigrations](photologue-phantom-makemigrations.md). makemigrations always proposes a spurious photologue migration (0009 under 3.4.1); check pending with `migrate --list`, generate scoped, check dependencies by hand
@@ -22,5 +23,5 @@ This index helps contributors find durable development facts. Deployment memorie
 - [Issue-register tests are in the suite](issue-register-tests-are-in-the-suite.md). a new docs/issues/ file can turn a green `app test` red; `:Resolution:` is required even when Open
 - [Management checks with test settings](manage-checks-with-test-settings.md). Use temporary media without changing the development link.
 - [Private deployment records](private-deployment-records.md) explains the source and deployment repository boundary.
-- [Ready-now may be done on a branch](ready-now-may-be-done-on-a-branch.md). master lists issues that unmerged branches already finished; check `git branch --no-merged master` first
+- [Ready-now may be done on a branch](ready-now-may-be-done-on-a-branch.md). main lists issues that unmerged branches already finished; check `git branch --no-merged main` first
 - [Task proposal register](task-proposal-register.md) points to proposed work and its descriptions.

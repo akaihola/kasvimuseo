@@ -70,7 +70,7 @@ and through ``ylaneenkasvit/wsgi.py`` in production. Neither path asks Django
 what its installed apps are.
 
 Issue 029 -- the ``setuptools`` ceiling, the real gunicorn constraint -- is
-untouched. Its own fix landed on ``master`` while this branch was open and
+untouched. Its own fix landed on ``main`` while this branch was open and
 writes that constraint into ``requirements/production.txt`` as a comment
 directly above the pin, so the line this issue keeps now has seven lines of
 explanation attached to it saying why it is kept and what happens to it at

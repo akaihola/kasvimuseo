@@ -10,12 +10,12 @@ metadata:
 
 Every kasvimuseo fix writes its own commit hash into the issue file's
 `:Resolution:` field, in the same branch as the fix. Every branch is then
-**rebased** onto `master` before it is merged — see
-[[kasvimuseo-integration-branch-is-master]]. The rebase rewrites the fix commit,
+**rebased** onto `main` before it is merged — see
+[[kasvimuseo-integration-branch-is-main]]. The rebase rewrites the fix commit,
 so the hash the issue file names stops existing: `git show` on it fails and the
 register points at nothing.
 
-Since master's `0ecc30d`, `dev/kasvimuseo docs` does check the hashes — and
+Since main's `0ecc30d`, `dev/kasvimuseo docs` does check the hashes — and
 as of 2026-08-08 it checks **reachability** (branch or tag), not just object
 existence: the Stage 5 docs build failed on Stage 4's dead `b8eb855` with "no
 branch and no tag reaches it", and `dev/repoint --write` repaired it (to
@@ -27,9 +27,9 @@ It happened on 020/021/033 (2026-07-31, merged naming `54cc2fa`, corrected to
 `0c82b49` afterwards).
 
 Recovering a dead pointer works: `git patch-id --stable` over `git rev-list
-master` mapped 16 of 18 dead pointers uniquely, and commit-subject match over
-master got a 17th. The 18th (`55ce0a8` in issue 062) is *deliberately* off
-master, parked on tag `interim-062-option-2` — a pointer reachable from a tag is
+main` mapped 16 of 18 dead pointers uniquely, and commit-subject match over
+main got a 17th. The 18th (`55ce0a8` in issue 062) is *deliberately* off
+main, parked on tag `interim-062-option-2` — a pointer reachable from a tag is
 intentional and must not be "corrected".
 
 **How to apply:** after any rebase, and again immediately before reporting the

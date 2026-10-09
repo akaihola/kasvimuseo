@@ -36,7 +36,7 @@ Metadata fields
     A branch is claimed the moment it is cut, while the issue is still
     ``Accepted`` and the maintainer has not yet agreed it is being worked --
     044 was in exactly that state -- and a status set on a branch is invisible
-    on ``master``, where the next person looks. ``In progress`` also cannot say
+    on ``main``, where the next person looks. ``In progress`` also cannot say
     *where* the work is, which is the one thing that stops the duplicate.
 
 ``Severity``
@@ -80,7 +80,7 @@ Metadata fields
 
 ``Resolution``
     Commit, or the reason for rejecting. Write the commit as soon as you have
-    it, on the branch that makes it. The rebase onto ``master`` then rewrites
+    it, on the branch that makes it. The rebase onto ``main`` then rewrites
     that commit and leaves this field naming one that is on no branch, so run
     ``dev/repoint --write`` after the rebase: it finds each dead pointer and
     names the commit that landed. "A commit named before it lands" below says
@@ -128,8 +128,8 @@ pointer to it goes in ``docs/archive.rst``, one bullet per removed document::
 
 The path and the commit are literals, separated by ``@``, and the reason
 follows ``--`` and wraps onto indented lines. **Name a commit that is already
-on** ``master``, and not one the removing branch makes itself. Any older commit
-that still holds the file will do, and the head of ``master`` at the time of
+on** ``main``, and not one the removing branch makes itself. Any older commit
+that still holds the file will do, and the head of ``main`` at the time of
 writing is the obvious one, so this pointer never needs re-pointing at all.
 
 The build reads that page and asks ``git`` whether each pointer resolves, and
@@ -142,7 +142,7 @@ A commit named before it lands
 
 Write the hash when you have it. Re-point it when the branch lands:
 
-1. ``git rebase master``.
+1. ``git rebase main``.
 2. ``dev/repoint`` -- what each dead pointer became, and how it was worked out.
 3. ``dev/repoint --write`` -- the same, written into the files.
 4. Commit that, then merge the branch with ``--no-ff``. A merge does not
@@ -150,7 +150,7 @@ Write the hash when you have it. Re-point it when the branch lands:
 
 This replaces the rule that said to write nothing until the branch had landed.
 That rule was correct and nobody kept it: eighteen dead pointers reached
-``master`` under it, because "write the fix and the issue file in one commit"
+``main`` under it, because "write the fix and the issue file in one commit"
 and "write the hash after that commit lands" cannot both be obeyed at once.
 A step that runs beats a rule that asks somebody to come back later.
 
@@ -179,7 +179,7 @@ and 059 was re-pointed at ``7200893`` before anybody noticed. ``dev/repoint``
 now writes such a hash long enough to reach a letter; a hash typed by hand
 wants the same care.
 
-**A commit that is deliberately not on** ``master`` **needs a tag.** Issue 062
+**A commit that is deliberately not on** ``main`` **needs a tag.** Issue 062
 names a spike that was measured and abandoned. A tag holds it, so ``git`` can
 still reach it, and the build reads it as parked rather than as rot. Without
 the tag the two are indistinguishable.
@@ -216,13 +216,13 @@ about a status is written down twice, so nothing about a status can drift.
   repairs them. A commit that is only on the branch you are working on passes,
   because a branch reaches it; it is the next rebase that kills it, and
   ``dev/repoint`` that saves it. A checkout that cannot answer -- a shallow
-  clone, one without ``git``, one with no ``master`` -- reports that it skipped
+  clone, one without ``git``, one with no ``main`` -- reports that it skipped
   the check and does not fail.
 
   Reachability is the question, not existence. The checkout that wrote a dead
   pointer keeps the old commit as a dangling object for as long as ``git gc``
   leaves it, so the pointer resolves there and nowhere else. Eighteen of them
-  had accumulated on ``master`` under a check that asked whether the object was
+  had accumulated on ``main`` under a check that asked whether the object was
   present.
 
 Writing about a generated page: name the fields, not the table

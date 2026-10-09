@@ -42,8 +42,8 @@ Facts for a fresh agent
 
 Enough to start without reading anything else.
 
-**The integration branch is** ``master``. There is no ``main``. Work on a
-branch and rebase it onto ``master``; never merge ``master`` into it.
+**The integration branch is** ``main``. Work on a branch and rebase it onto
+``main``; never merge ``main`` into it.
 
 **The suite** is pytest, and it runs inside the application's container,
 because the application is Django 1.5 on Python 2.7::

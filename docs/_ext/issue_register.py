@@ -332,7 +332,7 @@ def parse_archive(text, source='docs/archive.rst'):
             raise IssueRegisterError(
                 '{0} line {1}: cannot read this as an archive entry. Each one '
                 'is ``* ``path`` @ ``commit`` -- why it went``, with the commit '
-                'already on master: {2}'.format(source, number, line.strip()))
+                'already on main: {2}'.format(source, number, line.strip()))
         entries.append([match.group(1), match.group(2), match.group(3).strip()])
     return [tuple(entry) for entry in entries]
 

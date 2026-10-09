@@ -153,7 +153,7 @@ install from a git checkout, and no workflow, script or playbook in this
 repository builds or pushes this image.
 
 **It is not the upgrade plan's doing.** ``kasvi-s02-prod``, built from
-``master`` before this branch existed, has the same hole::
+``main`` before this branch existed, has the same hole::
 
     $ podman run --rm kasvi-s02-prod sh -c \
         'ls /usr/local/lib/python2.7/site-packages/ylaneenkasvit/templates'

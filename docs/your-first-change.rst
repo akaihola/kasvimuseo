@@ -78,7 +78,7 @@ Cut a branch, and say so in the issue file straight away::
 
     :Claimed: branch ``feature/short-name``
 
-That line on ``master`` is what stops two people doing the same work; a status
+That line on ``main`` is what stops two people doing the same work; a status
 you only set on your own branch is invisible to everybody else.
 
 Then write the change and its test. The suite is the safety net for everything
@@ -118,8 +118,7 @@ The documentation build fails on a pointer nobody re-pointed, so this is a
 footnote rather than a trap. :doc:`issues/README` says who runs it and how it
 works out the answer.
 
-Branch onto ``master`` and rebase; never merge ``master`` into your branch.
-There is no ``main`` in this repository.
+Branch onto ``main`` and rebase; never merge ``main`` into your branch.
 
 Found something else on the way?
 ================================

@@ -13,7 +13,7 @@ Issue 064: Nothing fails when coverage drops
     CI has existed since 018, and ``grep -n coverage .github/workflows/*.yml``
     returned nothing
 :Evidence: The coverage run itself --
-    ``dev/kasvimuseo app coverage`` on ``master`` at ``aa4c39a``: 449 tests,
+    ``dev/kasvimuseo app coverage`` on ``main`` at ``aa4c39a``: 449 tests,
     940 statements, 20 missed, 97.87 %, with the table written out in
     ``docs/test-coverage-plan.rst`` under "Where coverage stands". The gate was
     then shown to work in both directions: with three test modules moved out
@@ -94,7 +94,7 @@ not have been wrong to say what it measured, and could not have stayed right.
 What was measured
 =================
 
-On ``master`` at ``aa4c39a``, 2026-08-03, 449 tests, all passing: **940
+On ``main`` at ``aa4c39a``, 2026-08-03, 449 tests, all passing: **940
 statements, 20 missed, 97.87 %**. The full table is in
 ``docs/test-coverage-plan.rst`` under "Where coverage stands", which is dated
 and is the place that number is maintained from now on; the plan's ``Outcome``

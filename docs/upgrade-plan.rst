@@ -1345,21 +1345,21 @@ Appendix B — a note on the working tree
 =======================================
 
 While this analysis was being produced the working copy was switched from branch
-``test-coverage_g78`` to ``master`` by something outside this session. The
+``test-coverage_g78`` to ``main`` by something outside this session. The
 test-coverage work is intact on ``test-coverage_g78``, and **that branch is the
 baseline this document assumes**, because it is where the current test
 infrastructure lives. The two branches are not identical:
 
-* ``requirements/testing.txt`` on ``master`` is still the pre-modernisation
+* ``requirements/testing.txt`` on ``main`` is still the pre-modernisation
   ``django-nose`` / ``nose`` / ``yeam`` stack. The pytest stack described in
   Part 1 (``pytest==3.5.0``, ``pytest-django==2.9.1``, ``coverage``, ``mock``,
   ``pbr``) only exists on ``test-coverage_g78``.
 * ``ylaneenkasvit/test_settings.py`` — the settings module that Part 3 and
   Stage 5 refer to for ``TEST_NAME`` and ``SOUTH_TESTS_MIGRATE`` — exists only
-  on ``test-coverage_g78``. On ``master`` there is only a three-line
+  on ``test-coverage_g78``. On ``main`` there is only a three-line
   ``kasvimuseo/test_settings.py``.
 * ``docs/`` (including ``test-coverage-plan.rst``) exists only on
-  ``test-coverage_g78``. This file was written on ``master``, so it will need
+  ``test-coverage_g78``. This file was written on ``main``, so it will need
   moving or merging.
 * Three small bug fixes in ``kasvimuseo/models.py``, ``admin.py`` and
   ``views.py`` are on ``test-coverage_g78`` only.

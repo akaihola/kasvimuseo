@@ -17,11 +17,11 @@ name: tests
 # A bare `push:` alongside `pull_request:` runs everything twice while a pull
 # request is open, because a branch with a PR on it matches both. Limiting the
 # push trigger to the integration branch gives exactly one run per event: the
-# pull request builds the merge commit while it is open, and master builds
+# pull request builds the merge commit while it is open, and main builds
 # again once something lands on it.
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -191,7 +191,7 @@ jobs:
       # This job is where the check has teeth. A developer's checkout keeps the
       # pre-rebase commit as a dangling object, so a dead pointer resolves
       # there; a fresh clone has only what a reference reaches, which is what
-      # every other reader gets. The runner has no local `master` -- it checks
+      # every other reader gets. The runner has no local `main` -- it checks
       # out one branch and keeps the rest as origin/*, and the check knows to
       # look there too.
       - uses: actions/checkout@v7
@@ -201,12 +201,12 @@ jobs:
       - name: Build the documentation
         run: dev/kasvimuseo docs --clean
 
-      # Only what landed on master is ever published, so a pull request builds
+      # Only what landed on main is ever published, so a pull request builds
       # the documentation and fails on a warning without deploying anything.
       # The condition is on the upload rather than only on the deploy job so a
       # pull request does not carry a 12 MB artifact nobody will read.
       - name: Package the HTML for GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
           path: .dev/docs/html
@@ -220,13 +220,13 @@ jobs:
   # to "GitHub Actions"; no workflow can do that, and turning it on is the
   # maintainer's decision rather than this file's. Until then the API says the
   # repository has no Pages site, the deploy is skipped with a notice, and the
-  # run stays green -- rather than every push to master going red over a switch
+  # run stays green -- rather than every push to main going red over a switch
   # that has not been flipped. Once it is flipped this job starts publishing
   # with no change here.
   publish:
     name: pages
     needs: docs
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       pages: write

@@ -215,7 +215,7 @@ What landed, and what it measures
 =================================
 
 Steps 1 to 3 of the cheap half; step 4 was issue 046 and is already on
-``master``. Measured in headless WebKit and Chromium at the device's metrics --
+``main``. Measured in headless WebKit and Chromium at the device's metrics --
 **this is emulation, not the device**, and the reporter has the iPad and can
 confirm. The pages were rendered by Django, dumped, and served locally, with
 the CDN copies of Vue, axios and sanitize.css replaced by local ones; jQuery
