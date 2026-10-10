@@ -43,3 +43,20 @@ The deployments serve the loader from `static.<catalogue host>` and the catalogu
 
 The private deployment repository deploys a revision with this loader only after this task lands on `main`.
 Its task 5 checks the live embed afterwards.
+
+## Implementation and validation of 2026-10-10
+
+Contributors can check the implemented rule in `README.rst`, "Embedding the species list".
+The loader change and its tests are ready for integration.
+
+- `browser_tests/test_iframe_loader.py` checks actual iframe requests without configuration attributes.
+- All 14 checks passed in Chromium and WebKit with Playwright 1.63.0.
+- The checks cover catalogue, asset, and embedding origins, scheme and port preservation, and removal of one leading label.
+- `dev/kasvimuseo docs` built `.dev/docs/html/index.html` successfully.
+- The pinned Playwright 1.61.0 could not launch this host's 1.63 browser builds.
+- Task 11 owns the dependency update; this change keeps the pin unchanged.
+
+The base checkout contains an unrelated `TASKS.md` backlog reorder.
+The maintainer must resolve that edit before the feature branch can merge safely.
+Task 5 stays In Progress until integration finishes.
+The deployment maintainer then owns the live embed check in the private repository.
