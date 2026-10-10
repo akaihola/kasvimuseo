@@ -36,9 +36,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [7] Preserve vendored dependency license notices
-  <!-- hai:{"updatedAt":"2026-10-10T18:30:56.440Z"} -->
-
 - [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-10T18:28:18.805Z"} -->
 
@@ -46,6 +43,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
   <!-- hai:{"updatedAt":"2026-10-10T18:19:18.837Z"} -->
 
 ## In Progress
+
+- [~] [7] Preserve vendored dependency license notices
+  <!-- hai:{"updatedAt":"2026-10-10T18:30:56.440Z"} -->
 
 - [~] [5] Deduce the catalogue origin in the iframe loader
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
