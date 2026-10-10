@@ -18,8 +18,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [8] Refresh public documentation after the repository split
     - Depends on: [2], [3], [5], [6], [7], [10]
 
-- [4] Track exclusions for private local state
-
 - [16] Move the images and the locks to Python 3.13
     - Depends on: [10], [11]
 
@@ -35,6 +33,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
 
 ## Scheduled
+
+- [4] Track exclusions for private local state
+  <!-- hai:{"updatedAt":"2026-10-10T18:40:19.370Z"} -->
 
 - [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-10T18:28:18.805Z"} -->
