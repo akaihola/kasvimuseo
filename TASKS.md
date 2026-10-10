@@ -12,8 +12,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [5] Deduce the catalogue origin in the iframe loader
-
 - [11] Move the browser tests to Playwright 1.63
 
 - [1] Exclude private settings from release packages
@@ -44,6 +42,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
 
 ## Scheduled
+
+- [5] Deduce the catalogue origin in the iframe loader
+  <!-- hai:{"updatedAt":"2026-10-10T18:06:19.570Z"} -->
 
 ## In Progress
 
