@@ -239,6 +239,23 @@ minute more and a browser, which is more than a push should wait for, so it is
 left to CI and to whoever is changing that page.
 
 
+Before a release
+----------------
+
+This section is for the package maintainer who builds a source distribution or
+a wheel. Build from a clean checkout, then run the artifact check::
+
+    $ python3 setup.py sdist bdist_wheel
+    $ python3 dev/check-release-artifacts dist/*.tar.gz dist/*.whl
+
+The check fails on a machine-specific settings module, on a marker value you
+pass with ``--marker``, and on a missing template, catalog, static file or
+migration. ``setup.py`` names the private modules in ``PRIVATE_MODULES`` and
+drops them from every build; ``kasvimuseo/tests/test_release_artifacts.py``
+proves it with a planted ``local_settings.py`` behind a symlink (task 1). The
+production image runs the same check on the installed package.
+
+
 Documentation
 =============
 

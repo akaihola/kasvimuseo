@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""Reject a release artifact that carries machine-specific settings.
+
+For the package maintainer, before an sdist or a wheel leaves the machine::
+
+    python3 dev/check-release-artifacts dist/*.tar.gz dist/*.whl
+
+Exit status 0 means every artifact passed. Exit status 1 names each failure.
+
+The check has three parts, and each part says what to fix when it fails:
+
+1. No member is a private settings module (``PRIVATE_MODULES`` in
+   ``setup.py``, repeated here because this script runs without setuptools).
+2. With ``--marker TEXT``, no member contains ``TEXT``. The tests plant a
+   marker in a fake ``local_settings.py`` and check that it does not leak
+   through a symlink or a renamed copy.
+3. The files that only reach an install through ``MANIFEST.in`` and
+   ``package_data`` are present (issue 058), so an exclusion that is too wide
+   fails here instead of at the first rendered page.
+
+Only the standard library is used, so the script runs on the host and in both
+container images.
+"""
+
+import argparse
+import fnmatch
+import posixpath
+import sys
+import tarfile
+import zipfile
+
+PRIVATE_MODULES = {
+    'ylaneenkasvit': ['local_settings*.py', 'kajala_settings.py'],
+}
+
+# Relative to the package root inside the artifact.
+REQUIRED_FILES = [
+    'ylaneenkasvit/templates/base.html',
+    'ylaneenkasvit/templates/404.html',
+    'ylaneenkasvit/templates/500.html',
+    'ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html',
+    'ylaneenkasvit/locale/fi/LC_MESSAGES/django.mo',
+    'ylaneenkasvit/common_settings.py',
+    'ylaneenkasvit/ylaneenkasvit_settings.py',
+    'kasvimuseo/locale/fi/LC_MESSAGES/django.mo',
+    'kasvimuseo/migrations/0001_initial.py',
+    'kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js',
+    'kasvimuseo/templates/kasvimuseo/bed-map.html',
+    'jqm/README.rst',
+]
+
+
+def read_members(path):
+    """Return ``{member name: bytes}`` for a wheel or a source distribution."""
+    members = {}
+    if zipfile.is_zipfile(path):
+        with zipfile.ZipFile(path) as archive:
+            for info in archive.infolist():
+                if not info.is_dir():
+                    members[info.filename] = archive.read(info)
+    elif tarfile.is_tarfile(path):
+        with tarfile.open(path) as archive:
+            for info in archive.getmembers():
+                if info.isfile():
+                    members[info.name] = archive.extractfile(info).read()
+                elif info.issym() or info.islnk():
+                    # A link inside an sdist is as much a leak as a file.
+                    members[info.name] = b''
+    else:
+        raise SystemExit('{0}: neither a zip (wheel) nor a tar (sdist)'
+                         .format(path))
+    return members
+
+
+def package_relative(name):
+    """Strip the ``<name>-<version>/`` prefix an sdist puts on each member."""
+    parts = name.split('/')
+    if parts and parts[0].startswith('ylaneenkasvit-'):
+        return '/'.join(parts[1:])
+    return name
+
+
+def problems(path, marker=None):
+    members = read_members(path)
+    relative = {package_relative(name): content
+                for name, content in members.items()}
+    found = []
+    for name in sorted(relative):
+        directory, filename = posixpath.split(name)
+        for pattern in PRIVATE_MODULES.get(directory, []):
+            if fnmatch.fnmatch(filename, pattern):
+                found.append(
+                    '{0}: contains the private settings module {1}. Build'
+                    ' from a clean checkout; PRIVATE_MODULES in setup.py'
+                    ' should have dropped it.'.format(path, name))
+    if marker:
+        needle = marker.encode('utf-8')
+        for name, content in sorted(relative.items()):
+            if needle in content:
+                found.append(
+                    '{0}: {1} contains the marker {2!r}. A private value'
+                    ' leaked into the artifact.'.format(path, name, marker))
+    for required in REQUIRED_FILES:
+        if required not in relative:
+            found.append(
+                '{0}: {1} is missing. MANIFEST.in and package_data in setup.py'
+                ' put it there; check that an exclusion did not widen.'
+                .format(path, required))
+    return found
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
+    parser.add_argument('artifacts', nargs='+', metavar='ARTIFACT',
+                        help='an sdist (.tar.gz) or a wheel (.whl)')
+    parser.add_argument('--marker', help='text that must appear in no member')
+    args = parser.parse_args(argv)
+    failures = []
+    for artifact in args.artifacts:
+        failures.extend(problems(artifact, args.marker))
+    for failure in failures:
+        print(failure, file=sys.stderr)
+    if failures:
+        return 1
+    print('{0} artifact(s) carry no private settings'
+          .format(len(args.artifacts)))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
