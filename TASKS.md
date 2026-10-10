@@ -42,13 +42,13 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [4] Track exclusions for private local state
-  <!-- hai:{"updatedAt":"2026-10-10T18:40:19.370Z"} -->
-
 - [~] [5] Deduce the catalogue origin in the iframe loader
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
 
 ## Completed / Accepted
+
+- [ ] [4] Track exclusions for private local state
+  <!-- hai:{"updatedAt":"2026-10-10T18:40:19.370Z"} -->
 
 - [x] [10] Integrate the Django 5.2 and 6.0 upgrade
   <!-- hai:{"updatedAt":"2026-10-10T18:41:43.157Z"} -->
