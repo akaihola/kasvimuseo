@@ -30,3 +30,9 @@ The prepared public tree has no project LICENSE, COPYING, or equivalent file.
 ## Related work
 
 Review third-party obligations separately in [proposal 07](07-preserve-vendored-license-notices.md).
+
+## Implementation status, 2026-10-10
+
+The maintainer must confirm the project license, copyright holder, and any contributor constraints.
+The repository and available commit subjects record no project license choice.
+Implementation and artifact checks wait for that decision.
