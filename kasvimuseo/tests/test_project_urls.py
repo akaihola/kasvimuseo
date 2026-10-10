@@ -17,6 +17,7 @@ from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Permission, User
 from django.contrib.staticfiles import finders
 from django.urls import resolve, reverse
+from django.test import Client
 from django.test.utils import override_settings
 from django.utils.translation import gettext
 
@@ -80,8 +81,36 @@ def test_logout_ends_the_session(client, user):
     client.login(username=user.username, password=PASSWORD)
     assert '_auth_user_id' in client.session
 
+    response = client.post(reverse('logout'))
+
+    assert response.status_code == 200
+    assert 'Your account has been logged out.' in content(response)
+    assert '_auth_user_id' not in client.session
+
+
+def test_logout_get_keeps_the_session(client, user):
+    client.force_login(user)
+
     response = client.get(reverse('logout'))
 
+    assert response.status_code == 405
+    assert client.session['_auth_user_id'] == str(user.pk)
+
+
+def test_logout_form_requires_csrf_token(user):
+    client = Client(enforce_csrf_checks=True)
+    client.force_login(user)
+    response = client.get(reverse('login'))
+    body = content(response)
+    assert 'action="%s" method="post" data-ajax="false"' % reverse('logout') in body
+    assert 'name="csrfmiddlewaretoken"' in body
+    token = client.cookies['csrftoken'].value
+
+    response = client.post(reverse('logout'))
+    assert response.status_code == 403
+    assert client.session['_auth_user_id'] == str(user.pk)
+
+    response = client.post(reverse('logout'), {'csrfmiddlewaretoken': token})
     assert response.status_code == 200
     assert 'Your account has been logged out.' in content(response)
     assert '_auth_user_id' not in client.session

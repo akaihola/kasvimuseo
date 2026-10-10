@@ -29,5 +29,5 @@ setup(
     install_requires=[line.strip() for line in open('requirements/production.txt')
                       if line.strip() and not line.lstrip().startswith('#')],
     tests_require=['pytest==8.3.5',
-                   'pytest-django==4.8.0']
+                   'pytest-django==4.11.1']
 )

@@ -8,21 +8,18 @@ asgiref==3.12.1
     # via
     #   -r requirements/production.txt
     #   django
-django==4.2.30
+django==6.0.7
     # via
     #   -r requirements/production.txt
     #   django-extensions
+    #   django-photologue
 django-extensions==3.2.3
     # via -r requirements/dev.in
-django-grappelli==3.0.10
+django-grappelli==5.0.0
     # via -r requirements/production.txt
-django-photologue==3.18
+django-photologue==3.20
     # via -r requirements/production.txt
 django-sortedm2m==4.0.0
-    # via
-    #   -r requirements/production.txt
-    #   django-photologue
-exifread==3.5.1
     # via
     #   -r requirements/production.txt
     #   django-photologue
@@ -38,7 +35,7 @@ pillow==12.3.0
     # via
     #   -r requirements/production.txt
     #   django-photologue
-psycopg2-binary==2.9.10
+psycopg2-binary==2.9.12
     # via -r requirements/production.txt
 sqlparse==0.5.5
     # via

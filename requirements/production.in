@@ -1,10 +1,9 @@
-# This file defines the Stage 17 runtime pins for package maintainers.
-# See docs/issues/086-django-4-2-runtime-upgrade.rst for the decision.
-django==4.2.30
-django-grappelli==3.0.10
+# This file defines the Stage 19 runtime pins for package maintainers.
+# See docs/issues/088-django-6-0-runtime-upgrade.rst for the decision.
+django==6.0.7
+django-grappelli==5.0.0
 gunicorn==23.0.0
-psycopg2-binary==2.9.10
-django-photologue==3.18
+psycopg2-binary==2.9.12
+django-photologue==3.20
 django-sortedm2m==4.0.0
-ExifRead==3.5.1
 Pillow==12.3.0

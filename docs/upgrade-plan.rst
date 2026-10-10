@@ -433,6 +433,18 @@ records the callback change and its PostgreSQL check. The version boundary is:
 ``psycopg2-binary`` availability: 2.7.7 (py2.6+), 2.8.6 (py2.7 – 3.8),
 2.9.x (py3.6+, latest 2.9.12 requires 3.9+).
 
+The database server has a minimum too. Django checks the server version each
+time it opens a connection, and it raises ``NotSupportedError`` for an older
+server. The minimum is ``minimum_database_version`` in
+``django/db/backends/postgresql/features.py``:
+
+* Django 4.2: PostgreSQL 12
+* Django 5.2 and 6.0: PostgreSQL 14
+
+The development cluster uses the host's PostgreSQL, so a passing suite does not
+prove that a deployment target is new enough. Dump and restore an older
+database into PostgreSQL 14 or later before you deploy Stage 18.
+
 2.6 Everything else
 -------------------
 
@@ -969,7 +981,8 @@ Use the dependency constraints above and the resolved locks in Appendix A.
 Stage 18 — Django 4.2 → 5.0.14 → 5.1.15 → 5.2.16 (LTS)
 ------------------------------------------------------
 
-:Status: Next
+:Status: Done
+:Resolution: Issue 087
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -977,7 +990,8 @@ Use the dependency constraints above and the resolved locks in Appendix A.
 Stage 19 — Django 5.2 → 6.0.7 (current)
 ---------------------------------------
 
-:Status: Planned
+:Status: Done
+:Resolution: Issue 088
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
