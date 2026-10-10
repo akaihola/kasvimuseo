@@ -18,9 +18,13 @@
 *.egg-info
 /.idea
 /.venv
-/.dev/
+# Throwaway local state (README.rst, "Development setup"). No trailing slash:
+# `/.dev/` matches only a directory, and a checkout may keep `.dev` as a
+# symlink to a directory elsewhere (task 4).
+/.dev
 __pycache__
 /ylaneenkasvit/local_settings.py
+/ylaneenkasvit/local_settings.*.py
 /kasvimuseo/.pytest_cache/
 /browser_tests/.pytest_cache/
 /.pytest_cache/
@@ -33,7 +37,6 @@ __pycache__
 # Git worktrees live inside the repository, so they stay in the sandbox's
 # writable root and cannot be orphaned somewhere outside it.
 /.worktrees/
-/.claude/worktrees/
 # Private deployment files belong in the separate deployment repository.
 /ansible/
 /ansible.cfg
@@ -45,4 +48,8 @@ __pycache__
 .env.*
 /.serena/
 /.codegraph/
-/.claude/settings.local.json
+# Agent and editor configuration is machine-specific. Shared agent memory is
+# in .agents/memory/ (AGENTS.md), so nothing under .claude/ is tracked.
+/.claude/
+/.mcp.json
+/.vscode/
