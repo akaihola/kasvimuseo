@@ -41,13 +41,13 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-10T18:28:18.805Z"} -->
 
-- [1] Exclude private settings from release packages
-  <!-- hai:{"updatedAt":"2026-10-10T18:19:53.455Z"} -->
-
 - [11] Move the browser tests to Playwright 1.63
   <!-- hai:{"updatedAt":"2026-10-10T18:19:18.837Z"} -->
 
 ## In Progress
+
+- [~] [1] Exclude private settings from release packages
+  <!-- hai:{"updatedAt":"2026-10-10T18:19:53.455Z"} -->
 
 - [~] [5] Deduce the catalogue origin in the iframe loader
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->

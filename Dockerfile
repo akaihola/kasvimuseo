@@ -83,6 +83,21 @@ RUN set -e; \
         }; \
     done
 
+# No machine-specific settings module may reach the image (task 1).
+# `.containerignore` keeps them out of the build context and `setup.py`'s
+# `build_py` drops them from the package, so a hit here means one of the two
+# lost its entry.
+RUN set -e; \
+    site=/install/lib/python3.12/site-packages/ylaneenkasvit; \
+    for f in "$site"/local_settings*.py "$site"/kajala_settings.py; do \
+        test ! -e "$f" || { \
+            echo "task 1: $f is a private settings module and must not be" \
+                 "installed. Check .containerignore and PRIVATE_MODULES in" \
+                 "setup.py" >&2; \
+            exit 1; \
+        }; \
+    done
+
 FROM python:3.12.12-alpine3.22
 RUN apk add libjpeg-turbo libpq && rm -rf /var/cache/apk
 COPY --from=builder /install /usr/local
