@@ -12,8 +12,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [2] Keep contributor memories portable
-
 - [3] Replace operational data and personal examples
     - Depends on: [10]
 
@@ -41,6 +39,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
 
 ## Scheduled
+
+- [2] Keep contributor memories portable
+  <!-- hai:{"updatedAt":"2026-10-10T18:25:10.153Z"} -->
 
 - [1] Exclude private settings from release packages
   <!-- hai:{"updatedAt":"2026-10-10T18:19:53.455Z"} -->
