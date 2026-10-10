@@ -12,6 +12,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
+- [11] Move the browser tests to Playwright 1.63
+
 - [1] Exclude private settings from release packages
 
 - [2] Keep contributor memories portable
@@ -28,7 +30,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 - [4] Track exclusions for private local state
 
-- [11] Move the browser tests to Playwright 1.63
+- [16] Move the images and the locks to Python 3.13
+    - Depends on: [10], [11]
 
 - [14] Close the runtime upgrade programme (issue 036)
     - Depends on: [10]
@@ -70,9 +73,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 [13]: docs/tasks/13-finish-the-ipad-label-checks.md
 [14]: docs/tasks/14-close-the-runtime-upgrade-programme.md
 [15]: docs/tasks/15-use-main-base-branch.md
+[16]: docs/tasks/16-move-the-images-and-locks-to-python-3-13.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 -->
 
 ---
 
