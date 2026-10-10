@@ -44,15 +44,15 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [7] Preserve vendored dependency license notices
-  <!-- hai:{"updatedAt":"2026-10-10T18:30:56.440Z"} -->
-
 - [~] [5] Deduce the catalogue origin in the iframe loader
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
 
 - [~] [10] Integrate the Django 5.2 and 6.0 upgrade
 
 ## Completed / Accepted
+
+- [ ] [7] Preserve vendored dependency license notices
+  <!-- hai:{"updatedAt":"2026-10-10T18:30:56.440Z"} -->
 
 - [ ] [1] Exclude private settings from release packages
   <!-- hai:{"updatedAt":"2026-10-10T18:19:53.455Z"} -->
