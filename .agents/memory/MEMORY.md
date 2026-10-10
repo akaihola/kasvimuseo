@@ -16,4 +16,5 @@ This index helps contributors find portable development guidance. Each note link
 - [Repair commit pointers after rebasing](repoint-repairs-rebased-hashes.md).
 - [Keep deployment records private](private-deployment-records.md).
 - [Find proposed work](task-proposal-register.md).
+- [Record copied files in the third-party notices](record-copied-files-in-third-party-notices.md).
 - [Check template comments and issue fields](two-syntax-traps-django15-and-docinfo.md).

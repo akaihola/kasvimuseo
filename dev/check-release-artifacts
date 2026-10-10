@@ -16,7 +16,8 @@ The check has three parts, and each part says what to fix when it fails:
    through a symlink or a renamed copy.
 3. The files that only reach an install through ``MANIFEST.in`` and
    ``package_data`` are present (issue 058), so an exclusion that is too wide
-   fails here instead of at the first rendered page.
+   fails here instead of at the first rendered page. The third-party license
+   notices are in the same list (task 7).
 
 Only the standard library is used, so the script runs on the host and in both
 container images.
@@ -47,6 +48,11 @@ REQUIRED_FILES = [
     'kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js',
     'kasvimuseo/templates/kasvimuseo/bed-map.html',
     'jqm/README.rst',
+    # Third-party license notices (task 7); docs/third-party-notices.rst
+    # lists them.
+    'jqm/LICENSE',
+    'kasvimuseo/static/js/kasvimuseo/fitty.min.js.LICENSE.txt',
+    'kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js.LICENSE.txt',
 ]
 
 

@@ -101,4 +101,5 @@ out -- what the words mean, what to run, and what a finished change looks like.
    :caption: Reference
 
    api
+   third-party-notices
    archive

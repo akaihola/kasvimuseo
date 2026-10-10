@@ -56,6 +56,7 @@ setup(
                                  'templates/**/*',
                                  'templates/**/**/*'],
                   'jqm': ['README.rst',
+                          'LICENSE',
                           'static/**/*',
                           'templates/**/*']},
     install_requires=[line.strip() for line in open('requirements/production.txt')

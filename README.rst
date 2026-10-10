@@ -145,6 +145,8 @@ if you have them already, or install them once::
 
 The page loads Vue, axios and sanitize.css from CDNs; the tests answer those
 requests from ``browser_tests/vendor/`` instead, so a run needs no network.
+``docs/third-party-notices.rst`` records the version and the license of each
+copy.
 
 
 Continuous integration
@@ -249,9 +251,11 @@ a wheel. Build from a clean checkout, then run the artifact check::
     $ python3 dev/check-release-artifacts dist/*.tar.gz dist/*.whl
 
 The check fails on a machine-specific settings module, on a marker value you
-pass with ``--marker``, and on a missing template, catalog, static file or
-migration. ``setup.py`` names the private modules in ``PRIVATE_MODULES`` and
-drops them from every build; ``kasvimuseo/tests/test_release_artifacts.py``
+pass with ``--marker``, and on a missing template, catalog, static file,
+migration or third-party license notice. ``docs/third-party-notices.rst``
+lists every copied component with its license and notice file (task 7).
+``setup.py`` names the private modules in ``PRIVATE_MODULES`` and drops them
+from every build; ``kasvimuseo/tests/test_release_artifacts.py``
 proves it with a planted ``local_settings.py`` behind a symlink (task 1). The
 production image runs the same check on the installed package.
 
