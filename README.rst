@@ -18,6 +18,10 @@ Run these commands from the checkout::
 Open http://localhost:8000/.
 The development database and generated documentation live under ``.dev/``.
 The application stores uploaded photos under ``media/``.
+``.gitignore`` keeps ``.dev``, ``.claude/``, and the machine-specific settings
+modules out of Git. ``.containerignore`` keeps them out of the Podman build
+context. ``kasvimuseo/tests/test_ignore_rules.py`` checks both files with the
+committed rules alone (task 4).
 
 Use ``dev/kasvimuseo app run --runserver`` for automatic Python reloads.
 Use ``dev/kasvimuseo app manage <command>`` for Django management commands.

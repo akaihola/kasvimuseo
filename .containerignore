@@ -1,8 +1,15 @@
-.dev/
+# Podman, the supported build tool (README.rst, "Development setup"), reads
+# this file. No trailing slash on .dev: it may be a symlink (task 4).
+.dev
 .git/
+.worktrees/
+.githooks/
 media/
 static/
-*.pyc
+# A bare `*.ext` is a root-level rule here, unlike in .gitignore; `**/`
+# makes it reach every directory (task 4).
+**/*.pyc
+**/__pycache__/
 # Untracked, machine-local, and copied into the production image by
 # `COPY ylaneenkasvit` in Dockerfile unless it is excluded here: a developer's
 # copy switches DEBUG on and opens ALLOWED_HOSTS, and since upgrade plan Stage
@@ -12,8 +19,7 @@ static/
 # development image is unaffected either way: it has no app code at all and
 # reads the working copy from the /src bind mount, which is where its
 # local_settings.py is supposed to come from.
-ylaneenkasvit/local_settings.py
-ylaneenkasvit/local_settings.*.py
+ylaneenkasvit/local_settings*.py
 ylaneenkasvit/kajala_settings.py
 # Exclude private files from container build contexts.
 ansible/
@@ -22,8 +28,11 @@ ansible.cfg
 .claude/
 .serena/
 .codegraph/
-*.sql
-*.sql.gz
-*.dump
-.env
-.env.*
+.mcp.json
+.vscode/
+.idea/
+**/*.sql
+**/*.sql.gz
+**/*.dump
+**/.env
+**/.env.*
