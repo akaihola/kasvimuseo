@@ -193,11 +193,13 @@ A fourth job, ``pages``, runs only on a push to ``main`` and publishes what
 ``sphinx`` built. A pull request builds the documentation and fails on a warning
 like any other check, and deploys nothing.
 
-**The workflow only sees the GitHub remote**, ``origin``, which has been the
-mirror rather than the one ``main`` tracks. Work that is only ever pushed to
-``bitbucket`` is not tested by anything except the hook below::
+**GitHub is the only remote**, ``origin``. The maintainer dropped the Bitbucket
+mirror on 2026-10-09. CI tests a change only after it reaches GitHub::
 
     $ git push origin main
+
+Until then, only the commands that you run test it. The hook below runs the
+suite for you before each push.
 
 When a run goes red
 -------------------
