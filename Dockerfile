@@ -65,6 +65,9 @@ RUN pip install --prefix=/install /kasvimuseo
 # file a level deeper than the existing entries is silently not installed --
 # and it is one grappelli 2.5 requests on every admin page (upgrade plan Stage
 # 3), so dropping it is a 404 per page and an English date picker.
+#
+# The last three are the third-party license notices (task 7). The release
+# must carry them; docs/third-party-notices.rst lists the copies they cover.
 RUN set -e; \
     site=/install/lib/python3.12/site-packages; \
     for f in ylaneenkasvit/templates/base.html \
@@ -73,10 +76,13 @@ RUN set -e; \
              ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html \
              ylaneenkasvit/locale/fi/LC_MESSAGES/django.mo \
              kasvimuseo/locale/fi/LC_MESSAGES/django.mo \
-             kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js; do \
+             kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js \
+             jqm/LICENSE \
+             kasvimuseo/static/js/kasvimuseo/fitty.min.js.LICENSE.txt \
+             kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js.LICENSE.txt; do \
         test -r "$site/$f" || { \
-            echo "issue 058: $site/$f is missing from the installed package." \
-                 "MANIFEST.in is the only thing that puts it there, so check" \
+            echo "issue 058, task 7: $site/$f is missing from the installed package." \
+                 "MANIFEST.in or setup.py package_data puts it there, so check" \
                  "that it is still COPYed into /kasvimuseo above and still" \
                  "names this file" >&2; \
             exit 1; \

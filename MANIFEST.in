@@ -7,6 +7,8 @@ graft kasvimuseo/static
 graft jqm/templates
 graft jqm/static
 include jqm/README.rst
+# The MIT notice for the vendored django-jqm (task 7).
+include jqm/LICENSE
 # Machine-specific settings never go into a source distribution (task 1).
 # setup.py's build_py drops them from the module list; this is the second gate.
 exclude ylaneenkasvit/local_settings*.py

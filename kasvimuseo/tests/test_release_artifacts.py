@@ -142,7 +142,13 @@ def test_the_required_data_files_are_in_the_artifact(artifacts, kind):
                      'ui.datepicker-fi.js',
                      'kasvimuseo/templates/kasvimuseo/bed-map.html',
                      'jqm/templates/jqm/login.html',
-                     'jqm/README.rst']:
+                     'jqm/README.rst',
+                     # The license notices of task 7.
+                     'jqm/LICENSE',
+                     'kasvimuseo/static/js/kasvimuseo/'
+                     'fitty.min.js.LICENSE.txt',
+                     'kasvimuseo/static/grappelli/jquery/i18n/'
+                     'ui.datepicker-fi.js.LICENSE.txt']:
         assert required in names, required
 
 

@@ -33,6 +33,7 @@ Examples include [issue 041](../issues/041-duplicate-observation-numbers-crash-t
 ## Related work
 
 Coordinate attribution changes with [proposal 07](07-preserve-vendored-license-notices.md).
+Task 7 lists the notice files in `docs/third-party-notices.rst`; keep the author names and addresses inside them.
 
 Update of 2026-10-06: task 10 adds issues 087, 088, and 089. Issue 089 records an observation from the production dump of 2026-08-26.
 Include those issues in step 1.

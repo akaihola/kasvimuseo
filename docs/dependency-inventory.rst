@@ -1868,6 +1868,7 @@ package and a version (issue 031, ``Fixed``):
     files are in ``jqm/`` in this repository, with the URL, the version and the
     date in ``jqm/README.rst``. It is therefore out of this inventory in the
     strongest sense — it is not a package any resolver ever sees again.
+    :doc:`third-party-notices` records its license and the other copies.
 
 ``flax`` — **gone**
     ``git+https://github.com/akaihola/django-flax`` at a pinned commit. It was

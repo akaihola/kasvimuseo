@@ -75,3 +75,12 @@ builds and the production install now need no network beyond PyPI, and a page
 rendered from these templates still asks the CDN for its scripts. Bringing
 those two files in as well would be a separate change with a different
 argument.
+
+License
+=======
+
+Upstream declares the MIT License in its ``setup.py`` and ships no license
+text. ``LICENSE`` beside this file supplies that text, and the package data in
+``setup.py`` and ``MANIFEST.in`` carry it into every release artifact.
+``docs/third-party-notices.rst`` lists this copy with the other vendored
+components, including the one local change to ``templates/jqm/simple.html``.
