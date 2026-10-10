@@ -2,9 +2,11 @@ if (document.location.search == '?debug=1') {
     document.write('<div id="planted-species-iframe-debug" style="position:absolute;width:233px;height:10em;overflow:scroll;margin-left:-233px;background:#cff;"></div>');
 };
 var plantedSpeciesScript = document.currentScript;
+var plantedSpeciesSite = new URL(plantedSpeciesScript.src);
+plantedSpeciesSite.hostname = plantedSpeciesSite.hostname.replace(/^static\./, '');
 var plantedSpeciesFrame = document.createElement('iframe');
 plantedSpeciesFrame.src = new URL('/kasvimuseo/planted-species/',
-    plantedSpeciesScript.getAttribute('data-site-url') || window.location.origin).href;
+    plantedSpeciesSite.origin).href;
 plantedSpeciesFrame.width = '547px';
 plantedSpeciesFrame.height = '10000px';
 plantedSpeciesFrame.frameBorder = '0';
