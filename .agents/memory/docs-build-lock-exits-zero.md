@@ -1,22 +1,9 @@
----
-name: docs-build-lock-exits-zero
-description: "A concurrent `dev/kasvimuseo docs` prints \"a build is already running\" and exits 0 without building"
-metadata: 
-  node_type: memory
-  type: project
-  originSessionId: 937bfb98-ee2c-4eae-9e7d-97e9357f22cd
-  modified: 2026-08-01T15:58:29.811Z
----
+# Check documentation build output
 
-`dev/docs-build` takes an `flock`; a second invocation while one is running
-prints `docs: a build is already running, marked for rebuild` and **exits 0**
-without building anything. So "docs build passed" can be a lie if another docs
-run (or an earlier backgrounded one) still holds the lock.
+This note helps contributors distinguish a completed documentation build from a queued rebuild.
 
-**Why:** the warnings-as-errors docs build is one of the three acceptance
-commands, and a skipped build is indistinguishable from a clean one by exit
-code alone.
-
-**How to apply:** capture the output, not just the status, and require the
-final `docs: .../index.html` line before calling it green. Related:
-[[run-the-suite-in-the-container]], [[resolution-hash-dies-in-the-rebase]].
+Run `dev/kasvimuseo docs --clean` and check its output.
+The final `docs: .../index.html` line identifies the generated index.
+A concurrent invocation can report `docs: a build is already running, marked for rebuild` and exit successfully.
+That message means this invocation did not complete a build.
+Wait for the active build and check its result before reporting success.

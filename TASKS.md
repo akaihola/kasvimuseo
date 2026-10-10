@@ -49,7 +49,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 ## In Progress
 
 - [~] [2] Keep contributor memories portable
-  <!-- hai:{"updatedAt":"2026-10-10T18:25:52.084Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-10T18:27:52.775Z"} -->
 
 - [~] [5] Deduce the catalogue origin in the iframe loader
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
