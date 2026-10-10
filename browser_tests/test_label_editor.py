@@ -129,20 +129,11 @@ def test_a_label_whose_photo_never_loads_still_fits_its_text(page, base_url):
     assert len(fitted_sizes(page)) == 2
 
 
-def test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to(page, engine,
-                                                             base_url):
-    """Issue 062, which is what running this suite in WebKit found.
+def test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to(page, base_url):
+    """Both engines draw the size fitty writes inside ``zoom: 0.5``.
 
-    fitty writes an inline ``font-size``; inside issue 046's ``zoom: 0.5``
-    WebKit refuses to draw text smaller than 9 used pixels, so a name fitted
-    anywhere between 9px and 18px is drawn at 18px -- as much as twice the size
-    it was fitted to, on the engine every report about this page came from.
-    Chromium draws what fitty asked for.
-
-    This pins what each engine does *today*, so 062 cannot be fixed without
-    coming back here. It is deliberately a comparison rather than a number: the
-    floor is a WebKit setting and could move, while "drawn larger than fitted"
-    is the defect either way.
+    Issue 062 records the earlier WebKit floor and the change in build 2359.
+    Keep the fit below the earlier 18px floor so this check detects its return.
     """
     page.route(re.compile(r'/media/'), lambda route: route.abort())
     page.route('**' + DATA_URL, make_names_need_fitting)
@@ -158,12 +149,8 @@ def test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to(page, engine,
                 parseFloat(getComputedStyle(el).fontSize)];
     }""")
 
-    assert fitted < 18, 'this test says nothing unless the fit is under the' \
-        ' floor: {0}'.format(fitted)
-    if engine == 'webkit':
-        assert drawn > fitted, (fitted, drawn)
-    else:
-        assert drawn == fitted, (fitted, drawn)
+    assert fitted < 18, (fitted, drawn)
+    assert drawn == fitted, (fitted, drawn)
 
 
 def test_the_ipad_fits_a_label_whose_photo_never_loads(ipad_page, base_url):
