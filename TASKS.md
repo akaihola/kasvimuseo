@@ -12,26 +12,26 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [11] Move the browser tests to Playwright 1.63
-
 - [1] Exclude private settings from release packages
-
-- [6] Declare the project license
-
-- [4] Track exclusions for private local state
 
 - [2] Keep contributor memories portable
 
 - [3] Replace operational data and personal examples
     - Depends on: [10]
 
-- [7] Preserve vendored dependency license notices
+- [6] Declare the project license
 
-- [14] Close the runtime upgrade programme (issue 036)
-    - Depends on: [10]
+- [7] Preserve vendored dependency license notices
 
 - [8] Refresh public documentation after the repository split
     - Depends on: [2], [3], [5], [6], [7], [10]
+
+- [4] Track exclusions for private local state
+
+- [11] Move the browser tests to Playwright 1.63
+
+- [14] Close the runtime upgrade programme (issue 036)
+    - Depends on: [10]
 
 - [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
@@ -43,10 +43,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [5] Deduce the catalogue origin in the iframe loader
-  <!-- hai:{"updatedAt":"2026-10-10T18:06:19.570Z"} -->
-
 ## In Progress
+
+- [~] [5] Deduce the catalogue origin in the iframe loader
+  <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
 
 - [~] [10] Integrate the Django 5.2 and 6.0 upgrade
 
