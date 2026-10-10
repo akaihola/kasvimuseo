@@ -6,7 +6,7 @@ This index helps contributors find durable development facts. Deployment memorie
 - [master is an alias for main](master-is-an-alias-for-main.md). a symbolic ref kept for old worktrees since 2026-10-09; pushes to it are refused
 - [Sandbox reaps detached processes](sandbox-reaps-detached-processes.md). setsid+nohup dies when the Bash call ends; make background work resumable
 - [Run the suite in the container](run-the-suite-in-the-container.md). dev/kasvimuseo app test, not uv run pytest; podman needs the sandbox off
-- [Browser checks via a static harness](browser-checks-via-static-harness.md). for the label editor use `app browser-test`; for other pages dump the rendered pages, serve in-process, playwright==1.61.0
+- [Browser checks via a static harness](browser-checks-via-static-harness.md) describes browser checks and package selection.
 - [Two silent syntax traps](two-syntax-traps-django15-and-docinfo.md). multi-line {# #} renders; a blank line in an issue's docinfo hides the fields below
 - [pasta truncates remote responses](pasta-truncates-remote-responses.md). published container ports cut ~43 KB to a remote client; loopback can never show it
 - [A renumbered issue keeps its old title](renumbered-issue-keeps-its-old-title.md). line 2 says `Issue 058` in the 063 file; docs build and issue-register tests both pass anyway

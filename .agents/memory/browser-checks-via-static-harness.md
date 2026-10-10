@@ -26,12 +26,10 @@ same Playwright script (a backgrounded server is unreachable — see
 **Why:** unpkg/cdnjs are outside the sandbox's allowlist, so vue.min.js,
 axios.min.js and sanitize.css must be fetched from
 `raw.githubusercontent.com` (sanitize.css lives under `dist/` at tag `v2.0.0`).
-The playwright PyPI version must match the Nix browsers at
-`$PLAYWRIGHT_BROWSERS_PATH`; the pin lives in the file `$UV_CONSTRAINT` points
-at (currently `playwright~=1.61.0`, chromium-1228) — but kandev-spawned agents
-get `UV_CONSTRAINT` unset, so read it from
-`/nix/store/*-playwright-constraints.txt` (newest generation) instead of probing
-versions. See `~/.config/coding-agents/python.md` § Playwright Version Pinning.
+The Playwright package must match the browsers at
+`$PLAYWRIGHT_BROWSERS_PATH`. Use `browser_tests/requirements.txt` for the package
+version. Read `README.rst`, "Continuous integration", for browser installation.
+Issue 062, "Browser update, 2026-10-10", records the changed WebKit result.
 
 Better than stripping the tags by hand: a throwaway pytest module that builds
 data with `kasvimuseo/tests/factories.py`, GETs each page with the Django test
@@ -52,7 +50,7 @@ Three gotchas that cost a cycle each:
   earlier, so the "printed" PDF silently gets the screen stylesheet. Print from
   a fresh context.
 
-**How to apply:** `uv run -q --with playwright==1.61.0 python3 script.py`.
+**How to apply:** `uv run --no-project --with-requirements browser_tests/requirements.txt python3 script.py`.
 `pdftotext` is not installed; `--with pypdf` and `PdfReader(...).extract_text()`
 read the PDF back.
 `page.pdf(prefer_css_page_size=True)` plus `pdfplumber` measures the printed

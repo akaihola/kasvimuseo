@@ -8,12 +8,10 @@ Issue 062: WebKit draws fitted label text at a nine-pixel floor
 :Reported: 2026-08-02
 :Source: Measured while running the browser suite in WebKit for the first time
     (issue 061)
-:Evidence: ``browser_tests/test_label_editor.py`` --
-    ``test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to`` pins what each
-    engine does: in Chromium the drawn size equals the inline size fitty wrote,
-    in WebKit it is strictly larger. It stays, and it is what will notice if
-    the floor ever moves in either engine. The sweep behind it is in "Measured"
-    below
+:Evidence: ``browser_tests/test_label_editor.py`` contains
+    ``test_a_fitted_name_is_drawn_at_the_size_it_was_fitted_to``.
+    See "Measured" for the original floor and
+    "Browser update, 2026-10-10" for the result with Playwright 1.63
 :Depends on: (none)
 :Blocks: (none)
 :Related: 046 -- the ``zoom: 0.5`` this is entirely a consequence of
@@ -40,6 +38,23 @@ Issue 062: WebKit draws fitted label text at a nine-pixel floor
     code changed. The option-2 implementation, green in both engines, is kept
     on the tag ``interim-062-option-2`` (commit ``55ce0a8``) and costed out
     below, so reopening this is a cherry-pick rather than an investigation
+
+Browser update, 2026-10-10
+==========================
+
+This update helps contributors interpret the retained test after the browser upgrade.
+It records the current result without changing the maintainer's rejection.
+
+Playwright 1.63 uses WebKit build 2359 on the development host.
+The retained test fits the first species name to 16px inside ``zoom: 0.5``.
+WebKit now reports a computed size of 16px, equal to the inline size.
+Chromium also reports 16px.
+The earlier 18px floor no longer affects this case.
+
+The test now requires equal fitted and drawn sizes in both engines.
+It keeps the fitted size below the earlier 18px floor to detect its return.
+The original measurements below remain historical evidence.
+This browser result adds no new iPad evidence.
 
 Problem
 =======
