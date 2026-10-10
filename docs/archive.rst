@@ -27,3 +27,27 @@ Removed
 
 * ``README.rst`` @ ``b39ce70`` -- records the documentation before the deployment split.
   The private deployment repository now owns operations instructions and the imported source snapshots.
+
+* ``.agents/memory/asking-the-maintainer-may-not-land.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/master-is-an-alias-for-main.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/media-symlink-breaks-app-manage.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/merge-to-main-is-gated.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/ready-now-may-be-done-on-a-branch.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/resolution-hash-dies-in-the-rebase.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/sandbox-reaps-detached-processes.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.
+
+* ``.agents/memory/stale-dev-image-looks-like-a-missing-jqm.md`` @ ``04255a1`` -- the note contained obsolete or environment-specific guidance.
+  Task 2 preserved the original privately before removal.

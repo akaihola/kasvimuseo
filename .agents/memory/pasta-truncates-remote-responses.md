@@ -1,29 +1,11 @@
----
-name: pasta-truncates-remote-responses
-description: "rootless podman's published ports (pasta) truncate mid-size HTTP responses to remote clients; loopback never shows it"
-metadata: 
-  node_type: memory
-  type: project
-  originSessionId: f81b28b1-0608-43d2-b47a-0f01c062a1ab
-  modified: 2026-07-31T05:00:29.876Z
----
+# Check container port forwarding
 
-A container port published by rootless podman (`-p 8000:8000`, forwarded
-by pasta) delivers about 43 KB of a response to a **remote** client and then closes
-the connection cleanly -- the FIN rides the last data segment, every earlier segment
-acknowledged, nothing retransmitted. Responses small enough to be forwarded before
-the application closes survive, and so do ones too large to buffer, so it presents
-as a size *band* rather than a threshold. Confirmed 2026-07-31 (kasvimuseo issue
-044): 8 of 10 fetches cut at the identical byte through a published port, 10 of 10
-whole with `--network=host`.
+This note helps contributors investigate HTTP responses that truncate only for remote clients.
 
-**Why:** the loopback baseline is worthless here. A local client acknowledges at
-memory speed, so nothing is ever outstanding when the application closes and the
-bug cannot appear -- a fast read, a slow read, a 4 KB `SO_RCVBUF`, an eight-second
-stall and a request to the host's own tailnet address all delivered every byte.
+Compare the complete response through the published container port with a connection that bypasses port forwarding.
+A local loopback request might not reproduce a failure seen by a remote client.
+Check response lengths and server logs before attributing the failure to the application.
 
-**How to apply:** when a containerised dev server looks fine locally but
-truncates for a remote browser, suspect the port publication before the app, the
-network or the MTU. `--network=host` removes the forwarder. An SSH tunnel also
-avoids it, by making the remote request a loopback one on the server side. See
-[[run-the-suite-in-the-container]] for the podman/sandbox mechanics.
+[Issue 044](../../docs/issues/044-large-responses-can-truncate-through-container-networking.rst) records the original investigation.
+Rootless Podman port forwarding was the cause in that investigation.
+Use the current development helper's network configuration when reproducing it.
