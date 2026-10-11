@@ -32,17 +32,17 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
   <!-- hai:{"updatedAt":"2026-10-11T15:19:49.067Z"} -->
 
-- [ ] [16] Move the images and the locks to Python 3.13
+- [x] [16] Move the images and the locks to Python 3.13
     - Depends on: [10], [11]
-  <!-- hai:{"updatedAt":"2026-10-11T15:08:47.901Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T20:57:32.291Z"} -->
 
 - [ ] [8] Refresh public documentation after the repository split
     - Depends on: [2], [3], [5], [6], [7], [10]
   <!-- hai:{"updatedAt":"2026-10-11T14:56:11.455Z"} -->
 
-- [ ] [14] Close the runtime upgrade programme (issue 036)
+- [x] [14] Close the runtime upgrade programme (issue 036)
     - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:35:30.154Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T20:54:38.935Z"} -->
 
 - [x] [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-11T16:05:28.965Z"} -->
