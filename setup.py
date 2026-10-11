@@ -1,6 +1,7 @@
 import fnmatch
+from pathlib import Path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py as _build_py
 
 
@@ -22,7 +23,7 @@ PRIVATE_MODULES = {
 
 
 class build_py(_build_py):
-    """`build_py` that leaves machine-specific settings modules out."""
+    """Exclude private settings from source discovery and cached build output."""
 
     def find_package_modules(self, package, package_dir):
         modules = super().find_package_modules(package, package_dir)
@@ -30,6 +31,20 @@ class build_py(_build_py):
         return [(pkg, module, path) for pkg, module, path in modules
                 if not any(fnmatch.fnmatch(module, pattern)
                            for pattern in private)]
+
+    def run(self):
+        super().run()
+        if self.dry_run:
+            return
+        # Wheel installation copies all cached files, including undiscovered modules.
+        for package, patterns in PRIVATE_MODULES.items():
+            package_dir = Path(self.build_lib).joinpath(*package.split('.'))
+            for directory in (package_dir, package_dir / '__pycache__'):
+                for path in directory.glob('*'):
+                    if path.suffix in ('.py', '.pyc', '.pyo') and any(
+                            fnmatch.fnmatch(path.name.split('.')[0], pattern)
+                            for pattern in patterns):
+                        path.unlink()
 
 
 setup(
