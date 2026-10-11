@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import glob
 import io
 import os
+import py_compile
 import shutil
 import subprocess
 import sys
@@ -60,11 +61,8 @@ def run(args, **kwargs):
 
 
 @pytest.fixture(scope='module')
-def artifacts(tmp_path_factory):
-    """Build an sdist and a wheel from a copy with planted private settings.
-
-    Returns ``(source copy, sdist path, wheel path)``.
-    """
+def release_source(tmp_path_factory):
+    """Copy the source and plant synthetic private settings for packaging checks."""
     root = tmp_path_factory.mktemp('release')
     source = root / 'source'
     source.mkdir()
@@ -85,8 +83,14 @@ def artifacts(tmp_path_factory):
     # And a plain file with a second private name from .gitignore.
     (source / 'ylaneenkasvit' / 'kajala_settings.py').write_text(
         'MARKER = {0!r}\n'.format(MARKER))
+    return source
 
-    dist = root / 'dist'
+
+@pytest.fixture(scope='module')
+def artifacts(release_source):
+    """Return the source copy, source distribution, and wheel paths."""
+    source = release_source
+    dist = source.parent / 'dist'
     env = dict(os.environ, PYTHONPATH='')
     code, output = run(
         [sys.executable, 'setup.py', '-q', 'sdist', '-d', str(dist),
@@ -96,6 +100,74 @@ def artifacts(tmp_path_factory):
     [sdist] = glob.glob(str(dist / '*.tar.gz'))
     [wheel] = glob.glob(str(dist / '*.whl'))
     return source, sdist, wheel
+
+
+@pytest.mark.parametrize('builder', ['setup', 'pip'])
+@pytest.mark.parametrize('build_lib', ['build/lib', 'cached/lib'])
+def test_cached_private_modules_do_not_reach_wheels(
+        release_source, tmp_path, builder, build_lib):
+    """Check wheel builds after an earlier build cached private source and bytecode."""
+    source = tmp_path / 'source'
+    shutil.copytree(release_source, source, symlinks=True,
+                    ignore=shutil.ignore_patterns('build', '*.egg-info'))
+    (source / 'setup.cfg').write_text(f'[build]\nbuild_lib = {build_lib}\n')
+    package = source / 'ylaneenkasvit'
+    (package / 'local_settings_extra.py').write_text(f'MARKER = {MARKER!r}\n')
+    (package / 'kajala_settings_extra.py').write_text('PUBLIC = True\n')
+
+    setup_path = source / 'setup.py'
+    fixed_setup = setup_path.read_text()
+    old_setup = fixed_setup.replace("cmdclass={'build_py': build_py}",
+                                    "cmdclass={'build_py': _build_py}")
+    assert old_setup != fixed_setup
+    setup_path.write_text(old_setup)
+    env = dict(os.environ, PYTHONPATH='')
+    code, output = run([sys.executable, 'setup.py', '-q', 'build_py'],
+                       cwd=source, env=env)
+    assert code == 0, output
+    setup_path.write_text(fixed_setup)
+
+    cached_package = source / build_lib / 'ylaneenkasvit'
+    cached_modules = ['local_settings', 'local_settings_extra', 'kajala_settings',
+                      'local_settings_orphan', 'kajala_settings_extra']
+    orphan = cached_package / 'local_settings_orphan.py'
+    orphan.write_text(f'MARKER = {MARKER!r}\n')
+    for module in cached_modules:
+        path = cached_package / (module + '.py')
+        if module != 'kajala_settings_extra':
+            assert MARKER in path.read_text()
+        for suffix in ['.pyc', '.pyo']:
+            py_compile.compile(str(path), cfile=str(path.with_suffix(suffix)), doraise=True)
+        for optimize in [0, 1]:
+            py_compile.compile(str(path), doraise=True, optimize=optimize)
+    orphan.unlink()
+
+    dist = tmp_path / 'dist'
+    if builder == 'setup':
+        command = [sys.executable, 'setup.py', '-q', 'sdist', '-d', str(dist),
+                   'bdist_wheel', '-d', str(dist)]
+    else:
+        command = [sys.executable, '-m', 'pip', 'wheel', '--no-build-isolation',
+                   '--no-deps', '--no-index', '--wheel-dir', str(dist), '.']
+    code, output = run(command, cwd=source, env=env)
+    assert code == 0, output
+    [wheel] = dist.glob('*.whl')
+    names = names_in(str(wheel))
+    assert not any('local_settings' in name or 'kajala_settings.' in name for name in names)
+    assert 'ylaneenkasvit/kajala_settings_extra.py' in names
+    assert 'ylaneenkasvit/kajala_settings_extra.pyc' in names
+    assert any(name.startswith('ylaneenkasvit/__pycache__/kajala_settings_extra.')
+               for name in names)
+    assert not list(cached_package.glob('local_settings*'))
+    assert not list((cached_package / '__pycache__').glob('local_settings*'))
+    assert not list(cached_package.glob('kajala_settings.*'))
+    assert not list((cached_package / '__pycache__').glob('kajala_settings.*'))
+    assert (package / 'local_settings.py').is_symlink()
+    assert MARKER in (package / 'local_settings.py').read_text()
+    assert MARKER in (package / 'kajala_settings.py').read_text()
+    for artifact in dist.iterdir():
+        code, output = run([sys.executable, CHECKER, '--marker', MARKER, str(artifact)])
+        assert code == 0, output
 
 
 def names_in(path):
@@ -250,14 +322,21 @@ def test_the_wheel_loads_with_supplied_configuration(artifacts, tmp_path):
     assert output.strip() == '/admin/'
 
 
-def test_the_checker_rejects_a_leaked_module(tmp_path):
-    """The check itself fails on a wheel that carries the module."""
+@pytest.mark.parametrize('module', [
+    'local_settings.py', 'local_settings_extra.pyc', 'local_settings.pyo',
+    '__pycache__/local_settings.cpython-313.pyc',
+    'kajala_settings.py', 'kajala_settings.pyc', 'kajala_settings.pyo',
+    '__pycache__/kajala_settings.cpython-313.opt-1.pyc',
+])
+def test_the_checker_rejects_a_leaked_module(tmp_path, module):
+    """Reject private source, legacy bytecode, and tagged bytecode."""
     wheel = tmp_path / 'ylaneenkasvit-0-py3-none-any.whl'
+    name = 'ylaneenkasvit/' + module
     with zipfile.ZipFile(str(wheel), 'w') as archive:
-        archive.writestr('ylaneenkasvit/local_settings.py', 'MARKER = 1\n')
+        archive.writestr(name, 'MARKER = 1\n')
     code, output = run([sys.executable, CHECKER, str(wheel)])
     assert code == 1
-    assert 'private settings module ylaneenkasvit/local_settings.py' in output
+    assert 'private settings module ' + name in output
 
 
 def test_the_checker_rejects_a_leaked_marker(tmp_path):

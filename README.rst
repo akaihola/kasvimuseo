@@ -265,10 +265,11 @@ The check fails on a machine-specific settings module, on a marker value you
 pass with ``--marker``, and on a missing template, catalog, static file,
 migration or third-party license notice. ``docs/third-party-notices.rst``
 lists every copied component with its license and notice file (task 7).
-``setup.py`` names the private modules in ``PRIVATE_MODULES`` and drops them
-from every build; ``kasvimuseo/tests/test_release_artifacts.py``
-proves it with a planted ``local_settings.py`` behind a symlink (task 1). The
-production image runs the same check on the installed package.
+Read ``setup.py``, ``build_py``, for private module exclusion and cleanup of
+cached source and bytecode.
+Read ``kasvimuseo/tests/test_release_artifacts.py`` for checks of fresh builds
+and reused build directories.
+Read ``Dockerfile`` for the production image checks.
 
 
 Documentation

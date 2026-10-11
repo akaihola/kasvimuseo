@@ -31,7 +31,7 @@ import tarfile
 import zipfile
 
 PRIVATE_MODULES = {
-    'ylaneenkasvit': ['local_settings*.py', 'kajala_settings.py'],
+    'ylaneenkasvit': ['local_settings*', 'kajala_settings'],
 }
 
 # Relative to the package root inside the artifact.
@@ -93,8 +93,11 @@ def problems(path, marker=None):
     found = []
     for name in sorted(relative):
         directory, filename = posixpath.split(name)
+        if posixpath.basename(directory) == '__pycache__':
+            directory = posixpath.dirname(directory)
         for pattern in PRIVATE_MODULES.get(directory, []):
-            if fnmatch.fnmatch(filename, pattern):
+            if (posixpath.splitext(filename)[1] in ('.py', '.pyc', '.pyo')
+                    and fnmatch.fnmatch(filename.split('.')[0], pattern)):
                 found.append(
                     '{0}: contains the private settings module {1}. Build'
                     ' from a clean checkout; PRIVATE_MODULES in setup.py'
