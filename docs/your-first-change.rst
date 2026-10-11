@@ -40,7 +40,7 @@ Four, and they are worth two minutes because every other page assumes them.
 Set the project up
 ==================
 
-The application is Django 6.0 on Python 3.12, and it runs in a container with a
+The application is Django 6.0 on Python 3.13, and it runs in a container with a
 throwaway PostgreSQL cluster beside it, and one script drives all of it. You
 need ``podman`` and a PostgreSQL installation. :doc:`development` is the full
 account, including how to get a database with data in it; the shortest path

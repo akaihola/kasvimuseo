@@ -54,7 +54,7 @@ dashboard -- lives in :mod:`ylaneenkasvit`.
 Running it
 ==========
 
-The application is Django 6.0 on Python 3.12, and it runs in a container with a
+The application is Django 6.0 on Python 3.13, and it runs in a container with a
 throwaway PostgreSQL cluster beside it. One script drives everything::
 
     $ dev/kasvimuseo app build

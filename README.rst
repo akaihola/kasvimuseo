@@ -107,7 +107,7 @@ Two suites, in two places, and the split is deliberate (issue 017)::
     $ dev/kasvimuseo app browser-test         # the label editor, in two browsers
 
 ``app test`` is the one you want almost always: pytest inside the application
-container, which runs Django 6.0 on Python 3.12 with the dependencies that
+container, which runs Django 6.0 on Python 3.13 with the dependencies that
 ``requirements/production.txt`` pins, with its own PostgreSQL, no dump and no
 media.
 
