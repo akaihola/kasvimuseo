@@ -8,7 +8,7 @@ a document that no longer exists.
 
 Each entry names a path, the commit that still contains the file at that path,
 and why the text went. The commit is always one that is already on ``main``,
-because ``main`` is never rewritten here. A commit made on a task branch does
+because a merge does not rewrite it. A commit made on a task branch does
 not survive the rebase; that is the hazard the ``:Resolution:`` fields carry
 and ``dev/repoint`` repairs, and an archive entry avoids it entirely by naming
 an older commit.
