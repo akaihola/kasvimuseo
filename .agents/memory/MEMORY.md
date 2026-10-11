@@ -7,6 +7,7 @@ This index helps contributors find portable development guidance. Each note link
 - [Check browser server failures](browser-suite-server-dies-under-sibling-load.md).
 - [Use separate development image tags](dev-image-tag-is-shared-between-workspaces.md).
 - [Check documentation build output](docs-build-lock-exits-zero.md).
+- [Check reStructuredText table borders](rst-table-borders-and-git-diff-check.md).
 - [Check issue register changes](issue-register-tests-are-in-the-suite.md).
 - [Run management checks with test settings](manage-checks-with-test-settings.md).
 - [Check container port forwarding](pasta-truncates-remote-responses.md).

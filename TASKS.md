@@ -25,11 +25,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [8] Refresh public documentation after the repository split
+## In Progress
+
+- [~] [8] Refresh public documentation after the repository split
     - Depends on: [2], [3], [5], [6], [7], [10]
   <!-- hai:{"updatedAt":"2026-10-11T14:44:36.284Z"} -->
-
-## In Progress
 
 ## Completed / Accepted
 

@@ -10,7 +10,7 @@ Issue 067: Distinguish database bootstrap from restore
 :Depends on: (none) -- one guard in a ``case`` arm and one new command, both
     in ``dev/kasvimuseo``
 :Blocks: (none)
-:Related: 050, 055, 068, 069
+:Related: 055, 068, 069
 :Decision: Reject dump arguments to bootstrap. Require restore for an existing database.
 :Resolution: 9fa70bf records the implementation.
 

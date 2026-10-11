@@ -10,7 +10,6 @@ Issue 057: Use JSON for sessions
 :Depends on: (none)
 :Blocks: (none)
 :Related: 025 -- related work
-    049 -- related work
     036 -- related work
 :Decision: Keep the generic implementation and its automated checks.
 :Resolution: 41774eb records the implementation.

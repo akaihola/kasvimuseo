@@ -101,24 +101,24 @@ Deployments that need another address rule must configure it in the deployment r
 Testing
 =======
 
-Two suites, on two interpreters, and the split is deliberate (issue 017)::
+Two suites, in two places, and the split is deliberate (issue 017)::
 
     $ dev/kasvimuseo app test                 # the application
     $ dev/kasvimuseo app browser-test         # the label editor, in two browsers
 
-``app test`` is the one you want almost always: pytest inside the Python 2.7
-container, about twenty seconds, its own PostgreSQL, no dump and no media.
+``app test`` is the one you want almost always: pytest inside the application
+container, which runs Django 6.0 on Python 3.12 with the dependencies that
+``requirements/production.txt`` pins, with its own PostgreSQL, no dump and no
+media.
 
 ``app browser-test`` runs ``browser_tests/`` on the **host's** Python 3, through
 uv, driving Playwright against the real application in its own
 container. It covers what only exists in a browser: dragging museum numbers
 between labels, the save cycle, the per-label photo and the print toggle --
 and, since issue 013, the two admin changelist controls Grappelli builds out of
-JavaScript, its filter pulldown and its action dropdown. The
-application is Python 2.7 and nothing that drives a current browser supports
-2.7, which is why this half lives outside the container -- and Playwright can
-drive WebKit, which is the engine the iPad work (issue 045) needs and no
-browser old enough for 2.7 could have provided.
+JavaScript, its filter pulldown and its action dropdown. The container
+ships no browser, which is why this half lives on the host -- and Playwright
+can drive WebKit, which is the engine the iPad work (issue 045) needs.
 
 **Every test runs in both engines** since issue 061: Chromium, and Playwright's
 WebKit, which is what iOS Safari is built on and the engine every defect this
@@ -145,7 +145,7 @@ your ``media/`` and your ``local_settings.py`` are not read or written.
 The editor is staff-only (issue 052), so the seed makes one account for the
 tests to log in with and the script generates its password per run, passing it
 to both halves in ``KASVIMUSEO_BROWSER_TEST_PASSWORD``. No password is written
-down anywhere in this repository -- see issue 050 for why that rule exists. Any
+down anywhere in this repository; deployment record 050 owns the reason. Any
 pytest arguments pass straight through::
 
     $ dev/kasvimuseo app browser-test -k drag -x
@@ -186,16 +186,14 @@ describe. No production dump and no ``media fetch`` are involved: the tests
 build their own data, and the test settings point ``MEDIA_ROOT`` at a
 throwaway directory, so nothing reads a photo.
 
-A full run is about a minute and a half on a hosted runner, the four jobs in
-parallel: ``pytest`` builds the Python 2.7 image from scratch and runs the suite
-(68 s), ``sphinx`` builds the documentation with ``--clean`` (25 s) -- which is
-how a malformed issue field is caught on push rather than by whoever next builds
-the docs -- and
-``playwright`` runs the browser tests (97 s), the slowest of the three because
-it needs both the image and a browser. That last one is a separate job rather
-than a step in ``pytest`` so that a drag-and-drop regression and a model
-regression arrive as two different red lights; the price is that both jobs build
-the same image.
+The jobs run in parallel: ``pytest`` builds the application image from scratch
+and runs the suite, ``sphinx`` builds the documentation with ``--clean`` --
+which is how a malformed issue field is caught on push rather than by whoever
+next builds the docs -- and ``playwright`` runs the browser tests, the slowest
+of the three because it needs both the image and a browser. That last one is a
+separate job rather than a step in ``pytest`` so that a drag-and-drop
+regression and a model regression arrive as two different red lights; the price
+is that both jobs build the same image.
 
 Since issue 061 ``playwright`` is a matrix of two, ``playwright (chromium)`` and
 ``playwright (webkit)``, for the same reason: an engine regression should say
@@ -293,8 +291,8 @@ touched, and Sphinx never deletes a page whose source has gone::
 
 It runs on the host's Python 3 through ``uv``, not in the app container, and
 never imports the application -- see
-``docs/issues/038-no-rendered-documentation.rst`` for why, and for how it should
-change as the stack is upgraded. The toolchain is pinned in
+``docs/issues/038-no-rendered-documentation.rst`` for why. The toolchain is
+pinned in
 ``docs/requirements.txt``; nothing needs installing beforehand.
 
 To rebuild automatically whenever a coding agent edits documentation or Python

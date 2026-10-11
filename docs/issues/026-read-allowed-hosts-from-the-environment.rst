@@ -8,9 +8,8 @@ Issue 026: Read allowed hosts from the environment
 :Source: Repository maintenance
 :Evidence: The settings read allowed host names from a required environment variable. Tests cover accepted and rejected hosts.
 :Depends on: (none)
-:Blocks: 051 -- related work
+:Blocks: (none)
 :Related: 025 -- related work
-    049 -- related work
 :Decision: Keep the generic implementation and its automated checks.
 :Resolution: df16cc1 records the implementation.
 

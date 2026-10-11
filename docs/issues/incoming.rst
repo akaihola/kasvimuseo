@@ -8,9 +8,8 @@ arrives -- a sentence is enough. An agent splits it into a numbered file under
 A report leaves this page when it becomes a numbered issue file, and it leaves
 in the same commit that creates the file. Do not write down what became of it.
 The issue file carries the reasoning, and ``git log -p docs/issues/incoming.rst``
-carries every report this page has ever held. ``AGENTS.md`` states the rule.
-:doc:`../archive` names the commit that still holds the entries this page used
-to carry.
+carries the reports this page has held. The private deployment repository
+preserves the entries this page carried before 2026-08-04.
 
 Waiting
 -------

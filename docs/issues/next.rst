@@ -46,16 +46,16 @@ Enough to start without reading anything else.
 ``main``; never merge ``main`` into it.
 
 **The suite** is pytest, and it runs inside the application's container,
-because the application is Django 1.5 on Python 2.7::
+which holds Django 6.0 on Python 3.12 and the pinned dependencies::
 
     $ dev/kasvimuseo app test              # starts and stops PostgreSQL itself
 
-It needs PostgreSQL and nothing else -- no production dump, no media -- and
-takes about ten seconds. Run by hand instead of through the script, it wants
+It needs PostgreSQL and nothing else -- no database dump, no media. Run by
+hand instead of through the script, it wants
 ``DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings`` and a running cluster
 (``dev/kasvimuseo db start``); the rest of the configuration is in
-``pytest.ini``. The host's Python 3 cannot run it: nothing on the host has
-Django 1.5.
+``pytest.ini``. The host does not have the pinned dependencies, so the script
+is the way to run it.
 
 **The documentation** builds on the host, outside the container::
 
@@ -78,9 +78,8 @@ left to do.
 from there.
 
 **Refill this queue before it empties.** When fewer than three rows in "Ready
-now" are free to start, file new issues first, from :doc:`incoming`, then
-:doc:`../test-coverage-plan`, then :doc:`../upgrade-plan`. ``AGENTS.md`` gives
-the counting rule, the order and the steps.
+now" are free to start, file new issues first, from :doc:`incoming`, then from
+the proposals in ``TASKS.md`` at the repository root.
 
 **Write the way this repository writes.** Short sentences, active voice, one
 fact in one place, a pointer everywhere else. The rules are in ``AGENTS.md``.

@@ -6,8 +6,8 @@ from iOS Safari and WebKit is what Safari is built on; ``--engine`` narrows a
 run to one.
 
 These run on the **host's Python 3**, not in the application container: the
-application is Django 1.5 on Python 2.7, and nothing that drives a current
-browser supports that interpreter (issue 017). They talk to the server
+container ships no browser, and the tests need Playwright and its browsers
+(issue 017). They talk to the server
 ``dev/kasvimuseo app browser-test`` starts, over HTTP, and import no part of
 the application.
 

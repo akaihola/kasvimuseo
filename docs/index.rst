@@ -54,23 +54,25 @@ dashboard -- lives in :mod:`ylaneenkasvit`.
 Running it
 ==========
 
-The application is Django 1.5 on Python 2.7, so it runs in a container with a
+The application is Django 6.0 on Python 3.12, and it runs in a container with a
 throwaway PostgreSQL cluster beside it. One script drives everything::
 
     $ dev/kasvimuseo app build
     $ dev/kasvimuseo db bootstrap
     $ dev/kasvimuseo app run
 
-:doc:`development` has the rest: production dumps, media, tests, the Ansible
-deployment, and how these pages are built and served.
+:doc:`development` has the rest: database restores, media, tests, and how these
+pages are built and served. The private deployment repository owns the
+deployment instructions.
 
 The state of the code
 =====================
 
-That runtime is end of life. :doc:`issues/036-the-runtime-stack-is-end-of-life`
-is the umbrella issue, :doc:`upgrade-plan` is the twenty-stage route out of it,
-and :doc:`issues/index` is everything else known to be wrong, one file per
-problem, each with a status.
+The runtime upgrade programme is complete.
+:doc:`issues/036-the-runtime-stack-is-end-of-life` is its closed umbrella issue,
+:doc:`upgrade-plan` records the twenty stages that reached Django 6.0, and
+:doc:`issues/index` is everything else known to be wrong, one file per problem,
+each with a status.
 
 To pick up work rather than read about it, start at
 :doc:`issues/next`: the ranked queue of what is actionable today, generated
