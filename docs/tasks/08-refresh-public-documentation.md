@@ -50,7 +50,7 @@ Step 5 waits for private task 4, which replaces public history. If task 4 has no
 5. `docs/issues/next.rst` and `docs/issues/incoming.rst` no longer send readers to `AGENTS.md` for rules that file does not hold. The queue refill rule now names `TASKS.md`.
 6. `.agents/memory/private-deployment-records.md` points at the new page instead of the archive.
 
-Step 5, the commit reference repair, waits for private task 4. Task 9 repairs the references if task 4 lands after this task.
+7. Step 5 ended on 2026-10-11 after private task 4 replaced the public history. Task 9 renamed every commit pointer to the rewritten history; read `docs/tasks/09-integrate-and-publish-public-cleanup.md`, "Work done on 2026-10-11". `docs/archive.rst` now says that a merge does not rewrite a commit, instead of promising that `main` is never rewritten.
 
 ## Validation on 2026-10-11
 
@@ -59,3 +59,8 @@ Step 5, the commit reference repair, waits for private task 4. Task 9 repairs th
 - Outside the plans and the issue history, the generated pages mention Python 2.7, Django 1.5 or Ansible only in the upgrade plan title.
 - `dev/kasvimuseo app test` in the `kasvimuseo-dev-task8` image: 585 passed in 22 seconds.
 - `git diff --check` passed.
+
+## Validation of step 5 on 2026-10-11
+
+- `dev/repoint --verbose` on `main` at `261da1c`: 138 pointers, all parked on `refs/clean/`, nothing to re-point. They land when the maintainer publishes the rewritten history.
+- `dev/kasvimuseo docs --clean` on the same revision built `.dev/docs/html/index.html` with no warning in `.dev/docs/build.log`.
