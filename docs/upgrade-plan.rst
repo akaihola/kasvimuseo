@@ -856,7 +856,7 @@ Stage 4 — Photologue 2.8.3 → 3.0.2, still on Django 1.6
 -------------------------------------------------------
 
 :Status: Done
-:Resolution: 0913bf5
+:Resolution: bf6b24f
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -865,7 +865,7 @@ Stage 5 — Django 1.6.11 → 1.7.11: the South cut
 -----------------------------------------------
 
 :Status: Done
-:Resolution: dc51d2e
+:Resolution: 4876f02
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -874,7 +874,7 @@ Stage 6 — Django 1.7.11 → 1.8.19 (LTS)
 --------------------------------------
 
 :Status: Done
-:Resolution: 1b54a3f
+:Resolution: d51575a
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -883,7 +883,7 @@ Stage 7 — Django 1.8.19 → 1.9.13
 --------------------------------
 
 :Status: Done
-:Resolution: 9e6bfad, eef414d, f3e5708, 59793f6, aa6a615
+:Resolution: b648ee2, cb43eb2, ced6d2f, f64ab83, 4b02cd2
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -892,7 +892,7 @@ Stage 8 — Django 1.9.13 → 1.10.8
 --------------------------------
 
 :Status: Done
-:Resolution: 80e0a17, fde5201, 896b335, 120395a
+:Resolution: c0b10d4, 16703a9, f35c06b, 7633c65
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -901,7 +901,7 @@ Stage 9 — Django 1.10.8 → 1.11.29 (LTS)
 ---------------------------------------
 
 :Status: Done
-:Resolution: e013f8c, cdc10eb
+:Resolution: 10f8d21, b54641a
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -910,7 +910,7 @@ Stage 10 — **Python 2.7 → 3.7**, staying on Django 1.11.29
 ----------------------------------------------------------
 
 :Status: Done
-:Resolution: 5f86367, 5f2317f, 1eec63c
+:Resolution: 9e49558, be116c0, fddfca4
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -919,7 +919,7 @@ Stage 11 — Django 1.11 → 2.0.13
 -------------------------------
 
 :Status: Done
-:Resolution: 6c069fc, 30887c2, 1ee5d2a
+:Resolution: 8462a9d, 3a6653f, 19284857424a
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -928,7 +928,7 @@ Stage 12 — Django 2.0 → 2.1.15
 ------------------------------
 
 :Status: Done
-:Resolution: 1d5f0ea
+:Resolution: 25f0c08
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.
@@ -937,7 +937,7 @@ Stage 13 — Django 2.1 → 2.2.28 (LTS)
 ------------------------------------
 
 :Status: Done
-:Resolution: 93627e8, 0dad4e7, 2da5612
+:Resolution: 38a3ce7, 6f63d0e, 159cd3e
 
 Run the application, browser, migration, and documentation checks after this stage.
 Use the dependency constraints above and the resolved locks in Appendix A.

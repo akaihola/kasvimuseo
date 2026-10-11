@@ -78,7 +78,7 @@ Task 7 compared every copy with the file at the upstream version named above.
 
 * ``jqm/``: six templates and two static files are identical to the
   ``1.1.0.2`` archive, except ``templates/jqm/simple.html``. That template
-  submits the logout link as a form with a CSRF token (commit ``0fac221``).
+  submits the logout link as a form with a CSRF token (commit ``d863a3e``).
   The archive has no license text; ``jqm/LICENSE`` says so and supplies the
   MIT text. The copy keeps the Launchpad origin in ``jqm/README.rst``.
 * ``fitty.min.js``: identical to ``dist/fitty.min.js`` at tag ``2.2.5``. The

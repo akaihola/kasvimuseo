@@ -35,7 +35,7 @@ A separate prepared checkout and base checkout also contained different unrelate
 
 Complete proposals 01 through 08 before declaring the public cleanup ready. Coordinate external publication work with the maintainer.
 
-Update of 2026-10-06: local `main` contains the cleanup as merge `9e211ab`, so step 1 is done.
+Update of 2026-10-06: local `main` contains the cleanup as merge `f65ef16`, so step 1 is done.
 Do not do step 6 before the private deployment repository completes tasks 1, 3, and 4.
 Task 1 publishes the deployment repository to a private remote. Task 3 rotates the exposed credentials. Task 4 removes sensitive public history.
 After private task 4 replaces history, repair the `:Resolution:` commit references before the documentation build in step 4.
@@ -43,7 +43,7 @@ After private task 4 replaces history, repair the `:Resolution:` commit referenc
 ## Work done on 2026-10-11
 
 Private tasks 1, 3, and 4 are accepted. Private task 9 holds the rewritten history and is still in progress.
-The prepared clean `main` is `0ea0730`, rewritten from the `main` snapshot `03755f2`.
+The prepared clean `main` is `8a69870`, rewritten from the `main` snapshot `8a69870`.
 Its commit map lives in the private deployment repository under `.local/history-rewrite/20261010-185939-task-9/`.
 
 1. We reran `bin/rewrite-public-history` from the private repository against the current `main` into a temporary directory. All 899 shared commits received the same hashes as the prepared map, so the repair can use the prepared map.
@@ -69,3 +69,9 @@ Step 6, the publication, waits for the maintainer. The agent token cannot push a
 - Step 6, the publication: the maintainer pushes the rewritten `main` with an account that permits workflow changes, after this merge and a final rewrite. The push must include the tag `interim-062-option-2` next to `0.2.0`, because issue 062 names a commit on that tag. Read the private `docs/public-history-cleanup.rst`, "Rewrite procedure".
 - Step 7 against GitHub: a fresh public clone, a documentation build on it, and the published documentation check wait for that push.
 - The first, third and fourth completion checks stay open until the maintainer publishes.
+
+## Correction of 2026-10-12
+
+The refreshed rewrite of 2026-10-11 excluded the interim tags. Without the tag, the tool left the spike hash of issue 062 unchanged in 284 commit messages, so those commits received other hashes than in the first rewrite. The published `main` `b02822b` is that variant.
+We composed the two commit maps and re-pointed 62 hashes in 27 files to the published variant. Issue 062 still names `72b65c4`; its parent is on the published `main`, so the tag `interim-062-option-2` can be pushed on top.
+A rewrite of local `main` from a source without the interim tags reproduces `b02822b` and adds the newer commits on top, so the publication is a fast-forward push.

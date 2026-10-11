@@ -11,7 +11,7 @@ Issue 077: The Python 3 runtime needs a rehearsed transition
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 10 with the compatible Python 3.7 runtime and an isolated rehearsal. Keep the later upgrades in issue 036.
-:Resolution: 5f86367 changes the runtime; 5f2317f repairs archive assets; 1eec63c changes and rehearses Ansible; e9330a0 repairs code-only updates.
+:Resolution: 9e49558 changes the runtime; be116c0 repairs archive assets; fddfca4 changes and rehearses Ansible; a8892aa repairs code-only updates.
 
 Checks
 ------
