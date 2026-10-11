@@ -24,11 +24,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [16] Move the images and the locks to Python 3.13
+## Completed / Accepted
+
+- [ ] [16] Move the images and the locks to Python 3.13
     - Depends on: [10], [11]
   <!-- hai:{"updatedAt":"2026-10-11T14:56:36.681Z"} -->
-
-## Completed / Accepted
 
 - [ ] [8] Refresh public documentation after the repository split
     - Depends on: [2], [3], [5], [6], [7], [10]
