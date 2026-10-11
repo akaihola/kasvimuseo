@@ -19,11 +19,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [12] Decide how to handle the rotation regression in photo effects (issue 089)
+## Completed / Accepted
+
+- [ ] [12] Decide how to handle the rotation regression in photo effects (issue 089)
     - Depends on: [10]
   <!-- hai:{"updatedAt":"2026-10-11T15:26:41.398Z"} -->
-
-## Completed / Accepted
 
 - [ ] [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
