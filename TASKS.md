@@ -18,9 +18,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [16] Move the images and the locks to Python 3.13
     - Depends on: [10], [11]
 
-- [14] Close the runtime upgrade programme (issue 036)
-    - Depends on: [10]
-
 - [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
 
@@ -30,6 +27,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
 
 ## Scheduled
+
+- [14] Close the runtime upgrade programme (issue 036)
+    - Depends on: [10]
+  <!-- hai:{"updatedAt":"2026-10-11T14:28:16.476Z"} -->
 
 - [11] Move the browser tests to Playwright 1.63
   <!-- hai:{"updatedAt":"2026-10-10T18:19:18.837Z"} -->
