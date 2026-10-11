@@ -47,6 +47,11 @@ At the end of a session, every agent must update `MEMORY.md` when the memory ind
 Use one Markdown file for each durable fact. Keep each file short and link it from `MEMORY.md`.
 Do not write project memories in an agent-specific directory.
 
+A project memory must help any contributor on any machine with any agent.
+A fact about one machine, one agent harness, or one sandbox is not a project memory.
+Record such a fact in your agent's private memory.
+Keep machine paths, session identifiers, and tool permissions out of `.agents/memory/`.
+
 ## Do not duplicate prose
 
 Write a fact once, in the file that owns it. Everywhere else, write one short
