@@ -11,7 +11,7 @@ Issue 082: Django 2.2 is the next runtime upgrade step
 :Blocks: 083
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 13 with separate Django and Python commits. Use Debian 11 for the matching deployment interpreter.
-:Resolution: 41e207e upgrades Django; 8a97f5f upgrades Python; dc78466 repairs the browser checks; 3bc707f guards web-only deployments.
+:Resolution: 93627e8 upgrades Django; 0dad4e7 upgrades Python; 2da5612 repairs the browser checks. The private deployment repository keeps the web-only deployment guard.
 
 Work
 ----

@@ -72,7 +72,7 @@ Issue 063: The dragged museum number cannot be seen on the iPad
     untestable change to this template is exactly how 056's second half got its
     second life. The measured device evidence instead supports the small iPad
     path fix recorded above.
-:Resolution: ``e65771d`` -- the drag copy uses fixed positioning and viewport
+:Resolution: ``96806af`` -- the drag copy uses fixed positioning and viewport
     coordinates on iPad, and the focused browser assertion checks that path.
     The application suite and documentation build pass. The browser harness
     remains blocked before collection because its seed script raises Django's
@@ -116,7 +116,7 @@ tell it what size to be::
     fontSize = parseFloat(window.getComputedStyle(el).fontSize) * drawn;
 
 ``rect`` is in drawn pixels and ``offsetWidth`` in laid-out ones, and those are
-the two coordinate systems 746ce71 -- the commit behind 056 -- says Safari
+the two coordinate systems 312bf15 -- the commit behind 056 -- says Safari
 reports differently inside a ``zoom``\ ed subtree. So a ``font-size`` of zero,
 or of something absurd, is the first thing the report says to measure. It was
 measured, and it is not what happens.
@@ -356,7 +356,7 @@ why the list above cannot be shortened from here:
   2 above cannot be watched, only read.
 * **The premise cannot be checked.** In both engines ``getComputedStyle``
   inside the ``zoom: 0.5`` subtree reports the declared 32px, and the
-  rect-to-``offsetWidth`` ratio is the zoom. The disagreement 746ce71 describes
+  rect-to-``offsetWidth`` ratio is the zoom. The disagreement 312bf15 describes
   is not present here, so the arithmetic that matters runs only where nothing
   here can watch it.
 * **WebKit is not iOS Safari.** It is the nearest engine that runs on this

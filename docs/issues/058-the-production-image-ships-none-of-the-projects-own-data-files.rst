@@ -33,7 +33,7 @@ Issue 058: The production image ships none of the project's own data files
     008 -- ``/photologue/gallery/``, the URL this was found on, for an
     unrelated reason
 :Decision: Keep the generic source fix. The private deployment repository owns installation evidence.
-:Resolution: acc8b9d -- ``COPY MANIFEST.in`` into the build context in ``Dockerfile``, plus a ``RUN`` block that fails the build if any of the six files it carries is not readable in the installed package. ``ylaneenkasvit/locale/`` and ``kasvimuseo/locale/`` were missing too, and are fixed by the same line; the assertion covers them.
+:Resolution: 76d0821 -- ``COPY MANIFEST.in`` into the build context in ``Dockerfile``, plus a ``RUN`` block that fails the build if any of the six files it carries is not readable in the installed package. ``ylaneenkasvit/locale/`` and ``kasvimuseo/locale/`` were missing too, and are fixed by the same line; the assertion covers them.
 
 Problem
 =======
@@ -144,7 +144,7 @@ image, with ``LANGUAGE_CODE = 'fi'`` in force::
 Those four strings are the admin dashboard's group headings, the mobile list's
 title and an admin action -- the Finnish half of the page 040 was written
 about. In this image 040's fix landed and this one undid more than it: after
-cdb763b Django's own chrome is Finnish here, and the project's own strings were
+cd2083e Django's own chrome is Finnish here, and the project's own strings were
 the English ones.
 
 **Nobody is served either page**, which is why this is ``Medium``. See

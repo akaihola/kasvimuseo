@@ -11,7 +11,7 @@ Issue 083: Django 3.0 is the next runtime upgrade step
 :Blocks: 084
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 14 on Python 3.9. Keep psycopg2-binary at 2.8.6 and remove obsolete Python 2 helpers.
-:Resolution: c143913 upgrades the runtime and removes incompatible helpers.
+:Resolution: fa1ae9f upgrades the runtime and removes incompatible helpers.
 
 Work
 ----

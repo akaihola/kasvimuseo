@@ -20,7 +20,7 @@ This task helps the maintainer land the finished runtime upgrade and remove the 
 
 The branch holds issues 087 and 088, which move the runtime to Django 5.2.16 and then 6.0.7.
 It also holds issue 089 and the upgrade plan updates.
-It sits directly on the deployment split merge, `ea274ee`.
+It sits directly on the deployment split merge, `9e211ab`.
 
 On 2026-10-05 the branch passed these checks:
 

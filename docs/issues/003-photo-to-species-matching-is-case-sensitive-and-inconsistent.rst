@@ -16,7 +16,7 @@ Issue 003: Photo-to-species matching is case-sensitive and inconsistent
     or ``None`` -- used by both call sites. Python folds the case it can, and the
     one comparison that has to happen in SQL says ``name_fi__iexact`` rather than
     leaning on a collation; both are argued in "Decision" below.
-:Resolution: Fixed in 3da66c3.
+:Resolution: Fixed in 1c35bf9.
 
 Problem
 =======

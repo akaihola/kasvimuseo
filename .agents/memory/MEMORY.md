@@ -15,6 +15,7 @@ This index helps contributors find portable development guidance. Each note link
 - [Check development image builds](podman-builds-need-a-log-file.md).
 - [Check renumbered issue titles](renumbered-issue-keeps-its-old-title.md).
 - [Repair commit pointers after rebasing](repoint-repairs-rebased-hashes.md).
+- [Fetch the clean history before the docs build](fetch-the-clean-history-before-the-docs-build.md).
 - [Keep deployment records private](private-deployment-records.md).
 - [Use synthetic examples in public records](synthetic-examples-in-public-records.md).
 - [Keep private state out with committed rules](committed-ignore-rules-are-the-only-guard.md).

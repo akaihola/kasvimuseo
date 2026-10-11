@@ -36,7 +36,7 @@ Issue 062: WebKit draws fitted label text at a nine-pixel floor
     "Why this is Rejected and not Fixed": no user-visible defect on the machine
     every report about this page came from, so there is nothing to repair. No
     code changed. The option-2 implementation, green in both engines, is kept
-    on the tag ``interim-062-option-2`` (commit ``55ce0a8``) and costed out
+    on the tag ``interim-062-option-2`` (commit ``72b65c4``) and costed out
     below, so reopening this is a cherry-pick rather than an investigation
 
 Browser update, 2026-10-10
@@ -221,7 +221,7 @@ What option 2 costs, measured rather than estimated
 It was built and run in both engines before the ruling came, and then withdrawn.
 None of it is in the tree. It is kept two ways so that taking option 2 later is
 a cherry-pick and not an investigation: as the tag ``interim-062-option-2``
-(commit ``55ce0a8``, on no branch), and as this list, which is the part that
+(commit ``72b65c4``, on no branch), and as this list, which is the part that
 survives whatever happens to the tag.
 
 * it is **one argument**. ``fitTextToSpace``'s desktop branch becomes

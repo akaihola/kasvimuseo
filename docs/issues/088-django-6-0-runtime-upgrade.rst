@@ -11,7 +11,7 @@ Issue 088: Django 6.0 is the next runtime upgrade
 :Blocks: (none)
 :Related: 036, 087 -- the runtime upgrade programme; 087 is Stage 18
 :Decision: Upgrade directly to Django 6.0.7 on Python 3.12, keep ``AutoField``, and change only the dependency files.
-:Resolution: bcff77c upgrades the runtime and package locks.
+:Resolution: c34ecdd upgrades the runtime and package locks.
 
 Work
 ----

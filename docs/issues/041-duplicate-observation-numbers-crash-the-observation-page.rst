@@ -20,7 +20,7 @@ Issue 041: Duplicate observation numbers crash the observation page
     ``Status: Fixed`` covers the crash only: this stops it without ruling on
     what a duplicate museum number *means*, which is still open. See
     "Decision" and "Still open" below
-:Resolution: Fixed in ``kasvimuseo/views.py``, commit b4266bd
+:Resolution: Fixed in ``kasvimuseo/views.py``, commit 444919f
 
 Problem
 =======
@@ -96,7 +96,7 @@ raising ``Http404`` when there is none, in place of the ``get_object_or_404``
 that raised ``MultipleObjectsReturned``. ``kasvimuseo/tests/test_views.py`` gains
 a duplicate-number test that asserts a 200 and the same observation across two
 requests, and a second unknown-number test that pins the 404 with other
-observations present. Commit b4266bd.
+observations present. Commit 444919f.
 
 Still open
 ==========

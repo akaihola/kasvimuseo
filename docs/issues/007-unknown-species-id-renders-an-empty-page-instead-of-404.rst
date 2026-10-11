@@ -15,7 +15,7 @@ Issue 007: Unknown species id renders an empty page instead of 404
 :Blocks: (none)
 :Related: 041 -- the same family of missing lookup guards on the public views
 :Decision: Option 1 -- raise ``Http404`` when *nothing* in the list matches
-:Resolution: Fixed in ``kasvimuseo/views.py``, commit b4266bd
+:Resolution: Fixed in ``kasvimuseo/views.py``, commit 444919f
 
 Problem
 =======
@@ -58,4 +58,4 @@ the empty path -- Django evaluates the queryset for the context anyway.
 ``test_unknown_external_id_renders_an_empty_report`` with
 ``test_unknown_external_id_404s``, and adds
 ``test_partly_unknown_external_id_still_renders_what_matched`` to pin the
-partial-match case the decision deliberately leaves alone. Commit b4266bd.
+partial-match case the decision deliberately leaves alone. Commit 444919f.

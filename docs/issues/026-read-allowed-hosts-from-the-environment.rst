@@ -11,7 +11,7 @@ Issue 026: Read allowed hosts from the environment
 :Blocks: (none)
 :Related: 025 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: df16cc1 records the implementation.
+:Resolution: 33046d3 records the implementation.
 
 
 Scope

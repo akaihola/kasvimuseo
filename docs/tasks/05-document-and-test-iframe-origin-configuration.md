@@ -70,7 +70,7 @@ This record helps the maintainer check task 5 integration and its remaining depl
 - The loader and test code stayed unchanged during the rebase.
 - All 14 iframe checks passed again with the repository's Playwright 1.63.0 pin.
 - The JavaScript syntax check, diff check, and documentation build passed.
-- Merge commit `90655fd` integrated the implementation into local `main`.
+- Merge commit `a46b786` integrated the implementation into local `main`.
 
 This integration clears the blocker recorded on 2026-10-10.
 Task 5 is complete and awaits user acceptance.

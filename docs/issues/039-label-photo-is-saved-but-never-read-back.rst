@@ -28,7 +28,7 @@ Issue 039: The label photo is saved but never read back
     lookups the labels with a photo of their own no longer need. Issue 037 can
     now describe the chevrons as choosing the label's photo, which is its option
     3.
-:Resolution: Fixed in cce65ac.
+:Resolution: Fixed in e6c9ce6.
 
 Problem
 =======
@@ -57,11 +57,11 @@ the choice to the database, and the next load silently replaces it with the spec
 photo again. The ``visible`` flag beside it round-trips correctly, which is what makes
 the failure hard to spot: saving *appears* to work, because part of it does.
 
-This has been the behaviour since the choice was first persisted. Commit 957e441 ("Fix
+This has been the behaviour since the choice was first persisted. Commit d80c2d8 ("Fix
 #5: Add saving of planting labels grouping and hiding", 2018-04-23) added ``Label``,
 extended the read path with ``visible`` and the grouping, and added ``photo_id`` to the
 write path -- but left ``get_species_data`` reading ``species.photo``. The photo
-selection itself had shipped a week earlier in 8e689a6 ("Fix #13: Allow selecting the
+selection itself had shipped a week earlier in b1144cd ("Fix #13: Allow selecting the
 photo for a species label"), before there was anywhere to store it.
 
 Impact
@@ -95,7 +95,7 @@ browser test, so only the JSON contract is covered).
 Resolution
 ==========
 
-Commit cce65ac, together with issue 010 -- the same handler. The read path now
+Commit e6c9ce6, together with issue 010 -- the same handler. The read path now
 hands the label down instead of one flag off it::
 
     photo_pk, photo_alternatives = get_species_photo_info(

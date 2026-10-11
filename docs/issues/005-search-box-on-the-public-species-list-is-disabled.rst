@@ -14,7 +14,7 @@ Issue 005: Search box on the public species list is disabled
 :Blocks: (none)
 :Related: (none)
 :Decision: Option 1 -- drop the ``X`` prefixes
-:Resolution: Fixed in 2c46529.
+:Resolution: Fixed in 9eea30a.
 
 Problem
 =======
@@ -46,7 +46,7 @@ Decision
 ========
 
 Option 1. The history says the search was never switched *off*: the prefixes
-arrived with the file itself, in 14464ba ("WIP with planted species report based
+arrived with the file itself, in fb96b4f ("WIP with planted species report based
 on jQuery Mobile", 2011), which is the only commit ``git log -S 'Xdata-filter'``
 finds. That first version prefixed the loop variable the same way --
 ``{% for species in object_listX %}`` -- which is what the ``X`` is: a
@@ -73,4 +73,4 @@ Three characters gone from
 three attributes reach the delivered page and that no ``Xdata-filter`` remains.
 What the test cannot reach is the box itself: it is drawn by jQuery Mobile in
 the browser, so the assertion stops at the contract with it -- the rest wants
-the browser suite that 017 is about. Commit 2c46529.
+the browser suite that 017 is about. Commit 9eea30a.

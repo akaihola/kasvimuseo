@@ -11,7 +11,7 @@ Issue 078: Planting photo text reads a missing attribute
 :Blocks: 077 -- finish this method before the interpreter transition
 :Related: 036 -- the runtime upgrade programme
 :Decision: use planting.observation as the photo label and expose the method through the project's Python 2/Python 3 text pattern
-:Resolution: c8026bb
+:Resolution: 8126a22
 
 Work
 ----

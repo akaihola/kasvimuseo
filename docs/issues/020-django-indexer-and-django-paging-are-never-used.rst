@@ -12,7 +12,7 @@ Issue 020: django-indexer and django-paging are unused
 :Blocks: 036 -- Stage 0
 :Related: (none)
 :Decision: Remove both, from ``requirements/production.txt`` and from ``INSTALLED_APPS``. No database change is made with them: ``paging`` has nothing in the database, and ``indexer``'s one table stays behind, empty, next to the sentry tables from the same integration.
-:Resolution: 0c82b49 -- with issues 021 and 033, which edit the same six lines
+:Resolution: c98e5a7 -- with issues 021 and 033, which edit the same six lines
 
 Problem
 =======

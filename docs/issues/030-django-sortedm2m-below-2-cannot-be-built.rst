@@ -20,7 +20,7 @@ Issue 030: django-sortedm2m < 2.0.0 cannot be built by modern tools
     version is set, and in ``docs/upgrade-plan.rst`` 3b.3. The workaround the
     issue could only infer **is now verified**, on the two interpreters that
     matter: see "Verified since" below. Nothing installed changed.
-:Resolution: 679d96d records the build-tool bound beside the pin, and the
+:Resolution: d542df5 records the build-tool bound beside the pin, and the
     measurements that turned the inferred workaround into a verified one
 
 Problem

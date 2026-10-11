@@ -16,7 +16,7 @@ Issue 065: Write application errors to stderr
     059 -- related work
     036 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: 238b35e records the implementation.
+:Resolution: a5d6efd records the implementation.
 
 
 Scope

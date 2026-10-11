@@ -136,7 +136,7 @@ Infrastructure to put in place first
 
 :Stage: Step 0
 :Status: Done
-:Resolution: b60f8f0
+:Resolution: 6109d6b
 
 1. ``ylaneenkasvit/test_settings.py`` -- imports ``ylaneenkasvit_settings``,
    then::
@@ -188,7 +188,7 @@ P1 -- Public-visibility logic (``models.py``)
 ---------------------------------------------
 
 :Status: Done
-:Resolution: b8ad488
+:Resolution: fe2a983
 
 The highest-value target in the codebase: these methods alone decide what the
 public site shows, they are subtle, and they are entirely untested.
@@ -216,7 +216,7 @@ P2 -- Views and the labels API (``views.py``, 0 %)
 --------------------------------------------------
 
 :Status: Done
-:Resolution: da7a076
+:Resolution: 705568f
 
 * ``PlantedSpeciesList`` -- only public planted species, ordered by
   ``name_fi``, deduplicated.
@@ -251,7 +251,7 @@ P3 -- Cheap pure-function wins (template tags, ``forms.py``)
 ------------------------------------------------------------
 
 :Status: Done
-:Resolution: db10541
+:Resolution: 107a9d4
 
 No database, fast, and takes six modules from 0 % to ~100 %.
 
@@ -274,7 +274,7 @@ P4 -- Admin (``admin.py``, 0 %)
 --------------------------------
 
 :Status: Done
-:Resolution: c10a156
+:Resolution: 41e9130
 
 * Display callables, called directly -- ``PlantingAdmin.coordinates``,
   ``BedAdmin.map``, ``PhotoAdmin.image_filename``, ``SpeciesAdmin.photo_image``
@@ -290,7 +290,7 @@ P5 -- Signals and integration edges
 ------------------------------------
 
 :Status: Done
-:Resolution: 951ab23
+:Resolution: 50a1f6e
 
 * ``autoconnect_photo_to_species`` -- a ``post_save`` receiver connected at
   import for *every* model. Test: matches on the lowercased first word of the
@@ -431,7 +431,7 @@ Second round: user-facing functionality
 
 :Stage: Second round
 :Status: Done
-:Resolution: a7d1026, 090bea3, b8fe471 and 5a02b0c -- one commit per
+:Resolution: d6470e8, e27faa2, f61ac75 and 8d4163c -- one commit per
     package, in the order this section lists them
 
 97 % line coverage turned out to overstate how much *functionality* was
@@ -533,7 +533,7 @@ honest. It is dated, and a date is the whole point: it is a measurement, not a
 target, and the gate described at the end is what keeps it from drifting far
 from the truth between measurements.
 
-**Measured 2026-08-03**, on ``main`` at ``aa4c39a``, with::
+**Measured 2026-08-03**, on ``main`` at ``060a9c3``, with::
 
     $ dev/kasvimuseo app coverage
 

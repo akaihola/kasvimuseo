@@ -28,7 +28,7 @@ Issue 038: The repository has no rendered docs
     github.com today. A rendered site changes how easily that is found, not
     whether it is disclosed -- closing those three issues is what ends the
     disclosure.
-:Resolution: d95f545 -- the ``sphinx`` job builds with ``--clean`` and a
+:Resolution: 033064a -- the ``sphinx`` job builds with ``--clean`` and a
     ``pages`` job deploys from ``main``. Neither has been seen on a runner:
     the credentials available here cannot push to ``github.com``, so the
     workflow is validated by ``actionlint`` and by running its command locally,

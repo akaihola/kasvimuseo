@@ -23,8 +23,8 @@ Issue 028: photologue <= 3.15.1 breaks on Pillow 10 and later
     beside the unpinned resolution in the production ``Dockerfile`` -- and in
     ``docs/upgrade-plan.rst`` 3b.1 and Stage 10. The suite now covers it as
     well as describes it.
-:Resolution: 679d96d records the bound beside every pin that sets or
-    implies a Pillow version; 5d7a129 adds the test that reaches the call
+:Resolution: d542df5 records the bound beside every pin that sets or
+    implies a Pillow version; b3f788b adds the test that reaches the call
 
 Problem
 =======

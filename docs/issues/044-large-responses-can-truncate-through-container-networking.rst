@@ -14,7 +14,7 @@ Issue 044: Large responses can truncate through container networking
     045 -- related work
     010 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: 76f5b9c, b1260ce, e91df60 records the implementation.
+:Resolution: 70aedd7, 249ade0, 936b0aa records the implementation.
 
 Scope
 -----

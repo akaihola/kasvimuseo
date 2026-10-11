@@ -13,7 +13,7 @@ Issue 068: Provide an optional development login
     052 -- related work
     026 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: f44adf0 records the implementation.
+:Resolution: c55a635 records the implementation.
 
 Scope
 -----

@@ -15,7 +15,7 @@ Issue 048: Serve local media before a configured fallback
     042 -- related work
     022 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: c202290 records the implementation.
+:Resolution: da56703 records the implementation.
 
 Scope
 -----

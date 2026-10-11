@@ -16,7 +16,7 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     ``test_ipad_label_text_keeps_the_result_after_fit_observer_is_removed``
     pins that every iPad label is not handed to fitty and does not move on
     repeated resize events. All three fail against the template as it was
-    before 746ce71 and pass after it. The second half has no test and cannot
+    before 312bf15 and pass after it. The second half has no test and cannot
     have one here: see "What emulation cannot see"
 :Depends on: (none -- 017's browser suite is what makes the first half
     testable at all, and it is ``Fixed``)
@@ -37,9 +37,9 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     the list under "What is left" is shorter: items 1 and 5 are done, and 2, 3
     and 4 are not.
     Ruled on 2026-08-01 on the evidence, not by the maintainer: the
-    first half is fixed by 746ce71 and is now pinned by three browser tests
+    first half is fixed by 312bf15 and is now pinned by three browser tests
     that go red without it, so nothing is left to decide there. The second
-    half stays open and this issue stays actionable, because the change 746ce71
+    half stays open and this issue stays actionable, because the change 312bf15
     makes for it -- one-shot fitting and separate screen and print sizes on
     iOS -- runs on the device and nowhere else, and nothing available here can
     tell whether the growth stopped. It is deliberately **not** marked
@@ -50,7 +50,7 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     this report parks is answered under "Why do the photos fail at all?" and is
     **not** filed as its own issue, because no defect in this repository could
     be demonstrated for it
-:Resolution: (none yet) -- the first half is fixed in 746ce71 "fix(labels): fit
+:Resolution: (none yet) -- the first half is fixed in 312bf15 "fix(labels): fit
     text in iPad Safari", which this issue does not close, and the second half
     has no resolution until the device says so
 
@@ -80,14 +80,14 @@ The first half: no photo, no fit
 
 ``kasvimuseo/templates/kasvimuseo/reports/planting-labels.html`` fits the
 species name and the classification line to the label with fitty. Before
-746ce71 the only thing that ever called ``fitTextToSpace`` was the
+312bf15 the only thing that ever called ``fitTextToSpace`` was the
 ``verticalPhotoWidth`` watcher on the ``name`` and ``classification``
 components. That property changes in one place, ``setAspect``, which is the
 ``photo`` component's ``@load`` handler. **No photo, no fit**: the text kept the
 declared ``30pt`` / ``24pt``, and on a label drawn at 046's ``zoom: 0.5`` that
 is about double what a fitted label shows.
 
-Measured in the browser suite, against the template as it was before 746ce71,
+Measured in the browser suite, against the template as it was before 312bf15,
 with the seeded names replaced by one long enough to need fitting and every
 ``/media/`` request failed::
 
@@ -99,7 +99,7 @@ Two and a half times, on this data. The report's own headless reproduction said
 the same thing in the same units: with half the labels' photos 404ing, every
 one of them reported ``font-size: 40px`` and never changed.
 
-The same measurement after 746ce71::
+The same measurement after 312bf15::
 
     desktop, no photo   16px, 16px      (fitted, exactly as with a photo)
     desktop, photos     16px, 16px
@@ -124,7 +124,7 @@ re-test that.** What it left to suspect was iOS text autosizing
 (``-webkit-text-size-adjust``, which this page gets only from the CDN copy of
 sanitize.css) and fitty's own resize observers on the device.
 
-746ce71 addresses the second suspect and, if its premise is right, the first
+312bf15 addresses the second suspect and, if its premise is right, the first
 one too. On iOS -- and only there -- the template now:
 
 * measures a clone of the text in a ``position: fixed`` wrapper outside the
@@ -184,13 +184,13 @@ reported three things:
   line is not.
 * **Not all photos are visible.** So the trigger is still there, and it is
   still the question below rather than a template one. It costs a picture now
-  instead of the text on every label, which is the whole of what 746ce71
+  instead of the text on every label, which is the whole of what 312bf15
   changed about it.
 * **The number does not show while it is being dragged.** That is 045's drag
   layer rather than this issue's fitter -- ``#drag-number`` sits outside
   ``#labels``, takes none of the rules this issue is about, and is sized from
   an inline ``font-size`` computed in ``dragStart`` from ``getBoundingClientRect``
-  against ``offsetWidth``. Those are the two coordinate systems 746ce71 says
+  against ``offsetWidth``. Those are the two coordinate systems 312bf15 says
   Safari disagrees about, so it is worth suspecting the same cause; it is a
   different symptom on a different feature, so it is written into
   :doc:`incoming` rather than folded in here.
@@ -237,7 +237,7 @@ runs on rather than about this repository:
 Neither is a defect that can be demonstrated from here, and one look at the
 tablet's network inspector or the development server's access log distinguishes
 them, so **this is not filed as its own issue**. What has changed since the
-report is that it is no longer load-bearing: after 746ce71 a label is fitted
+report is that it is no longer load-bearing: after 312bf15 a label is fitted
 whether or not its photo arrives, so a failing photo costs a picture and not
 the text.
 
@@ -268,7 +268,7 @@ what is actually left:
    maintainer confirms photos are still missing, so what is left of this one is
    *which* -- a local 200 or a redirect to ``media.example.invalid``.
 
-With 1 done, this becomes ``Fixed`` with 746ce71 in ``Resolution`` as soon as 2
+With 1 done, this becomes ``Fixed`` with 312bf15 in ``Resolution`` as soon as 2
 holds, and nothing else changes.
 
 The report added one note about how to do 2 and 4 with more than eyes: an iPad
@@ -283,13 +283,13 @@ Traps found on the way
 
 * **A test that passes on the broken code.**
   ``test_label_text_fits_and_stays_stable_during_layout_passes``, added by
-  746ce71, passes against the template as it was before 746ce71. It is a real
+  312bf15, passes against the template as it was before 312bf15. It is a real
   test -- it says fitty does not run away on a desktop over twelve resize
   passes -- but it is not a regression test for either half of this report,
   because the label it measures has a photo and is therefore fitted by the old
   watcher too. The two tests named in ``Evidence`` above were added for that
   reason: both fail before the fix.
-* **The iPad was emulated as a desktop.** 746ce71's own iPad test redefined
+* **The iPad was emulated as a desktop.** 312bf15's own iPad test redefined
   ``navigator.platform`` and ``navigator.maxTouchPoints`` on a 1280x900 mouse
   page. It now runs on ``ipad_page`` -- the iPad viewport, a touch screen and
   the device's user agent -- which is the fixture the register asked for in

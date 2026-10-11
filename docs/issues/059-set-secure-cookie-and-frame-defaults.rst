@@ -13,7 +13,7 @@ Issue 059: Set secure cookie and frame defaults
     025 -- related work
     019 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: 72008933932b records the implementation.
+:Resolution: ebb818badfe6 records the implementation.
 
 Scope
 -----

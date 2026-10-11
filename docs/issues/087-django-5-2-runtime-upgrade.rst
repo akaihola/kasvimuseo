@@ -11,7 +11,7 @@ Issue 087: Django 5.2 is the next runtime upgrade step
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Upgrade directly to Django 5.2.16 on Python 3.12 and replace GET logout with a protected POST form.
-:Resolution: 71a3a68 replaces GET logout; 9efcfac upgrades the runtime and package locks.
+:Resolution: 0fac221 replaces GET logout; 56f9104 upgrades the runtime and package locks.
 
 Work
 ----

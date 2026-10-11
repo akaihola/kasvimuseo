@@ -35,7 +35,22 @@ A separate prepared checkout and base checkout also contained different unrelate
 
 Complete proposals 01 through 08 before declaring the public cleanup ready. Coordinate external publication work with the maintainer.
 
-Update of 2026-10-06: local `main` contains the cleanup as merge `ea274ee`, so step 1 is done.
+Update of 2026-10-06: local `main` contains the cleanup as merge `9e211ab`, so step 1 is done.
 Do not do step 6 before the private deployment repository completes tasks 1, 3, and 4.
 Task 1 publishes the deployment repository to a private remote. Task 3 rotates the exposed credentials. Task 4 removes sensitive public history.
 After private task 4 replaces history, repair the `:Resolution:` commit references before the documentation build in step 4.
+
+## Work done on 2026-10-11
+
+Private tasks 1, 3, and 4 are accepted. Private task 9 holds the rewritten history and is still in progress.
+The prepared clean `main` is `0ea0730`, rewritten from the `main` snapshot `03755f2`.
+Its commit map lives in the private deployment repository under `.local/history-rewrite/20261010-185939-task-9/`.
+
+1. We reran `bin/rewrite-public-history` from the private repository against the current `main` into a temporary directory. All 899 shared commits received the same hashes as the prepared map, so the repair can use the prepared map.
+2. We rewrote every commit hash in `docs/` and `docs/tasks/` with the map: 140 checked pointers and the hashes in prose, in 85 files.
+3. Issue 025 named a dropped commit that only changed a removed deployment issue file. Issue 082 named a dropped commit that only changed `ansible/install.yaml`. Both `:Resolution:` fields now say that the private deployment repository keeps those records.
+4. Issue 062 keeps its pointer at the rewritten spike commit `72b65c4`, on the rewritten tag `interim-062-option-2`. The publication must include that tag, or the documentation build fails in a fresh clone.
+5. The task description `docs/tasks/02` names a commit that is on no surviving branch. We left it, because the build does not check task descriptions.
+6. We fetched the rewritten `main` and the rewritten interim tag into `refs/clean/` in the shared repository. Read `.agents/memory/fetch-the-clean-history-before-the-docs-build.md`.
+
+Step 6, the publication, waits for the maintainer. The agent token cannot push a history that changes `.github/workflows/`, and private task 9 must end first.

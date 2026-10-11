@@ -12,7 +12,7 @@ Issue 021: gunicorn is an INSTALLED_APP for a command that is gone
 :Blocks: 036 -- Stage 0
 :Related: 029 -- the real gunicorn constraint, as distinct from this cosmetic one
 :Decision: Remove ``'gunicorn'`` from ``INSTALLED_APPS`` and keep the pin in ``requirements/production.txt``. It is the production server, and since issue 044 the development server too, so the dependency has more use now than when this was filed -- it is only the *app* entry that is dead.
-:Resolution: 0c82b49 -- with issues 020 and 033, which edit the same six lines
+:Resolution: c98e5a7 -- with issues 020 and 033, which edit the same six lines
 
 Problem
 =======
