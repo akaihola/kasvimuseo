@@ -25,7 +25,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 - [ ] [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
-  <!-- hai:{"updatedAt":"2026-10-11T15:09:55.292Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T15:19:49.067Z"} -->
 
 - [ ] [16] Move the images and the locks to Python 3.13
     - Depends on: [10], [11]
