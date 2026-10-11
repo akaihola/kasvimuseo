@@ -75,29 +75,29 @@ def test_a_better_photo_uploaded_later_replaces_the_first_one(photo_factory):
 
 @pytest.mark.django_db
 def test_a_replacement_goes_to_the_right_one_of_two_namesakes(photo_factory):
-    """The one duplicate ``name_fi`` the production data actually has.
+    """The shape of a duplicate ``name_fi`` in a real collection.
 
-    Two ``tarhakurjenmiekka``, and both already have a photo -- so once issue
+    Two ``tarhapioni``, and both already have a photo -- so once issue
     042 stopped ``photo__isnull=True`` narrowing the candidates, every photo
     titled after them is ambiguous and 002's disambiguation has to earn its
     keep. Both of their existing photographs are named after the house they
-    were taken at, which is what tells them apart.
+    were taken at, which is what tells them apart. The names are synthetic.
     """
-    kurala = create_species(name_fi='tarhakurjenmiekka', genus='Iris')
-    peltomaki = create_species(name_fi='tarhakurjenmiekka', genus='Iris',
-                               species="'Cracchus'")
-    for species, house in ((kurala, 'Kurala'), (peltomaki, 'Peltomäki')):
+    ylatalo = create_species(name_fi='tarhapioni', genus='Paeonia')
+    alatalo = create_species(name_fi='tarhapioni', genus='Paeonia',
+                             species="'Sarah Bernhardt'")
+    for species, house in ((ylatalo, 'Ylätalo'), (alatalo, 'Alatalo')):
         create_observation(species=species,
                            origin=create_location(name=house))
         species.photo = photo_factory(title='vanha kuva {0}'.format(house),
                                       filename='vanha-{0}'.format(house))
         species.save()
 
-    photo = photo_factory(title='Tarhakurjenmiekka Kurala 02',
-                          filename='Tarhakurjenmiekka.Kurala.183')
+    photo = photo_factory(title='Tarhapioni Ylätalo 02',
+                          filename='Tarhapioni.Ylätalo.183')
 
-    assert models.Species.objects.get(pk=kurala.pk).photo == photo
-    assert models.Species.objects.get(pk=peltomaki.pk).photo != photo
+    assert models.Species.objects.get(pk=ylatalo.pk).photo == photo
+    assert models.Species.objects.get(pk=alatalo.pk).photo != photo
 
 
 @pytest.mark.django_db

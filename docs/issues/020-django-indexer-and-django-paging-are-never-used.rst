@@ -67,7 +67,7 @@ Package             ``models.py``              South migrations
 =================== ========================== ==============================
 
 So ``paging`` really has no database consequence, and ``indexer`` does have
-one: the production dump carries the ``indexer_index`` table, its sequence, and
+one: a restored copy of the installation carries the ``indexer_index`` table, its sequence, and
 one ``south_migrationhistory`` row (``indexer / 0001_initial``). The table holds
 **zero rows** -- it was written by Sentry's indexing, and Sentry has been gone
 since before this dump.
@@ -131,13 +131,13 @@ own guard passed too: the step that fails rather than ship an English admin
 **The suite passes**: ``dev/kasvimuseo app test`` -- 406 passed.
 ``manage.py validate`` reports 0 errors.
 
-**The site serves.** The production dump was restored, migrated forward, and
+**The site serves.** A restored copy of the installation was migrated forward, and
 the pages were loaded over HTTP from ``dev/kasvimuseo app run`` -- which is
 gunicorn, so a short response is an error rather than a silent truncation
 (issue 044). All answered ``200`` with their content:
 
 * public: ``/kasvimuseo/planted-species/`` (53,540 bytes),
-  ``/kasvimuseo/planted-observation/1291/``,
+  ``/kasvimuseo/planted-observation/<number>/``,
   ``/kasvimuseo/planting-labels/``, ``/kasvimuseo/planting-labels/data/``
   (54,613 bytes -- the response issue 044 was about),
   ``/kasvimuseo/map/22/``, ``/photologue/gallery/``, ``/accounts/login/``

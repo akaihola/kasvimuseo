@@ -111,9 +111,9 @@ Decision
 See ``Decision`` above. The reasoning, in the order it was worked out:
 
 **What is actually broken is where the file is, not what is in it.** The
-fixture's contents are right -- 054 checked them against the production dump,
-and ``.dev/backups/production.sql``'s ``photologue_photosize`` block is the
-four rows the file names, at the same ids, with the sequence at 4. What is
+fixture's contents are right -- 054 checked them against a restored copy of
+the installation, whose ``photologue_photosize`` table is the four rows the
+file names, at the same ids, with the sequence at 4. What is
 wrong is that the only loader that ever sees it is the one that runs too
 early. Option 2 moves it to a loader that runs late enough, and the move is
 one ``git mv``: ``kasvimuseo`` has 22 migrations, so South loads
@@ -201,8 +201,8 @@ Installed 4 object(s) from 1 fixture(s)``, and::
       4 | mobilethumbnail |    80 |     45 |      80 | t       | t
     (4 rows)
 
--- the production dump's table, row for row, with
-``photologue_photosize_id_seq`` at 4 as production's is.
+-- the installation's table, row for row, with
+``photologue_photosize_id_seq`` at 4 as the server's is.
 
 **And the pages, which is the half a table cannot show.** On that database,
 with one species, one planting and one uploaded photograph, and logged into

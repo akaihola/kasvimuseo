@@ -26,9 +26,9 @@ Examples include [issue 041](../issues/041-duplicate-observation-numbers-crash-t
 
 ## Completion checks
 
-- [ ] Public explanations retain the bug trigger, expected behavior, and decision without exposing installation data.
-- [ ] Changed fixtures still exercise the same behavior in the affected tests.
-- [ ] A scan of tracked text and translation catalogs finds no unnecessary personal or operational details.
+- [x] Public explanations retain the bug trigger, expected behavior, and decision without exposing installation data.
+- [x] Changed fixtures still exercise the same behavior in the affected tests.
+- [x] A scan of tracked text and translation catalogs finds no unnecessary personal or operational details.
 
 ## Related work
 
@@ -37,3 +37,21 @@ Task 7 lists the notice files in `docs/third-party-notices.rst`; keep the author
 
 Update of 2026-10-06: task 10 adds issues 087, 088, and 089. Issue 089 records an observation from the production dump of 2026-08-26.
 Include those issues in step 1.
+
+## Work done on 2026-10-11
+
+1. The private deployment repository keeps the original evidence in `docs/public-issue-evidence.rst`, with the public commit that holds the original text.
+2. Issues 002, 006, 011, 020, 041, 042, 045, 053, 054, 055, 056, 063 and 089 now describe the installation without counts, identifiers, file names, device versions or machine paths.
+3. `kasvimuseo/tests/test_signals.py` uses two synthetic `tarhapioni` namesakes and synthetic house names for the same disambiguation test.
+4. `kasvimuseo/tests/test_admin.py` creates a synthetic contact. `ylaneenkasvit/dev_login.py` shows the `puutarhuri` account in its example URL.
+5. `docs/user-guide.rst`, "Projektin muistilista", names the maintainer by role.
+6. Author credits stay: `LICENSE`, `docs/conf.py`, the translation catalog headers, the upstream fork URLs and `docs/third-party-notices.rst`.
+7. `.agents/memory/synthetic-examples-in-public-records.md` records the convention.
+
+Issues 087 and 088 record only local validation results and needed no change.
+
+## Validation on 2026-10-11
+
+- `dev/kasvimuseo app test` in the `kasvimuseo-dev-task3` image: 576 passed, 6 skipped.
+- `dev/kasvimuseo docs --clean` built `.dev/docs/html/index.html` with warnings treated as errors.
+- A scan of tracked text and the two translation catalogs for personal names, place names, device versions and dump references found only author credits and upstream attribution.

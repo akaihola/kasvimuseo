@@ -12,7 +12,7 @@ Issue 011: Species report opens every image file to pick a CSS class
 :Blocks: (none)
 :Related: 004 -- option 2 there depends on how the species photo is rendered; 006 -- the dead template carried the same expression
 :Decision: Option 1, store the orientation. Option 2 does not exist in the pinned photologue: 2.6.1's ``ImageModel`` keeps no dimensions on the model at all, and its one size accessor, ``_get_SIZE_size``, is ``Image.open(self._get_SIZE_filename(size)).size`` after a ``create_size`` that opens the original when the cached copy is absent -- a file open either way. So ``Species.photo_is_horizontal`` plus a South migration and a backfill. Fallback when the file cannot be read is ``vertical``, because that is the branch the template already took for a species with no photo, so nothing that renders today changes shape.
-:Resolution: 93a191e -- ``Species.photo_is_horizontal`` and ``measure_photo_orientation()``, migrations 0020 (column) and 0021 (backfill), both report templates, and the tests that prove no image file is opened. a235a9c adds the species list to those tests and records what the migration did to the production dump.
+:Resolution: 93a191e -- ``Species.photo_is_horizontal`` and ``measure_photo_orientation()``, migrations 0020 (column) and 0021 (backfill), both report templates, and the tests that prove no image file is opened. a235a9c adds the species list to those tests and records the backfill check on a restored copy of the installation.
 
 Problem
 =======
@@ -82,12 +82,12 @@ What was done
   cannot go stale.
 * ``0020_auto__add_field_species_photo_is_horizontal`` adds the column and
   ``0021_backfill_species_photo_is_horizontal`` measures the existing rows.
-  Both were applied to the production dump itself, restored with
-  ``dev/kasvimuseo db restore`` and standing at 0019 with no such column: 156
-  species, 113 of them with a photo. The backfill measured **93 horizontal and
-  20 vertical**, leaving ``NULL`` on exactly the 43 that have no photo, and
-  re-reading all 113 files afterwards and comparing found **113 matches and no
-  mismatches**. Run once with the media directory absent it filled nothing and
+  Both were applied to a restored copy of the installation, standing at 0019
+  with no such column. The backfill measured every species with a photo,
+  left ``NULL`` on exactly the species without one, and re-reading every file
+  afterwards and comparing found **no mismatch**; the private deployment
+  repository keeps the counts. Run once with the media directory absent it
+  filled nothing and
   failed nothing, which is the other half of the promise. Both reports were
   then rendered from that database, one species from each branch, and each came
   back 200 with the right class.

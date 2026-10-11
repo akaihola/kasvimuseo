@@ -95,9 +95,9 @@ The filter is gone; the photo saved last wins. Both consequences the options
 above asked to be designed around were checked against a restored copy of the
 production database rather than guessed at.
 
-**The duplicate names.** The check the options section asks for gives 156
-species, 113 of them with a photo, and exactly **one** duplicated ``name_fi``:
-two ``tarhakurjenmiekka``, *both of which already have photos*. So the
+**The duplicate names.** The check the options section asks for found exactly
+**one** duplicated ``name_fi``, and *both namesakes already had photos*. The
+private deployment repository keeps the names and the counts. So the
 ``MultipleObjectsReturned`` of issue 002 was not reachable in production while
 ``photo__isnull=True`` was there -- both duplicates were filtered out before
 the lookup ran -- and dropping the filter is exactly what makes it reachable.
@@ -105,10 +105,10 @@ That is what the dependency on 002 was about, and it was the right way round.
 
 Those two are now a live case rather than a hypothetical one, and 002's
 disambiguation handles them: both of their existing photographs are named after
-the house they were taken at (``Tarhakurjenmiekka.Kurala.182.jpg`` and
-``Tarhakurjenmiekka 'Cracchus.Peltomäki.178.jpg``), and each house is the origin
-of that species' observations. ``test_signals.py`` carries a test built from
-their real names.
+the house they were taken at, and each house is the origin of that species'
+observations. ``test_signals.py`` carries a test built on that shape with
+synthetic names: two ``tarhapioni`` whose photographs are named
+``Tarhapioni.Ylätalo.182.jpg`` and ``Tarhapioni 'Sarah Bernhardt'.Alatalo.178.jpg``.
 
 One tie-break was added to ``photo_matching`` for this change: when nothing else
 separates two namesakes, prefer the one that has no photo yet. It is the better
@@ -122,9 +122,9 @@ belongs in the instructions issue 037 asks for.
 
 The same check settles 002's option 3 as well, from the other end: a unique
 constraint on ``name_fi`` is **not** applicable to this data as it stands. The
-two ``tarhakurjenmiekka`` are genuinely different plants -- ``Iris x`` and
-``Iris 'Cracchus'`` -- so the constraint would need them renamed or merged
-first, which is a decision about the collection rather than about the code.
+two namesakes are genuinely different plants of the same genus, so the
+constraint would need them renamed or merged first, which is a decision about
+the collection rather than about the code.
 
 A second cause, found by reproducing the report
 -----------------------------------------------

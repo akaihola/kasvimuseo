@@ -82,7 +82,7 @@ Issue 063: The dragged museum number cannot be seen on the iPad
 Problem
 =======
 
-As reported from the iPad (7th generation, iPadOS 18.7.9, Safari) on
+As reported from the maintainer's iPad, in Safari, on
 2026-08-02, on ``/kasvimuseo/planting-labels/``:
 
 **The museum number is not visible while it is being dragged.**

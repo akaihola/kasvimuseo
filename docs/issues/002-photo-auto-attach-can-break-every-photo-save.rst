@@ -109,24 +109,24 @@ can now attach a photo to the wrong species. The two thresholds are what bound
 that, and they are module constants so they can be tuned without reading the
 algorithm.
 
-What the production data says
------------------------------
+What the installation data said
+-------------------------------
 
-Checked against a restored copy while fixing 042, which is the change that made
-this fault reachable in the first place: 156 species, 113 with a photo, and
-exactly **one** duplicated ``name_fi`` -- two ``tarhakurjenmiekka``, both of
-which already have photos.
+A restored copy of the installation was checked while fixing 042, which is the
+change that made this fault reachable in the first place. It had exactly
+**one** duplicated ``name_fi``, and both namesakes already had photos. The
+private deployment repository keeps the names and the counts.
 
 Two things follow. While ``photo__isnull=True`` was in the lookup this crash
 could not actually happen in production, because the only two candidates it
 needs were filtered out before the lookup ran; it was a latent fault, waiting
 for either a second photoless namesake or for 042. And the disambiguation is
 not decoration: since 042 those two are ambiguous on every photo titled after
-them, and it is what tells them apart -- correctly, on their real names, which
-``test_signals.py`` now has a test for.
+them, and it is what tells them apart. ``test_signals.py`` has a test for that
+shape with synthetic names: two ``tarhapioni`` of different cultivars, each
+photographed at a different house.
 
 **Option 3 is not applicable to this data as it stands.** A unique constraint on
-``name_fi`` would need the two ``tarhakurjenmiekka`` -- genuinely different
-plants, ``Iris x`` and ``Iris 'Cracchus'`` -- renamed or merged first. That is a
-decision about the collection rather than about the code, and it is the reason
-this was not the fix.
+``name_fi`` would need the two namesakes -- genuinely different plants of the
+same genus -- renamed or merged first. That is a decision about the collection
+rather than about the code, and it is the reason this was not the fix.

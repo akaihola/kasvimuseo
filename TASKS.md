@@ -31,10 +31,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [3] Replace operational data and personal examples
-    - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:20:54.984Z"} -->
-
 - [11] Move the browser tests to Playwright 1.63
   <!-- hai:{"updatedAt":"2026-10-10T18:19:18.837Z"} -->
 
@@ -44,6 +40,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
 
 ## Completed / Accepted
+
+- [ ] [3] Replace operational data and personal examples
+    - Depends on: [10]
+  <!-- hai:{"updatedAt":"2026-10-11T14:20:54.984Z"} -->
 
 - [ ] [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-11T04:26:58.624Z"} -->

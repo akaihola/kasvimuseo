@@ -57,7 +57,7 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
 Problem
 =======
 
-As reported from the iPad (7th generation, iPadOS 18.7.9, Safari) on
+As reported from the maintainer's iPad, in Safari, on
 2026-07-31, on ``/kasvimuseo/planting-labels/``:
 
 **Label text is about twice the size it should be, and on the labels whose
@@ -67,7 +67,7 @@ Two symptoms, split by whether the photo arrives:
 
 * on the majority of labels, where it does not, the text is simply too big and
   stays that way;
-* on the seven top labels where it does, the text starts at that same doubled
+* on the few labels where it does, the text starts at that same doubled
   size, grows every few seconds, and eventually vanishes.
 
 The report traced the first half to one line of control flow and left the
@@ -219,10 +219,10 @@ fix first. What can be established here:
   follow to the public internet, which is 048's "no offline development"
   impact, restated for a tablet.
 * **On a checkout that has run** ``dev/kasvimuseo media fetch`` **nothing
-  should fail.** On the checkout these notes were written on, all 137
-  originals the production dump references are present in ``media/`` and 139
-  derived ``_display`` files have been generated beside them, so every URL the
-  editor asks for is answered locally with a 200.
+  should fail.** On the checkout these notes were written on, every original
+  the installation references was present in ``media/`` with a derived
+  ``_display`` file beside it, so every URL the editor asks for was answered
+  locally with a 200.
 
 Two candidates remain for the tablet, and both are about the machine the server
 runs on rather than about this repository:
@@ -272,8 +272,8 @@ With 1 done, this becomes ``Fixed`` with 746ce71 in ``Resolution`` as soon as 2
 holds, and nothing else changes.
 
 The report added one note about how to do 2 and 4 with more than eyes: an iPad
-Safari debugging setup is being put together outside this repository, in
-``~/repos/nixos-config`` and a task of its own, and having it before touching
+Safari debugging setup is being put together outside this repository, as a
+task of its own, and having it before touching
 the second half is worth the wait. Safari's Web Inspector attached to the
 tablet is the only thing that can show the computed ``font-size`` growing,
 which is the measurement this file could not take.

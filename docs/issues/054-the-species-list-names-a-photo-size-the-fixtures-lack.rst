@@ -18,7 +18,7 @@ Issue 054: The species list names a photo size not in the fixtures
 :Depends on: (none)
 :Blocks: (none)
 :Related: 011 -- found while covering it, and its test carried the workaround; 004 -- the other broken-image issue on a public page, Fixed
-:Decision: Production is not affected, and the dump says so rather than the maintainer: ``photologue_photosize`` in ``.dev/backups/production.sql`` holds four rows, and the fourth is ``mobilethumbnail`` at 80x45, quality 80, ``crop`` and ``upscale`` on. So this is a fixture gap, not a live defect: the row was added on the server by hand and never written back. Option 1 plus option 2 -- the row goes into ``initial_data.json`` with the production values, so a fresh database matches the server, and a South data migration gives it to the databases that already exist, since ``initial_data.json`` is loaded at ``syncdb`` and never again. Option 3, pointing the template at ``thumbnail``, is rejected: it would change what production serves, which is the one thing here that is currently correct. Nothing had to be invented, so the question of what size to choose does not arise.
+:Decision: Production is not affected, and the installation's ``photologue_photosize`` table says so rather than the maintainer: it holds four rows, and the fourth is ``mobilethumbnail`` at 80x45, quality 80, ``crop`` and ``upscale`` on. So this is a fixture gap, not a live defect: the row was added on the server by hand and never written back. Option 1 plus option 2 -- the row goes into ``initial_data.json`` with the production values, so a fresh database matches the server, and a South data migration gives it to the databases that already exist, since ``initial_data.json`` is loaded at ``syncdb`` and never again. Option 3, pointing the template at ``thumbnail``, is rejected: it would change what production serves, which is the one thing here that is currently correct. Nothing had to be invented, so the question of what size to choose does not arise.
 :Resolution: 6f6d20b -- the fixture row, migration ``0022_add_mobilethumbnail_photo_size``, and the two tests. The suite's ``mobile_thumbnail_size`` fixture is deleted with it.
 
 Problem
@@ -70,10 +70,9 @@ Decision
 
 See ``Decision`` above. The reasoning, in the order it was worked out:
 
-**The dump settled the scope, and no question had to be asked.** Issue 050's
-precedent is that ``.dev/backups/production.sql`` can answer questions about
-the server, and it answers this one exactly. Its
-``photologue_photosize`` ``COPY`` block is::
+**The installation settled the scope, and no question had to be asked.** A
+restored copy of the installation can answer questions about the server, and
+it answers this one exactly. Its ``photologue_photosize`` table is::
 
     1  admin_thumbnail   51   36  70  f  t  f  f
     2  thumbnail        128  128  70  f  f  f  f

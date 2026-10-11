@@ -20,7 +20,7 @@ from django.apps import apps
 
 @pytest.mark.django_db
 def test_the_migrations_create_the_four_photo_sizes_production_has():
-    """The values are the production dump's -- see issue 054.
+    """The values are the installation's -- see issue 054.
 
     Exactly these four rows: photologue's defaults -- an ``admin_thumbnail``
     of 100x75 among them -- must not appear beside or instead of them.

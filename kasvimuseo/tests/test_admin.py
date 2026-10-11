@@ -203,7 +203,7 @@ def sample_data(db, photo_factory):
     planting = factories.create_planted(
         bed=factories.create_bed(plot=factories.create_plot()))
     factories.create_care(planting)
-    Contact.objects.create(last_name='Kaihola', first_name='Antti')
+    Contact.objects.create(last_name='Mallinen', first_name='Maija')
     species = planting.observation.species
     species.photo = photo_factory()
     species.save()

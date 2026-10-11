@@ -61,7 +61,7 @@ Problem
 device and a list of symptoms:
 
 ==================== ==============================================
- Device              iPad (7th generation), iPadOS 18.7.9, Safari
+ Device              the maintainer's iPad, in Safari
  In scope            admin, label editor, printable sheets
  Admin               **Works.**
  Label editor        Numbers cannot be dragged between labels.
