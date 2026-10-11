@@ -25,3 +25,14 @@ The private deployment repository tracks the host work for the new runtime.
 
 - [ ] Issue 036 has a status and a decision that match the state of the programme.
 - [ ] A clean documentation build passes.
+
+## Work done on 2026-10-11
+
+1. `docs/upgrade-plan.rst` on `main` shows Stages 0 to 19 as `Done`.
+2. The programme ends with the source upgrade. The private deployment repository owns the host work, so the public record cannot track a deployment.
+3. Issue 036 now reads `Fixed`. Its decision records that choice, and its resolution names the Stage 19 merge and upgrade commits.
+
+## Validation on 2026-10-11
+
+- `dev/kasvimuseo docs --clean` built `.dev/docs/html/index.html` with no warnings. The generated register lists issue 036 as `Fixed`.
+- `dev/kasvimuseo app test kasvimuseo/tests/test_issue_register.py kasvimuseo/tests/test_commit_pointers.py` in the `kasvimuseo-dev-task14` image: 78 passed.
