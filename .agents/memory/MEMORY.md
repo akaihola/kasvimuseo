@@ -4,6 +4,7 @@ This index helps contributors find portable development guidance. Each note link
 - [Integrate on main](kasvimuseo-integration-branch-is-main.md).
 - [Run the suite in the container](run-the-suite-in-the-container.md).
 - [Check browser behavior](browser-checks-via-static-harness.md).
+- [Check a fix on the iPad](check-a-fix-on-the-ipad-from-a-development-server.md).
 - [Check browser server failures](browser-suite-server-dies-under-sibling-load.md).
 - [Use separate development image tags](dev-image-tag-is-shared-between-workspaces.md).
 - [Check documentation build output](docs-build-lock-exits-zero.md).
