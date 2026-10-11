@@ -42,6 +42,8 @@ PRIVATE = [
     '.env.production',
     'ylaneenkasvit/local_settings.py',
     'ylaneenkasvit/local_settings.staging.py',
+    'ylaneenkasvit/local_settings_staging.py',
+    'ylaneenkasvit/local_settings2.py',
     'ylaneenkasvit/kajala_settings.py',
     'ansible/hosts',
     'ansible.cfg',
@@ -66,6 +68,7 @@ PUBLIC = [
     'kasvimuseo/tests/test_ignore_rules.py',
     'requirements/dev.txt',
     'ylaneenkasvit/common_settings.py',
+    'ylaneenkasvit/development_settings.py',
     'ylaneenkasvit/test_settings.py',
 ]
 
