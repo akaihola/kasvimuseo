@@ -7,5 +7,5 @@ The private `kasvimuseo-deployment` repository owns site settings, inventories, 
 Public development instructions must work without access to that repository.
 Read [docs/issues/deployment-records.rst](../../docs/issues/deployment-records.rst) for the issue numbers that the private repository owns.
 
-Keep machine paths, session identifiers, and tool permissions out of public memory text and metadata.
+Read [AGENTS.md](../../AGENTS.md), "Maintain agent memories", for facts that belong in private agent memory.
 Preserve originals privately before removing environment-specific records.
