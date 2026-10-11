@@ -45,3 +45,24 @@ The review reproduced the leak with a harmless marker. Both `setup.py build_py` 
 ## Related work
 
 Coordinate the filesystem layout with [proposal 04](04-track-private-state-exclusions.md).
+
+## Correction on 2026-10-11
+
+Independent review found that wheel builds still copied private settings from an existing build directory.
+The original tests always used fresh build directories and missed this defect.
+
+1. `setup.py`, `build_py.run`, removes cached private source and bytecode after copying package files.
+2. `dev/check-release-artifacts`, `problems`, rejects private source, legacy bytecode, and tagged bytecode under `__pycache__`.
+3. `kasvimuseo/tests/test_release_artifacts.py` rebuilds wheels after an unfiltered build cached synthetic private settings.
+4. The regression checks cover direct and pip wheel builds, configured build directories, orphaned bytecode, and preservation of public modules.
+
+The user still owns acceptance of task 1 in `TASKS.md`, "Completed / Accepted".
+
+## Validation on 2026-10-11
+
+- All four cached-build cases failed with the previous implementation and passed with the correction.
+- All 27 packaging checks passed in the Python 3.13 development image.
+- The full application suite passed all 596 tests in that image.
+- The production image built successfully and contained no private source or bytecode.
+- The installed production package loaded with configuration supplied from the environment.
+- The clean documentation build passed.
