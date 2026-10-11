@@ -12,7 +12,6 @@ Issue 069: Track development settings
 :Related: 059 -- related work
     048 -- related work
     044 -- related work
-    050 -- related work
     025 -- related work
     026 -- related work
 :Decision: Keep the generic implementation and its automated checks.

@@ -1,5 +1,5 @@
-# The browser tests run on the host's Python 3, not in the Python 2.7 app
-# container, so nothing here is installed anywhere near the application. uv
+# The browser tests run on the host's Python 3, not in the app container, so
+# nothing here is installed anywhere near the application. uv
 # resolves this file per run; see `dev/kasvimuseo app browser-test`.
 #
 # playwright is pinned loosely on purpose: the browser builds it downloads have

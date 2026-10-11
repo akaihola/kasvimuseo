@@ -26,10 +26,10 @@ The prepared issue register retains ten deployment-only stubs, and [docs/archive
 
 ## Completion checks
 
-- [ ] Documentation describes the current runtime and an independent contributor workflow.
-- [ ] Issue rankings, relationships, and remaining archive references are valid.
-- [ ] A clean documentation build passes with warnings treated as errors.
-- [ ] Generated output contains no removed operational pages.
+- [x] Documentation describes the current runtime and an independent contributor workflow.
+- [x] Issue rankings, relationships, and remaining archive references are valid.
+- [x] A clean documentation build passes with warnings treated as errors.
+- [x] Generated output contains no removed operational pages.
 
 ## Dependencies
 
@@ -40,3 +40,22 @@ Update of 2026-10-06: task 10 lands the Django 6.0 runtime that this documentati
 `docs/issues/incoming.rst` still says that `AGENTS.md` states the rule for incoming reports.
 `AGENTS.md` no longer holds either rule.
 Step 5 waits for private task 4, which replaces public history. If task 4 has not run when this task ends, task 9 repairs the commit references.
+
+## Work done on 2026-10-11
+
+1. `README.rst`, "Testing" and "Continuous integration", `docs/index.rst`, `docs/your-first-change.rst`, `docs/issues/next.rst`, "Facts for a fresh agent", and `docs/api.rst` now describe Django 6.0 on Python 3.12 in the container. The comments in `docs/conf.py`, `dev/docs-build`, `dev/kasvimuseo`, `browser_tests/` and `.github/workflows/tests.yml` say the same.
+2. `docs/index.rst` no longer promises Ansible instructions. The private deployment repository owns deployment instructions.
+3. `docs/issues/deployment-records.rst` lists the ten reserved numbers 032, 049, 050, 051, 060, 066, 070, 071, 074 and 075. We removed the ten placeholder files and their ranking entries. Issues 025, 026, 031, 036, 057, 059, 065, 067, 068 and 069 no longer name those numbers in `Depends on`, `Blocks` or `Related`. Issue 017 and `README.rst` point at the new page in prose.
+4. `docs/archive.rst`, "Removed", holds no entries. The nine removed entries pointed at the pre-split `README.rst`, the emptied `incoming.rst` entries and eight machine-specific memory notes.
+5. `docs/issues/next.rst` and `docs/issues/incoming.rst` no longer send readers to `AGENTS.md` for rules that file does not hold. The queue refill rule now names `TASKS.md`.
+6. `.agents/memory/private-deployment-records.md` points at the new page instead of the archive.
+
+Step 5, the commit reference repair, waits for private task 4. Task 9 repairs the references if task 4 lands after this task.
+
+## Validation on 2026-10-11
+
+- `dev/kasvimuseo docs --clean` built `.dev/docs/html/index.html` with warnings treated as errors and no warning in `.dev/docs/build.log`.
+- `.dev/docs/html/issues/` contains `deployment-records.html` and no `*-deployment-record.html` page.
+- Outside the plans and the issue history, the generated pages mention Python 2.7, Django 1.5 or Ansible only in the upgrade plan title.
+- `dev/kasvimuseo app test` in the `kasvimuseo-dev-task8` image: 585 passed in 22 seconds.
+- `git diff --check` passed.

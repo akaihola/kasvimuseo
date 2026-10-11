@@ -234,12 +234,12 @@ TEST_ENV="-e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings"
 # browser, which is how both 048 and 067 arrived.
 warn_about_local_settings() {
     local settings=$REPO/ylaneenkasvit/local_settings.py
-    # Python 2.7 imports a .pyc that has no .py beside it, so deleting only the
+    # Python imports a .pyc that has no .py beside it, so deleting only the
     # source leaves the old settings in force, which is why
     # the note below would otherwise be advice that does not work.
     if [ ! -f "$settings" ] && [ -f "$settings"c ]; then
         echo "Note: ylaneenkasvit/local_settings.pyc has no .py beside it and" >&2
-        echo "Python 2.7 imports it anyway, so whatever it says is still applied" >&2
+        echo "Python imports it anyway, so whatever it says is still applied" >&2
         echo "over ylaneenkasvit/development_settings.py. Delete it." >&2
         return 0
     fi
@@ -321,12 +321,12 @@ app_serve() {
     fi
 }
 
-# The label editor's browser tests (issue 017). Two interpreters, and that is
-# the point: the application is Django 1.5 on Python 2.7, nothing that drives a
-# current browser supports 2.7, and the browser this page has to be right in is
-# not one a 2020 Chromium can stand in for. So the server is the real
-# application in its own container and the tests are Python 3 on the host,
-# through uv, talking to it over HTTP -- the same split `docs` already uses.
+# The label editor's browser tests (issue 017). Two places, and that is the
+# point: the application container ships no browser, and the browser this page
+# has to be right in is not one a 2020 Chromium can stand in for. So the server
+# is the real application in its own container and the tests are Python 3 on
+# the host, through uv, talking to it over HTTP -- the same split `docs`
+# already uses.
 #
 # Two engines as well as two interpreters, since issue 061: every test runs in
 # Chromium and again in Playwright's WebKit, which is the engine iOS Safari is

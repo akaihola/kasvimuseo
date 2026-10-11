@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build the Sphinx documentation into .dev/docs/html/.
 #
-# Runs on the host's Python 3 via uv, entirely outside the Python 2.7 app
-# container: nothing here imports the application. See
+# Runs on the host's Python 3 via uv, entirely outside the app container:
+# nothing here imports the application. See
 # docs/issues/038-no-rendered-documentation.rst.
 #
 # Usage: dev/docs-build [--open] [--clean] [sphinx-build args...]

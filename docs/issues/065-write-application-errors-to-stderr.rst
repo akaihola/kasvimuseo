@@ -9,13 +9,11 @@ Issue 065: Write application errors to stderr
 :Evidence: The settings write application errors to stderr. Tests check logging without relying on an external mail service.
 :Depends on: (none)
 :Blocks: (none)
-:Related: 051 -- related work
-    044 -- related work
+:Related: 044 -- related work
     025 -- related work
     026 -- related work
     057 -- related work
     059 -- related work
-    066 -- related work
     036 -- related work
 :Decision: Keep the generic implementation and its automated checks.
 :Resolution: 238b35e records the implementation.

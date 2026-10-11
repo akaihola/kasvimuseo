@@ -8,22 +8,15 @@ Suggested order of implementation
 ---------------------------------
 
 The ranking preserves the existing implementation order.
-The private deployment repository owns operational reports behind deployment records.
+The private deployment repository owns the reports behind the numbers in :doc:`deployment-records`.
 
 .. issue-rank::
 
-   050: Keep the established priority.
-   049: Keep the established priority.
    065: Keep the established priority.
-   051: Keep the established priority.
    026: Keep the established priority.
    025: Keep the established priority.
    057: Keep the established priority.
    059: Keep the established priority.
-   060: Keep the established priority.
-   071: Keep the established priority.
-   066: Keep the established priority.
-   075: Keep the established priority.
    069: Keep the established priority.
    044: Keep the established priority.
    002: Keep the established priority.
@@ -65,7 +58,6 @@ The private deployment repository owns operational reports behind deployment rec
    021: Keep the established priority.
    022: Keep the established priority.
    033: Keep the established priority.
-   032: Keep the established priority.
    031: Keep the established priority.
    006: Keep the established priority.
    013: Keep the established priority.
@@ -78,7 +70,6 @@ The private deployment repository owns operational reports behind deployment rec
    064: Keep the established priority.
    067: Keep the established priority.
    068: Keep the established priority.
-   070: Keep the established priority.
    034: Keep the established priority.
    014: Keep the established priority.
    028: Keep the established priority.
@@ -101,7 +92,6 @@ The private deployment repository owns operational reports behind deployment rec
    089: Photologue 3.20 from 088 leaves a phone photo sideways when it has an
       effect. No production data has an effect, so the decision can wait.
    035: Keep the established priority.
-   074: Keep the established priority.
 
 All issues
 ----------
@@ -118,3 +108,4 @@ All issues
    README
    next
    incoming
+   deployment-records

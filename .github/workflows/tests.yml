@@ -1,8 +1,8 @@
 # Continuous integration for kasvimuseo -- issue 018.
 #
 # This deliberately calls dev/kasvimuseo rather than re-expressing what it does.
-# The suite runs inside the project's own Python 2.7 image (no public runtime has
-# Django 1.5 and the pinned dependencies), and ylaneenkasvit/common_settings.py
+# The suite runs inside the project's own image (no public runtime has the
+# pinned dependencies), and ylaneenkasvit/common_settings.py
 # hardcodes HOST: /var/run/postgresql -- a unix socket directory, not a TCP host.
 # A PostgreSQL service container would therefore need a settings change to be
 # reachable at all, while the script already starts a throwaway cluster and
@@ -46,7 +46,7 @@ jobs:
       # against musl. Not cached: a cache keyed on the build inputs would save
       # roughly a minute per run and is worth adding if that ever matters, but it
       # is machinery to maintain for a two-minute pipeline.
-      - name: Build the Python 2.7 image
+      - name: Build the application image
         run: dev/kasvimuseo app build
 
       # Starts the cluster, runs pytest against it, stops it again. About 25
@@ -151,7 +151,7 @@ jobs:
               >> "$GITHUB_PATH"
           echo "USER=$(id -un)" >> "$GITHUB_ENV"
 
-      - name: Build the Python 2.7 image
+      - name: Build the application image
         run: dev/kasvimuseo app build
 
       - name: Install Playwright's ${{ matrix.engine }}

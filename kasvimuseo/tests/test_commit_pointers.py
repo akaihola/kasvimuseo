@@ -3,7 +3,7 @@
 
 The module under test is ``docs/_ext/commit_pointers.py``, which the
 documentation build drives on the host's Python 3 and ``dev/repoint`` drives on
-either. It is tested here, in the application's Python 2.7 container, for the
+either. It is tested here, in the application's container, for the
 reason ``test_issue_register.py`` gives: this is the suite anybody changing
 this repository runs.
 

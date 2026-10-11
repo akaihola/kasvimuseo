@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Sphinx configuration.
 
-This file runs on the host's Python 3, never inside the application's Python 2.7
+This file runs on the host's Python 3, never inside the application's
 container, and nothing here imports the application. See
 ``docs/issues/038-no-rendered-documentation.rst`` for why, and for the points in
 ``docs/upgrade-plan.rst`` at which each workaround can be dropped.
@@ -37,8 +37,8 @@ exclude_patterns = ['_build']
 # -- API reference ----------------------------------------------------------
 #
 # sphinx-autoapi rather than sphinx.ext.autodoc: autodoc imports every module,
-# which needs a working Django 1.5 environment on Python 2.7, where modern
-# Sphinx cannot run. autoapi parses the source instead.
+# which needs a configured Django environment with the pinned dependencies.
+# autoapi parses the source instead.
 autoapi_dirs = ['../kasvimuseo', '../ylaneenkasvit']
 autoapi_root = 'api'
 autoapi_ignore = [

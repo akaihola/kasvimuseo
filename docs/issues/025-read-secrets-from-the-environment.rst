@@ -8,7 +8,7 @@ Issue 025: Read secrets from the environment
 :Source: Repository maintenance
 :Evidence: The settings require explicit signing keys and database passwords. Missing variables stop startup.
 :Depends on: (none)
-:Blocks: 049 -- related work
+:Blocks: (none)
 :Related: 026 -- related work
 :Decision: Keep the generic implementation and its automated checks.
 :Resolution: 49407ca, 90eb35d records the implementation.

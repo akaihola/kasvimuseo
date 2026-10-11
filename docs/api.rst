@@ -3,8 +3,8 @@ API reference
 =============
 
 Generated from the source by sphinx-autoapi, which reads the code without
-importing it -- the only way to document a Python 2.7 application from a modern
-toolchain. South migrations and the test suite are left out.
+importing it, so the build needs none of the application's dependencies.
+Migrations and the test suite are left out.
 
 Because nothing is imported, what is documented is what the source *says*:
 dynamically built attributes and anything a decorator rewrites at import time

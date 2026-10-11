@@ -8,10 +8,10 @@ Issue 031: Three dependencies were installed from URLs, not from PyPI
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: (none)
-:Depends on: 032 -- **met**: deleting ``fabfile.py`` removed ``flax``, one of
-    the three
+:Depends on: (none) -- deleting ``fabfile.py`` removed ``flax``, one of the
+    three, before this issue started; deployment record 032 holds that work
 :Blocks: 036 -- Stage 0
-:Related: 032
+:Related: (none)
 :Decision: Vendor ``django-jqm`` into the repository, as the Options section
     below and ``docs/upgrade-plan.rst`` Stage 0 both recommend. Asked of the
     maintainer rather than assumed, since the field was ``undecided`` and the

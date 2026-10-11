@@ -31,22 +31,23 @@ Four, and they are worth two minutes because every other page assumes them.
     change that resolves the issue.
 
 **A stage**
-    One step of a plan -- :doc:`upgrade-plan` has twenty, and
-    :doc:`test-coverage-plan`'s packages are all done. Stages are not issues:
-    the plan already argued for the order, so there is nothing to rank. "Where
-    this plan has got to", at the top of each plan, says which one is next.
+    One step of a plan -- :doc:`upgrade-plan` has twenty, and both it and
+    :doc:`test-coverage-plan` are complete. Stages are not issues: the plan
+    already argued for the order, so there is nothing to rank. "Where this
+    plan has got to", at the top of each plan, says which one is next, or that
+    none is left.
 
 Set the project up
 ==================
 
-The application is Django 1.5 on Python 2.7, so it runs in a container with a
+The application is Django 6.0 on Python 3.12, and it runs in a container with a
 throwaway PostgreSQL cluster beside it, and one script drives all of it. You
 need ``podman`` and a PostgreSQL installation. :doc:`development` is the full
 account, including how to get a database with data in it; the shortest path
 that gets you a running application is at the top of it.
 
-You do not need the production dump to write code or run the suite. You do need
-it to look at real data.
+You do not need a database dump to write code or run the suite. You do need
+one, supplied by its owner, to look at real data.
 
 Pick something to work on
 =========================
@@ -68,8 +69,8 @@ maintainer has not ruled on what the fix should be, so the work includes asking
 -- ask, and carry on rather than waiting. **Severity** is user-visible impact,
 not difficulty.
 
-If the queue is empty of anything you can do, the next stage of
-:doc:`upgrade-plan` is the other source of work.
+If the queue is empty of anything you can do, ``TASKS.md`` at the repository
+root lists the proposed work.
 
 Make the change
 ===============
@@ -90,7 +91,7 @@ Check it
 
 Two commands, and both of them are what CI runs::
 
-    $ dev/kasvimuseo app test      # pytest, in the container, about 20 seconds
+    $ dev/kasvimuseo app test      # pytest, in the container
     $ dev/kasvimuseo docs          # Sphinx, on the host, warnings are errors
 
 The suite has a coverage floor, so a change that adds code without tests can

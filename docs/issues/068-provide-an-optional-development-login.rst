@@ -10,8 +10,6 @@ Issue 068: Provide an optional development login
 :Depends on: (none)
 :Blocks: (none)
 :Related: 067 -- related work
-    049 -- related work
-    051 -- related work
     052 -- related work
     026 -- related work
 :Decision: Keep the generic implementation and its automated checks.

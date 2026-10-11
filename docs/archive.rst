@@ -19,35 +19,6 @@ pointer resolves. ``docs/issues/README.rst`` defines it.
 Removed
 =======
 
-* ``docs/issues/incoming.rst`` @ ``88455a0`` -- the "Emptied on ..." entries,
-  removed 2026-08-04. About 160 lines that told, in prose, what became of every
-  report the page had ever held. Each of those reports is a numbered issue file
-  now. Each issue file carries its own reasoning, so the entries were a second
-  copy that nobody updated. Read the page at that commit to see them.
-
-* ``README.rst`` @ ``b39ce70`` -- records the documentation before the deployment split.
-  The private deployment repository now owns operations instructions and the imported source snapshots.
-
-* ``.agents/memory/asking-the-maintainer-may-not-land.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/master-is-an-alias-for-main.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/media-symlink-breaks-app-manage.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/merge-to-main-is-gated.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/ready-now-may-be-done-on-a-branch.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/resolution-hash-dies-in-the-rebase.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/sandbox-reaps-detached-processes.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
-
-* ``.agents/memory/stale-dev-image-looks-like-a-missing-jqm.md`` @ ``a7a8a0a`` -- the note contained obsolete or environment-specific guidance.
-  Task 2 preserved the original privately before removal.
+This page holds no entries at present.
+Task 8 removed the earlier entries on 2026-10-11, because each one pointed
+readers at operational text that the private deployment repository now owns.

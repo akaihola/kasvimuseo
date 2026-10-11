@@ -28,8 +28,8 @@ Issue 017: Browser test suite is unrunnable, so the Vue label editor is untested
     decision" below for what was measured.
 :Resolution: Fixed in b378bbf. The old suite and
     ``requirements/integration-tests.txt`` are gone, and with them the
-    committed production password -- which turned out to be live, and is issue
-    :doc:`050 <050-deployment-record>`.
+    committed production password -- which turned out to be live, and is
+    deployment record 050 in :doc:`deployment-records`.
 
 Problem
 =======

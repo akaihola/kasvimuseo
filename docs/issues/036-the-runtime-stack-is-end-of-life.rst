@@ -8,7 +8,7 @@ Issue 036: The runtime stack is end-of-life and unpatched
 :Reported: 2026-07-28
 :Source: Dependency upgrade analysis, branch ``requirements-update-plan``
 :Evidence: See :doc:`076-model-text-needs-python-3-methods`, Checks.
-:Depends on: 016, 019, 020, 021, 022, 023, 024, 027, 028, 029, 030, 031, 032, 033, 034 -- the individual obstacles, listed in the upgrade plan
+:Depends on: 016, 019, 020, 021, 022, 023, 024, 027, 028, 029, 030, 031, 033, 034 -- the individual obstacles, listed in the upgrade plan
 :Blocks: (none)
 :Related: 035 -- the ceiling that will make this recur
     040 -- option 3 there is to wait for this
