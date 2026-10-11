@@ -39,7 +39,7 @@ Review `jqm/`, `browser_tests/vendor/`, and copied assets under `kasvimuseo/stat
 
 ## Validation on 2026-10-10
 
-- Every copy was compared byte for byte with the upstream file at the recorded version. One template differs on purpose; the notices page records it.
+- Each copy was compared with its upstream version. The date-picker code and one template differ. Read `docs/third-party-notices.rst`, "What the check on 2026-10-10 found".
 - The upstream django-jqm archive has no license file. Its `setup.py` and the Launchpad project page declare MIT, which `jqm/LICENSE` records.
 - The full application suite passed in the development image: 570 tests, including the 13 new notice tests and the 10 release artifact tests.
 - A negative control removed `jqm/LICENSE`; two notice tests failed and named the file.
@@ -49,3 +49,23 @@ Review `jqm/`, `browser_tests/vendor/`, and copied assets under `kasvimuseo/stat
 ## Related work
 
 Coordinate project metadata with [proposal 06](06-declare-project-license.md).
+
+## Review correction, 2026-10-11
+
+The correction resolves R1, R2, and S1 from the independent review.
+
+1. The dashboard template now carries its upstream notices in source distributions, wheels, and the production image.
+2. `docs/third-party-notices.rst`, "The inventory", records the copied template and its notice file.
+3. The same document, "What the check on 2026-10-10 found", records the date-picker code changes.
+4. The notice tests parse every inventory row and check complete notice contents against reviewed hashes.
+5. Regression checks reject rows with missing files and a notice reduced to its copyright line.
+
+Task 7 remains unchecked in `TASKS.md` until the user accepts it.
+
+## Validation on 2026-10-11
+
+- The full application suite passed after rebasing on current `main`: 598 tests.
+- The browser suite passed: 79 tests and seven touch checks skipped. `browser_tests/conftest.py` explains the skips.
+- `dev/kasvimuseo docs --clean` built the documentation without warnings.
+- The production image build passed. Its installed dashboard notice matched the reviewed file byte for byte.
+- The rerun also found a stale assertion after task 4 changed an ignore rule. Commit `test(settings): drop stale ignore rule assertion` removes it.

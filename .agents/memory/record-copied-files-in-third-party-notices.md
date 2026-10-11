@@ -4,4 +4,5 @@ This note helps contributors keep the license inventory complete when they copy 
 
 Read [docs/third-party-notices.rst](../../docs/third-party-notices.rst), "The inventory", before you copy a file from another project.
 Add a row for the copy and put the upstream license text beside the file.
-[kasvimuseo/tests/test_third_party_notices.py](../../kasvimuseo/tests/test_third_party_notices.py) fails on a notice file without a row.
+Read [kasvimuseo/tests/test_third_party_notices.py](../../kasvimuseo/tests/test_third_party_notices.py) for inventory and complete notice checks.
+Read [docs/third-party-notices.rst](../../docs/third-party-notices.rst), "What is not vendored", for template overrides.

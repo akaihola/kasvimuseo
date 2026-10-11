@@ -220,11 +220,41 @@ def test_the_required_data_files_are_in_the_artifact(artifacts, kind):
                      'jqm/README.rst',
                      # The license notices of task 7.
                      'jqm/LICENSE',
+                     ('ylaneenkasvit/templates/grappelli/dashboard/modules/'
+                      'link_list.html.LICENSE.txt'),
                      'kasvimuseo/static/js/kasvimuseo/'
                      'fitty.min.js.LICENSE.txt',
                      'kasvimuseo/static/grappelli/jquery/i18n/'
                      'ui.datepicker-fi.js.LICENSE.txt']:
         assert required in names, required
+
+
+@pytest.mark.parametrize('kind', ['sdist', 'wheel'])
+def test_the_dashboard_notice_is_complete_in_the_artifact(artifacts, kind):
+    notice = ('ylaneenkasvit/templates/grappelli/dashboard/modules/'
+              'link_list.html.LICENSE.txt')
+    expected = (artifacts[0] / notice).read_bytes()
+    if kind == 'wheel':
+        with zipfile.ZipFile(artifacts[2]) as archive:
+            actual = archive.read(notice)
+    else:
+        with tarfile.open(artifacts[1]) as archive:
+            root = archive.getnames()[0].split('/')[0]
+            actual = archive.extractfile(root + '/' + notice).read()
+    assert actual == expected
+
+
+def test_the_checker_rejects_a_missing_dashboard_notice(artifacts, tmp_path):
+    wheel = tmp_path / 'without-dashboard-notice.whl'
+    notice = ('ylaneenkasvit/templates/grappelli/dashboard/modules/'
+              'link_list.html.LICENSE.txt')
+    with zipfile.ZipFile(artifacts[2]) as source, zipfile.ZipFile(wheel, 'w') as target:
+        for name in source.namelist():
+            if name != notice:
+                target.writestr(name, source.read(name))
+    code, output = run([sys.executable, CHECKER, str(wheel)])
+    assert code == 1
+    assert notice + ' is missing' in output
 
 
 @pytest.mark.parametrize('kind', ['sdist', 'wheel'])

@@ -132,9 +132,7 @@ def test_the_development_relaxation_is_in_a_tracked_file():
     with open(os.path.join(REPO_ROOT, '.gitignore')) as ignores:
         ignored = ignores.read()
 
-    # The one settings file that is still untracked, and the line that says so:
-    # if this ever stops matching, read the rest of this assertion again.
-    assert '/ylaneenkasvit/local_settings.py' in ignored
+    # test_ignore_rules.py checks which private settings Git ignores.
     assert 'development_settings' not in ignored, (
         'the development settings are excluded from the repository, which is'
         ' the shape of issue 069')
