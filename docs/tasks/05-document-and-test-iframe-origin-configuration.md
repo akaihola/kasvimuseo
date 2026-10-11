@@ -60,3 +60,18 @@ The base checkout contains an unrelated `TASKS.md` backlog reorder.
 The maintainer must resolve that edit before the feature branch can merge safely.
 Task 5 stays In Progress until integration finishes.
 The deployment maintainer then owns the live embed check in the private repository.
+
+## Integration of 2026-10-11
+
+This record helps the maintainer check task 5 integration and its remaining deployment work.
+
+- The independent review found zero actionable defects and proposed no code fixes.
+- The maintainer reconciled the tracker and memory index with current `main`.
+- The loader and test code stayed unchanged during the rebase.
+- All 14 iframe checks passed again with the repository's Playwright 1.63.0 pin.
+- The JavaScript syntax check, diff check, and documentation build passed.
+- Merge commit `90655fd` integrated the implementation into local `main`.
+
+This integration clears the blocker recorded on 2026-10-10.
+Task 5 is complete and awaits user acceptance.
+The deployment maintainer owns deployment and the live embed check in the private repository.

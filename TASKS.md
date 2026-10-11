@@ -37,10 +37,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [5] Deduce the catalogue origin in the iframe loader
-  <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
-
 ## Completed / Accepted
+
+- [ ] [5] Deduce the catalogue origin in the iframe loader
+  <!-- hai:{"updatedAt":"2026-10-11T14:30:53.441Z"} -->
 
 - [ ] [3] Replace operational data and personal examples
     - Depends on: [10]
