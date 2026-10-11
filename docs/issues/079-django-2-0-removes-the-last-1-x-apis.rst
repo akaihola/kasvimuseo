@@ -11,7 +11,7 @@ Issue 079: Django 2.0 removes the last 1.x APIs this project uses
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 11 on Python 3.7 with the pins the upgrade plan names. Keep the later stages in issue 036.
-:Resolution: 6c069fc drops the removed APIs; 30887c2 updates two tests; 1ee5d2a moves the pins.
+:Resolution: 8462a9d drops the removed APIs; 3a6653f updates two tests; 19284857424a moves the pins.
 
 Work
 ----

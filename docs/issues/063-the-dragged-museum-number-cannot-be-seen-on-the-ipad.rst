@@ -72,7 +72,7 @@ Issue 063: The dragged museum number cannot be seen on the iPad
     untestable change to this template is exactly how 056's second half got its
     second life. The measured device evidence instead supports the small iPad
     path fix recorded above.
-:Resolution: ``96806af`` -- the drag copy uses fixed positioning and viewport
+:Resolution: ``3c1ce8c`` -- the drag copy uses fixed positioning and viewport
     coordinates on iPad, and the focused browser assertion checks that path.
     The application suite and documentation build pass. The browser harness
     remains blocked before collection because its seed script raises Django's

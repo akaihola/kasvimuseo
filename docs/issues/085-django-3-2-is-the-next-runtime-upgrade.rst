@@ -11,7 +11,7 @@ Issue 085: Django 3.2 is the next runtime upgrade step
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 16 on Python 3.10.19 with the requested package pins. Keep implicit primary keys as AutoField.
-:Resolution: 580bba9 upgrades the runtime and pins the implicit primary-key type.
+:Resolution: b977544 upgrades the runtime and pins the implicit primary-key type.
 
 Work
 ----

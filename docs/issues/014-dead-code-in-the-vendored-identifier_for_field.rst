@@ -19,7 +19,7 @@ Issue 014: Dead code in the vendored identifier_for_field
     there. Two of the three Django API removals nobody had listed --
     ``_meta.module_name`` at 1.8 and ``_meta.get_field_by_name`` at 1.10 -- are
     in this same function, which is a second reason not to invest in it.
-:Resolution: dc51d2e, the Stage 5 commit that deletes
+:Resolution: 4876f02, the Stage 5 commit that deletes
     ``kasvimuseo/templatetags/kasvimuseo_admin_list.py`` -- the closing event
     this field always named. No repair was made before it, as ruled.
 

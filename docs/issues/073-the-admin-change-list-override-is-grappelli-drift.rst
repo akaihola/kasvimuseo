@@ -18,7 +18,7 @@ Issue 073: The admin change list override is Grappelli drift
 :Decision: ruled -- delete the override. The old ``admin_list`` fork was
     removed in Stage 5, and the installed Grappelli 2.10.4 template supplies
     the required changelist behavior.
-:Resolution: 380f31f -- deleted the obsolete project override. The docs build
+:Resolution: ebf7016 -- deleted the obsolete project override. The docs build
     and full application suite passed. The browser test stopped in its
     existing Django app-initialization setup.
 

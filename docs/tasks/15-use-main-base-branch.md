@@ -31,7 +31,7 @@ One mention stays: `AGENTS.md` links to a file on the `master` branch of another
 
 ## Status on 2026-10-09
 
-Steps 1 to 4 are done, in merge `3d206bc`.
+Steps 1 to 4 are done, in merge `355c814`.
 The suite (543 tests) and a clean documentation build passed before the merge.
 
 Step 5 failed on `gogo` with HTTP 403, `Resource not accessible by personal access token`.

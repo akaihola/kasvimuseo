@@ -62,5 +62,5 @@ Step 5 waits for private task 4, which replaces public history. If task 4 has no
 
 ## Validation of step 5 on 2026-10-11
 
-- `dev/repoint --verbose` on `main` at `261da1c`: 138 pointers, all parked on `refs/clean/`, nothing to re-point. They land when the maintainer publishes the rewritten history.
+- `dev/repoint --verbose` on `main` at `782d8e6`: 138 pointers, all parked on `refs/clean/`, nothing to re-point. They land when the maintainer publishes the rewritten history.
 - `dev/kasvimuseo docs --clean` on the same revision built `.dev/docs/html/index.html` with no warning in `.dev/docs/build.log`.

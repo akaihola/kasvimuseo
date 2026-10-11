@@ -11,7 +11,7 @@ Issue 086: Django 4.2 is the next runtime upgrade step
 :Blocks: 087
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 17 through Django 4.0 and 4.1, then move to Django 4.2 on Python 3.12.
-:Resolution: 1132d6c replaces removed APIs; 98e3dca upgrades the runtime and storage settings.
+:Resolution: 62fd6b2 replaces removed APIs; 909d167 upgrades the runtime and storage settings.
 
 Work
 ----
