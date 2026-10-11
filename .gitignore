@@ -23,8 +23,7 @@
 # symlink to a directory elsewhere (task 4).
 /.dev
 __pycache__
-/ylaneenkasvit/local_settings.py
-/ylaneenkasvit/local_settings.*.py
+/ylaneenkasvit/local_settings*.py
 /kasvimuseo/.pytest_cache/
 /browser_tests/.pytest_cache/
 /.pytest_cache/

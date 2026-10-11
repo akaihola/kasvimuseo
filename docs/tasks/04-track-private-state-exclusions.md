@@ -44,6 +44,18 @@ The machine-specific settings modules stay in `ylaneenkasvit/`; `setup.py` exclu
 - A throwaway Podman build copied a planted context with every private path and a `.dev` symlink. With the new rules the image held none of them and held every file the production `Dockerfile` copies.
 - The same build with the old rules held `backups/production.sql`, `.mcp.json`, `.vscode/settings.json`, `.idea/workspace.xml`, `.worktrees/task/README.rst`, and two `.pyc` files.
 
+## Review correction on 2026-10-11
+
+The independent review found that Git still selected underscore and numeric settings variants.
+`.gitignore` now uses `/ylaneenkasvit/local_settings*.py`, matching the private module family excluded by packages and container builds.
+The tests cover both variants and confirm that `development_settings.py` remains trackable.
+
+## Validation on 2026-10-11
+
+- The expanded tests failed four Git checks before the rule changed.
+- All nine focused tests passed on the host and in the existing Python 3.13 development image.
+- `git diff --check` and `dev/kasvimuseo docs --clean` passed.
+
 ## Related work
 
 Package-content protection remains the responsibility of [proposal 01](01-exclude-private-settings-from-packages.md).
