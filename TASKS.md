@@ -43,7 +43,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 - [ ] [3] Replace operational data and personal examples
     - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:20:54.984Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T14:27:28.353Z"} -->
 
 - [ ] [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-11T04:26:58.624Z"} -->
