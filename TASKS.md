@@ -28,11 +28,12 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [14] Close the runtime upgrade programme (issue 036)
-    - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:28:16.476Z"} -->
 
 ## In Progress
+
+- [~] [14] Close the runtime upgrade programme (issue 036)
+    - Depends on: [10]
+  <!-- hai:{"updatedAt":"2026-10-11T14:28:16.476Z"} -->
 
 ## Completed / Accepted
 
