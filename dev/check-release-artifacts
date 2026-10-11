@@ -51,6 +51,7 @@ REQUIRED_FILES = [
     # Third-party license notices (task 7); docs/third-party-notices.rst
     # lists them.
     'jqm/LICENSE',
+    'ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html.LICENSE.txt',
     'kasvimuseo/static/js/kasvimuseo/fitty.min.js.LICENSE.txt',
     'kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js.LICENSE.txt',
 ]

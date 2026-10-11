@@ -18,8 +18,8 @@ The inventory
 
 The table lists the path in this repository, the upstream project, the exact
 upstream version, the license, and the notice file.
-``kasvimuseo/tests/test_third_party_notices.py`` checks that every row names a
-file that exists and has its notice.
+``kasvimuseo/tests/test_third_party_notices.py`` parses the rows and checks every path and version.
+It checks each complete notice against the reviewed text.
 
 .. list-table::
    :header-rows: 1
@@ -47,6 +47,12 @@ file that exists and has its notice.
      - ``1.10.3``
      - MIT
      - ``kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js.LICENSE.txt``
+   * - ``ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html``
+     - `django-grappelli <https://github.com/sehmaschine/django-grappelli/tree/2.4.5>`_,
+       including code from django-admin-tools
+     - ``2.4.5``
+     - BSD 3-Clause and MIT
+     - ``ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html.LICENSE.txt``
    * - ``browser_tests/vendor/vue.min.js``
      - `Vue.js <https://github.com/vuejs/vue>`_ by Evan You
      - ``2.6.14``
@@ -77,9 +83,10 @@ Task 7 compared every copy with the file at the upstream version named above.
   MIT text. The copy keeps the Launchpad origin in ``jqm/README.rst``.
 * ``fitty.min.js``: identical to ``dist/fitty.min.js`` at tag ``2.2.5``. The
   file keeps its upstream header with the copyright line.
-* ``ui.datepicker-fi.js``: the jQuery UI ``1.10.3`` file with two additions.
-  The header names the author, the source and the date, and a comment
-  explains why Grappelli needs the file. The code is unchanged.
+* ``ui.datepicker-fi.js`` derives from the jQuery UI ``1.10.3`` file.
+  The added comments record its source and explain its use with Grappelli.
+  The wrapper uses ``grp.jQuery`` instead of global ``jQuery``.
+  The date format is ``yy-mm-dd`` instead of ``dd.mm.yy``.
 * ``vue.min.js``: identical to ``dist/vue.min.js`` of the ``vue@2.6.14`` npm
   package. The file keeps its upstream header.
 * ``axios.min.js``: identical to ``dist/axios.min.js`` of the ``axios@1.7.9``
@@ -90,15 +97,23 @@ Task 7 compared every copy with the file at the upstream version named above.
   is a different build of the same version, with an MIT header. CC0 requires
   no notice; the copy keeps the upstream header anyway.
 
+Dashboard template review on 2026-10-11
+=======================================
+
+The dashboard ``link_list.html`` template derives from django-grappelli ``2.4.5``.
+It removes the unused translation import and the ``spaceless`` block.
+It renders each link description below the link instead of in a tooltip.
+Its notice file preserves the complete upstream ``LICENSE``, including the django-admin-tools MIT notice.
+
 Where the notices travel
 ========================
 
-The source distribution and the wheel carry ``jqm/LICENSE`` and both static
-notice files: ``MANIFEST.in`` names ``jqm/LICENSE``, and the ``package_data``
-globs in ``setup.py`` match the rest. ``dev/check-release-artifacts`` lists
-the three files as required, and the production image build checks them
-after ``pip install``. The ``browser_tests/vendor/`` copies never leave the
-repository, so their notice files only need to exist beside them.
+The source distribution and the wheel carry four notices from the inventory.
+``MANIFEST.in`` includes the django-jqm and dashboard template notices.
+The ``package_data`` patterns in ``setup.py`` include both static asset notices.
+``dev/check-release-artifacts`` requires all four files.
+The production image build checks them after ``pip install``.
+The ``browser_tests/vendor/`` copies stay in the repository beside their notices.
 
 What is not vendored
 ====================
@@ -107,6 +122,6 @@ The pages still load jQuery, jQuery Mobile, Vue, axios and sanitize.css from
 CDNs. A file a visitor's browser fetches is not a copy in this repository, so
 it needs no notice here. ``jqm/README.rst`` explains the jQuery case.
 
-Templates under ``ylaneenkasvit/templates/`` and ``kasvimuseo/templates/``
-that start with ``{% extends %}`` override a Django or Grappelli template.
-They contain this project's own markup only.
+A template that starts with ``{% extends %}`` can contain copied upstream markup.
+Check its origin before deciding whether it needs a notice.
+The inventory includes the copied Grappelli dashboard template.

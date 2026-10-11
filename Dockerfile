@@ -73,7 +73,7 @@ RUN test -r /install/lib/python3.13/site-packages/ylaneenkasvit-*.dist-info/LICE
 # and it is one grappelli 2.5 requests on every admin page (upgrade plan Stage
 # 3), so dropping it is a 404 per page and an English date picker.
 #
-# The last three are the third-party license notices (task 7). The release
+# The last four are the third-party license notices (task 7). The release
 # must carry them; docs/third-party-notices.rst lists the copies they cover.
 RUN set -e; \
     site=/install/lib/python3.13/site-packages; \
@@ -85,6 +85,7 @@ RUN set -e; \
              kasvimuseo/locale/fi/LC_MESSAGES/django.mo \
              kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js \
              jqm/LICENSE \
+             ylaneenkasvit/templates/grappelli/dashboard/modules/link_list.html.LICENSE.txt \
              kasvimuseo/static/js/kasvimuseo/fitty.min.js.LICENSE.txt \
              kasvimuseo/static/grappelli/jquery/i18n/ui.datepicker-fi.js.LICENSE.txt; do \
         test -r "$site/$f" || { \
