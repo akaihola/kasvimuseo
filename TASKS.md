@@ -37,6 +37,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
+- [~] [6] Declare the project license
+  <!-- hai:{"updatedAt":"2026-10-11T14:33:24.800Z"} -->
+
 ## Completed / Accepted
 
 - [ ] [5] Deduce the catalogue origin in the iframe loader
@@ -45,9 +48,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [ ] [3] Replace operational data and personal examples
     - Depends on: [10]
   <!-- hai:{"updatedAt":"2026-10-11T14:27:28.353Z"} -->
-
-- [ ] [6] Declare the project license
-  <!-- hai:{"updatedAt":"2026-10-11T04:26:58.624Z"} -->
 
 - [ ] [4] Track exclusions for private local state
   <!-- hai:{"updatedAt":"2026-10-10T18:40:19.370Z"} -->
