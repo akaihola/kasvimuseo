@@ -40,7 +40,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 ## In Progress
 
 - [~] [6] Declare the project license
-  <!-- hai:{"updatedAt":"2026-10-11T04:24:29.130Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T04:26:18.368Z"} -->
 
 - [~] [5] Deduce the catalogue origin in the iframe loader
   <!-- hai:{"updatedAt":"2026-10-10T18:08:23.828Z"} -->
