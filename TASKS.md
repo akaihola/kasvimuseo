@@ -12,9 +12,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [16] Move the images and the locks to Python 3.13
-    - Depends on: [10], [11]
-
 - [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
 
@@ -24,6 +21,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
 
 ## Scheduled
+
+- [16] Move the images and the locks to Python 3.13
+    - Depends on: [10], [11]
+  <!-- hai:{"updatedAt":"2026-10-11T14:56:36.681Z"} -->
 
 ## In Progress
 
