@@ -34,7 +34,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 - [ ] [14] Close the runtime upgrade programme (issue 036)
     - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:28:16.476Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T14:35:30.154Z"} -->
 
 - [ ] [6] Declare the project license
   <!-- hai:{"updatedAt":"2026-10-11T14:34:08.389Z"} -->
