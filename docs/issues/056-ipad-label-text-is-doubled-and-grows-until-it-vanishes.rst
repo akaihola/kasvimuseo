@@ -2,8 +2,7 @@
 Issue 056: iPad label text is doubled, and grows until it vanishes
 ==========================================================================
 
-:Status: In progress
-:Claimed: feature/fix-ipad-label-text-4ic
+:Status: Fixed
 :Severity: Medium
 :Area: templates / mobile
 :Reported: 2026-07-31
@@ -28,7 +27,13 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     017 -- the browser suite that carries the evidence below
     048 -- where the photos come from, which is the question this report parks
     039 -- the per-label photo choice, whose chevrons re-fit a label
-:Decision: **Updated on 2026-08-02 by the device.** The maintainer opened this
+:Decision: **Closed on 2026-10-12 by the device.** The maintainer did items 2,
+    3 and 4 of "What is left" on the iPad against a development server that
+    served 312bf15. The text stays stable for a minute, the printed sheet uses
+    the printed size, and the screen size is right. That is the second half
+    confirmed where it was reported, so the status is ``Fixed`` and the
+    commit is in ``Resolution``. The earlier rulings below stand as history.
+    **Updated on 2026-08-02 by the device.** The maintainer opened this
     branch's editor on the iPad and reports that the label text is the right
     size and the species names fit, which is the first half confirmed where it
     was reported rather than in emulation. What that sighting does not settle
@@ -50,9 +55,9 @@ Issue 056: iPad label text is doubled, and grows until it vanishes
     this report parks is answered under "Why do the photos fail at all?" and is
     **not** filed as its own issue, because no defect in this repository could
     be demonstrated for it
-:Resolution: (none yet) -- the first half is fixed in 312bf15 "fix(labels): fit
-    text in iPad Safari", which this issue does not close, and the second half
-    has no resolution until the device says so
+:Resolution: Fixed in 312bf15 "fix(labels): fit text in iPad Safari". The
+    device confirmed the first half on 2026-08-02 and the second half on
+    2026-10-12; see "What the device said"
 
 Problem
 =======
@@ -148,8 +153,8 @@ What emulation cannot see
 The browser suite runs Playwright's Chromium against a real gunicorn-served
 instance (issue 017), and the fixtures emulate the device as far as a viewport,
 a touch screen and a user agent go. Three things about this fix are outside
-what that can reach, and they are why this issue is ``Accepted`` and not
-``Fixed``:
+what that can reach, and they are why this issue stayed open until the device
+answered on 2026-10-12:
 
 * **The CSS half never applies.** The iOS rules are behind ``@supports
   (-webkit-touch-callout: none)``, the standard iOS-Safari-only test.
@@ -195,9 +200,33 @@ reported three things:
   different symptom on a different feature, so it is written into
   :doc:`incoming` rather than folded in here.
 
-What is **not** established by that look: whether the text still grows over
-seconds, and what the printed sheet does. Both want the tablet again, and both
-are in "What is left".
+What was **not** established by that look: whether the text still grows over
+seconds, and what the printed sheet does. Both wanted the tablet again, and the
+section below records the answers.
+
+The second look, 2026-10-12
+---------------------------
+
+The maintainer opened the editor on the iPad again. The page came from a
+development server on the agent's machine, over the tailnet, at the integration
+commit of that day, which carries 312bf15. Before the look, the agent checked
+from the server that the page contained the iOS branch and that every sampled
+label photo answered ``200`` locally rather than a redirect. The maintainer
+reported three things, in the order of "What is left":
+
+* **The text does not grow. It stays stable.** That is item 2, and it is the
+  second half confirmed on the device. The one-shot fit without a fitty
+  subscription is enough; no suspect from the list above needs a further look.
+* **The printed sheet uses the printed size.** That is item 3. The
+  ``--fit-print-size`` and ``--fit-screen-size`` split, which no engine here
+  draws, does what it was written to do.
+* **The text size is good.** That is item 4: the iOS branch is neither too
+  large nor too small, so the coordinate system the device reports matches
+  the premise of 312bf15.
+
+These are observations by eye, like the first look. No computed ``font-size``
+was read from the device, so the growth is shown to be gone rather than
+measured; that is what the report asked for, and it closes the issue.
 
 Why do the photos fail at all?
 ==============================
@@ -244,32 +273,34 @@ the text.
 What is left
 ============
 
-For whoever has the iPad. All of it is looking, not changing. Items 1 and 5
-were done on 2026-08-02 -- see "What the device said" -- and 2, 3 and 4 are
-what is actually left:
+Nothing. All of it was looking, not changing. Items 1 and 5 were done on
+2026-08-02 and items 2, 3 and 4 on 2026-10-12 -- see "What the device said".
+The list stays so the record shows what was asked:
 
 1. **Done.** Open the label editor on the tablet and read the species name on a
    label whose photo did not load. It should be the same size as one whose
    photo did. That is the first half, and it is the one this file claims is
    fixed; the maintainer reports that it is.
-2. **Watch a label whose photo did load** for a minute. If the text still grows
+2. **Done.** Watch a label whose photo did load for a minute. If the text still grows
    every few seconds, the second half is not fixed and the suspect list above
    is where to start -- with ``-webkit-text-size-adjust`` first, since the fix
    sets it on the measuring clone only.
-3. **Print one sheet** and check the text is the printed size rather than the
+3. **Done.** Print one sheet and check the text is the printed size rather than the
    screen size. The iOS branch keeps the two apart in ``--fit-print-size`` and
    ``--fit-screen-size``, and no engine here applies either.
-4. **If the text is now too small rather than too large**, say so: in emulation
+4. **Done.** If the text is now too small rather than too large, say so: in emulation
    the iOS branch fits to a clone measured at 506px where the desktop path fits
    inside the zoomed box, and the two disagree by about a sixth on the same
    label. Which is right depends on the coordinate system the device actually
    reports, which is the premise above.
-5. **Half done.** Answer the photo question while the tablet is out: the
-   maintainer confirms photos are still missing, so what is left of this one is
-   *which* -- a local 200 or a redirect to ``media.example.invalid``.
+5. **Done.** Answer the photo question while the tablet is out: the
+   maintainer confirmed on 2026-08-02 that photos were still missing, so what
+   was left of this one was *which* -- a local 200 or a redirect to
+   ``media.example.invalid``. On 2026-10-12 the server that the tablet used had
+   fetched its media, and every sampled photo URL answered a local ``200``.
 
-With 1 done, this becomes ``Fixed`` with 312bf15 in ``Resolution`` as soon as 2
-holds, and nothing else changes.
+With 2 done, this became ``Fixed`` with 312bf15 in ``Resolution``, and nothing
+else changed.
 
 The report added one note about how to do 2 and 4 with more than eyes: an iPad
 Safari debugging setup is being put together outside this repository, as a

@@ -14,10 +14,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [13] Finish the iPad label checks (issue 056)
-  <!-- hai:{"updatedAt":"2026-10-11T15:20:53.830Z"} -->
-
 ## In Progress
+
+- [~] [13] Finish the iPad label checks (issue 056)
+  <!-- hai:{"updatedAt":"2026-10-11T21:12:28.692Z"} -->
 
 ## Completed / Accepted
 
