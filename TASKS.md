@@ -12,15 +12,16 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [9] Integrate and publish the public cleanup
-    - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
-
 - [13] Finish the iPad label checks (issue 056)
 
 - [12] Decide how to handle the rotation regression in photo effects (issue 089)
     - Depends on: [10]
 
 ## Scheduled
+
+- [9] Integrate and publish the public cleanup
+    - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
+  <!-- hai:{"updatedAt":"2026-10-11T15:09:55.292Z"} -->
 
 ## In Progress
 
