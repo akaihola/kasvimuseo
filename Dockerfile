@@ -1,4 +1,4 @@
-FROM python:3.12.12-alpine3.22 AS base
+FROM python:3.13.16-alpine3.24 AS base
 
 FROM base AS builder
 
@@ -6,7 +6,7 @@ RUN mkdir /install
 
 RUN apk add gcc jpeg-dev musl-dev postgresql-dev zlib-dev
 ENV LIBRARY_PATH=/lib:/usr/lib
-ENV PYTHONPATH=/install/lib/python3.12/site-packages
+ENV PYTHONPATH=/install/lib/python3.13/site-packages
 
 # Keep the packaging tools consistent with the lock resolver.
 RUN pip install --no-cache-dir pip==24.0 setuptools==75.8.0 wheel==0.45.1
@@ -19,7 +19,7 @@ RUN pip install --prefix=/install -r /kasvimuseo/requirements/production.txt
 # Issue 040 records why these files need a build check.
 RUN set -e; \
     prefix=/install; \
-    pkg=$prefix/lib/python3.12/site-packages/django; \
+    pkg=$prefix/lib/python3.13/site-packages/django; \
     if [ -d "$prefix/django" ]; then \
         cp -a "$prefix/django"/. "$pkg"/; \
         rm -rf "$prefix/django"; \
@@ -53,7 +53,7 @@ COPY ylaneenkasvit /kasvimuseo/ylaneenkasvit
 COPY jqm /kasvimuseo/jqm
 RUN pip install --prefix=/install /kasvimuseo
 
-RUN test -r /install/lib/python3.12/site-packages/ylaneenkasvit-*.dist-info/LICENSE || { \
+RUN test -r /install/lib/python3.13/site-packages/ylaneenkasvit-*.dist-info/LICENSE || { \
         echo "task 6: The project license is missing. Copy LICENSE before pip install" \
              "and keep license_files in setup.py." >&2; \
         exit 1; \
@@ -76,7 +76,7 @@ RUN test -r /install/lib/python3.12/site-packages/ylaneenkasvit-*.dist-info/LICE
 # The last three are the third-party license notices (task 7). The release
 # must carry them; docs/third-party-notices.rst lists the copies they cover.
 RUN set -e; \
-    site=/install/lib/python3.12/site-packages; \
+    site=/install/lib/python3.13/site-packages; \
     for f in ylaneenkasvit/templates/base.html \
              ylaneenkasvit/templates/404.html \
              ylaneenkasvit/templates/500.html \
@@ -101,7 +101,7 @@ RUN set -e; \
 # `build_py` drops them from the package, so a hit here means one of the two
 # lost its entry.
 RUN set -e; \
-    site=/install/lib/python3.12/site-packages/ylaneenkasvit; \
+    site=/install/lib/python3.13/site-packages/ylaneenkasvit; \
     for f in "$site"/local_settings*.py "$site"/kajala_settings.py; do \
         test ! -e "$f" || { \
             echo "task 1: $f is a private settings module and must not be" \
@@ -111,7 +111,7 @@ RUN set -e; \
         }; \
     done
 
-FROM python:3.12.12-alpine3.22
+FROM python:3.13.16-alpine3.24
 RUN apk add libjpeg-turbo libpq && rm -rf /var/cache/apk
 COPY --from=builder /install /usr/local
 CMD ["manage", \

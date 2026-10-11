@@ -119,3 +119,43 @@ Above the issue 087 branch, only issue 088 changes; it enters "Not in the queue"
 Run ``python3 .dev/issue088/review_tracker.py`` to repeat this comparison.
 The documentation build passes with warnings treated as errors and produces ``.dev/docs/html/index.html``.
 The browser containers and the task's PostgreSQL cluster stop after the checks.
+
+Python 3.13 results
+~~~~~~~~~~~~~~~~~~~
+
+This section records the Python 3.13 checks of 2026-10-11 for release maintainers.
+Task 16 in ``TASKS.md`` moved both images to ``python:3.13.16-alpine3.24``.
+The resolver image uses that base, the development image's build dependencies, and the packaging tools named in :doc:`086-django-4-2-runtime-upgrade`, "Lock generation".
+It regenerated the three locks with the commands their headers record, in the order production, development, testing.
+The locks keep every pin; only their Python version headers changed.
+
+Run the checks from the task checkout::
+
+    export SHELL="$(command -v bash)"
+    export KASVIMUSEO_IMAGE=kasvimuseo-dev-task16
+    export KASVIMUSEO_DB_NAME=task16_upgrade
+    export KASVIMUSEO_PG_PORT=5816
+    export KASVIMUSEO_BROWSER_DB_NAME=task16_browsertest
+    dev/kasvimuseo app build
+    podman build -f Dockerfile -t kasvimuseo-prod-task16 .
+    python3 .dev/task16/check_packages.py
+    dev/kasvimuseo app coverage
+    dev/kasvimuseo app test -q
+    podman run --rm -i -e DJANGO_SETTINGS_MODULE=ylaneenkasvit.test_settings \
+      kasvimuseo-prod-task16 python < .dev/task16/check_static.py
+    dev/kasvimuseo app browser-test --engine chromium
+    dev/kasvimuseo app browser-test --engine webkit
+    dev/kasvimuseo docs --clean
+    git diff --check
+
+Both images report Python 3.13.16 and Django 6.0.7.
+The development image is ``bf0f7df1e023``; the production image is ``785b200f6151``.
+All 10 production packages and 18 development and test packages match their locks, and both images pass ``pip check``.
+The development image keeps pip 24.0, setuptools 75.8.0, and wheel 0.45.1.
+The full application suite passes 585 tests.
+The coverage run passes the coverage gate with 99.52% coverage.
+The production image passes the system check without a source mount and collects 702 static files, including the Finnish date-picker asset.
+Chromium passes all 43 browser checks.
+WebKit passes 36 checks and skips seven Chromium-only checks.
+The documentation build passes with warnings treated as errors.
+Scripts and logs remain under ``.dev/task16/`` in the task checkout.

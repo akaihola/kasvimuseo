@@ -1,6 +1,6 @@
-# Development image: Python 3.12 + the app's dependencies, but NO app code.
+# Development image: Python 3.13 + the app's dependencies, but NO app code.
 # The working copy is bind-mounted at /src so edits take effect immediately.
-FROM docker.io/library/python:3.12.12-alpine3.22
+FROM docker.io/library/python:3.13.16-alpine3.24
 
 # git: kasvimuseo/tests/test_ignore_rules.py runs `git check-ignore` (task 4).
 RUN apk add --no-cache jpeg-dev zlib-dev libpq postgresql-dev gcc musl-dev git
@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir --no-deps -r /tmp/requirements/dev.txt
 # fails instead of shipping an English admin.
 RUN set -e; \
     prefix=/usr/local; \
-    pkg=$prefix/lib/python3.12/site-packages/django; \
+    pkg=$prefix/lib/python3.13/site-packages/django; \
     if [ -d "$prefix/django" ]; then \
         cp -a "$prefix/django"/. "$pkg"/; \
         rm -rf "$prefix/django"; \
