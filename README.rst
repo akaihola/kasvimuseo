@@ -85,16 +85,18 @@ Private inventories, site settings, account records, and deployment instructions
 Embedding the species list
 --------------------------
 
-The iframe loader uses the embedding page's origin by default.
-Set ``data-site-url`` on the script element when the catalogue runs on another origin::
+Embedding page authors can use this script to show the species list from the catalogue::
 
-    <script src="/static/js/kasvimuseo/planted-species-iframe.js"
-            data-site-url="https://plants.example.invalid/"></script>
+    <script src="https://static.plants.example.invalid/js/kasvimuseo/planted-species-iframe.js"></script>
 
-The attribute goes away. On 2026-10-07 the maintainer decided that the loader
-must deduce the catalogue origin from its own address, so that no embedding
-page needs an attribute. Task 5 in ``TASKS.md`` makes that change. Do not add
-the attribute to a new page.
+The loader reads its own address from ``document.currentScript.src``.
+The origin is the scheme, hostname, and port of that address.
+The loader removes one leading ``static.`` hostname label and keeps the scheme and port.
+The example requests ``https://plants.example.invalid/kasvimuseo/planted-species/``.
+Without that label, the loader uses the script's origin unchanged.
+This also works when the embedding page uses a third origin, such as ``https://museum.example.invalid``.
+The embedding page needs no configuration attribute.
+Deployments that need another address rule must configure it in the deployment repository.
 
 Testing
 =======
