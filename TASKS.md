@@ -50,9 +50,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [x] [11] Move the browser tests to Playwright 1.63
   <!-- hai:{"updatedAt":"2026-10-11T14:29:38.572Z"} -->
 
-- [ ] [3] Replace operational data and personal examples
+- [x] [3] Replace operational data and personal examples
     - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:27:28.353Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-11T20:52:31.026Z"} -->
 
 - [ ] [4] Track exclusions for private local state
   <!-- hai:{"updatedAt":"2026-10-10T18:40:19.370Z"} -->
