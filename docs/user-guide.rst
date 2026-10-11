@@ -140,5 +140,5 @@ Projektin muistilista
 
 Kysy projektin ylläpitäjältä pääsy työn seurantaan.
 
-Antti käyttää tätä tehtävä- ja muisti listana, jossa näkyvät tekemistä
+Ylläpitäjä käyttää tätä tehtävä- ja muistilistana, jossa näkyvät tekemistä
 odottamat, tekeillä olevat sekä valmiit muutokset.

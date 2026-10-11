@@ -41,8 +41,9 @@ Either one causes the defect.
 Impact
 ======
 
-Nothing is affected today. The production dump of 2026-08-26 has no row in
-``photologue_photoeffect``, so no photo and no photo size has an effect.
+Nothing is affected today. The installation had no row in
+``photologue_photoeffect`` when this issue was filed, so no photo and no photo
+size has an effect. The private deployment repository keeps that check.
 
 A staff user can create an effect, because photologue's ``PhotoEffect`` admin
 stays registered. ``PhotoForm`` in ``kasvimuseo/forms.py`` excludes only

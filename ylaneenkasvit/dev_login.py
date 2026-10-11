@@ -17,7 +17,7 @@ a process in a container has no way to put one there. A URL can. This is that
 URL, which is what :doc:`issue 068
 </issues/068-provide-an-optional-development-login>` records::
 
-    $ xdg-open http://localhost:8000/dev-login/akaihola/
+    $ xdg-open http://localhost:8000/dev-login/puutarhuri/
 
 It exists only when ``settings.DEV_LOGIN`` is on. ``common_settings`` reads
 that from ``KASVIMUSEO_DEV_LOGIN`` and defaults it off, ``dev/kasvimuseo``

@@ -274,7 +274,7 @@ def test_labels_api_get_orders_the_museum_numbers_on_a_label(staff_client):
 def test_labels_api_get_puts_a_missing_number_first(staff_client):
     """Issue 053: ``external_id`` is nullable, so the order has to say where.
 
-    Nothing in the production dump or in ``browser_tests/seed.py`` is missing
+    Nothing in the installation or in ``browser_tests/seed.py`` is missing
     one, but the column allows it. First is where ``None`` lands in
     ``kasvimuseo_model_tags.external_ids`` and where ``null`` lands in the
     editor's ``insort``, so it is where it lands here.

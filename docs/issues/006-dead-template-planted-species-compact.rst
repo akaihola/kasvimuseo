@@ -144,13 +144,13 @@ built its own filename matches.
 
 **The page still renders in the running application**, which is the check the
 suite cannot make on its own here, since the point of the issue is that the
-live path uses a different file. The production dump restored and migrated
+live path uses a different file. A restored copy of the installation, migrated
 forward (``db restore`` then ``app manage migrate``; without the second step
 the species pages ``500`` on ``photo_is_horizontal``, see issue 020),
 then over HTTP, both reports so the pair can be compared::
 
-    GET /kasvimuseo/planted-species-compact/116,83/    200, 12,616 bytes
-    GET /kasvimuseo/planted-species-printable/116,83/  200, 11,086 bytes
+    GET /kasvimuseo/planted-species-compact/<two ids>/    200
+    GET /kasvimuseo/planted-species-printable/<two ids>/  200
 
 Both carry the species' Finnish names, the ``header`` class, the "Yleistietoja
 kasvilajista" table, the viewport tag and the print button. Only the compact

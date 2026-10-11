@@ -32,21 +32,23 @@ number::
                                     external_id=observation_external_id)
 
 ``Observation.external_id`` carries no uniqueness constraint, and the
-production data has duplicates. In the July 2026 dump, of 311 observations
-(none with a null number) 307 numbers are distinct: 147, 1092, 1172 and 1291
-each appear twice. Requesting one of those numbers raises
+installation data has duplicates: a handful of museum numbers each sit on two
+observations. The private deployment repository keeps the numbers. Seed two
+observations that both carry number ``12`` and request
+``/kasvimuseo/planted-observation/12/``: the lookup raises
 ``MultipleObjectsReturned`` -- a 500, not the 404 the ``get_object_or_404``
 was reaching for.
 
 The view had no link anywhere in the application until now, which is why this
 has never been seen. The ``sivu`` column added to the observation changelist
-in the same change makes it reachable, so roughly 3 % of those links now lead
-to an error page.
+in the same change makes it reachable, so a few of those links now lead to an
+error page.
 
 Impact
 ======
 
-Eight of 311 observations have an unreachable public page. The rest work. A
+Every observation that shares its number has an unreachable public page. The
+rest work. A
 gardener clicking the link sees Django's error page, with no hint that the
 cause is two rows sharing a number.
 
@@ -59,7 +61,7 @@ Options
    share a number, is that one plant recorded twice or two plants numbered
    wrongly?
 2. Clean the data and add ``unique=True``, which turns the crash into a
-   migration that fails loudly until the four collisions are resolved.
+   migration that fails loudly until the collisions are resolved.
 3. Key the URL by primary key instead. The route is new to the UI and no
    external links exist to preserve, so the change is cheap -- but the museum
    numbering is what the staff know the plants by.
@@ -71,7 +73,7 @@ Decision
 
 Option 1, taking the first match. It is the only one of the three that stops
 the crash today without deciding anything else, and the crash is the part that
-is live: the ``sivu`` link now answers on all 311 observations.
+is live: the ``sivu`` link now answers on every observation.
 
 Option 2 was rejected here because it needs the production data to clean, which
 this environment does not have (issue 026 is the reason it is not available),
@@ -103,8 +105,8 @@ What a duplicate museum number means. If two rows sharing a number are one plant
 recorded twice, the duplicate should be merged; if they are two plants numbered
 wrongly, one of them should be renumbered -- and either way the column should
 then carry ``unique=True`` (option 2), which would make this view's guard dead
-code rather than wrong. Until that ruling, the second observation of each of the
-four pairs has no public page of its own, which is a smaller fault than the one
+code rather than wrong. Until that ruling, the second observation of each of those
+pairs has no public page of its own, which is a smaller fault than the one
 it replaces but is still a fault. Deciding it needs the production data.
 
 See also

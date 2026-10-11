@@ -20,7 +20,7 @@ This task helps the maintainer choose how the project handles a photologue 3.20 
 
 Photologue 3.20 applies a photo effect before it reads the EXIF orientation, and the effect removes that data.
 Photologue therefore caches a phone photo with an effect sideways.
-The production dump of 2026-08-26 has no photo effects, so nothing triggers the regression today.
+The installation had no photo effects when issue 089 was filed, so nothing triggers the regression today.
 Issue 089 is on the branch that task 10 merges.
 
 ## Completion checks
