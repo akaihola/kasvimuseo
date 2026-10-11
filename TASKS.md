@@ -41,11 +41,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
   <!-- hai:{"updatedAt":"2026-10-11T14:35:30.154Z"} -->
 
-- [ ] [6] Declare the project license
-  <!-- hai:{"updatedAt":"2026-10-11T14:34:08.389Z"} -->
+- [x] [6] Declare the project license
+  <!-- hai:{"updatedAt":"2026-10-11T16:05:28.965Z"} -->
 
-- [ ] [5] Deduce the catalogue origin in the iframe loader
-  <!-- hai:{"updatedAt":"2026-10-11T14:30:53.441Z"} -->
+- [x] [5] Deduce the catalogue origin in the iframe loader
+  <!-- hai:{"updatedAt":"2026-10-11T16:01:58.915Z"} -->
 
 - [x] [11] Move the browser tests to Playwright 1.63
   <!-- hai:{"updatedAt":"2026-10-11T14:29:38.572Z"} -->
@@ -66,8 +66,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [ ] [1] Exclude private settings from release packages
   <!-- hai:{"updatedAt":"2026-10-10T18:19:53.455Z"} -->
 
-- [ ] [2] Keep contributor memories portable
-  <!-- hai:{"updatedAt":"2026-10-10T18:28:02.595Z"} -->
+- [x] [2] Keep contributor memories portable
+  <!-- hai:{"updatedAt":"2026-10-11T16:05:02.635Z"} -->
 
 - [x] [15] Use `main` base branch
   <!-- hai:{"id":"simple-62a534f6-9f9d-4252-8c7a-eb3b68ad8167","priority":"none","labels":[],"createdAt":"2026-10-06T19:33:17.859Z","updatedAt":"2026-10-10T09:18:34.698Z"} -->
