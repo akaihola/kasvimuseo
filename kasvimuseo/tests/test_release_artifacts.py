@@ -28,6 +28,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
+from email.parser import BytesParser
 
 import pytest
 
@@ -41,7 +42,7 @@ CHECKER = os.path.join(REPO_ROOT, 'dev', 'check-release-artifacts')
 MARKER = '-'.join(['TASK-1', 'PRIVATE', 'MARKER', '9f3c2a'])
 
 # What the build needs: the packages, setup.py, and what it reads.
-SOURCES = ['setup.py', 'MANIFEST.in', 'requirements',
+SOURCES = ['setup.py', 'MANIFEST.in', 'LICENSE', 'requirements',
            'kasvimuseo', 'ylaneenkasvit', 'jqm']
 # Byproducts of a working tree that are not source.
 IGNORE = shutil.ignore_patterns(
@@ -150,6 +151,42 @@ def test_the_required_data_files_are_in_the_artifact(artifacts, kind):
                      'kasvimuseo/static/grappelli/jquery/i18n/'
                      'ui.datepicker-fi.js.LICENSE.txt']:
         assert required in names, required
+
+
+@pytest.mark.parametrize('kind', ['sdist', 'wheel'])
+def test_the_project_license_and_metadata_are_in_the_artifact(artifacts, kind):
+    expected = (artifacts[0] / 'LICENSE').read_bytes()
+    if kind == 'wheel':
+        with zipfile.ZipFile(artifacts[2]) as archive:
+            [license_path] = [name for name in archive.namelist()
+                              if name.endswith('.dist-info/LICENSE')]
+            license_text = archive.read(license_path)
+            metadata = archive.read(license_path.rsplit('/', 1)[0] + '/METADATA')
+    else:
+        with tarfile.open(artifacts[1]) as archive:
+            root = archive.getnames()[0].split('/')[0]
+            license_file = archive.extractfile(root + '/LICENSE')
+            metadata_file = archive.extractfile(root + '/PKG-INFO')
+            assert license_file is not None
+            assert metadata_file is not None
+            license_text = license_file.read()
+            metadata = metadata_file.read()
+    assert license_text == expected
+    fields = BytesParser().parsebytes(metadata)
+    assert fields['License'] == 'BSD-3-Clause'
+    assert 'LICENSE' in fields.get_all('License-File', [])
+
+
+def test_the_checker_rejects_a_missing_project_license(artifacts, tmp_path):
+    wheel = tmp_path / 'without-license.whl'
+    with zipfile.ZipFile(artifacts[2]) as source:
+        with zipfile.ZipFile(str(wheel), 'w') as target:
+            for name in source.namelist():
+                if not name.endswith('.dist-info/LICENSE'):
+                    target.writestr(name, source.read(name))
+    code, output = run([sys.executable, CHECKER, str(wheel)])
+    assert code == 1
+    assert 'The project license is missing' in output
 
 
 def test_the_wheel_loads_with_supplied_configuration(artifacts, tmp_path):

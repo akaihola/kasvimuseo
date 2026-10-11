@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject a release artifact that carries machine-specific settings.
+"""Check required files and exclude private settings from release artifacts.
 
 For the package maintainer, before an sdist or a wheel leaves the machine::
 
@@ -112,6 +112,11 @@ def problems(path, marker=None):
                 '{0}: {1} is missing. MANIFEST.in and package_data in setup.py'
                 ' put it there; check that an exclusion did not widen.'
                 .format(path, required))
+    if not any(name == 'LICENSE' or name.endswith('.dist-info/LICENSE')
+               for name in relative):
+        found.append(
+            '{0}: The project license is missing. Include LICENSE in MANIFEST.in'
+            ' and license_files in setup.py.'.format(path))
     return found
 
 

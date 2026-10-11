@@ -19,3 +19,4 @@ This index helps contributors find portable development guidance. Each note link
 - [Find proposed work](task-proposal-register.md).
 - [Record copied files in the third-party notices](record-copied-files-in-third-party-notices.md).
 - [Check template comments and issue fields](two-syntax-traps-django15-and-docinfo.md).
+- [Check project license artifacts](project-license-artifacts.md).
