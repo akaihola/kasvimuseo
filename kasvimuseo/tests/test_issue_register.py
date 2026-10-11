@@ -411,10 +411,15 @@ def test_the_real_register_parses_and_is_ranked_exactly_once():
     assert len(ranking) == len(issues)
 
 
-def test_the_real_register_has_something_to_work_on():
+def test_the_real_register_queues_every_issue():
+    """Every issue is in the ready queue or in the parked table.
+
+    The queue may be empty. Issue 089 was the last ready issue when task 12
+    deferred it on 2026-10-11, and ``issue-queue`` renders an empty queue as
+    "Nothing is ready".
+    """
     issues = issue_register.load_issues(ISSUES)
     with open(os.path.join(ISSUES, 'index.rst')) as handle:
         ranking = issue_register.parse_ranking(handle.read())
     ready, parked = issue_register.build_queue(issues, ranking)
-    assert ready, 'docs/issues/next.rst would render an empty queue'
     assert len(ready) + len(parked) == len(issues)

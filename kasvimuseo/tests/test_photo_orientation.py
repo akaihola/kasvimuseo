@@ -4,6 +4,9 @@ A phone stores a photo taken upright as a landscape image and an EXIF
 ``Orientation`` tag that says how to turn it. Photologue reads the tag when it
 builds each cached size. From photologue 3.20 it reads the tag after it applies
 a ``PhotoEffect``, and an enhanced or filtered image has no EXIF data left.
+
+Issue 089 decided to accept the regression and to report it upstream. The
+effect test pins the regression until a photologue release fixes it.
 """
 
 import io

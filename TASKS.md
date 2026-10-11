@@ -14,16 +14,16 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [12] Decide how to handle the rotation regression in photo effects (issue 089)
-    - Depends on: [10]
-  <!-- hai:{"updatedAt":"2026-10-11T15:22:28.449Z"} -->
-
 - [13] Finish the iPad label checks (issue 056)
   <!-- hai:{"updatedAt":"2026-10-11T15:20:53.830Z"} -->
 
 ## In Progress
 
 ## Completed / Accepted
+
+- [ ] [12] Decide how to handle the rotation regression in photo effects (issue 089)
+    - Depends on: [10]
+  <!-- hai:{"updatedAt":"2026-10-11T15:27:47.740Z"} -->
 
 - [ ] [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
