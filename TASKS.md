@@ -19,10 +19,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [*] Send machine-specific agent memories to private memory
-  <!-- hai:{"id":"simple-c33f461b-afc6-4256-bcad-1d9e800b8b9f","createdAt":"2026-10-11T20:52:49.339Z","updatedAt":"2026-10-11T20:53:07.117Z"} -->
-
 ## Completed / Accepted
+
+- [ ] [*] Send machine-specific agent memories to private memory
+  <!-- hai:{"id":"simple-c33f461b-afc6-4256-bcad-1d9e800b8b9f","createdAt":"2026-10-11T20:52:49.339Z","updatedAt":"2026-10-11T20:53:53.442Z"} -->
 
 - [ ] [12] Decide how to handle the rotation regression in photo effects (issue 089)
     - Depends on: [10]
