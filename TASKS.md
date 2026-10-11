@@ -16,10 +16,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [13] Finish the iPad label checks (issue 056)
-  <!-- hai:{"updatedAt":"2026-10-11T21:12:28.692Z"} -->
-
 ## Completed / Accepted
+
+- [ ] [13] Finish the iPad label checks (issue 056)
+  <!-- hai:{"updatedAt":"2026-10-11T21:15:01.554Z"} -->
 
 - [ ] [*] Send machine-specific agent memories to private memory
   <!-- hai:{"id":"simple-c33f461b-afc6-4256-bcad-1d9e800b8b9f","createdAt":"2026-10-11T20:52:49.339Z","updatedAt":"2026-10-11T20:53:53.442Z"} -->
