@@ -34,6 +34,7 @@ RUN set -e; \
     done
 
 COPY setup.py /kasvimuseo/setup.py
+COPY LICENSE /kasvimuseo/LICENSE
 # `setup.py`'s `package_data` names `kasvimuseo`'s and `jqm`'s templates and
 # static files and nothing else; everything else non-Python this project ships
 # -- `ylaneenkasvit/templates/`, and both packages' `locale/` -- reaches an
@@ -51,6 +52,12 @@ COPY ylaneenkasvit /kasvimuseo/ylaneenkasvit
 # staticfiles finder look inside it.
 COPY jqm /kasvimuseo/jqm
 RUN pip install --prefix=/install /kasvimuseo
+
+RUN test -r /install/lib/python3.12/site-packages/ylaneenkasvit-*.dist-info/LICENSE || { \
+        echo "task 6: The project license is missing. Copy LICENSE before pip install" \
+             "and keep license_files in setup.py." >&2; \
+        exit 1; \
+    }
 
 # The same idiom as the Django block above, for this project's own files
 # (issue 058). Nothing fails until a page is rendered: a missing `base.html` is

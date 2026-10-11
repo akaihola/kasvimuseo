@@ -2,6 +2,7 @@ recursive-include */locale *.po
 recursive-include */locale *.mo
 recursive-include ylaneenkasvit/templates *.html
 include requirements/production.txt
+include LICENSE
 recursive-include kasvimuseo/templates *.html
 graft kasvimuseo/static
 graft jqm/templates

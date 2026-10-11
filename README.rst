@@ -4,6 +4,13 @@ Kasvimuseo
 This guide helps developers run and test the plant catalogue locally.
 Private deployment configuration and operations records live in the separate ``kasvimuseo-deployment`` repository.
 
+License
+-------
+
+The project uses the BSD 3-Clause license, identified by SPDX as ``BSD-3-Clause``.
+Read `LICENSE <https://github.com/akaihola/kasvimuseo/blob/main/LICENSE>`_ for the copyright notice and terms.
+Read `Third-party notices <https://akaihola.github.io/kasvimuseo/third-party-notices.html>`_ for vendored component licenses.
+
 Development setup
 -----------------
 

@@ -35,6 +35,8 @@ class build_py(_build_py):
 setup(
     name="ylaneenkasvit",
     version="0.2.1.dev0",
+    license="BSD-3-Clause",
+    license_files=['LICENSE'],
     packages=find_packages(),
     cmdclass={'build_py': build_py},
     entry_points={
