@@ -53,3 +53,20 @@ This decision resolves the blocker recorded on 2026-10-10.
 
 Run the artifact suite with `dev/kasvimuseo app test kasvimuseo/tests/test_release_artifacts.py -q`.
 The completion checks remain unchecked until the maintainer accepts the work.
+
+## Review correction, 2026-10-11
+
+Independent review found a regression in the release checker added by task 6.
+Setuptools 77 writes wheel licenses under `.dist-info/licenses/`.
+The earlier container checks used setuptools 75.8.0 and did not detect the regression.
+
+The checker now accepts both wheel license layouts after archive path normalization.
+The artifact tests locate the license and metadata in both layouts.
+The tests also remove either license location and check that the checker rejects the stripped wheel.
+
+- All 16 artifact tests passed with setuptools 75.8.0 and wheel 0.45.1.
+- All 16 artifact tests passed with setuptools 77.0.3 and wheel 0.45.1.
+- The checker passed both artifacts from the reviewer's setuptools 77 reproduction.
+- `git diff --check` passed.
+
+The original license decision and acceptance checks remain unchanged.

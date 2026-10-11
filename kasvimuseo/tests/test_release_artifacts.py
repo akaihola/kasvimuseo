@@ -41,6 +41,8 @@ CHECKER = os.path.join(REPO_ROOT, 'dev', 'check-release-artifacts')
 # would otherwise find the marker here.
 MARKER = '-'.join(['TASK-1', 'PRIVATE', 'MARKER', '9f3c2a'])
 
+WHEEL_LICENSE_PATHS = ('.dist-info/LICENSE', '.dist-info/licenses/LICENSE')
+
 # What the build needs: the packages, setup.py, and what it reads.
 SOURCES = ['setup.py', 'MANIFEST.in', 'LICENSE', 'requirements',
            'kasvimuseo', 'ylaneenkasvit', 'jqm']
@@ -159,9 +161,10 @@ def test_the_project_license_and_metadata_are_in_the_artifact(artifacts, kind):
     if kind == 'wheel':
         with zipfile.ZipFile(artifacts[2]) as archive:
             [license_path] = [name for name in archive.namelist()
-                              if name.endswith('.dist-info/LICENSE')]
+                              if name.endswith(WHEEL_LICENSE_PATHS)]
             license_text = archive.read(license_path)
-            metadata = archive.read(license_path.rsplit('/', 1)[0] + '/METADATA')
+            metadata_path = license_path.split('.dist-info/', 1)[0] + '.dist-info/METADATA'
+            metadata = archive.read(metadata_path)
     else:
         with tarfile.open(artifacts[1]) as archive:
             root = archive.getnames()[0].split('/')[0]
@@ -177,12 +180,35 @@ def test_the_project_license_and_metadata_are_in_the_artifact(artifacts, kind):
     assert 'LICENSE' in fields.get_all('License-File', [])
 
 
-def test_the_checker_rejects_a_missing_project_license(artifacts, tmp_path):
-    wheel = tmp_path / 'without-license.whl'
+@pytest.fixture(params=['LICENSE', 'licenses/LICENSE'])
+def licensed_wheel(artifacts, tmp_path, request):
+    wheel = tmp_path / 'licensed.whl'
     with zipfile.ZipFile(artifacts[2]) as source:
+        [old_path] = [name for name in source.namelist()
+                      if name.endswith(WHEEL_LICENSE_PATHS)]
+        prefix = old_path.split('.dist-info/', 1)[0] + '.dist-info/'
+        new_path = prefix + request.param
         with zipfile.ZipFile(str(wheel), 'w') as target:
             for name in source.namelist():
-                if not name.endswith('.dist-info/LICENSE'):
+                content = source.read(name)
+                if name == prefix + 'RECORD':
+                    content = content.replace((old_path + ',').encode(),
+                                              (new_path + ',').encode())
+                target.writestr(new_path if name == old_path else name, content)
+    return wheel
+
+
+def test_the_checker_accepts_both_wheel_license_layouts(licensed_wheel):
+    code, output = run([sys.executable, CHECKER, str(licensed_wheel)])
+    assert code == 0, output
+
+
+def test_the_checker_rejects_a_missing_project_license(licensed_wheel, tmp_path):
+    wheel = tmp_path / 'without-license.whl'
+    with zipfile.ZipFile(licensed_wheel) as source:
+        with zipfile.ZipFile(str(wheel), 'w') as target:
+            for name in source.namelist():
+                if not name.endswith(WHEEL_LICENSE_PATHS):
                     target.writestr(name, source.read(name))
     code, output = run([sys.executable, CHECKER, str(wheel)])
     assert code == 1

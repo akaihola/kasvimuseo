@@ -79,7 +79,7 @@ def read_members(path):
 
 
 def package_relative(name):
-    """Strip the ``<name>-<version>/`` prefix an sdist puts on each member."""
+    """Strip the project prefix from source and wheel metadata paths."""
     parts = name.split('/')
     if parts and parts[0].startswith('ylaneenkasvit-'):
         return '/'.join(parts[1:])
@@ -112,8 +112,7 @@ def problems(path, marker=None):
                 '{0}: {1} is missing. MANIFEST.in and package_data in setup.py'
                 ' put it there; check that an exclusion did not widen.'
                 .format(path, required))
-    if not any(name == 'LICENSE' or name.endswith('.dist-info/LICENSE')
-               for name in relative):
+    if 'LICENSE' not in relative and 'licenses/LICENSE' not in relative:
         found.append(
             '{0}: The project license is missing. Include LICENSE in MANIFEST.in'
             ' and license_files in setup.py.'.format(path))
