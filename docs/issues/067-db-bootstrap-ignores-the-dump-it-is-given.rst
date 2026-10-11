@@ -12,7 +12,7 @@ Issue 067: Distinguish database bootstrap from restore
 :Blocks: (none)
 :Related: 055, 068, 069
 :Decision: Reject dump arguments to bootstrap. Require restore for an existing database.
-:Resolution: 9fa70bf records the implementation.
+:Resolution: 6de5910 records the implementation.
 
 Work
 ----

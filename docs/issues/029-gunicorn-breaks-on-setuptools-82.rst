@@ -19,7 +19,7 @@ Issue 029: gunicorn <= 20.1.0 breaks on setuptools >= 82
     ``gunicorn`` pin in ``requirements/production.txt``, which is the only
     place the version is set, and in ``docs/upgrade-plan.rst`` 3b.2 and
     Stage 10.
-:Resolution: 679d96d -- the ruling, beside the gunicorn pin and in
+:Resolution: d542df5 -- the ruling, beside the gunicorn pin and in
     Stage 10 of the upgrade plan. No version changed
 
 Problem

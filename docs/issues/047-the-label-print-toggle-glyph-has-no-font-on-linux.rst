@@ -21,7 +21,7 @@ Issue 047: The label print toggle uses a glyph no Linux font has
     sized by ``.remove svg { width: 40px; height: 40px }`` in place of the
     ``font-size: 30pt``, with the checkbox wrapped inside the ``<label>`` and
     ``.remove`` added to the ``@media print`` hide list.
-:Resolution: Fixed in 4e75b40.
+:Resolution: Fixed in 3ed73eb.
 
 Problem
 =======
@@ -120,7 +120,7 @@ Rejected alternatives, recorded so they are not revisited
 Resolution
 ==========
 
-Commit 4e75b40, together with issue 046. The three lines are now::
+Commit 3ed73eb, together with issue 046. The three lines are now::
 
     '    <div class="remove">' +
     '        <label title="Tulosta tämä kyltti">' +

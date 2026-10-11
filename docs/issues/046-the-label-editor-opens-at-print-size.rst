@@ -21,7 +21,7 @@ Issue 046: The label editor opens at print size, not screen size
     preview's two hardcoded ``0.25``\ s read that same property, and its
     pointer offsets are expressed in unscaled label pixels (380 x 120, was
     ``-95`` / ``-30`` at 0.25) so they follow the scale.
-:Resolution: Fixed in 4e75b40.
+:Resolution: Fixed in 3ed73eb.
 
 Problem
 =======
@@ -103,7 +103,7 @@ once.
 Resolution
 ==========
 
-Commit 4e75b40, together with issue 047. The stylesheet declares the scale once,
+Commit 3ed73eb, together with issue 047. The stylesheet declares the scale once,
 on ``:root``::
 
     --screen-scale: 0.5;

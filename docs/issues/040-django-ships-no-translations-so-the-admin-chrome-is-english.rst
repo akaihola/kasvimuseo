@@ -18,7 +18,7 @@ Issue 040: Django ships no translations, so the admin chrome is English
 :Decision: Option 1 -- move the stray tree back into the package, in
     ``dev/Containerfile`` where it is astray, and assert the same property in
     the production ``Dockerfile``, which measurement showed was never affected
-:Resolution: Fixed in cdb763b.
+:Resolution: Fixed in cd2083e.
 
 Problem
 =======
@@ -165,7 +165,7 @@ suite about strings this repository does not translate itself:
 the ``Lisää``/``Muokkaa`` links, plus no ``Site administration`` anywhere) and
 ``test_submit_row_is_finnish``. Both pass against a rebuilt dev image and both
 fail against an image built before the fix, which is what makes them evidence.
-Commit cdb763b.
+Commit cd2083e.
 
 On the rebuilt image the admin front page is Finnish throughout: ``Sivuston
 ylläpito``, ``Lisää``/``Muokkaa`` on every model row, ``Ryhmät``. Two English

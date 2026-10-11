@@ -19,11 +19,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [9] Integrate and publish the public cleanup
+## In Progress
+
+- [~] [9] Integrate and publish the public cleanup
     - Depends on: [1], [2], [3], [4], [5], [6], [7], [8]
   <!-- hai:{"updatedAt":"2026-10-11T15:09:55.292Z"} -->
-
-## In Progress
 
 ## Completed / Accepted
 

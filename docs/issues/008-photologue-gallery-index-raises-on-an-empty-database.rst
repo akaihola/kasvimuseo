@@ -15,7 +15,7 @@ Issue 008: Photologue gallery index raises on an empty database
 :Blocks: (none)
 :Related: 018 -- a CI job starting from a fresh database is what would catch this
 :Decision: Option 2 -- override the route with ``allow_empty=True``
-:Resolution: Fixed in c6fc4e3.
+:Resolution: Fixed in aaff48c.
 
 Problem
 =======
@@ -67,4 +67,4 @@ Resolution
 ``ylaneenkasvit/urls.py`` declares the override, and
 ``kasvimuseo/tests/test_project_urls.py`` gains two tests next to
 ``test_photologue_urls_are_wired``: the empty database now renders 200 with an
-empty ``latest``, and a database with a gallery still lists it. Commit c6fc4e3.
+empty ``latest``, and a database with a gallery still lists it. Commit aaff48c.

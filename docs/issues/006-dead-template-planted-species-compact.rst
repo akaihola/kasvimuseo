@@ -23,7 +23,7 @@ Issue 006: Dead template: planted-species-compact.html
     the mobile front end by nothing that was ever built. The two were offered
     separately in case the evidence differed; it does not, so one ruling covers
     both
-:Resolution: 77f382e -- both files deleted, plus the assertion that pins which
+:Resolution: a6c775f -- both files deleted, plus the assertion that pins which
     template the live compact report is rendered from
 
 Problem

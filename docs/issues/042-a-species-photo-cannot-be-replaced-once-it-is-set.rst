@@ -18,7 +18,7 @@ Issue 042: A species photo cannot be replaced once it is set
     wins. Ruled on when the defect was reported from the garden a second time,
     as a photo that would not change; the admin control is not excluded and can
     still follow.
-:Resolution: 942532c
+:Resolution: 2235d5c
 
 Problem
 =======

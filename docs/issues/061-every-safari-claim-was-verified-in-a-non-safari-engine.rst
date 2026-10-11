@@ -40,7 +40,7 @@ Issue 061: Every Safari claim in the register was checked in Chromium
     of runner time and gives up most of what the split is for, since the
     engines differ in layout and text measurement and those are the tests that
     would have stayed Chromium-only
-:Resolution: e59a5f9 "test(browser): run the suite in WebKit as well as
+:Resolution: 8076f28 "test(browser): run the suite in WebKit as well as
     Chromium": ``browser_tests/conftest.py`` launches either engine,
     ``dev/kasvimuseo app browser-test`` runs both, and
     ``.github/workflows/tests.yml`` runs one per matrix leg. The finding the
@@ -57,7 +57,7 @@ viewport and the device's user agent.
 The defects those tests were written for are Safari defects. 045, 046, 047 and
 056 are all iPad reports; 056 is ``Accepted`` rather than ``Fixed`` precisely
 because the change it verifies runs on the device and nowhere else, and the
-commit it verifies (746ce71) states its premise as a claim about *Safari*
+commit it verifies (312bf15) states its premise as a claim about *Safari*
 applying CSS ``zoom`` to label geometry while reporting text and width
 measurements in a coordinate system that does not match.
 

@@ -47,12 +47,12 @@ Issue 045: The label editor is unusable on an iPad
     number lands on is found by hit-testing the release point, since a pointer
     drag is not delivered to what it passes over. Argued in "What the large
     half decided" below.
-:Resolution: The cheap half is fixed in bffb370, with the print toggle's
-    pointer split in 64ddc1b and its colour on an excluded label in 17e9c4c.
+:Resolution: The cheap half is fixed in aef9150, with the print toggle's
+    pointer split in cbd8fa1 and its colour on an excluded label in c3f0a4f.
     The large half -- pointer events, and the touch tests that hold them up --
-    is fixed in 336ad21, which is what makes this ``Fixed``, with the drag
-    preview put back where it belongs in ea60a03 and the dragged number given
-    something to draw in 1a5e5db.
+    is fixed in 35b6798, which is what makes this ``Fixed``, with the drag
+    preview put back where it belongs in 3a5c7b5 and the dragged number given
+    something to draw in 78e9124.
 
 Problem
 =======
@@ -271,7 +271,7 @@ not have been confirmed until 2026-07-31 for a reason outside this issue: the
 label editor's data endpoint was among the responses issue 044's pasta layer
 truncated -- cut off mid-string around 42.9 kB, so ``JSON.parse`` raised and the
 Vue application drew nothing at all in a browser talking to the development
-server. 044 is fixed (``76f5b9c``), and this branch is rebased onto that fix, so
+server. 044 is fixed (``70aedd7``), and this branch is rebased onto that fix, so
 the page loads and the maintainer can now look at it on the iPad. The numbers
 above come from a dump taken through the Django test client, which never crossed
 a socket and was therefore always complete.

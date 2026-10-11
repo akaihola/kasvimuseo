@@ -11,7 +11,7 @@ Issue 081: Django 2.1 is the next runtime upgrade step
 :Blocks: (none)
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 12 with Django 2.1.15, Grappelli 2.12.4 and Photologue 3.9. Keep Python 3.7.
-:Resolution: 1b9b93e updates the runtime pins and regenerates both locks.
+:Resolution: 1d5f0ea updates the runtime pins and regenerates both locks.
 
 Problem
 =======

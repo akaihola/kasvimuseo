@@ -123,7 +123,7 @@ Text this project no longer wants is removed with ``git rm`` rather than left
 in place with a note saying it is out of date. Git keeps the content; the
 pointer to it goes in ``docs/archive.rst``, one bullet per removed document::
 
-    * ``docs/issues/incoming.rst`` @ ``88455a0`` -- the "Emptied on ..."
+    * ``docs/issues/incoming.rst`` @ ``1e8e82a`` -- the "Emptied on ..."
       entries, removed 2026-08-04. Why they went, in as many lines as it takes.
 
 The path and the commit are literals, separated by ``@``, and the reason

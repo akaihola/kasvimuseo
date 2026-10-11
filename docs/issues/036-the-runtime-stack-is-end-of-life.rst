@@ -17,7 +17,7 @@ Issue 036: The runtime stack is end-of-life and unpatched
 :Decision: The programme ends with the source upgrade, not with a deployment.
     Stage 19 landed Django 6.0.7 on ``main`` as the last stage.
     The private deployment repository owns the host work for the new runtime, so this public record cannot track it.
-:Resolution: 8bd0599 merges Stage 19 into ``main``; bcff77c is the upgrade commit.
+:Resolution: 54e2dd2 merges Stage 19 into ``main``; c34ecdd is the upgrade commit.
     See :doc:`088-django-6-0-runtime-upgrade`, "Results".
     Every stage in :doc:`../upgrade-plan`, Part 4, reads ``Done``.
 

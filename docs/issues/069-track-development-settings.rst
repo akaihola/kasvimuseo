@@ -15,7 +15,7 @@ Issue 069: Track development settings
     025 -- related work
     026 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: c37eb1f records the implementation.
+:Resolution: 259c156 records the implementation.
 
 
 Scope

@@ -17,7 +17,7 @@ Issue 043: The photo changelist cannot be sorted by name
 :Decision: ``image_filename.admin_order_field = 'image'``. Case is left to the
     database rather than forced to lower case, and the ordering assumes every
     photo stays in one directory; both are argued in "Decision" below.
-:Resolution: Fixed in ee08991.
+:Resolution: Fixed in f1389d6.
 
 Problem
 =======
@@ -126,7 +126,7 @@ and ``kasvimuseo/tests/test_admin_changelist.py`` gains two tests beside
 ``test_photo_changelist_shows_the_file_name``: the header now carries the
 ``sortable`` class and an ``?o=`` link, and following that link orders the rows
 by file name in both directions. Both failed before the attribute and pass
-after it. Commit ee08991.
+after it. Commit f1389d6.
 
 See also
 ========

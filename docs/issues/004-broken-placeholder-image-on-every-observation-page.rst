@@ -14,7 +14,7 @@ Issue 004: Broken placeholder image on every observation page
 :Blocks: (none)
 :Related: 011 -- option 2 here renders the species photo, which is what 011 is about
 :Decision: Option 1 -- remove the tag
-:Resolution: Fixed in 65b6300.
+:Resolution: Fixed in 980ccf1.
 
 Problem
 =======
@@ -41,7 +41,7 @@ Options
 Decision
 ========
 
-Option 1. The tag came in with the page itself, in d541468 ("Added the planted
+Option 1. The tag came in with the page itself, in 09c520c ("Added the planted
 species and observations reports"), pointing at a filename that has never
 existed anywhere in this repository: it is scaffolding that was left behind, not
 a photo that went missing. Removing it is the only change that restores the page
@@ -63,4 +63,4 @@ The one line is gone from
 ``test_observation_page_has_no_placeholder_image``, which asserts both that
 ``dummy.jpg`` is absent and that the page carries no ``<img>`` at all -- so
 option 2 cannot be added by accident without the test being changed
-deliberately. Commit 65b6300.
+deliberately. Commit 980ccf1.

@@ -11,7 +11,7 @@ Issue 084: Django 3.1 is the next runtime upgrade step
 :Blocks: 085
 :Related: 036 -- the runtime upgrade programme
 :Decision: Complete Stage 15 on Python 3.9 as requested. Use the compatible pins after checking both images and PostgreSQL.
-:Resolution: 8a6ea04 upgrades the runtime and checks PostgreSQL timestamp decoding.
+:Resolution: 0cadce4 upgrades the runtime and checks PostgreSQL timestamp decoding.
 
 Work
 ----

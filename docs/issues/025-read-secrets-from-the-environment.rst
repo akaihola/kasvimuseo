@@ -11,7 +11,7 @@ Issue 025: Read secrets from the environment
 :Blocks: (none)
 :Related: 026 -- related work
 :Decision: Keep the generic implementation and its automated checks.
-:Resolution: 49407ca, 90eb35d records the implementation.
+:Resolution: a99027c. The private deployment repository keeps the rotation record.
 
 
 Scope
