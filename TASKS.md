@@ -18,8 +18,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Completed / Accepted
 
-- [ ] [13] Finish the iPad label checks (issue 056)
-  <!-- hai:{"updatedAt":"2026-10-11T21:15:01.554Z"} -->
+- [x] [13] Finish the iPad label checks (issue 056)
+  <!-- hai:{"updatedAt":"2026-10-12T13:21:45.480Z"} -->
 
 - [x] [*] Send machine-specific agent memories to private memory
   <!-- hai:{"id":"simple-c33f461b-afc6-4256-bcad-1d9e800b8b9f","createdAt":"2026-10-11T20:52:49.339Z","updatedAt":"2026-10-12T13:16:26.931Z"} -->
@@ -36,9 +36,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10], [11]
   <!-- hai:{"updatedAt":"2026-10-11T20:57:32.291Z"} -->
 
-- [ ] [8] Refresh public documentation after the repository split
+- [x] [8] Refresh public documentation after the repository split
     - Depends on: [2], [3], [5], [6], [7], [10]
-  <!-- hai:{"updatedAt":"2026-10-11T14:56:11.455Z"} -->
+  <!-- hai:{"updatedAt":"2026-10-12T13:20:48.438Z"} -->
 
 - [x] [14] Close the runtime upgrade programme (issue 036)
     - Depends on: [10]
@@ -57,8 +57,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
     - Depends on: [10]
   <!-- hai:{"updatedAt":"2026-10-11T20:52:31.026Z"} -->
 
-- [ ] [4] Track exclusions for private local state
-  <!-- hai:{"updatedAt":"2026-10-10T18:40:19.370Z"} -->
+- [x] [4] Track exclusions for private local state
+  <!-- hai:{"updatedAt":"2026-10-12T13:19:50.781Z"} -->
 
 - [x] [10] Integrate the Django 5.2 and 6.0 upgrade
   <!-- hai:{"updatedAt":"2026-10-10T18:41:43.157Z"} -->
