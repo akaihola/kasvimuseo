@@ -21,8 +21,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [ ] [13] Finish the iPad label checks (issue 056)
   <!-- hai:{"updatedAt":"2026-10-11T21:15:01.554Z"} -->
 
-- [ ] [*] Send machine-specific agent memories to private memory
-  <!-- hai:{"id":"simple-c33f461b-afc6-4256-bcad-1d9e800b8b9f","createdAt":"2026-10-11T20:52:49.339Z","updatedAt":"2026-10-11T20:53:53.442Z"} -->
+- [x] [*] Send machine-specific agent memories to private memory
+  <!-- hai:{"id":"simple-c33f461b-afc6-4256-bcad-1d9e800b8b9f","createdAt":"2026-10-11T20:52:49.339Z","updatedAt":"2026-10-12T13:16:26.931Z"} -->
 
 - [ ] [12] Decide how to handle the rotation regression in photo effects (issue 089)
     - Depends on: [10]
@@ -63,11 +63,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [x] [10] Integrate the Django 5.2 and 6.0 upgrade
   <!-- hai:{"updatedAt":"2026-10-10T18:41:43.157Z"} -->
 
-- [ ] [7] Preserve vendored dependency license notices
-  <!-- hai:{"updatedAt":"2026-10-10T18:30:56.440Z"} -->
+- [x] [7] Preserve vendored dependency license notices
+  <!-- hai:{"updatedAt":"2026-10-12T13:18:01.202Z"} -->
 
-- [ ] [1] Exclude private settings from release packages
-  <!-- hai:{"updatedAt":"2026-10-10T18:19:53.455Z"} -->
+- [x] [1] Exclude private settings from release packages
+  <!-- hai:{"updatedAt":"2026-10-12T13:16:55.964Z"} -->
 
 - [x] [2] Keep contributor memories portable
   <!-- hai:{"updatedAt":"2026-10-11T16:05:02.635Z"} -->
