@@ -29,7 +29,7 @@ A separate prepared checkout and base checkout also contained different unrelate
 - [x] A fresh public clone contains the accepted cleanup.
 - [x] Required checks pass against the integrated revision.
 - [x] Published packages and documentation match that revision and pass the content checks.
-- [ ] The maintainer records any remaining publication or history work in the appropriate private records.
+- [x] The maintainer records any remaining publication or history work in the appropriate private records.
 
 ## Dependencies
 
@@ -85,3 +85,10 @@ The content scan of all seven public references passed, covering both tags.
 A fresh clone of GitHub `main` at `02d8c7c` resolves every pointer, builds the documentation without warnings, and builds an sdist and a wheel that pass `dev/check-release-artifacts`.
 CI run 38255834038 passed pytest and both browser suites; its sphinx job ran before the tag existed and waits for a rerun by the maintainer.
 The superseded rewrite outputs under the private `.local/history-rewrite/` with `forward` and `final` in their names used the tag-aware variant. Do not push from them.
+
+## Published documentation of 2026-10-14
+
+GitHub Pages was switched off, so the pages job skipped deployment until the maintainer enabled it with the source "GitHub Actions" on 2026-10-14.
+After the rerun of CI run 38565210962, https://akaihola.github.io/kasvimuseo/ answers, and the page of issue 062 names the published spike commit.
+The private deployment repository records the pushes, the tag decision, the scans, and the superseded rewrite directories in `docs/public-history-cleanup.rst`, "Forward publication of 2026-10-12 and 2026-10-14".
+Every completion check of this task passed.
