@@ -10,6 +10,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Unverified proposals
 
+- [*] Fix the chromium touch test `test_a_number_moves_between_labels_by_touch`, which failed on CI runs 38153518073, 38255834038 and 38565210962 but passes in WebKit
+
 ## Ordered backlog
 
 ## Scheduled
