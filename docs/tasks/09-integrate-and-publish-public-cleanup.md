@@ -26,9 +26,9 @@ A separate prepared checkout and base checkout also contained different unrelate
 
 ## Completion checks
 
-- [ ] A fresh public clone contains the accepted cleanup.
+- [x] A fresh public clone contains the accepted cleanup.
 - [x] Required checks pass against the integrated revision.
-- [ ] Published packages and documentation match that revision and pass the content checks.
+- [x] Published packages and documentation match that revision and pass the content checks.
 - [ ] The maintainer records any remaining publication or history work in the appropriate private records.
 
 ## Dependencies
@@ -75,3 +75,13 @@ Step 6, the publication, waits for the maintainer. The agent token cannot push a
 The refreshed rewrite of 2026-10-11 excluded the interim tags. Without the tag, the tool left the spike hash of issue 062 unchanged in 284 commit messages, so those commits received other hashes than in the first rewrite. The published `main` `b02822b` is that variant.
 We composed the two commit maps and re-pointed 62 hashes in 27 files to the published variant. Issue 062 still names `72b65c4`; its parent is on the published `main`, so the tag `interim-062-option-2` can be pushed on top.
 A rewrite of local `main` from a source without the interim tags reproduces `b02822b` and adds the newer commits on top, so the publication is a fast-forward push.
+
+## Publication of 2026-10-12 and 2026-10-14
+
+On 2026-10-12 another thread recovered every clone and worktree onto the clean history and rebased the correction above into it. Read the private `docs/public-history-cleanup.rst`, "Clone recovery of 2026-10-12".
+The agent pushed `main` and `master` forward from `b02822b` to `02d8c7c` with an atomic, lease-guarded push. The 30 new commits change no workflow file.
+On 2026-10-14 the maintainer pushed the tag `interim-062-option-2` from `atom`, because the spike's history carries an older workflow file that the agent token may not create.
+The content scan of all seven public references passed, covering both tags.
+A fresh clone of GitHub `main` at `02d8c7c` resolves every pointer, builds the documentation without warnings, and builds an sdist and a wheel that pass `dev/check-release-artifacts`.
+CI run 38255834038 passed pytest and both browser suites; its sphinx job ran before the tag existed and waits for a rerun by the maintainer.
+The superseded rewrite outputs under the private `.local/history-rewrite/` with `forward` and `final` in their names used the tag-aware variant. Do not push from them.
