@@ -10,9 +10,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Unverified proposals
 
-- [*] Fix the intermittent chromium merge failures in `browser_tests/test_label_editor.py`: the second drag of number 11 onto the narcissus label leaves it unmerged in `test_a_number_moves_between_labels_by_touch` and, on 2026-10-14, in `test_dragging_a_number_onto_a_label_of_the_same_species_merges_them`; the chromium job failed on three of five CI runs since 2026-10-11 and WebKit always passes
-
 ## Ordered backlog
+
+- [17] Fix the intermittent chromium label merge failures
+  <!-- hai:{"id":"simple-b467c2b06b2151b8","updatedAt":"2026-10-14T20:00:06.776Z"} -->
 
 ## Scheduled
 
@@ -95,9 +96,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 [16]: docs/tasks/16-move-the-images-and-locks-to-python-3-13.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 -->
 
 ---
+
+[17]: docs/tasks/17-fix-the-intermittent-chromium-label-merge-failures.md
 
 ## Rules
 
