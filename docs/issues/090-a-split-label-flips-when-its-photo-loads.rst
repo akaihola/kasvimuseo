@@ -70,10 +70,11 @@ press.
 Evidence
 ========
 
-A probe, ``test_probe_task17.py`` in the task's work directory, disabled the
-cache over the Chrome DevTools Protocol and held the photo response until the
-test had measured the number. It then released the photo, waited for the flip,
-and pressed where the number had been. The result was the failure CI showed.
+A probe test, written for this task and not kept in the suite, disabled the
+cache with the Chrome DevTools Protocol call ``Network.setCacheDisabled`` and
+held every ``/media/`` route until the test had measured the number. It then
+released the photo, waited for the flip, and dispatched the touch sequence of
+``touch_drag`` from the stale point. The result was the failure CI showed.
 
 .. list-table::
    :header-rows: 1
