@@ -98,10 +98,10 @@ Fix
 ===
 
 ``labels_drawn`` in ``browser_tests/conftest.py`` waits until every label has
-loaded its photo and carries the class its aspect ratio decides. ``open_editor``
-calls it, so every editor test starts from a settled sheet. The two merge tests
-call it again after their split, before they measure the number for the second
-drag.
+loaded its photo and carries the class its aspect ratio decides.
+``open_editor`` calls it, so every editor test starts from a settled sheet.
+The two merge tests call it again after their split, before they measure the
+number for the second drag.
 
 The editor is unchanged. Its brief horizontal-then-vertical redraw of a new
 label is visible to a person only as a flicker on a slow connection. A later
