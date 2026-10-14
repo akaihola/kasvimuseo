@@ -293,6 +293,10 @@ def ipad_page(anonymous_ipad_page, base_url):
 def open_editor(page, base_url):
     """The label editor, loaded, with its labels drawn.
 
+    Drawn means that every label has loaded its photo and taken the layout the
+    photo decides, so a test can measure a number and then press on it (issue
+    090).
+
     ``page`` has been through the admin's login form, which is what the editor
     now requires (issue 052). It used to stop at ``/admin/`` for a different
     reason -- to borrow the ``csrftoken`` cookie the editor set none of -- and
@@ -300,6 +304,7 @@ def open_editor(page, base_url):
     """
     page.goto(base_url + LABELS_URL)
     page.wait_for_selector('#labels li')
+    labels_drawn(page)
     return page
 
 
@@ -330,6 +335,29 @@ def labels(page):
             photo: li.querySelector('.photo img').getAttribute('src'),
             hidden: li.classList.contains('hidden'),
         }))""")
+
+
+def labels_drawn(page):
+    """Wait until every label has its photo and the layout the photo decides.
+
+    A label is drawn horizontal until its photo has loaded. The editor's
+    ``setAspect`` then turns the label of a portrait photo vertical, and that
+    moves its museum numbers from the lower right corner to the top. A test
+    that measures a number before the flip and presses after it presses on the
+    photo, and nothing moves (issue 090). The orientation threshold is the
+    editor's own, ``3.1 / 4`` in ``planting-labels.html``.
+    """
+    page.wait_for_function("""() => Array.from(
+        document.querySelectorAll('#labels li')).every(li => {
+            const img = li.querySelector('.photo img');
+            if (!img || !img.getAttribute('src')) {
+                return true;
+            }
+            return img.complete && img.naturalWidth > 0
+                && li.classList.contains(
+                    img.naturalWidth / img.naturalHeight < 3.1 / 4
+                    ? 'vertical' : 'horizontal');
+        })""")
 
 
 def centre(source):
