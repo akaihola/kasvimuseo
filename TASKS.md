@@ -10,7 +10,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Unverified proposals
 
-- [*] Fix the chromium touch test `test_a_number_moves_between_labels_by_touch`, which failed on CI runs 38153518073, 38255834038 and 38565210962 but passes in WebKit
+- [*] Fix the intermittent chromium merge failures in `browser_tests/test_label_editor.py`: the second drag of number 11 onto the narcissus label leaves it unmerged in `test_a_number_moves_between_labels_by_touch` and, on 2026-10-14, in `test_dragging_a_number_onto_a_label_of_the_same_species_merges_them`; the chromium job failed on three of five CI runs since 2026-10-11 and WebKit always passes
 
 ## Ordered backlog
 
