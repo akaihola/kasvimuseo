@@ -92,6 +92,7 @@ The private deployment repository owns the reports behind the numbers in :doc:`d
    089: Photologue 3.20 from 088 leaves a phone photo sideways when it has an
       effect. No production data has an effect, so the decision can wait.
    035: Keep the established priority.
+   090: The browser suite's own race; fixed with the tests that showed it.
 
 All issues
 ----------

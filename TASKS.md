@@ -14,10 +14,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [17] Fix the intermittent chromium label merge failures
-  <!-- hai:{"id":"simple-b467c2b06b2151b8","updatedAt":"2026-10-14T20:00:40.329Z"} -->
-
 ## In Progress
+
+- [~] [17] Fix the intermittent chromium label merge failures
+  <!-- hai:{"id":"simple-b467c2b06b2151b8","updatedAt":"2026-10-14T20:04:19.399Z"} -->
 
 ## Completed / Accepted
 

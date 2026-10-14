@@ -20,8 +20,8 @@ import re
 
 import pytest
 
-from conftest import (DATA_URL, LABELS_URL, centre, drag, labels, save,
-                      touch_drag)
+from conftest import (DATA_URL, LABELS_URL, centre, drag, labels,
+                      labels_drawn, save, touch_drag)
 
 NARSISSI = 'valkonarsissi'
 ESIKKO = 'kevätesikko'
@@ -284,9 +284,16 @@ def test_dragging_a_number_onto_the_background_splits_the_label(editor):
 def test_dragging_a_number_onto_a_label_of_the_same_species_merges_them(
         editor):
     """And the label left holding nothing goes away, rather than printing
-    blank."""
+    blank.
+
+    The split label is drawn horizontal until its photo loads, and the photo
+    is a portrait, so the label then flips and its number moves (issue 090).
+    ``labels_drawn`` waits for that before the number is measured for the
+    second drag; without it, a slow machine presses where the number was.
+    """
     drag(editor, number(editor, 11), *empty_space(editor))
     assert len(labels(editor)) == 3
+    labels_drawn(editor)
 
     target = editor.locator('#labels li').nth(1).bounding_box()
     drag(editor, number(editor, 11),
@@ -327,6 +334,9 @@ def test_a_number_moves_between_labels_by_touch(touch_editor):
 
     assert [(label['name'], label['ids']) for label in labels(touch_editor)] \
         == [(ESIKKO, ['21']), (NARSISSI, ['12']), (NARSISSI, ['11'])]
+    # The split label flips when its photo loads; measure it after that, as
+    # the mouse test above does (issue 090).
+    labels_drawn(touch_editor)
 
     target = touch_editor.locator('#labels li').nth(1).bounding_box()
     touch_drag(touch_editor, number(touch_editor, 11),

@@ -6,6 +6,7 @@ This index helps contributors find portable development guidance. Each note link
 - [Check browser behavior](browser-checks-via-static-harness.md).
 - [Check a fix on the iPad](check-a-fix-on-the-ipad-from-a-development-server.md).
 - [Check browser server failures](browser-suite-server-dies-under-sibling-load.md).
+- [Wait for the labels to be drawn](browser-tests-wait-for-the-labels-to-be-drawn.md).
 - [Use separate development image tags](dev-image-tag-is-shared-between-workspaces.md).
 - [Check documentation build output](docs-build-lock-exits-zero.md).
 - [Check reStructuredText table borders](rst-table-borders-and-git-diff-check.md).
