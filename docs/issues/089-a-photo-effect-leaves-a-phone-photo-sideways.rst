@@ -2,15 +2,18 @@
 Issue 089: A photo effect leaves a phone photo sideways
 =======================================================
 
-:Status: Accepted
+:Status: Fixed
 :Severity: Low
 :Area: photos / dependencies
 :Reported: 2026-10-05
 :Source: Pre-merge review of the Django 6.0 branch of issue 088
 :Evidence: ``kasvimuseo/tests/test_photo_orientation.py`` --
-    ``test_a_photo_with_an_effect_stays_sideways`` pins the defect, and
-    ``test_a_photo_with_no_effect_is_turned_upright`` pins the path that
-    works. The first test passes on photologue 3.20 and fails on 3.19.
+    ``test_a_sideways_photo_with_an_effect_is_shown_upright`` and
+    ``test_a_sideways_photo_with_a_size_effect_is_shown_upright`` pin the
+    fix, and ``test_a_sideways_jpeg_is_stored_upright`` pins the label
+    layout. ``test_photologue_turns_a_photo_with_an_effect_upright``
+    disconnects the receiver and is a strict expected failure for
+    upstream issue 233.
 :Depends on: (none)
 :Blocks: (none)
 :Related: 088 -- its move to photologue 3.20 brings this regression
@@ -26,8 +29,9 @@ Issue 089: A photo effect leaves a phone photo sideways
     The agent of task 12 had chosen options 1 and 4 on the evidence on
     2026-10-11, as ``docs/issues/README.rst`` allows; the maintainer added
     option 3 and rejected option 2.
-:Resolution: (none yet) -- task 18 lands the work-around. Upstream issue 233
-    is the signal for the photologue fix.
+:Resolution: 8c60228 -- ``turn_photo_upright`` in ``kasvimuseo/models.py``
+    stores each new upload upright. Upstream issue 233 is the signal for
+    task 19.
 
 This issue is for the maintainer and the next agent who touches photos. It
 decides whether the project works around a photologue 3.20 regression or
@@ -96,11 +100,11 @@ and the tag read.
 Reproduce
 =========
 
-Run the pinning tests in the Django 6.0 image::
+Run the orientation tests in the development image::
 
-    $ KASVIMUSEO_IMAGE=kasvimuseo-dev-issue088 dev/kasvimuseo app test \
-        kasvimuseo/tests/test_photo_orientation.py
+    $ dev/kasvimuseo app test kasvimuseo/tests/test_photo_orientation.py
 
-Both tests pass. In the Django 5.2 image, ``kasvimuseo-dev-issue087``, which
-has photologue 3.19, the effect test fails with ``(20, 40) == (40, 20)``. That
-failure shows that 3.19 turned the photo upright.
+On photologue 3.20, every test passes and
+``test_photologue_turns_a_photo_with_an_effect_upright`` is an expected
+failure. That test saves the photo without the receiver, so it shows the
+regression.

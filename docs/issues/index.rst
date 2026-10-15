@@ -90,7 +90,7 @@ The private deployment repository owns the reports behind the numbers in :doc:`d
    087: Keep the established priority.
    088: Stage 19 moves from Django 5.2 to Django 6.0.7 on Python 3.12 or later.
    089: Photologue 3.20 from 088 leaves a phone photo sideways when it has an
-      effect. No production data has an effect, so the decision can wait.
+      effect. Task 18 turns each upload upright before photologue stores it.
    035: Keep the established priority.
    090: The browser suite's own race; fixed with the tests that showed it.
 
