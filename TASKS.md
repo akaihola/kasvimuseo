@@ -19,10 +19,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [18] Turn uploaded originals upright before photologue stores them (issue 089)
-  <!-- hai:{"updatedAt":"2026-10-15T07:31:02.845Z"} -->
-
 ## Completed / Accepted
+
+- [ ] [18] Turn uploaded originals upright before photologue stores them (issue 089)
+  <!-- hai:{"updatedAt":"2026-10-15T07:35:30.004Z"} -->
 
 - [ ] [17] Fix the intermittent chromium label merge failures
   <!-- hai:{"id":"simple-b467c2b06b2151b8","updatedAt":"2026-10-14T20:40:31.559Z"} -->
