@@ -15,9 +15,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [18] Turn uploaded originals upright before photologue stores them (issue 089)
-
 ## Scheduled
+
+- [18] Turn uploaded originals upright before photologue stores them (issue 089)
+  <!-- hai:{"updatedAt":"2026-10-15T07:30:26.578Z"} -->
 
 ## In Progress
 
