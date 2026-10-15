@@ -2,7 +2,7 @@
 Issue 089: A photo effect leaves a phone photo sideways
 =======================================================
 
-:Status: Deferred
+:Status: Accepted
 :Severity: Low
 :Area: photos / dependencies
 :Reported: 2026-10-05
@@ -15,19 +15,19 @@ Issue 089: A photo effect leaves a phone photo sideways
 :Blocks: (none)
 :Related: 088 -- its move to photologue 3.20 brings this regression
     054 -- the four photo sizes, none of which has an effect
-:Decision: Options 1 and 4, decided on the evidence on 2026-10-11 by the
-    agent of task 12, as ``docs/issues/README.rst`` allows when only the
-    ruling is missing. The maintainer confirms or changes it when they accept
-    task 12. Option 1: accept the regression and keep the pinning test, because
-    no photo and no photo size has an effect, and option 3 would change every
-    stored original to fix a case nobody uses. Option 2 was not taken, because
-    photologue's own admin keeps the same field on a photo size, so it would
-    hide the regression rather than close it. Option 4: the maintainer sends
-    the report under "Upstream report" below from their own account. An agent
-    cannot send it, because it is published under the maintainer's name.
-:Resolution: (none yet) -- ``Deferred`` until photologue reads the tag before
-    the effect again. The pinning test then fails, and the change that updates
-    it closes this issue.
+:Decision: Options 1, 3 and 4, ruled by the maintainer on 2026-10-15 when
+    they accepted task 12. Option 2 is rejected. Option 1: the effect test
+    keeps pinning what photologue does until upstream fixes it. Option 3:
+    task 18 turns each uploaded original upright before photologue stores
+    it, which also fixes the label layout that ``measure_photo_orientation``
+    in ``kasvimuseo/models.py`` reads from the stored pixels. Option 4: the
+    maintainer sent the report on 2026-10-15; "Upstream report" below links
+    it. Task 19 proposes to remove the work-around after the upstream fix.
+    The agent of task 12 had chosen options 1 and 4 on the evidence on
+    2026-10-11, as ``docs/issues/README.rst`` allows; the maintainer added
+    option 3 and rejected option 2.
+:Resolution: (none yet) -- task 18 lands the work-around. Upstream issue 233
+    is the signal for the photologue fix.
 
 This issue is for the maintainer and the next agent who touches photos. It
 decides whether the project works around a photologue 3.20 regression or
@@ -82,42 +82,16 @@ choice.
 Upstream report
 ===============
 
-This section is for the maintainer. It holds the text of the report that
-option 4 asks for. The maintainer sends it to
-https://github.com/richardbarran/django-photologue/issues and then records
-the issue link in the ``Resolution`` field. No report with this content was
-found there on 2026-10-11.
-
-Title: ``Photo.create_size() applies the effect before it reads the EXIF
-orientation, so an effect leaves a phone photo sideways (3.20)``
-
-.. code-block:: text
-
-    Since 3.20, Photo.create_size() calls effect.pre_process(im) before it
-    reads the EXIF Orientation tag with im.getexif(). An effect that uses
-    ImageEnhance or a filter returns a new image, and that image has no EXIF
-    data. create_size() then finds no Orientation tag and does not transpose
-    the photo. A photo taken upright on a phone is cached sideways in every
-    size.
-
-    3.19 read the tag from the stored original, so the effect did not matter.
-
-    To reproduce:
-
-    1. Save a 40x20 JPEG with EXIF Orientation = 6 as a Photo.
-    2. Call photo.get_display_size(). It returns (20, 40).
-    3. Give the photo any PhotoEffect, for example contrast=1.2, and clear
-       the cache.
-    4. Call photo.get_display_size() again. It returns (40, 20).
-
-    The same happens when the PhotoSize has the effect instead of the Photo.
-
-    A fix is to read the Orientation tag, or to call
-    ImageOps.exif_transpose(), before the effect's pre_process() runs.
-
-    A test that pins both cases is in
-    kasvimuseo/tests/test_photo_orientation.py of
-    https://github.com/akaihola/kasvimuseo.
+The maintainer reported the regression as
+`django-photologue issue 233
+<https://github.com/richardbarran/django-photologue/issues/233>`_ on
+2026-10-15. Before that, a throwaway Django project with SQLite checked
+every claim of the report against photologue 3.19, 3.20 and master at
+commit ``a8f96eb``, which includes pull request 232. 3.19 turns the photo
+upright with and without an effect. 3.20 and master leave it sideways with
+an effect on the photo or on the photo size. Pull request 232 fixes the
+orientation map and the mirrored values, but not the order of the effect
+and the tag read.
 
 Reproduce
 =========
