@@ -40,3 +40,11 @@ Photologue reads `DateTimeOriginal` from the stored file after the save, so the 
 
 [Task 19](19-remove-the-orientation-work-around.md) proposes to remove the receiver after the upstream fix.
 Existing originals keep their tags. A one-off command for them is outside this task and needs its own decision.
+
+## Validation results
+
+On 2026-10-15, commit 8c60228 added `turn_photo_upright` and its tests.
+
+- The application suite passed with 605 tests and one strict expected failure on photologue 3.20 and Pillow 12.3.0.
+- Pillow refuses `quality='keep'` for an image that `exif_transpose` returns, because that image has no JPEG format. The receiver passes the quantization tables and the subsampling of the original instead. These are the two settings that `quality='keep'` copies.
+- The tests save each sideways upload two ways: stored before the save, and stored by the save as the admin form does.

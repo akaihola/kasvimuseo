@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+import io
+import os
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils.dates import MONTHS
 from django.utils.encoding import force_str
@@ -8,6 +11,7 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 import operator
 from photologue.models import Photo
+from PIL import ExifTags, Image, ImageOps, JpegImagePlugin
 
 from kasvimuseo import photo_matching
 
@@ -715,6 +719,58 @@ class Care(models.Model):
         ordering = 'date',
 
 
+def turn_photo_upright(sender, instance, **kwargs):
+    """Store a newly uploaded ``Photo`` original upright (issue 089).
+
+    Photologue 3.20 applies a ``PhotoEffect`` before it reads the EXIF
+    ``Orientation`` tag, and the effect drops the tag (upstream issue 233).
+    ``measure_photo_orientation`` also reads the stored pixels. So this
+    turns the pixels upright with Pillow, which handles all eight values,
+    and stores the file with no tag. The rest of the EXIF data stays, so
+    ``DateTimeOriginal`` survives.
+
+    A file with no tag, or with tag 1, is stored byte for byte as
+    uploaded. The receiver runs before ``FileField.pre_save`` commits an
+    upload. A file that is already in the storage is deleted and saved
+    again under its upload name. Task 19 decides when this can go.
+    """
+    image = instance.image
+    if not image:
+        return
+    if instance.pk is not None:
+        stored = (sender.objects.filter(pk=instance.pk)
+                  .values_list('image', flat=True).first())
+        if stored == image.name:
+            return
+    source = image.file
+    source.seek(0)
+    data = source.read()
+    source.seek(0)
+    try:
+        with Image.open(io.BytesIO(data)) as original:
+            orientation = original.getexif().get(ExifTags.Base.Orientation)
+            if orientation in (None, 1):
+                return
+            upright = ImageOps.exif_transpose(original)
+            options = {'exif': upright.getexif().tobytes()}
+            if original.format == 'JPEG':
+                # ``quality='keep'`` refuses an image that ``transpose``
+                # made, so pass the two settings it would copy.
+                options['qtables'] = original.quantization
+                options['subsampling'] = JpegImagePlugin.get_sampling(
+                    original)
+            buffer = io.BytesIO()
+            upright.save(buffer, original.format, **options)
+    except (IOError, OSError, ValueError):
+        # Not an image Pillow can turn. Photologue reports it, not this.
+        return
+    name = os.path.basename(image.name)
+    if image._committed:
+        image.close()
+        image.storage.delete(image.name)
+    instance.image = ContentFile(buffer.getvalue(), name=name)
+
+
 def autoconnect_photo_to_species(sender, instance, **kwargs):
     """Attach a saved ``Photo`` to the species its title names.
 
@@ -756,3 +812,4 @@ def autoconnect_photo_to_species(sender, instance, **kwargs):
 # has nothing to do with. The guard stays, so the function is still safe to
 # call directly and to reconnect more widely.
 models.signals.post_save.connect(autoconnect_photo_to_species, sender=Photo)
+models.signals.pre_save.connect(turn_photo_upright, sender=Photo)
