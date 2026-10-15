@@ -10,7 +10,12 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Unverified proposals
 
+- [19] Remove the orientation work-around after the photologue fix (issue 089)
+    - Depends on: [18]
+
 ## Ordered backlog
+
+- [18] Turn uploaded originals upright before photologue stores them (issue 089)
 
 ## Scheduled
 
@@ -94,9 +99,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 [14]: docs/tasks/14-close-the-runtime-upgrade-programme.md
 [15]: docs/tasks/15-use-main-base-branch.md
 [16]: docs/tasks/16-move-the-images-and-locks-to-python-3-13.md
+[18]: docs/tasks/18-turn-uploaded-originals-upright.md
+[19]: docs/tasks/19-remove-the-orientation-work-around.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 -->
 
 ---
 
