@@ -24,8 +24,8 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 - [ ] [18] Turn uploaded originals upright before photologue stores them (issue 089)
   <!-- hai:{"updatedAt":"2026-10-15T07:35:30.004Z"} -->
 
-- [ ] [17] Fix the intermittent chromium label merge failures
-  <!-- hai:{"id":"simple-b467c2b06b2151b8","updatedAt":"2026-10-14T20:40:31.559Z"} -->
+- [x] [17] Fix the intermittent chromium label merge failures
+  <!-- hai:{"id":"simple-b467c2b06b2151b8","updatedAt":"2026-10-15T08:14:02.732Z"} -->
 
 - [x] [13] Finish the iPad label checks (issue 056)
   <!-- hai:{"updatedAt":"2026-10-12T13:21:45.480Z"} -->
