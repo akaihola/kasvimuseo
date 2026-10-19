@@ -187,8 +187,9 @@ Below, `<filename>@<branch>` means operate on the file in the specified branch.
 
 3. Merge and deploy
 
-- When Git applies, rebase the feature branch on `main`, resolve conflicts, merge it,
-  and remove the worktree and branch.
+- When Git applies, rebase the feature branch on `main`, resolve conflicts, and merge it.
+- Keep the worktree and branch after merging. Remove them only when the user
+  explicitly requests it.
 - Move the issue to `## Completed / Accepted` with `[ ]`, pending user acceptance, and
   commit when applicable.
 - Follow any release steps in `README.rst`.
