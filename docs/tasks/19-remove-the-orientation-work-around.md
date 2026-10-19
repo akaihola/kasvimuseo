@@ -1,7 +1,5 @@
----
-depends-on: [18]
----
 
+> Waits for a photologue release that fixes upstream issue 233. Task 18 is done (board clean-up, approved by Antti 2026-10-19, B10 f).
 # 19. Remove the orientation work-around after the photologue fix
 
 This task helps the contributor who bumps photologue past the fix of upstream issue 233 decide whether the receiver of task 18 can go.

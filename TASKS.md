@@ -11,7 +11,7 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 ## Unverified proposals
 
 - [19] Remove the orientation work-around after the photologue fix (issue 089)
-    - Depends on: [18]
+  <!-- hai:{"updatedAt":"2026-10-19T15:28:58.741Z"} -->
 
 ## Ordered backlog
 
