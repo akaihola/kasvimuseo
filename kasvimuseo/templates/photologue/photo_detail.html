@@ -1,0 +1,20 @@
+{% extends "photologue/root.html" %}
+{% load photologue_tags i18n %}
+{% comment %}
+Task 24: photologue's own photo page links the original file. An original
+stored before task 24 can still have GPS tags, so this page shows and links
+the display size only. The markup is new; it copies no upstream markup.
+{% endcomment %}
+{% block content %}
+    <h1>{{ object.title }}</h1>
+    <p>{% trans "Published" %} {{ object.date_added }}</p>
+    {% if object.caption %}<p>{{ object.caption }}</p>{% endif %}
+    <a href="{{ object.get_display_url }}"><img src="{{ object.get_display_url }}" alt="{{ object.title }}"></a>
+    {% for gallery in object.public_galleries %}
+        <p>
+            {% previous_in_gallery object gallery %}
+            <a href="{{ gallery.get_absolute_url }}">{{ gallery.title }}</a>
+            {% next_in_gallery object gallery %}
+        </p>
+    {% endfor %}
+{% endblock %}

@@ -125,3 +125,5 @@ it needs no notice here. ``jqm/README.rst`` explains the jQuery case.
 A template that starts with ``{% extends %}`` can contain copied upstream markup.
 Check its origin before deciding whether it needs a notice.
 The inventory includes the copied Grappelli dashboard template.
+``kasvimuseo/templates/photologue/photo_detail.html`` replaces photologue's
+template with new markup and copies none of it (task 24).

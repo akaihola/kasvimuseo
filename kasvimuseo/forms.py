@@ -5,9 +5,10 @@ from django.utils.translation import gettext_lazy as _
 from unicodedata import combining, normalize
 
 from photologue.models import Photo
+from PIL import Image
 
 from kasvimuseo.models import (
-    Observation, Species, get_next_observation_extid)
+    TOO_MANY_PIXELS, Observation, Species, get_next_observation_extid)
 from kasvimuseo.photos import get_candidate_photo_pks
 
 #: What ``clean()`` below does with the file name, and what
@@ -52,6 +53,26 @@ def remove_diacritics(text):
                     if not combining(character))
 
 
+class PhotoImageField(forms.ImageField):
+    """An image field that names a decompression bomb as such (task 24).
+
+    Django's ``ImageField`` refuses any image Pillow cannot open with one
+    message, "not an image or a corrupted image". For an image with too
+    many pixels, give the message that ``turn_photo_upright`` raises for a
+    save outside this form.
+    """
+
+    def to_python(self, data):
+        try:
+            return super(PhotoImageField, self).to_python(data)
+        except forms.ValidationError as error:
+            bomb = error.__cause__
+            if isinstance(bomb, Image.DecompressionBombError):
+                raise forms.ValidationError(
+                    TOO_MANY_PIXELS, code='too_many_pixels') from bomb
+            raise
+
+
 class PhotoForm(forms.ModelForm):
     class Meta:
         model = Photo
@@ -64,6 +85,7 @@ class PhotoForm(forms.ModelForm):
         # ``sites`` widget would undo that on the way out and hide the photo
         # from photologue's own gallery and photo views, which filter by site.
         exclude = ['sites']
+        field_classes = {'image': PhotoImageField}
 
     def __init__(self, *args, **kwargs):
         super(PhotoForm, self).__init__(*args, **kwargs)

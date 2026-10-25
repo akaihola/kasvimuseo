@@ -14,13 +14,14 @@ This is a proposal. The maintainer verifies it when the strict expected failure 
 1. Confirm that the strict expected failure of task 18 fails on the new photologue version, which means photologue reads the tag before the effect.
 2. Check whether `measure_photo_orientation` in `kasvimuseo/models.py` still reads pixel dimensions. If it does, the receiver still fixes the label layout, and this task changes the measurement to read the EXIF tag instead of removing the receiver.
 3. Check that the new photologue handles all eight orientation values, which pull request 232 adds.
-4. Remove the receiver and its tests, or keep it and record why in issue 089.
+4. Remove the orientation part of the receiver and its tests, or keep it and record why in issue 089. Keep the tag removal of task 24.
 5. Record the outcome in issue 089, "Decision".
 
 ## Evidence
 
 The receiver of task 18 exists for the regression of upstream issue 233 and for the label layout.
 The upstream fix removes the first reason only.
+Since [task 24](24-strip-location-data-from-uploaded-originals.md), the receiver also removes the private EXIF tags from every upload. Keep that job when you remove the work-around.
 
 ## Completion checks
 

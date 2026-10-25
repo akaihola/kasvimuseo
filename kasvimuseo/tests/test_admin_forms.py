@@ -19,7 +19,8 @@ from django.urls import reverse
 
 from kasvimuseo import admin  # noqa: F401  (registers the ModelAdmins)
 from kasvimuseo.models import (
-    Bed, Care, Contact, Location, Observation, Planting, Plot, Species)
+    TOO_MANY_PIXELS, Bed, Care, Contact, Location, Observation, Planting, Plot,
+    Species)
 from kasvimuseo.tests import factories
 from kasvimuseo.tests.conftest import jpeg_bytes
 from photologue.models import Photo
@@ -388,6 +389,32 @@ def test_photo_admin_upload_derives_title_and_connects_species(admin_client,
     assert photo.title == 'valkonarsissi kukassa'
     assert photo.slug == 'valkonarsissi-kukassa'
     assert Species.objects.get(pk=species.pk).photo == photo
+
+
+@pytest.mark.django_db
+def test_photo_admin_refuses_an_image_with_too_many_pixels(admin_client,
+                                                           media_root,
+                                                           monkeypatch):
+    """Task 24: a decompression bomb gets a form error that names it.
+
+    The 8x8 upload has 64 pixels, more than twice the limit of 10, so
+    Pillow raises ``DecompressionBombError``.
+    """
+    from PIL import Image
+    monkeypatch.setattr(Image, 'MAX_IMAGE_PIXELS', 10)
+    upload = SimpleUploadedFile('valkonarsissi kukassa.jpg', jpeg_bytes(),
+                                content_type=str('image/jpeg'))
+
+    response = post_add(admin_client, Photo,
+                        {'title': '', 'slug': '',
+                         'date_added_0': '2020-05-01',
+                         'date_added_1': '12:00:00',
+                         'image': upload,
+                         'is_public': 'on'})
+
+    assert response.status_code == 200
+    assert form_errors(response)['image'] == [str(TOO_MANY_PIXELS)]
+    assert not Photo.objects.exists()
 
 
 # -- the species photo (issue 037) -------------------------------------------
