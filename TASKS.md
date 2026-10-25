@@ -15,11 +15,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [22] Move Pillow, Django and sqlparse past their published advisories
-    - Depends on: [21]
-
-  <!-- hai:{"id":"simple-e60a3f3f-8c9c-45a9-b248-71443be0c346","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.354Z","updatedAt":"2026-10-25T16:25:00.354Z"} -->
-
 - [23] Check the message origin in the iframe loader
     - Depends on: [21]
 
@@ -31,6 +26,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
   <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T16:25:00.669Z"} -->
 
 ## Scheduled
+
+- [22] Move Pillow, Django and sqlparse past their published advisories
+    - Depends on: [21]
+
+  <!-- hai:{"id":"simple-e60a3f3f-8c9c-45a9-b248-71443be0c346","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.354Z","updatedAt":"2026-10-25T16:37:18.777Z"} -->
 
 ## In Progress
 
