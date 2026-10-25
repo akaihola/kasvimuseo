@@ -1,0 +1,262 @@
+{
+  "items": [
+    {
+      "issue": "kasvimuseo [22]",
+      "hai_id": "simple-e60a3f3f-8c9c-45a9-b248-71443be0c346",
+      "title": "Move Pillow, Django and sqlparse past their published advisories",
+      "repository": "/tmp/claude-1001/k22w",
+      "source_repository": "/home/agent/prg/kasvimuseo",
+      "base_commit": "06b6c031ddb9dfaaf1581c63770068cae9a440c7",
+      "delivery_commits": [
+        "2b4def23e9a1c4c815bbbced877f802f55be4402",
+        "890968ca87619f108a5cde8d6f7a6e2e7d52424b",
+        "67ca40d67288afe758bd2f501ef8d4b844f7b713",
+        "fe48feaad308f02d017cba66adbb92637f1d45f4",
+        "3cd12db4bdf99c54657c9a28d85bfd10ae324424"
+      ],
+      "checks": [
+        {
+          "id": "pip-audit-production",
+          "command": "UV_TOOL_DIR=\"${TMPDIR:-/tmp}/uvtools\" uvx --from 'pip-audit==2.10.1' pip-audit -r requirements/production.txt --no-deps --disable-pip --cache-dir \"${TMPDIR:-/tmp}/pip-audit-cache\"",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/production.txt"
+            }
+          }
+        },
+        {
+          "id": "pip-audit-dev",
+          "command": "UV_TOOL_DIR=\"${TMPDIR:-/tmp}/uvtools\" uvx --from 'pip-audit==2.10.1' pip-audit -r requirements/dev.txt --no-deps --disable-pip --cache-dir \"${TMPDIR:-/tmp}/pip-audit-cache\"",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            }
+          }
+        },
+        {
+          "id": "pip-audit-testing",
+          "command": "UV_TOOL_DIR=\"${TMPDIR:-/tmp}/uvtools\" uvx --from 'pip-audit==2.10.1' pip-audit -r requirements/testing.txt --no-deps --disable-pip --cache-dir \"${TMPDIR:-/tmp}/pip-audit-cache\"",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            }
+          }
+        },
+        {
+          "id": "pinned-versions",
+          "command": "grep -qx 'django==6.0.9' requirements/production.txt && grep -qx 'pillow==13.0.0' requirements/production.txt && grep -qx 'sqlparse==0.6.0' requirements/production.txt && grep -qx 'werkzeug==3.1.9' requirements/dev.txt && grep -qx 'pytest==9.0.3' requirements/testing.txt && echo ok",
+          "dependencies": {
+            "production-lock": {
+              "kind": "sha256",
+              "path": "requirements/production.txt"
+            },
+            "dev-lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            }
+          }
+        },
+        {
+          "id": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task22 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            }
+          }
+        },
+        {
+          "id": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task22 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "browser_tests/requirements.txt"
+            }
+          }
+        },
+        {
+          "id": "delivery-scope",
+          "command": "test \"$(git diff --name-only 06b6c031ddb9dfaaf1581c63770068cae9a440c7 3cd12db4bdf99c54657c9a28d85bfd10ae324424 | LC_ALL=C sort | tr '\\n' ' ')\" = '.agents/memory/MEMORY.md .agents/memory/regenerate-the-locks-in-the-resolver-image.md docs/dependency-inventory.rst docs/tasks/22-move-pillow-django-and-sqlparse-past-their-published-advisories.md requirements/dev.in requirements/dev.txt requirements/production.in requirements/production.txt requirements/testing.in requirements/testing.txt setup.py ' && test \"$(git rev-list --reverse 06b6c031ddb9dfaaf1581c63770068cae9a440c7..3cd12db4bdf99c54657c9a28d85bfd10ae324424 | tr '\\n' ' ')\" = '2b4def23e9a1c4c815bbbced877f802f55be4402 890968ca87619f108a5cde8d6f7a6e2e7d52424b 67ca40d67288afe758bd2f501ef8d4b844f7b713 fe48feaad308f02d017cba66adbb92637f1d45f4 3cd12db4bdf99c54657c9a28d85bfd10ae324424 ' && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "no-private-paths",
+          "command": "added=$(git diff 06b6c031ddb9dfaaf1581c63770068cae9a440c7 3cd12db4bdf99c54657c9a28d85bfd10ae324424 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "dependencies": {}
+        }
+      ],
+      "evidence": {
+        "pip-audit-production": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/production.txt",
+              "value": "687b0ff5a63875d2223b528fc1d4c76a729d4de50366c662a16da22956dc51ff"
+            }
+          },
+          "issue": "kasvimuseo [22]",
+          "check": "pip-audit-production",
+          "command": "UV_TOOL_DIR=\"${TMPDIR:-/tmp}/uvtools\" uvx --from 'pip-audit==2.10.1' pip-audit -r requirements/production.txt --no-deps --disable-pip --cache-dir \"${TMPDIR:-/tmp}/pip-audit-cache\"",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:53:28.353458+00:00"
+        },
+        "pip-audit-dev": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            }
+          },
+          "issue": "kasvimuseo [22]",
+          "check": "pip-audit-dev",
+          "command": "UV_TOOL_DIR=\"${TMPDIR:-/tmp}/uvtools\" uvx --from 'pip-audit==2.10.1' pip-audit -r requirements/dev.txt --no-deps --disable-pip --cache-dir \"${TMPDIR:-/tmp}/pip-audit-cache\"",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:53:30.201565+00:00"
+        },
+        "pip-audit-testing": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            }
+          },
+          "issue": "kasvimuseo [22]",
+          "check": "pip-audit-testing",
+          "command": "UV_TOOL_DIR=\"${TMPDIR:-/tmp}/uvtools\" uvx --from 'pip-audit==2.10.1' pip-audit -r requirements/testing.txt --no-deps --disable-pip --cache-dir \"${TMPDIR:-/tmp}/pip-audit-cache\"",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:53:32.263370+00:00"
+        },
+        "pinned-versions": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {
+            "production-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/production.txt",
+              "value": "687b0ff5a63875d2223b528fc1d4c76a729d4de50366c662a16da22956dc51ff"
+            },
+            "dev-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            }
+          },
+          "issue": "kasvimuseo [22]",
+          "check": "pinned-versions",
+          "command": "grep -qx 'django==6.0.9' requirements/production.txt && grep -qx 'pillow==13.0.0' requirements/production.txt && grep -qx 'sqlparse==0.6.0' requirements/production.txt && grep -qx 'werkzeug==3.1.9' requirements/dev.txt && grep -qx 'pytest==9.0.3' requirements/testing.txt && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:53:33.956346+00:00"
+        },
+        "app-test": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            }
+          },
+          "issue": "kasvimuseo [22]",
+          "check": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task22 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:53:51.766477+00:00"
+        },
+        "browser-test-chromium": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k22w/browser_tests/requirements.txt",
+              "value": "116b8abf7f7771bd798374e2db7a1099d8e888eddba3f6bc7a302a0d843fda7e"
+            }
+          },
+          "issue": "kasvimuseo [22]",
+          "check": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task22 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:54:49.540933+00:00"
+        },
+        "delivery-scope": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {},
+          "issue": "kasvimuseo [22]",
+          "check": "delivery-scope",
+          "command": "test \"$(git diff --name-only 06b6c031ddb9dfaaf1581c63770068cae9a440c7 3cd12db4bdf99c54657c9a28d85bfd10ae324424 | LC_ALL=C sort | tr '\\n' ' ')\" = '.agents/memory/MEMORY.md .agents/memory/regenerate-the-locks-in-the-resolver-image.md docs/dependency-inventory.rst docs/tasks/22-move-pillow-django-and-sqlparse-past-their-published-advisories.md requirements/dev.in requirements/dev.txt requirements/production.in requirements/production.txt requirements/testing.in requirements/testing.txt setup.py ' && test \"$(git rev-list --reverse 06b6c031ddb9dfaaf1581c63770068cae9a440c7..3cd12db4bdf99c54657c9a28d85bfd10ae324424 | tr '\\n' ' ')\" = '2b4def23e9a1c4c815bbbced877f802f55be4402 890968ca87619f108a5cde8d6f7a6e2e7d52424b 67ca40d67288afe758bd2f501ef8d4b844f7b713 fe48feaad308f02d017cba66adbb92637f1d45f4 3cd12db4bdf99c54657c9a28d85bfd10ae324424 ' && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:54:50.561691+00:00"
+        },
+        "no-private-paths": {
+          "repository": "/tmp/claude-1001/k22w",
+          "tested_commit": "3cd12db4bdf99c54657c9a28d85bfd10ae324424",
+          "dependencies": {},
+          "issue": "kasvimuseo [22]",
+          "check": "no-private-paths",
+          "command": "added=$(git diff 06b6c031ddb9dfaaf1581c63770068cae9a440c7 3cd12db4bdf99c54657c9a28d85bfd10ae324424 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:54:52.636337+00:00"
+        }
+      }
+    }
+  ]
+}

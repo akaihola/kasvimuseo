@@ -127,3 +127,27 @@ For a row with more than one run, the admission value is the first run's and the
 - The owner: deploy the new locks to production. That is step KD1 of the security review, in kasvimuseo-deployment. Until then, production still decodes uploads with Pillow 12.3.0.
 - The steward: `browser_tests/requirements.txt` allows pytest 8.4, which has the advisories that pytest 9.0.3 fixes. A weekly audit (review draft K8) can cover that file too.
 - The steward: Django 6.1 waits for a photologue release that allows it.
+
+### Checks at the merged commit
+
+The receipt is [22-move-pillow-django-and-sqlparse-past-their-published-advisories.evidence.json](22-move-pillow-django-and-sqlparse-past-their-published-advisories.evidence.json). Base `06b6c03`, merged `3cd12db`. All eight checks passed in a clean checkout at the merged commit:
+
+- `pip-audit-production`, `pip-audit-dev`, `pip-audit-testing`: pip-audit 2.10.1 found no known advisory in each lock.
+- `pinned-versions`: the locks hold Django 6.0.9, Pillow 13.0.0, sqlparse 0.6.0, Werkzeug 3.1.9 and pytest 9.0.3.
+- `app-test`: the image build, then `dev/kasvimuseo app test` in `nix-shell -p postgresql`: 605 passed, 1 xfailed.
+- `browser-test-chromium`: the image build, then `KASVIMUSEO_BROWSER_ENGINES=chromium dev/kasvimuseo app browser-test`: 43 passed.
+- `delivery-scope`: the delivery changes only the 11 files of this issue, in the five listed commits.
+- `no-private-paths`: no added line holds a home path, a host name or a T3 path.
+
+Memory reports for the recording: every record call started at once after a 0 s wait. Starting swap was 1 MiB for each, and swap growth was 0 MiB for each.
+
+| Check | Admission MiB | Final MiB | Time | Exit |
+| --- | --- | --- | --- | --- |
+| `pip-audit-production` | 57,479 | 57,447 | 2 s | 0 |
+| `pip-audit-dev` | 57,447 | 57,426 | 2 s | 0 |
+| `pip-audit-testing` | 57,426 | 57,419 | 2 s | 0 |
+| `pinned-versions` | 57,419 | 57,415 | 2 s | 0 |
+| `app-test` | 57,416 | 57,426 | 17 s | 0 |
+| `browser-test-chromium` | 57,426 | 57,397 | 58 s | 0 |
+| `delivery-scope` | 57,397 | 57,412 | 2 s | 0 |
+| `no-private-paths` | 57,413 | 57,443 | 2 s | 0 |
