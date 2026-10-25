@@ -1,0 +1,186 @@
+{
+  "items": [
+    {
+      "issue": "kasvimuseo [24]",
+      "hai_id": "simple-647892a7-9c66-41f8-bdea-a096264e4054",
+      "title": "Strip location data from uploaded originals",
+      "repository": "/tmp/claude-1001/k24/wt",
+      "source_repository": "/home/agent/prg/kasvimuseo",
+      "base_commit": "7f17822ceb4cf5533d6d8511b619f701048a4146",
+      "delivery_commits": [
+        "91b8261804d78cfe67050a46ef13fae64e1b5d4e",
+        "5744b16a29f9c3a6df282b4d00ed8fda0bc384e1",
+        "bf07e541f9de43272eab3a15019b3e35f8ba6227"
+      ],
+      "checks": [
+        {
+          "id": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            }
+          }
+        },
+        {
+          "id": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "browser_tests/requirements.txt"
+            }
+          }
+        },
+        {
+          "id": "strip-command-on-a-development-copy",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 nix-shell -p postgresql --run 'dev/kasvimuseo app build' >/dev/null\nset -euo pipefail\nfor link in .dev media static ylaneenkasvit/local_settings.py; do test ! -L \"$link\"; done\nexport KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 KASVIMUSEO_DB_NAME=kasvimuseo_task24_count\nwork=$(mktemp -d)\ncat > \"$work/check.sh\" <<'SH'\nset -euo pipefail\ntrap 'dev/kasvimuseo db stop >/dev/null' EXIT\ndev/kasvimuseo db start >/dev/null\npsql -h \"$PWD/.dev/run\" -p 5432 -U \"$USER\" -d postgres -q -c \"DROP DATABASE IF EXISTS $KASVIMUSEO_DB_NAME\" -c \"CREATE DATABASE $KASVIMUSEO_DB_NAME OWNER ylaneenkasvit\"\nrm -rf media/photologue\ndev/kasvimuseo db bootstrap >/dev/null\ndev/kasvimuseo app manage shell <<'PY'\nfrom django.db.models.signals import pre_save\nfrom photologue.models import Photo\nfrom kasvimuseo.models import turn_photo_upright\nfrom kasvimuseo.tests.test_photo_orientation import save_photo, tagged_image_bytes\nassert pre_save.disconnect(turn_photo_upright, sender=Photo)\nsave_photo(tagged_image_bytes(private=True))\nsave_photo(tagged_image_bytes(1), title='tarhapioni kukassa')\nPY\nbefore=$(sha256sum media/photologue/photos/*.jpg)\ncounted=$(dev/kasvimuseo app manage strip_private_exif --count)\necho \"count: $counted\"\ntest \"$counted\" = '1 of 2 originals have private tags.'\ntest \"$(sha256sum media/photologue/photos/*.jpg)\" = \"$before\"\necho 'count mode changed no original'\nstripped=$(dev/kasvimuseo app manage strip_private_exif)\necho \"strip: $stripped\"\ntest \"$stripped\" = 'Removed the private tags from 1 of 2 originals.'\nrecounted=$(dev/kasvimuseo app manage strip_private_exif --count)\necho \"count again: $recounted\"\ntest \"$recounted\" = '0 of 2 originals have private tags.'\nrm -rf media/photologue\nSH\nnix-shell -p postgresql --run \"bash $work/check.sh\"\nrm -rf \"$work\"\necho ok\n",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            }
+          }
+        },
+        {
+          "id": "no-original-address",
+          "command": "! grep -rnF 'image.url' kasvimuseo/templates/kasvimuseo kasvimuseo/templates/photologue && grep -qF '<a href=\"{{ object.get_display_url }}\">' kasvimuseo/templates/photologue/photo_detail.html && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "delivery-scope",
+          "command": "test \"$(git diff --name-only 7f17822ceb4cf5533d6d8511b619f701048a4146 bf07e541f9de43272eab3a15019b3e35f8ba6227 | LC_ALL=C sort | tr '\\n' ' ')\" = '.agents/memory/MEMORY.md .agents/memory/compile-the-finnish-messages-with-babel.md docs/tasks/19-remove-the-orientation-work-around.md docs/tasks/24-strip-location-data-from-uploaded-originals.md docs/third-party-notices.rst kasvimuseo/forms.py kasvimuseo/locale/fi/LC_MESSAGES/django.mo kasvimuseo/locale/fi/LC_MESSAGES/django.po kasvimuseo/management/__init__.py kasvimuseo/management/commands/__init__.py kasvimuseo/management/commands/strip_private_exif.py kasvimuseo/models.py kasvimuseo/templates/kasvimuseo/reports/planted-species.html kasvimuseo/templates/photologue/photo_detail.html kasvimuseo/tests/test_admin_forms.py kasvimuseo/tests/test_photo_orientation.py kasvimuseo/tests/test_templates.py ' && test \"$(git rev-list --reverse 7f17822ceb4cf5533d6d8511b619f701048a4146..bf07e541f9de43272eab3a15019b3e35f8ba6227 | tr '\\n' ' ')\" = '91b8261804d78cfe67050a46ef13fae64e1b5d4e 5744b16a29f9c3a6df282b4d00ed8fda0bc384e1 bf07e541f9de43272eab3a15019b3e35f8ba6227 ' && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "no-private-paths",
+          "command": "added=$(git diff 7f17822ceb4cf5533d6d8511b619f701048a4146 bf07e541f9de43272eab3a15019b3e35f8ba6227 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "dependencies": {}
+        }
+      ],
+      "evidence": {
+        "app-test": {
+          "repository": "/tmp/claude-1001/k24/wt",
+          "tested_commit": "bf07e541f9de43272eab3a15019b3e35f8ba6227",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            }
+          },
+          "issue": "kasvimuseo [24]",
+          "check": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:30:35.470020+00:00"
+        },
+        "browser-test-chromium": {
+          "repository": "/tmp/claude-1001/k24/wt",
+          "tested_commit": "bf07e541f9de43272eab3a15019b3e35f8ba6227",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/browser_tests/requirements.txt",
+              "value": "116b8abf7f7771bd798374e2db7a1099d8e888eddba3f6bc7a302a0d843fda7e"
+            }
+          },
+          "issue": "kasvimuseo [24]",
+          "check": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:31:25.942801+00:00"
+        },
+        "strip-command-on-a-development-copy": {
+          "repository": "/tmp/claude-1001/k24/wt",
+          "tested_commit": "bf07e541f9de43272eab3a15019b3e35f8ba6227",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k24/wt/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            }
+          },
+          "issue": "kasvimuseo [24]",
+          "check": "strip-command-on-a-development-copy",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 nix-shell -p postgresql --run 'dev/kasvimuseo app build' >/dev/null\nset -euo pipefail\nfor link in .dev media static ylaneenkasvit/local_settings.py; do test ! -L \"$link\"; done\nexport KASVIMUSEO_IMAGE=kasvimuseo-dev-task24 KASVIMUSEO_DB_NAME=kasvimuseo_task24_count\nwork=$(mktemp -d)\ncat > \"$work/check.sh\" <<'SH'\nset -euo pipefail\ntrap 'dev/kasvimuseo db stop >/dev/null' EXIT\ndev/kasvimuseo db start >/dev/null\npsql -h \"$PWD/.dev/run\" -p 5432 -U \"$USER\" -d postgres -q -c \"DROP DATABASE IF EXISTS $KASVIMUSEO_DB_NAME\" -c \"CREATE DATABASE $KASVIMUSEO_DB_NAME OWNER ylaneenkasvit\"\nrm -rf media/photologue\ndev/kasvimuseo db bootstrap >/dev/null\ndev/kasvimuseo app manage shell <<'PY'\nfrom django.db.models.signals import pre_save\nfrom photologue.models import Photo\nfrom kasvimuseo.models import turn_photo_upright\nfrom kasvimuseo.tests.test_photo_orientation import save_photo, tagged_image_bytes\nassert pre_save.disconnect(turn_photo_upright, sender=Photo)\nsave_photo(tagged_image_bytes(private=True))\nsave_photo(tagged_image_bytes(1), title='tarhapioni kukassa')\nPY\nbefore=$(sha256sum media/photologue/photos/*.jpg)\ncounted=$(dev/kasvimuseo app manage strip_private_exif --count)\necho \"count: $counted\"\ntest \"$counted\" = '1 of 2 originals have private tags.'\ntest \"$(sha256sum media/photologue/photos/*.jpg)\" = \"$before\"\necho 'count mode changed no original'\nstripped=$(dev/kasvimuseo app manage strip_private_exif)\necho \"strip: $stripped\"\ntest \"$stripped\" = 'Removed the private tags from 1 of 2 originals.'\nrecounted=$(dev/kasvimuseo app manage strip_private_exif --count)\necho \"count again: $recounted\"\ntest \"$recounted\" = '0 of 2 originals have private tags.'\nrm -rf media/photologue\nSH\nnix-shell -p postgresql --run \"bash $work/check.sh\"\nrm -rf \"$work\"\necho ok\n",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:31:32.426988+00:00"
+        },
+        "no-original-address": {
+          "repository": "/tmp/claude-1001/k24/wt",
+          "tested_commit": "bf07e541f9de43272eab3a15019b3e35f8ba6227",
+          "dependencies": {},
+          "issue": "kasvimuseo [24]",
+          "check": "no-original-address",
+          "command": "! grep -rnF 'image.url' kasvimuseo/templates/kasvimuseo kasvimuseo/templates/photologue && grep -qF '<a href=\"{{ object.get_display_url }}\">' kasvimuseo/templates/photologue/photo_detail.html && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:31:33.371676+00:00"
+        },
+        "delivery-scope": {
+          "repository": "/tmp/claude-1001/k24/wt",
+          "tested_commit": "bf07e541f9de43272eab3a15019b3e35f8ba6227",
+          "dependencies": {},
+          "issue": "kasvimuseo [24]",
+          "check": "delivery-scope",
+          "command": "test \"$(git diff --name-only 7f17822ceb4cf5533d6d8511b619f701048a4146 bf07e541f9de43272eab3a15019b3e35f8ba6227 | LC_ALL=C sort | tr '\\n' ' ')\" = '.agents/memory/MEMORY.md .agents/memory/compile-the-finnish-messages-with-babel.md docs/tasks/19-remove-the-orientation-work-around.md docs/tasks/24-strip-location-data-from-uploaded-originals.md docs/third-party-notices.rst kasvimuseo/forms.py kasvimuseo/locale/fi/LC_MESSAGES/django.mo kasvimuseo/locale/fi/LC_MESSAGES/django.po kasvimuseo/management/__init__.py kasvimuseo/management/commands/__init__.py kasvimuseo/management/commands/strip_private_exif.py kasvimuseo/models.py kasvimuseo/templates/kasvimuseo/reports/planted-species.html kasvimuseo/templates/photologue/photo_detail.html kasvimuseo/tests/test_admin_forms.py kasvimuseo/tests/test_photo_orientation.py kasvimuseo/tests/test_templates.py ' && test \"$(git rev-list --reverse 7f17822ceb4cf5533d6d8511b619f701048a4146..bf07e541f9de43272eab3a15019b3e35f8ba6227 | tr '\\n' ' ')\" = '91b8261804d78cfe67050a46ef13fae64e1b5d4e 5744b16a29f9c3a6df282b4d00ed8fda0bc384e1 bf07e541f9de43272eab3a15019b3e35f8ba6227 ' && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:31:35.442712+00:00"
+        },
+        "no-private-paths": {
+          "repository": "/tmp/claude-1001/k24/wt",
+          "tested_commit": "bf07e541f9de43272eab3a15019b3e35f8ba6227",
+          "dependencies": {},
+          "issue": "kasvimuseo [24]",
+          "check": "no-private-paths",
+          "command": "added=$(git diff 7f17822ceb4cf5533d6d8511b619f701048a4146 bf07e541f9de43272eab3a15019b3e35f8ba6227 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:31:37.504476+00:00"
+        }
+      }
+    }
+  ]
+}

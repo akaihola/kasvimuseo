@@ -103,3 +103,23 @@ On the task branch at `9f67a9d`, before the rebase, from a detached worktree wit
 
 - Run the command on production. This is the review's KD1, the owner's step in kasvimuseo-deployment. Deploy this change first, so that no new upload adds tags. Then run `strip_private_exif --count`, and then `strip_private_exif` if the count is not zero. A positive count means that the exposure was real. Keep a backup of the originals before the second command.
 - The change takes effect on the live site only after a deployment. This issue made no deployment.
+
+### Checks at the merged commit
+
+The receipt is [24-strip-location-data-from-uploaded-originals.evidence.json](24-strip-location-data-from-uploaded-originals.evidence.json). Base `7f17822`, merged `bf07e54`. All six checks passed:
+
+- `app-test`: the image build, then `dev/kasvimuseo app test` in `nix-shell -p postgresql`: 631 passed, 1 xfailed. They include the new cases for the first two acceptance conditions.
+- `browser-test-chromium`: the image build, then `KASVIMUSEO_BROWSER_ENGINES=chromium dev/kasvimuseo app browser-test`: 65 passed.
+- `strip-command-on-a-development-copy`: the command check from "Checks before the merge", on a fresh database and an empty media directory in the clean checkout. `--count` printed "1 of 2 originals have private tags." and changed no file. The strip run printed "Removed the private tags from 1 of 2 originals.", and `--count` then printed "0 of 2 originals have private tags.".
+- `no-original-address`: no template under `kasvimuseo/templates/kasvimuseo` or `kasvimuseo/templates/photologue` uses `image.url`, and the photo page links `get_display_url`.
+- `delivery-scope`: the delivery changes only the 17 listed files, in the three listed commits.
+- `no-private-paths`: no added line holds a home path, a host name or a T3 path.
+
+### Memory reports for the record calls
+
+- Recording `app-test`: started at once after a 0 s wait. Admission 56,931 MiB, final 56,839 MiB. Starting swap 1 MiB, growth 0 MiB. 14 s, exit 0.
+- Recording `browser-test-chromium`: started at once after a 0 s wait. Admission 56,840 MiB, final 56,907 MiB. Starting swap 1 MiB, growth 0 MiB. 51 s, exit 0.
+- Recording `strip-command-on-a-development-copy`: started at once after a 0 s wait. Admission 56,909 MiB, final 56,794 MiB. Starting swap 1 MiB, growth 0 MiB. 6 s, exit 0.
+- Recording `no-original-address`: started at once after a 0 s wait. Admission 56,795 MiB, final 56,826 MiB. Starting swap 1 MiB, growth 0 MiB. 2 s, exit 0.
+- Recording `delivery-scope`: started at once after a 0 s wait. Admission 56,826 MiB, final 56,873 MiB. Starting swap 1 MiB, growth 0 MiB. 2 s, exit 0.
+- Recording `no-private-paths`: started at once after a 0 s wait. Admission 56,875 MiB, final 56,906 MiB. Starting swap 1 MiB, growth 0 MiB. 2 s, exit 0.

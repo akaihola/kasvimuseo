@@ -19,12 +19,12 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [24] Strip location data from uploaded originals
+## Completed / Accepted
+
+- [ ] [24] Strip location data from uploaded originals
     - Depends on: [21], [22]
 
-      <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T17:10:46.571Z"} -->
-
-## Completed / Accepted
+      <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T17:32:05.284Z"} -->
 
 - [ ] [23] Check the message origin in the iframe loader
     - Depends on: [21]
