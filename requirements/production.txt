@@ -6,7 +6,7 @@
 #
 asgiref==3.12.1
     # via django
-django==6.0.7
+django==6.0.9
     # via
     #   -r requirements/production.in
     #   django-photologue
@@ -22,11 +22,13 @@ gunicorn==23.0.0
     # via -r requirements/production.in
 packaging==26.2
     # via gunicorn
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   -r requirements/production.in
     #   django-photologue
 psycopg2-binary==2.9.12
     # via -r requirements/production.in
-sqlparse==0.5.5
-    # via django
+sqlparse==0.6.0
+    # via
+    #   -r requirements/production.in
+    #   django

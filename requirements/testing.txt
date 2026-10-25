@@ -14,7 +14,9 @@ packaging==26.2
     #   pytest
 pluggy==1.6.0
     # via pytest
-pytest==8.3.5
+pygments==2.21.0
+    # via pytest
+pytest==9.0.3
     # via
     #   -r requirements/testing.in
     #   pytest-django
