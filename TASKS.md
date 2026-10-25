@@ -15,6 +15,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
+- [20] Security scan of the kasvimuseo app: login, authorization, uploads,
+  templates, settings and dependencies
+  <!-- hai:{"id":"simple-6d11db1d-3c0a-4a28-a9da-b87e6809c7ec","labels":["steward","security"],"createdAt":"2026-10-25T14:33:47.150Z","updatedAt":"2026-10-25T14:33:47.150Z"} -->
+
 ## Scheduled
 
 ## In Progress
@@ -104,11 +108,13 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 [19]: docs/tasks/19-remove-the-orientation-work-around.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -->
 
 ---
 
 [17]: docs/tasks/17-fix-the-intermittent-chromium-label-merge-failures.md
+
+[20]: docs/tasks/20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-templa.md
 
 ## Rules
 
