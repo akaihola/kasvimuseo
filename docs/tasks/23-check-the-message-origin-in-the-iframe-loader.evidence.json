@@ -1,0 +1,161 @@
+{
+  "items": [
+    {
+      "issue": "kasvimuseo [23]",
+      "hai_id": "simple-3794ce84-142d-4940-ad49-71e5a16d6149",
+      "title": "Check the message origin in the iframe loader",
+      "repository": "/tmp/claude-1001/k23m",
+      "source_repository": "/home/agent/prg/kasvimuseo",
+      "base_commit": "9f475218559f0d0f57ee6f4a0c805693bed89b5c",
+      "delivery_commits": [
+        "23795e61445f19c26c8774dc335b5770b685b405",
+        "31ecc70d21174fa328f4005d464c9d594493a452",
+        "1319cb1d75bb9667cb418ad81b56a655449807c5"
+      ],
+      "checks": [
+        {
+          "id": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task23 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            }
+          }
+        },
+        {
+          "id": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task23 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "requirements/testing.txt"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "browser_tests/requirements.txt"
+            }
+          }
+        },
+        {
+          "id": "loader-static",
+          "command": "f=kasvimuseo/static/js/kasvimuseo/planted-species-iframe.js && ! grep -nE 'document[.]write|innerHTML|attachEvent' \"$f\" && grep -qF 'event.origin !== catalogueOrigin' \"$f\" && grep -qF 'event.source !== plantedSpeciesFrame.contentWindow' \"$f\" && grep -qF 'line.textContent' \"$f\" && echo ok",
+          "dependencies": {
+            "loader": {
+              "kind": "sha256",
+              "path": "kasvimuseo/static/js/kasvimuseo/planted-species-iframe.js"
+            }
+          }
+        },
+        {
+          "id": "delivery-scope",
+          "command": "test \"$(git diff --name-only 9f475218559f0d0f57ee6f4a0c805693bed89b5c 1319cb1d75bb9667cb418ad81b56a655449807c5 | LC_ALL=C sort | tr '\\n' ' ')\" = '.agents/memory/iframe-loader-checks.md README.rst browser_tests/test_iframe_loader.py docs/tasks/23-check-the-message-origin-in-the-iframe-loader.md kasvimuseo/static/js/kasvimuseo/planted-species-iframe.js ' && test \"$(git rev-list --reverse 9f475218559f0d0f57ee6f4a0c805693bed89b5c..1319cb1d75bb9667cb418ad81b56a655449807c5 | tr '\\n' ' ')\" = '23795e61445f19c26c8774dc335b5770b685b405 31ecc70d21174fa328f4005d464c9d594493a452 1319cb1d75bb9667cb418ad81b56a655449807c5 ' && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "no-private-paths",
+          "command": "added=$(git diff 9f475218559f0d0f57ee6f4a0c805693bed89b5c 1319cb1d75bb9667cb418ad81b56a655449807c5 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "dependencies": {}
+        }
+      ],
+      "evidence": {
+        "app-test": {
+          "repository": "/tmp/claude-1001/k23m",
+          "tested_commit": "1319cb1d75bb9667cb418ad81b56a655449807c5",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k23m/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k23m/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            }
+          },
+          "issue": "kasvimuseo [23]",
+          "check": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task23 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:08:33.417623+00:00"
+        },
+        "browser-test-chromium": {
+          "repository": "/tmp/claude-1001/k23m",
+          "tested_commit": "1319cb1d75bb9667cb418ad81b56a655449807c5",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k23m/requirements/dev.txt",
+              "value": "1cdb775961f23969f5adedac92fe8872088d04cd77e01d50ee69db5030013255"
+            },
+            "testing-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k23m/requirements/testing.txt",
+              "value": "6cebce706e8f5535113f1b093ce69544ccf534ef73c164bb702c5a7cf45ba68d"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k23m/browser_tests/requirements.txt",
+              "value": "116b8abf7f7771bd798374e2db7a1099d8e888eddba3f6bc7a302a0d843fda7e"
+            }
+          },
+          "issue": "kasvimuseo [23]",
+          "check": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task23 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:09:28.116700+00:00"
+        },
+        "loader-static": {
+          "repository": "/tmp/claude-1001/k23m",
+          "tested_commit": "1319cb1d75bb9667cb418ad81b56a655449807c5",
+          "dependencies": {
+            "loader": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k23m/kasvimuseo/static/js/kasvimuseo/planted-species-iframe.js",
+              "value": "47544c221bafb70edb495f9625f3b14bc85125bad287ee6c5dd1d8cb456591aa"
+            }
+          },
+          "issue": "kasvimuseo [23]",
+          "check": "loader-static",
+          "command": "f=kasvimuseo/static/js/kasvimuseo/planted-species-iframe.js && ! grep -nE 'document[.]write|innerHTML|attachEvent' \"$f\" && grep -qF 'event.origin !== catalogueOrigin' \"$f\" && grep -qF 'event.source !== plantedSpeciesFrame.contentWindow' \"$f\" && grep -qF 'line.textContent' \"$f\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:09:28.967356+00:00"
+        },
+        "delivery-scope": {
+          "repository": "/tmp/claude-1001/k23m",
+          "tested_commit": "1319cb1d75bb9667cb418ad81b56a655449807c5",
+          "dependencies": {},
+          "issue": "kasvimuseo [23]",
+          "check": "delivery-scope",
+          "command": "test \"$(git diff --name-only 9f475218559f0d0f57ee6f4a0c805693bed89b5c 1319cb1d75bb9667cb418ad81b56a655449807c5 | LC_ALL=C sort | tr '\\n' ' ')\" = '.agents/memory/iframe-loader-checks.md README.rst browser_tests/test_iframe_loader.py docs/tasks/23-check-the-message-origin-in-the-iframe-loader.md kasvimuseo/static/js/kasvimuseo/planted-species-iframe.js ' && test \"$(git rev-list --reverse 9f475218559f0d0f57ee6f4a0c805693bed89b5c..1319cb1d75bb9667cb418ad81b56a655449807c5 | tr '\\n' ' ')\" = '23795e61445f19c26c8774dc335b5770b685b405 31ecc70d21174fa328f4005d464c9d594493a452 1319cb1d75bb9667cb418ad81b56a655449807c5 ' && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:09:31.057363+00:00"
+        },
+        "no-private-paths": {
+          "repository": "/tmp/claude-1001/k23m",
+          "tested_commit": "1319cb1d75bb9667cb418ad81b56a655449807c5",
+          "dependencies": {},
+          "issue": "kasvimuseo [23]",
+          "check": "no-private-paths",
+          "command": "added=$(git diff 9f475218559f0d0f57ee6f4a0c805693bed89b5c 1319cb1d75bb9667cb418ad81b56a655449807c5 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T17:09:33.142512+00:00"
+        }
+      }
+    }
+  ]
+}

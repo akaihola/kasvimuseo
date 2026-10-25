@@ -86,6 +86,24 @@ On the task branch at `63f882a`, before the rebase:
 - Browser suite, WebKit: started at once after a 0 s wait. Admission 56,883 MiB, final 55,200 MiB. Starting swap 1 MiB, growth 0 MiB. 131 s, exit 1 (the EGL failures).
 - Documentation build: started at once after a 0 s wait. Admission 55,970 MiB, final 56,406 MiB. Starting swap 1 MiB, growth 0 MiB. 12 s, exit 0.
 
+### Checks at the merged commit
+
+The receipt is [23-check-the-message-origin-in-the-iframe-loader.evidence.json](23-check-the-message-origin-in-the-iframe-loader.evidence.json). Base `9f47521`, merged `1319cb1`. All five checks passed:
+
+- `app-test`: the image build, then `dev/kasvimuseo app test` in `nix-shell -p postgresql`: 605 passed, 1 xfailed.
+- `browser-test-chromium`: the image build, then `KASVIMUSEO_BROWSER_ENGINES=chromium dev/kasvimuseo app browser-test`: 65 passed. They include the 22 new cases for the acceptance conditions.
+- `loader-static`: the loader has no `document.write`, `innerHTML` or `attachEvent`, and it has the origin, source and `textContent` lines.
+- `delivery-scope`: the delivery changes only the five listed files, in the three listed commits.
+- `no-private-paths`: no added line holds a home path, a host name or a T3 path.
+
+### Memory reports for the record calls
+
+- Recording `app-test`: started at once after a 0 s wait. Admission 56,689 MiB, final 56,735 MiB. Starting swap 1 MiB, growth 0 MiB. 14 s, exit 0.
+- Recording `browser-test-chromium`: started at once after a 0 s wait. Admission 56,735 MiB, final 56,627 MiB. Starting swap 1 MiB, growth 0 MiB. 54 s, exit 0.
+- Recording `loader-static`: started at once after a 0 s wait. Admission 56,627 MiB, final 54,913 MiB. Starting swap 1 MiB, growth 0 MiB. 2 s, exit 0.
+- Recording `delivery-scope`: started at once after a 0 s wait. Admission 54,893 MiB, final 53,821 MiB. Starting swap 1 MiB, growth 0 MiB. 2 s, exit 0.
+- Recording `no-private-paths`: started at once after a 0 s wait. Admission 53,818 MiB, final 53,698 MiB. Starting swap 1 MiB, growth 0 MiB. 2 s, exit 0.
+
 ### Open, for the owner
 
 - Tell the operators of the museum's other site that the loader changed. The script address stays the same. A cached copy of the old script keeps the old behaviour until the cache expires. Nothing was sent.
