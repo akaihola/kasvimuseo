@@ -22,12 +22,12 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [23] Check the message origin in the iframe loader
+## In Progress
+
+- [~] [23] Check the message origin in the iframe loader
     - Depends on: [21]
 
-  <!-- hai:{"id":"simple-3794ce84-142d-4940-ad49-71e5a16d6149","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.519Z","updatedAt":"2026-10-25T16:56:12.206Z"} -->
-
-## In Progress
+      <!-- hai:{"id":"simple-3794ce84-142d-4940-ad49-71e5a16d6149","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.519Z","updatedAt":"2026-10-25T16:56:19.557Z"} -->
 
 ## Completed / Accepted
 
