@@ -1,6 +1,3 @@
-if (document.location.search == '?debug=1') {
-    document.write('<div id="planted-species-iframe-debug" style="position:absolute;width:233px;height:10em;overflow:scroll;margin-left:-233px;background:#cff;"></div>');
-};
 var plantedSpeciesScript = document.currentScript;
 var plantedSpeciesSite = new URL(plantedSpeciesScript.src);
 plantedSpeciesSite.hostname = plantedSpeciesSite.hostname.replace(/^static\./, '');
@@ -16,23 +13,39 @@ plantedSpeciesFrame.style.border = 'none';
 plantedSpeciesScript.insertAdjacentElement('afterend', plantedSpeciesFrame);
 
 (function() {
-    var debug = document.getElementById("planted-species-iframe-debug"),
+    // Only the catalogue frame may resize itself, and only in whole pixels up
+    // to maxHeight. Any other window can post to this page (task 23).
+    var catalogueOrigin = plantedSpeciesSite.origin,
+        maxHeight = 100000,
+        debug = null,
         resizeIframe = function(event) {
-            var elem = document.getElementById("kasvit-iframe"),
-                y = elem.offsetTop;
+            var elem = plantedSpeciesFrame,
+                y = elem.offsetTop,
+                height,
+                line;
+            if (event.origin !== catalogueOrigin ||
+                    event.source !== plantedSpeciesFrame.contentWindow ||
+                    !event.data) return;
+            height = event.data.plantedSpeciesIframeHeight;
+            if (typeof height !== 'string' || !/^\d+px$/.test(height) ||
+                    parseInt(height, 10) > maxHeight) return;
             if (debug) {
-                debug.innerHTML +=
-                    '<br>' +
-                    event.data.plantedSpeciesIframePlantName +
-                    '/' +
-                    event.data.plantedSpeciesIframeHeight;
+                line = document.createElement('div');
+                line.textContent =
+                    event.data.plantedSpeciesIframePlantName + '/' + height;
+                debug.appendChild(line);
                 debug.scrollTop = 10000;
             }
-            elem.style.height = event.data.plantedSpeciesIframeHeight;
+            elem.style.height = height;
             while (elem = elem.offsetParent) y += elem.offsetTop;
             window.scrollTo(0, y);
         };
-    
-    if (window.addEventListener) window.addEventListener("message", resizeIframe, false);
-    else window.attachEvent("message", resizeIframe);
+
+    if (document.location.search == '?debug=1') {
+        debug = document.createElement('div');
+        debug.id = 'planted-species-iframe-debug';
+        debug.style.cssText = 'position:absolute;width:233px;height:10em;overflow:scroll;margin-left:-233px;background:#cff;';
+        plantedSpeciesFrame.insertAdjacentElement('afterend', debug);
+    }
+    window.addEventListener('message', resizeIframe, false);
 })();

@@ -98,6 +98,12 @@ This also works when the embedding page uses a third origin, such as ``https://m
 The embedding page needs no configuration attribute.
 Deployments that need another address rule must configure it in the deployment repository.
 
+The loader changes the frame height only for a message from the catalogue frame on the catalogue origin.
+It accepts a height in whole pixels, such as ``1234px``, up to ``100000px``.
+It ignores all other messages.
+A redirect of the catalogue address to another origin, for example from ``http`` to ``https``, therefore stops the resize.
+With ``?debug=1`` in the embedding page's address, the loader lists the messages that it accepted, as text.
+
 Testing
 =======
 
