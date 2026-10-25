@@ -56,7 +56,27 @@ db_init() {
            --encoding=UTF8 --locale=C.UTF-8 >/dev/null
 }
 
+# The cluster runs on the host, and without these checks a missing tool shows
+# as "command not found" inside db_init, and a long socket path only as
+# "could not start server".
+require_postgres() {
+    local tool socket=$PGSOCK/.s.PGSQL.$PGPORT
+    for tool in initdb pg_ctl psql; do
+        command -v "$tool" >/dev/null 2>&1 || die \
+            "$tool is not on PATH. The helper runs PostgreSQL on the host and needs
+initdb, pg_ctl and psql. Install the PostgreSQL command-line tools, or on
+NixOS run the helper in a shell that has them:
+  nix-shell -p postgresql --run 'dev/kasvimuseo app test'"
+    done
+    [ "$(printf %s "$socket" | wc -c)" -le 107 ] || die \
+        "PostgreSQL allows a socket path of 107 bytes, and this one is longer:
+  $socket
+Run the helper from a checkout with a shorter path, for example:
+  git worktree add --detach /tmp/kasvimuseo-check"
+}
+
 db_start() {
+    require_postgres
     db_init
     pg_running && return
     mkdir -p "$PGSOCK"
@@ -405,13 +425,22 @@ browser_test() {
         sleep 0.5
     done
 
+    # On NixOS, uv's Nix-built Python does not search nix-ld's libraries, so
+    # Playwright's greenlet cannot load libstdc++.so.6. Only pytest and the
+    # browsers get them: the seed command runs podman, which must not.
+    local seed="$REPO/dev/kasvimuseo app browser-seed" nix_ld=()
+    if [ -n "${NIX_LD_LIBRARY_PATH:-}" ]; then
+        nix_ld=(env "LD_LIBRARY_PATH=$NIX_LD_LIBRARY_PATH")
+        seed="env -u LD_LIBRARY_PATH $seed"
+    fi
+
     # --no-project: the repository's own setup.py is a Python 2 package and has
     # nothing to do with these tests.
     KASVIMUSEO_BROWSER_TEST_URL=$url \
-    KASVIMUSEO_BROWSER_TEST_SEED="$REPO/dev/kasvimuseo app browser-seed" \
+    KASVIMUSEO_BROWSER_TEST_SEED=$seed \
     KASVIMUSEO_BROWSER_TEST_PASSWORD=$BROWSER_PASSWORD \
     uv run --no-project --with-requirements "$REPO/browser_tests/requirements.txt" \
-        pytest "$REPO/browser_tests" "$@"
+        "${nix_ld[@]}" pytest "$REPO/browser_tests" "$@"
 }
 
 # Starts the cluster if needed and stops it again afterwards.

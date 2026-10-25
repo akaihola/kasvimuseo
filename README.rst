@@ -161,6 +161,22 @@ requests from ``browser_tests/vendor/`` instead, so a run needs no network.
 ``docs/third-party-notices.rst`` records the version and the license of each
 copy.
 
+**On NixOS**, ``initdb``, ``pg_ctl`` and ``psql`` are not on ``PATH``, and the
+helper stops with a message that names the missing tool. Run each suite in a
+Nix shell that has them::
+
+    $ nix-shell -p postgresql --run 'dev/kasvimuseo app test'
+    $ KASVIMUSEO_BROWSER_ENGINES=chromium \
+          nix-shell -p postgresql --run 'dev/kasvimuseo app browser-test'
+
+Point ``PLAYWRIGHT_BROWSERS_PATH`` at browsers that match the ``playwright`` pin
+in ``browser_tests/requirements.txt``. uv's Python on NixOS cannot load
+``libstdc++.so.6`` for Playwright, so ``app browser-test`` gives pytest the
+libraries in ``NIX_LD_LIBRARY_PATH``. PostgreSQL limits its socket path to 107
+bytes, so run the helper from a checkout with a short path. WebKit needs an EGL
+display: on a host without a GL driver, every WebKit test stops at ``new_page``
+with ``TargetClosedError``, and only Chromium can run there.
+
 
 Continuous integration
 ======================
