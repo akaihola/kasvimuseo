@@ -15,10 +15,6 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
-- [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
-  Nix
-  <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T16:25:00.185Z"} -->
-
 - [22] Move Pillow, Django and sqlparse past their published advisories
     - Depends on: [21]
 
@@ -35,6 +31,10 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
   <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T16:25:00.669Z"} -->
 
 ## Scheduled
+
+- [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
+  Nix
+  <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T16:25:31.273Z"} -->
 
 ## In Progress
 
