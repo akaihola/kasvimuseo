@@ -15,6 +15,25 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
+- [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
+  Nix
+  <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T16:25:00.185Z"} -->
+
+- [22] Move Pillow, Django and sqlparse past their published advisories
+    - Depends on: [21]
+
+  <!-- hai:{"id":"simple-e60a3f3f-8c9c-45a9-b248-71443be0c346","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.354Z","updatedAt":"2026-10-25T16:25:00.354Z"} -->
+
+- [23] Check the message origin in the iframe loader
+    - Depends on: [21]
+
+  <!-- hai:{"id":"simple-3794ce84-142d-4940-ad49-71e5a16d6149","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.519Z","updatedAt":"2026-10-25T16:25:00.519Z"} -->
+
+- [24] Strip location data from uploaded originals
+    - Depends on: [21], [22]
+
+  <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T16:25:00.669Z"} -->
+
 ## Scheduled
 
 ## In Progress
@@ -108,13 +127,21 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 [19]: docs/tasks/19-remove-the-orientation-work-around.md
 [*]: TASKS.md
 
-<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -->
+<!-- hai:reserved-numbers:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24 -->
 
 ---
 
 [17]: docs/tasks/17-fix-the-intermittent-chromium-label-merge-failures.md
 
 [20]: docs/tasks/20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-templa.md
+
+[21]: docs/tasks/21-make-the-app-and-browser-suites-run-on-nixos-with-postgresql-tools-fro.md
+
+[22]: docs/tasks/22-move-pillow-django-and-sqlparse-past-their-published-advisories.md
+
+[23]: docs/tasks/23-check-the-message-origin-in-the-iframe-loader.md
+
+[24]: docs/tasks/24-strip-location-data-from-uploaded-originals.md
 
 ## Rules
 
