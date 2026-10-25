@@ -36,9 +36,9 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
       <!-- hai:{"id":"simple-e60a3f3f-8c9c-45a9-b248-71443be0c346","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.354Z","updatedAt":"2026-10-25T16:55:23.735Z"} -->
 
-- [ ] [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
+- [x] [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
   Nix
-      <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T16:36:57.738Z"} -->
+      <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T17:56:28.695Z"} -->
 
 - [x] [20] Security scan of the kasvimuseo app: login, authorization, uploads,
   templates, settings and dependencies
