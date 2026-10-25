@@ -27,12 +27,12 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [22] Move Pillow, Django and sqlparse past their published advisories
+## In Progress
+
+- [~] [22] Move Pillow, Django and sqlparse past their published advisories
     - Depends on: [21]
 
-  <!-- hai:{"id":"simple-e60a3f3f-8c9c-45a9-b248-71443be0c346","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.354Z","updatedAt":"2026-10-25T16:37:18.777Z"} -->
-
-## In Progress
+      <!-- hai:{"id":"simple-e60a3f3f-8c9c-45a9-b248-71443be0c346","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.354Z","updatedAt":"2026-10-25T16:37:26.780Z"} -->
 
 ## Completed / Accepted
 
