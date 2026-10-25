@@ -32,11 +32,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Scheduled
 
-- [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
-  Nix
-  <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T16:25:31.273Z"} -->
-
 ## In Progress
+
+- [~] [21] Make the app and browser suites run on NixOS with PostgreSQL tools from
+  Nix
+      <!-- hai:{"id":"simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b","labels":["steward"],"createdAt":"2026-10-25T16:25:00.185Z","updatedAt":"2026-10-25T16:25:47.852Z"} -->
 
 ## Completed / Accepted
 
