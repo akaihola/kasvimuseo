@@ -1,0 +1,127 @@
+{
+  "items": [
+    {
+      "issue": "kasvimuseo [20]",
+      "hai_id": "simple-6d11db1d-3c0a-4a28-a9da-b87e6809c7ec",
+      "title": "Security scan of the kasvimuseo app: login, authorization, uploads, templates, settings and dependencies",
+      "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+      "source_repository": "/home/agent/prg/kasvimuseo",
+      "base_commit": "3d3345effaba568e43ef24916f8cf984132f6c14",
+      "delivery_commits": [
+        "907f7ca68195817b5bab40ce58b878cf0397f405",
+        "2604d5bac88cbb617974f3a6833d70d3cef02545"
+      ],
+      "checks": [
+        {
+          "id": "report-sections",
+          "command": "r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && for h in '## Urgent' '## Findings at a glance' '## Findings' '## Recheck of the deployment review' '## History and local files' '## Dependencies' '## Coverage by area' '### Authentication and the development login' '### Authorization' '### Uploads and image handling' '### Templates' '### CSRF, raw SQL, redirects and error pages' '### Settings that reach production' '### Dependency versions' '## Not reviewed' '## Do these first' '## Draft issues'; do grep -qxF \"$h\" <<<\"$r\" || { echo \"missing: $h\"; exit 1; }; done && test \"$(grep '^## ' <<<\"$r\" | tail -n 2 | tr '\\n' '|')\" = '## Do these first|## Draft issues|' && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "draft-issues",
+          "command": "r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && test \"$(grep -cE '^### K[1-8]\\. ' <<<\"$r\")\" -eq 8 && test \"$(grep -cE '^### KD[12]\\. ' <<<\"$r\")\" -eq 2 && grep -qxF '### A1 with additions' <<<\"$r\" && grep -qxF '### A2 and A3' <<<\"$r\" && sed -n '/^## Not reviewed$/,/^## Method and limits$/p' <<<\"$r\" | grep -q grappelli && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "delivery-scope",
+          "command": "test \"$(git diff --name-only 3d3345effaba568e43ef24916f8cf984132f6c14 2604d5bac88cbb617974f3a6833d70d3cef02545 | sort | tr '\\n' ' ')\" = 'docs/reviews/2026-10-25-security-review.md docs/tasks/20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-templa.md ' && test \"$(git rev-list --reverse 3d3345effaba568e43ef24916f8cf984132f6c14..2604d5bac88cbb617974f3a6833d70d3cef02545 | tr '\\n' ' ')\" = '907f7ca68195817b5bab40ce58b878cf0397f405 2604d5bac88cbb617974f3a6833d70d3cef02545 ' && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "no-private-paths-or-secret-shapes",
+          "command": "added=$(git diff 3d3345effaba568e43ef24916f8cf984132f6c14 2604d5bac88cbb617974f3a6833d70d3cef02545 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|http://(tinni|atom|hopeli)/|[.]kandev|BEGIN [A-Z ]*PRIVATE KEY|pbkdf2_sha|[$]6[$]|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|ANSIBLE_VAULT' <<<\"$added\" && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "audited-versions-match-lock",
+          "command": "lock=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:requirements/production.txt) && r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && for p in pillow==12.3.0 django==6.0.7 sqlparse==0.5.5; do grep -q \"^$p\" <<<\"$lock\" || { echo \"lock lacks $p\"; exit 1; }; done && grep -q 'Pillow 12.3.0' <<<\"$r\" && grep -q 'Django 6.0.7' <<<\"$r\" && grep -q 'sqlparse 0.5.5' <<<\"$r\" && echo ok",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/production.txt"
+            }
+          }
+        },
+        {
+          "id": "report-links-resolve",
+          "command": "r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && paths=$(sed -nE 's#^\\[[^]]+\\]: \\.\\./\\.\\./([^ ]+)$#\\1#p; s#^\\[[^]]+\\]: \\.\\./([^ ]+)$#docs/\\1#p' <<<\"$r\" | sed 's#/$##') && test -n \"$paths\" && while read -r p; do git cat-file -e \"2604d5bac88cbb617974f3a6833d70d3cef02545:$p\" || { echo \"missing: $p\"; exit 1; }; done <<<\"$paths\" && echo ok",
+          "dependencies": {}
+        }
+      ],
+      "evidence": {
+        "report-sections": {
+          "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+          "tested_commit": "2604d5bac88cbb617974f3a6833d70d3cef02545",
+          "dependencies": {},
+          "issue": "kasvimuseo [20]",
+          "check": "report-sections",
+          "command": "r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && for h in '## Urgent' '## Findings at a glance' '## Findings' '## Recheck of the deployment review' '## History and local files' '## Dependencies' '## Coverage by area' '### Authentication and the development login' '### Authorization' '### Uploads and image handling' '### Templates' '### CSRF, raw SQL, redirects and error pages' '### Settings that reach production' '### Dependency versions' '## Not reviewed' '## Do these first' '## Draft issues'; do grep -qxF \"$h\" <<<\"$r\" || { echo \"missing: $h\"; exit 1; }; done && test \"$(grep '^## ' <<<\"$r\" | tail -n 2 | tr '\\n' '|')\" = '## Do these first|## Draft issues|' && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:04:55.457570+00:00"
+        },
+        "draft-issues": {
+          "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+          "tested_commit": "2604d5bac88cbb617974f3a6833d70d3cef02545",
+          "dependencies": {},
+          "issue": "kasvimuseo [20]",
+          "check": "draft-issues",
+          "command": "r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && test \"$(grep -cE '^### K[1-8]\\. ' <<<\"$r\")\" -eq 8 && test \"$(grep -cE '^### KD[12]\\. ' <<<\"$r\")\" -eq 2 && grep -qxF '### A1 with additions' <<<\"$r\" && grep -qxF '### A2 and A3' <<<\"$r\" && sed -n '/^## Not reviewed$/,/^## Method and limits$/p' <<<\"$r\" | grep -q grappelli && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:04:55.559349+00:00"
+        },
+        "delivery-scope": {
+          "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+          "tested_commit": "2604d5bac88cbb617974f3a6833d70d3cef02545",
+          "dependencies": {},
+          "issue": "kasvimuseo [20]",
+          "check": "delivery-scope",
+          "command": "test \"$(git diff --name-only 3d3345effaba568e43ef24916f8cf984132f6c14 2604d5bac88cbb617974f3a6833d70d3cef02545 | sort | tr '\\n' ' ')\" = 'docs/reviews/2026-10-25-security-review.md docs/tasks/20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-templa.md ' && test \"$(git rev-list --reverse 3d3345effaba568e43ef24916f8cf984132f6c14..2604d5bac88cbb617974f3a6833d70d3cef02545 | tr '\\n' ' ')\" = '907f7ca68195817b5bab40ce58b878cf0397f405 2604d5bac88cbb617974f3a6833d70d3cef02545 ' && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:04:55.646885+00:00"
+        },
+        "no-private-paths-or-secret-shapes": {
+          "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+          "tested_commit": "2604d5bac88cbb617974f3a6833d70d3cef02545",
+          "dependencies": {},
+          "issue": "kasvimuseo [20]",
+          "check": "no-private-paths-or-secret-shapes",
+          "command": "added=$(git diff 3d3345effaba568e43ef24916f8cf984132f6c14 2604d5bac88cbb617974f3a6833d70d3cef02545 | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|http://(tinni|atom|hopeli)/|[.]kandev|BEGIN [A-Z ]*PRIVATE KEY|pbkdf2_sha|[$]6[$]|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|ANSIBLE_VAULT' <<<\"$added\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:04:55.734634+00:00"
+        },
+        "audited-versions-match-lock": {
+          "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+          "tested_commit": "2604d5bac88cbb617974f3a6833d70d3cef02545",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29/requirements/production.txt",
+              "value": "df850765e894b8fc959e621cb361c1f0b52bcb49cd50df2c9ed5e59d6b1db146"
+            }
+          },
+          "issue": "kasvimuseo [20]",
+          "check": "audited-versions-match-lock",
+          "command": "lock=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:requirements/production.txt) && r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && for p in pillow==12.3.0 django==6.0.7 sqlparse==0.5.5; do grep -q \"^$p\" <<<\"$lock\" || { echo \"lock lacks $p\"; exit 1; }; done && grep -q 'Pillow 12.3.0' <<<\"$r\" && grep -q 'Django 6.0.7' <<<\"$r\" && grep -q 'sqlparse 0.5.5' <<<\"$r\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:04:55.830035+00:00"
+        },
+        "report-links-resolve": {
+          "repository": "/home/agent/.t3/worktrees/kasvimuseo/pacer-20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-4d298c29",
+          "tested_commit": "2604d5bac88cbb617974f3a6833d70d3cef02545",
+          "dependencies": {},
+          "issue": "kasvimuseo [20]",
+          "check": "report-links-resolve",
+          "command": "r=$(git show 2604d5bac88cbb617974f3a6833d70d3cef02545:docs/reviews/2026-10-25-security-review.md) && paths=$(sed -nE 's#^\\[[^]]+\\]: \\.\\./\\.\\./([^ ]+)$#\\1#p; s#^\\[[^]]+\\]: \\.\\./([^ ]+)$#docs/\\1#p' <<<\"$r\" | sed 's#/$##') && test -n \"$paths\" && while read -r p; do git cat-file -e \"2604d5bac88cbb617974f3a6833d70d3cef02545:$p\" || { echo \"missing: $p\"; exit 1; }; done <<<\"$paths\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:04:55.968637+00:00"
+        }
+      }
+    }
+  ]
+}

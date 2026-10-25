@@ -89,3 +89,19 @@ After the safeguard stop, the maintainer asked for a defensive write-up. The mai
 - The report rechecks A1, A2 and A3. All three still hold. It adds details to A1 and drafts no duplicate.
 - The report drafts K1-K8 for this repository and KD1-KD2 for kasvimuseo-deployment. Nobody filed them.
 - No live credential is in the tree, the history or the ignored files.
+
+### Checks at the merged commit
+
+The merge fast-forwarded `main` from `3d3345e` to `2604d5b`. The delivery commits are `907f7ca` and `2604d5b`. A clean checkout at `2604d5b` recorded these checks into the receipt [20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-templa.evidence.json](20-security-scan-of-the-kasvimuseo-app-login-authorization-uploads-templa.evidence.json). All six passed:
+
+- `report-sections`: the report has every coverage heading, and it ends with "Do these first" and "Draft issues".
+- `draft-issues`: the report has K1-K8, KD1-KD2, the A1 additions and A2-A3, and "Not reviewed" names grappelli.
+- `delivery-scope`: the delivery commits change only the report and this file, so the work stayed read-only.
+- `no-private-paths-or-secret-shapes`: the added lines hold no home path, no private host link and no secret-shaped text.
+- `audited-versions-match-lock`: the versions that the report audits are the ones in `requirements/production.txt`.
+- `report-links-resolve`: every relative link of the report names a file at `2604d5b`.
+
+### Memory reports, second session
+
+- Recording of the six checks: started at once after a 0 s wait. Admission 54,691 MiB, final 55,163 MiB. Starting swap 1 MiB, growth 0 MiB. 1 s, exit 0.
+- The eight verification agents read code only and ran no heavy command.

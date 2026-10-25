@@ -19,11 +19,11 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## In Progress
 
-- [~] [20] Security scan of the kasvimuseo app: login, authorization, uploads,
-  templates, settings and dependencies
-      <!-- hai:{"id":"simple-6d11db1d-3c0a-4a28-a9da-b87e6809c7ec","labels":["steward","security"],"createdAt":"2026-10-25T14:33:47.150Z","updatedAt":"2026-10-25T14:46:03.002Z"} -->
-
 ## Completed / Accepted
+
+- [ ] [20] Security scan of the kasvimuseo app: login, authorization, uploads,
+  templates, settings and dependencies
+      <!-- hai:{"id":"simple-6d11db1d-3c0a-4a28-a9da-b87e6809c7ec","labels":["steward","security"],"createdAt":"2026-10-25T14:33:47.150Z","updatedAt":"2026-10-25T16:05:28.307Z"} -->
 
 - [x] [18] Turn uploaded originals upright before photologue stores them (issue 089)
   <!-- hai:{"updatedAt":"2026-10-15T20:24:41.424Z"} -->
