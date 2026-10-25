@@ -77,3 +77,15 @@ These conditions are met so far: no code change, no request to the live site, no
 - pip-audit, first run: started at once after a 0 s wait. Admission 56,542 MiB, final 56,414 MiB. Starting swap 1 MiB, growth 0 MiB. 5 s, exit 0. Every audit exited 1 because pip-audit could not write its cache, so this run gave no result.
 - pip-audit, second run: started at once after a 0 s wait. Admission 56,618 MiB, final 56,585 MiB. Starting swap 1 MiB, growth 0 MiB. 16 s, exit 0.
 - Two smaller history commands ran without the guard: `git fsck --unreachable` and a per-path count of password-shaped lines. The guarded readings just before and after them were 56,673 MiB and 56,542 MiB, with no swap growth.
+
+## Completion record, 2026-10-25
+
+This record replaces the "not met" list of the progress record above. It is for the steward.
+
+After the safeguard stop, the maintainer asked for a defensive write-up. The maintainer set three limits: leave grappelli's lookup and user-switch views out and list them as not reviewed, run the false-positive check on the eight candidates, and write no payloads, exploit steps or attack strings.
+
+- The report is [docs/reviews/2026-10-25-security-review.md](../reviews/2026-10-25-security-review.md). It covers every area of step 1, or names it under "Not reviewed" with the reason.
+- Eight agents checked one candidate each against the code. Their scores are in the report's "Findings at a glance". No candidate scored 8 or more, so the skill's own filter keeps none. The report keeps each confirmed fact with its score and filter class, as task 15 of kasvimuseo-deployment did.
+- The report rechecks A1, A2 and A3. All three still hold. It adds details to A1 and drafts no duplicate.
+- The report drafts K1-K8 for this repository and KD1-KD2 for kasvimuseo-deployment. Nobody filed them.
+- No live credential is in the tree, the history or the ignored files.
