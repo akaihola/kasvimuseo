@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 import io
 import os
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
 from django.utils.dates import MONTHS
@@ -719,20 +720,91 @@ class Care(models.Model):
         ordering = 'date',
 
 
+#: The tags that tie a photo to a place, a person or one camera (task 24).
+#: ``GPSInfo`` points to the whole GPS block. ``CameraSerialNumber`` is
+#: the older DNG tag. Both sit in the main directory.
+PRIVATE_TAGS = (ExifTags.Base.GPSInfo, ExifTags.Base.CameraSerialNumber)
+#: The private tags of the EXIF sub-directory.
+PRIVATE_EXIF_TAGS = (ExifTags.Base.CameraOwnerName,
+                     ExifTags.Base.BodySerialNumber,
+                     ExifTags.Base.LensSerialNumber)
+
+#: The form error for an image that Pillow refuses as a decompression bomb.
+TOO_MANY_PIXELS = _(u'The image has too many pixels. Upload a smaller '
+                    u'image.')
+
+
+def remove_private_tags(exif):
+    """Delete the private tags from ``exif``. Return whether it had any."""
+    directories = [(exif, PRIVATE_TAGS)]
+    if ExifTags.IFD.Exif in exif:
+        directories.append((exif.get_ifd(ExifTags.IFD.Exif),
+                            PRIVATE_EXIF_TAGS))
+    found = [(directory, tag) for directory, tags in directories
+             for tag in tags if tag in directory]
+    for directory, tag in found:
+        del directory[tag]
+    return bool(found)
+
+
+def clean_original(data, turn_upright=True):
+    """Return the image ``data`` upright and without private tags.
+
+    Return ``None`` when ``data`` needs no change. With ``turn_upright``
+    false, only the private tags count. The rest of the EXIF data stays,
+    so ``DateTimeOriginal`` survives.
+
+    A JPEG is encoded again with its own quantization tables and
+    subsampling, the two settings that ``quality='keep'`` copies. Pillow
+    refuses ``'keep'`` for an image that ``transpose`` made. A phone photo
+    with a second image, for example a gain map, opens as MPO. It is
+    stored as a JPEG of its first image.
+
+    Pillow raises ``OSError`` or ``ValueError`` for a file it cannot read
+    or write, and ``Image.DecompressionBombError`` for too many pixels.
+    """
+    with Image.open(io.BytesIO(data)) as original:
+        orientation = original.getexif().get(ExifTags.Base.Orientation)
+        turn = turn_upright and orientation not in (None, 1)
+        image = ImageOps.exif_transpose(original) if turn else original
+        # The transpose reads the tags of ``data`` again, so remove the
+        # private tags from its result.
+        exif = image.getexif()
+        if not remove_private_tags(exif) and not turn:
+            return None
+        image_format = original.format
+        options = {'exif': exif.tobytes()}
+        if 'icc_profile' in original.info:
+            options['icc_profile'] = original.info['icc_profile']
+        if image_format in ('JPEG', 'MPO'):
+            image_format = 'JPEG'
+            options['qtables'] = original.quantization
+            options['subsampling'] = JpegImagePlugin.get_sampling(original)
+        buffer = io.BytesIO()
+        image.save(buffer, image_format, **options)
+    return buffer.getvalue()
+
+
 def turn_photo_upright(sender, instance, **kwargs):
-    """Store a newly uploaded ``Photo`` original upright (issue 089).
+    """Store a newly uploaded ``Photo`` original upright and private.
 
-    Photologue 3.20 applies a ``PhotoEffect`` before it reads the EXIF
-    ``Orientation`` tag, and the effect drops the tag (upstream issue 233).
-    ``measure_photo_orientation`` also reads the stored pixels. So this
-    turns the pixels upright with Pillow, which handles all eight values,
-    and stores the file with no tag. The rest of the EXIF data stays, so
-    ``DateTimeOriginal`` survives.
+    This receiver does two jobs. Keep the second job when task 19 removes
+    the first one.
 
-    A file with no tag, or with tag 1, is stored byte for byte as
-    uploaded. The receiver runs before ``FileField.pre_save`` commits an
-    upload. A file that is already in the storage is deleted and saved
-    again under its upload name. Task 19 decides when this can go.
+    1. The orientation work-around (issue 089). Photologue 3.20 applies a
+       ``PhotoEffect`` before it reads the EXIF ``Orientation`` tag, and
+       the effect drops the tag (upstream issue 233).
+       ``measure_photo_orientation`` also reads the stored pixels. So
+       this turns the pixels upright with Pillow, which handles all
+       eight values, and stores the file with no tag.
+    2. The private tags (task 24). Anonymous visitors can download an
+       original, so this removes the GPS block and the owner and
+       serial-number tags from every upload, also from an upright one.
+
+    ``clean_original`` does both. A file that needs neither job is stored
+    byte for byte as uploaded. The receiver runs before
+    ``FileField.pre_save`` commits an upload. A file that is already in
+    the storage is deleted and saved again under its upload name.
     """
     image = instance.image
     if not image:
@@ -747,28 +819,20 @@ def turn_photo_upright(sender, instance, **kwargs):
     data = source.read()
     source.seek(0)
     try:
-        with Image.open(io.BytesIO(data)) as original:
-            orientation = original.getexif().get(ExifTags.Base.Orientation)
-            if orientation in (None, 1):
-                return
-            upright = ImageOps.exif_transpose(original)
-            options = {'exif': upright.getexif().tobytes()}
-            if original.format == 'JPEG':
-                # ``quality='keep'`` refuses an image that ``transpose``
-                # made, so pass the two settings it would copy.
-                options['qtables'] = original.quantization
-                options['subsampling'] = JpegImagePlugin.get_sampling(
-                    original)
-            buffer = io.BytesIO()
-            upright.save(buffer, original.format, **options)
-    except (IOError, OSError, ValueError):
+        cleaned = clean_original(data)
+    except Image.DecompressionBombError as error:
+        # ``PhotoForm`` shows the same error before the save.
+        raise ValidationError({'image': TOO_MANY_PIXELS}) from error
+    except (OSError, ValueError):
         # Not an image Pillow can turn. Photologue reports it, not this.
+        return
+    if cleaned is None:
         return
     name = os.path.basename(image.name)
     if image._committed:
         image.close()
         image.storage.delete(image.name)
-    instance.image = ContentFile(buffer.getvalue(), name=name)
+    instance.image = ContentFile(cleaned, name=name)
 
 
 def autoconnect_photo_to_species(sender, instance, **kwargs):

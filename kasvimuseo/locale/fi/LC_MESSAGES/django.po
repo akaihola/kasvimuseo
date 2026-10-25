@@ -617,3 +617,8 @@ msgstr "Edellinen kuva tälle kyltille"
 #: templates/kasvimuseo/reports/planting-labels.html:436 templates/kasvimuseo/reports/planting-labels.html:437
 msgid "Next photo for this label"
 msgstr "Seuraava kuva tälle kyltille"
+
+# Task 24: the form error for an image Pillow refuses as a decompression bomb.
+#: models.py:733
+msgid "The image has too many pixels. Upload a smaller image."
+msgstr "Kuvassa on liian monta kuvapistettä. Lataa pienempi kuva."

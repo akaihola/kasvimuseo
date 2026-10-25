@@ -763,3 +763,53 @@ def test_a_label_left_out_of_the_run_is_dimmed_by_its_contents(staff_client):
     box = re.search(r'\n        li\.hidden \{([^}]*)\}', content)
     assert box, 'the ``li.hidden`` rule is gone'
     assert 'opacity' not in box.group(1)
+
+
+# Task 24: no public page names the address of an original. An original
+# stored before task 24 can still have GPS tags. The derived sizes have none.
+
+
+PUBLIC_PAGES_WITH_THE_PHOTO = [
+    ('photologue:pl-photo', {'slug': 'valkonarsissi-kukassa'}),
+    ('photologue:photo-list', {}),
+    ('photologue:pl-photo-archive', {}),
+    ('photologue:pl-gallery', {'slug': 'narsissit'}),
+    ('photologue:gallery-list', {}),
+    ('planted-species', {'species_external_ids': '1'}),
+    ('planted-species-compact', {'species_external_ids': '1'}),
+    ('planted-species-list', {}),
+]
+
+
+@pytest.fixture
+def gallery_species(display_size, full_species):
+    """``full_species``, with its photo in a public gallery as well."""
+    from photologue.models import Gallery
+    gallery = Gallery.objects.create(title='Narsissit', slug='narsissit')
+    gallery.photos.add(full_species.photo)
+    return full_species
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url_name,kwargs', PUBLIC_PAGES_WITH_THE_PHOTO)
+def test_no_public_page_names_the_address_of_an_original(
+        client, gallery_species, url_name, kwargs):
+    photo = gallery_species.photo
+
+    content = page(client.get(reverse(url_name, kwargs=kwargs)))
+
+    # The page shows a derived size, so the test is not passing on a page
+    # without the photo.
+    assert '/media/photologue/photos/cache/valkonarsissi-kukassa_' in content
+    assert photo.image.url == '/media/photologue/photos/valkonarsissi-kukassa.jpg'
+    assert photo.image.url not in content
+
+
+@pytest.mark.django_db
+def test_the_photo_page_links_the_display_size(client, gallery_species):
+    photo = gallery_species.photo
+
+    content = page(client.get(reverse('photologue:pl-photo',
+                                      kwargs={'slug': photo.slug})))
+
+    assert 'href="{0}"'.format(photo.get_display_url()) in content
