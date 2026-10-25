@@ -2,7 +2,7 @@
  Complete dependency version inventory (generated)
 =====================================================
 
-:Generated: 2026-08-05 from PyPI JSON metadata (505 bands, 49 packages)
+:Generated: 2026-10-25 from PyPI JSON metadata (522 bands, 49 packages)
 :Companion to: ``upgrade-plan.rst`` — that document explains *what to do*; this
                one is the raw evidence it was derived from.
 
@@ -119,10 +119,10 @@ question is what changed inside a band.
 * **5.1 – 5.1.15 (16 releases)**
     :Python: ``>=3.10``
     :Requires: ``asgiref<4,>=3.8.1; sqlparse>=0.3.1; tzdata;sys_platform=="win32"``
-* **5.2 – 5.2.17 (18 releases)**
+* **5.2 – 5.2.18 (19 releases)**
     :Python: ``>=3.10``
     :Requires: ``asgiref>=3.8.1; sqlparse>=0.3.1; tzdata;sys_platform=="win32"``
-* **6.0 – 6.0.8 (9 releases)**
+* **6.0 – 6.1.2 (13 releases)**
     :Python: ``>=3.12``
     :Requires: ``asgiref>=3.9.1; sqlparse>=0.5.0; tzdata;sys_platform=="win32"``
 
@@ -227,6 +227,10 @@ a Django version, not by a classifier.
     :Requires: nothing declared
 * **5.0.0**
     :Python: ``clf:3.12,3.13,3.14``
+    :Requires: nothing declared
+* **5.0.1**
+    :Python: ``clf:3.12,3.13,3.14``
+    :Django: 5.2,6.0,6.1
     :Requires: nothing declared
 
 django-sortedm2m
@@ -347,6 +351,9 @@ psycopg2-binary
 * **2.9.11 – 2.9.12 (2 releases)**
     :Python: ``>=3.9``
     :Requires: nothing declared
+* **2.9.13**
+    :Python: ``>=3.10``
+    :Requires: nothing declared
 
 psycopg2
 --------
@@ -371,6 +378,9 @@ psycopg2
 * **2.9.11 – 2.9.12 (2 releases)**
     :Python: ``>=3.9``
     :Requires: nothing declared
+* **2.9.13**
+    :Python: ``>=3.10``
+    :Requires: nothing declared
 
 psycopg
 -------
@@ -386,7 +396,7 @@ psycopg
 * **3.2.2 – 3.2.13 (12 releases)**
     :Python: ``>=3.8``
     :Requires: ``backports.zoneinfo>=0.2.0;python_version<"3.9"; typing-extensions>=4.6;python_version<"3.13"; tzdata;sys_platform=="win32"``
-* **3.3.0 – 3.3.4 (5 releases)**
+* **3.3.0 – 3.3.6 (7 releases)**
     :Python: ``>=3.10``
     :Requires: ``typing-extensions>=4.6;python_version<"3.13"; tzdata;sys_platform=="win32"``
 
@@ -433,6 +443,9 @@ pillow
     :Requires: nothing declared
 * **12.0.0 – 12.3.0 (5 releases)**
     :Python: ``>=3.10``
+    :Requires: nothing declared
+* **13.0.0**
+    :Python: ``>=3.11``
     :Requires: nothing declared
 
 exifread
@@ -491,6 +504,9 @@ gunicorn
 * **24.0.0 – 26.0.0 (11 releases)**
     :Python: ``>=3.10``
     :Requires: ``packaging``
+* **26.1.0 – 26.2.0 (2 releases)**
+    :Python: ``>=3.10``
+    :Requires: nothing declared
 
 six
 ---
@@ -536,8 +552,11 @@ pytz
 * **2023.4 – 2024.1 (2 releases)**
     :Python: ``clf:2.4,2.5,2.6,2.7,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,3.10,3.11,3.12``
     :Requires: nothing declared
-* **2024.2 – 2026.3 (6 releases)**
+* **2024.2 – 2026.4 (7 releases)**
     :Python: ``clf:2.4,2.5,2.6,2.7,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,3.10,3.11,3.12,3.13``
+    :Requires: nothing declared
+* **2026.5**
+    :Python: ``clf:2.4,2.5,2.6,2.7,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,3.10,3.11,3.12,3.13,3.14``
     :Requires: nothing declared
 
 sqlparse
@@ -556,6 +575,9 @@ sqlparse
     :Requires: nothing declared
 * **0.5.0 – 0.5.5 (6 releases)**
     :Python: ``>=3.8``
+    :Requires: nothing declared
+* **0.6.0**
+    :Python: ``>=3.10``
     :Requires: nothing declared
 
 asgiref
@@ -608,6 +630,9 @@ asgiref
 * **3.12.0 – 3.12.1 (2 releases)**
     :Python: ``>=3.10``
     :Requires: ``typing_extensions>=4;python_version<"3.11"``
+* **3.13.0**
+    :Python: ``>=3.11``
+    :Requires: nothing declared
 
 django-extensions
 -----------------
@@ -953,6 +978,10 @@ pytest-django
     :Python: ``>=3.10``
     :Django: 4.2,5.1,5.2,6.0
     :Requires: ``pytest>=7.0.0``
+* **4.13.0 – 4.14.0 (2 releases)**
+    :Python: ``>=3.10``
+    :Django: 5.2,6.0
+    :Requires: ``pytest>=7.0.0``
 
 coverage
 --------
@@ -983,8 +1012,11 @@ coverage
 * **7.6.2 – 7.10.7 (27 releases)**
     :Python: ``>=3.9``
     :Requires: nothing declared
-* **7.11.0 – 7.15.3 (19 releases)**
+* **7.11.0 – 7.16.2 (23 releases)**
     :Python: ``>=3.10``
+    :Requires: nothing declared
+* **7.17.0**
+    :Python: ``>=3.11``
     :Requires: nothing declared
 
 mock
@@ -1031,7 +1063,13 @@ pbr
 * **5.5.0 – 6.1.0 (12 releases)**
     :Python: ``>=2.6``
     :Requires: nothing declared
-* **6.1.1 – 7.0.3 (5 releases)**
+* **6.1.1 – 7.1.1 (7 releases)**
+    :Python: ``>=2.6``
+    :Requires: ``setuptools``
+* **7.1.2**
+    :Python: ``>=2.6``
+    :Requires: ``setuptools;python_version<"3.7"; setuptools>=64.0.0;python_version>="3.7"``
+* **7.1.3**
     :Python: ``>=2.6``
     :Requires: ``setuptools``
 
@@ -1118,7 +1156,7 @@ selenium
 * **4.41.0 – 4.43.0 (3 releases)**
     :Python: ``>=3.10``
     :Requires: ``certifi>=2026.1.4; trio-websocket<1.0,>=0.12.2; trio<1.0,>=0.31.0; typing_extensions<5.0,>=4.15.0; urllib3[socks]<3.0,>=2.6.3; websocket-client<2.0,>=1.8.0``
-* **4.44.0 – 4.46.0 (3 releases)**
+* **4.44.0 – 4.51.0 (8 releases)**
     :Python: ``>=3.10``
     :Requires: ``certifi>=2026.2.25; trio-websocket<1.0,>=0.12.2; trio<1.0,>=0.31.0; typing_extensions<5.0,>=4.15.0; urllib3[socks]<3.0,>=2.6.3; websocket-client<2.0,>=1.8.0``
 
@@ -1331,7 +1369,7 @@ werkzeug
 * **3.1.0 – 3.1.3 (4 releases)**
     :Python: ``>=3.9``
     :Requires: ``MarkupSafe>=2.1.1``
-* **3.1.4 – 3.1.8 (5 releases)**
+* **3.1.4 – 3.1.9 (6 releases)**
     :Python: ``>=3.9``
     :Requires: ``markupsafe>=2.1.1``
 
@@ -1486,6 +1524,9 @@ pluggy
 * **1.6.0**
     :Python: ``>=3.9``
     :Requires: nothing declared
+* **1.7.0**
+    :Python: ``>=3.10``
+    :Requires: nothing declared
 
 py
 --
@@ -1561,6 +1602,9 @@ more-itertools
 * **11.0.0 – 11.1.0 (4 releases)**
     :Python: ``>=3.10``
     :Requires: nothing declared
+* **11.2.0 – 11.2.1 (2 releases)**
+    :Python: ``>=3.11``
+    :Requires: nothing declared
 
 atomicwrites
 ------------
@@ -1600,7 +1644,7 @@ zipp
 * **3.21.0 – 3.23.1 (4 releases)**
     :Python: ``>=3.9``
     :Requires: nothing declared
-* **4.1.0**
+* **4.1.0 – 4.1.2 (3 releases)**
     :Python: ``>=3.10``
     :Requires: nothing declared
 
@@ -1648,8 +1692,11 @@ importlib-metadata
 * **8.7.1**
     :Python: ``>=3.9``
     :Requires: ``zipp>=3.20``
-* **8.8.0 – 9.0.0 (3 releases)**
+* **8.8.0 – 9.0.1 (4 releases)**
     :Python: ``>=3.10``
+    :Requires: ``zipp>=3.20``
+* **9.1.0 – 10.1.0 (3 releases)**
+    :Python: ``>=3.11``
     :Requires: ``zipp>=3.20``
 
 typing-extensions
@@ -1725,6 +1772,9 @@ configparser
     :Requires: nothing declared
 * **7.2.0**
     :Python: ``>=3.9``
+    :Requires: nothing declared
+* **7.3.0**
+    :Python: ``>=3.11``
     :Requires: nothing declared
 
 contextlib2
@@ -1822,8 +1872,11 @@ wcwidth
 * **0.2.14**
     :Python: ``>=3.6``
     :Requires: nothing declared
-* **0.3.0 – 0.8.2 (15 releases)**
+* **0.3.0 – 0.8.5 (18 releases)**
     :Python: ``>=3.8``
+    :Requires: nothing declared
+* **0.9.0 – 0.9.4 (5 releases)**
+    :Python: ``>=3.9``
     :Requires: nothing declared
 
 podman-compose
