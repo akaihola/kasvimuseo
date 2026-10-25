@@ -1,0 +1,117 @@
+{
+  "items": [
+    {
+      "issue": "kasvimuseo [21]",
+      "hai_id": "simple-fa9542b6-11e5-4cfd-9fd9-cbb4bfebd78b",
+      "title": "Make the app and browser suites run on NixOS with PostgreSQL tools from Nix",
+      "repository": "/tmp/claude-1001/k21",
+      "source_repository": "/home/agent/prg/kasvimuseo",
+      "base_commit": "e25beb848cedd90265b144ba05e1282f401289cf",
+      "delivery_commits": [
+        "2ee8d1b4f2a394069316aa05a80ab15e15fb9136",
+        "0c4464f8107e0b9e4664aa6f8fc114d1de9190e2",
+        "76e60d903c07d758df815f0363318273af612eae",
+        "1e3038f4ad31f13967e1629b75de242174ba775f"
+      ],
+      "checks": [
+        {
+          "id": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task21 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            }
+          }
+        },
+        {
+          "id": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task21 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "requirements/dev.txt"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "browser_tests/requirements.txt"
+            }
+          }
+        },
+        {
+          "id": "delivery-scope",
+          "command": "test \"$(git diff --name-only e25beb848cedd90265b144ba05e1282f401289cf 1e3038f4ad31f13967e1629b75de242174ba775f | LC_ALL=C sort | tr '\\n' ' ')\" = 'README.rst dev/kasvimuseo ' && test \"$(git rev-list --reverse e25beb848cedd90265b144ba05e1282f401289cf..1e3038f4ad31f13967e1629b75de242174ba775f | tr '\\n' ' ')\" = '2ee8d1b4f2a394069316aa05a80ab15e15fb9136 0c4464f8107e0b9e4664aa6f8fc114d1de9190e2 76e60d903c07d758df815f0363318273af612eae 1e3038f4ad31f13967e1629b75de242174ba775f ' && echo ok",
+          "dependencies": {}
+        },
+        {
+          "id": "no-private-paths",
+          "command": "added=$(git diff e25beb848cedd90265b144ba05e1282f401289cf 1e3038f4ad31f13967e1629b75de242174ba775f | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "dependencies": {}
+        }
+      ],
+      "evidence": {
+        "app-test": {
+          "repository": "/tmp/claude-1001/k21",
+          "tested_commit": "1e3038f4ad31f13967e1629b75de242174ba775f",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k21/requirements/dev.txt",
+              "value": "01b221917a78216b4fdd96565cde91d23239a3138aeb759eed41aa6c06c32815"
+            }
+          },
+          "issue": "kasvimuseo [21]",
+          "check": "app-test",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task21 nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:35:13.522403+00:00"
+        },
+        "browser-test-chromium": {
+          "repository": "/tmp/claude-1001/k21",
+          "tested_commit": "1e3038f4ad31f13967e1629b75de242174ba775f",
+          "dependencies": {
+            "lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k21/requirements/dev.txt",
+              "value": "01b221917a78216b4fdd96565cde91d23239a3138aeb759eed41aa6c06c32815"
+            },
+            "browser-lock": {
+              "kind": "sha256",
+              "path": "/tmp/claude-1001/k21/browser_tests/requirements.txt",
+              "value": "116b8abf7f7771bd798374e2db7a1099d8e888eddba3f6bc7a302a0d843fda7e"
+            }
+          },
+          "issue": "kasvimuseo [21]",
+          "check": "browser-test-chromium",
+          "command": "KASVIMUSEO_IMAGE=kasvimuseo-dev-task21 KASVIMUSEO_BROWSER_ENGINES=chromium nix-shell -p postgresql --run 'dev/kasvimuseo app build && dev/kasvimuseo app browser-test'",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:36:12.101054+00:00"
+        },
+        "delivery-scope": {
+          "repository": "/tmp/claude-1001/k21",
+          "tested_commit": "1e3038f4ad31f13967e1629b75de242174ba775f",
+          "dependencies": {},
+          "issue": "kasvimuseo [21]",
+          "check": "delivery-scope",
+          "command": "test \"$(git diff --name-only e25beb848cedd90265b144ba05e1282f401289cf 1e3038f4ad31f13967e1629b75de242174ba775f | LC_ALL=C sort | tr '\\n' ' ')\" = 'README.rst dev/kasvimuseo ' && test \"$(git rev-list --reverse e25beb848cedd90265b144ba05e1282f401289cf..1e3038f4ad31f13967e1629b75de242174ba775f | tr '\\n' ' ')\" = '2ee8d1b4f2a394069316aa05a80ab15e15fb9136 0c4464f8107e0b9e4664aa6f8fc114d1de9190e2 76e60d903c07d758df815f0363318273af612eae 1e3038f4ad31f13967e1629b75de242174ba775f ' && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:36:12.720107+00:00"
+        },
+        "no-private-paths": {
+          "repository": "/tmp/claude-1001/k21",
+          "tested_commit": "1e3038f4ad31f13967e1629b75de242174ba775f",
+          "dependencies": {},
+          "issue": "kasvimuseo [21]",
+          "check": "no-private-paths",
+          "command": "added=$(git diff e25beb848cedd90265b144ba05e1282f401289cf 1e3038f4ad31f13967e1629b75de242174ba775f | grep '^+' || true) && test -n \"$added\" && ! grep -nE '/home/|/tmp/claude|tinni|atom|hopeli|gogo|[.]kandev|[.]t3/' <<<\"$added\" && echo ok",
+          "result": "pass",
+          "exit_code": 0,
+          "timestamp": "2026-10-25T16:36:14.800386+00:00"
+        }
+      }
+    }
+  ]
+}
