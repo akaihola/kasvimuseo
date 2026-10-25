@@ -29,3 +29,51 @@ The kasvimuseo Django app has never had a security review. kasvimuseo-deployment
 - Handoff: a short outcome (first line: any live credential, or "no live credential found") and the report's top findings; detail goes in the report and this task record.
 
 Tracker: [the kasvimuseo tracker](../../TASKS.md).
+
+## Progress record, 2026-10-25
+
+This record is for the steward and for the agent that finishes this task. The review is not complete.
+
+### Safeguard stop
+
+A provider safety classifier stopped one response of the review session. The response was about the third-party grappelli views (the related lookups and the user switch). We did not retry that material, and we did not review those views.
+
+### Acceptance conditions that are not met
+
+- The report `docs/reviews/2026-10-25-security-review.md` does not exist.
+- Therefore the area coverage, the ranked findings, `## Do these first` and `## Draft issues` are not written.
+- The handoff of the top findings is not given.
+- The false-positive check of the `security-review` skill did not run on the candidates below.
+
+These conditions are met so far: no code change, no request to the live site, no deployment, no push and no service start. No secret value is in this file, in the commit or in the thread. The scans printed rule names, paths, commit ids and value shapes only.
+
+### Work done before the stop
+
+- History scan: a script read every blob of every reference, and the unreachable objects (2,324 blobs, 1,430 commit messages). It found no live credential. The matches are test fixtures, development defaults and the `***REMOVED***` markers of the history rewrite.
+- Ignored files, by name only: the `.dev`, `media`, `static` and `ylaneenkasvit/local_settings.py` links of the base checkout point into the ignored state of kasvimuseo-deployment. Its 2026-10-21 review lists that state. Five old agent task worktrees outside this repository keep `.dev/docs/` build output from before the history rewrite. Its page titles name the credentials that production rotated on 2026-08-26. We did not open these files.
+- Recheck of the deployment review's kasvimuseo findings on `main`:
+  - A1 still holds: [common_settings.py](../../ylaneenkasvit/common_settings.py) lines 283 and 285 use `bool(os.environ.get(...))`, and [dev/kasvimuseo](../../dev/kasvimuseo) line 40 turns `DEV_LOGIN` on by default.
+  - A2 still holds: `MIDDLEWARE` (lines 92-99) has no `SecurityMiddleware`, and no settings module sets `AUTH_PASSWORD_VALIDATORS`.
+  - A3 still holds: on 2026-10-25, `git ls-remote` showed `fix-ipad-label-font-size` at `1cc5996` and `feature/fix-issue-018-run-th-9pv` at `1e874d6`. Both tips hold `integration_tests/tests/conftest.py` with the rotated admin password. The file was added in `ba10cb6` and removed in `6f9fcb9`, so the `main` history holds it too.
+- Dependency audit (pip-audit 2, PyPI and OSV, pinned files without installation):
+  - `requirements/production.txt`: Django 6.0.7 has two GeoDjango advisories, fixed in 6.0.8; the app does not install GeoDjango. Pillow 12.3.0 has 41 advisories, fixed in 13.0.0. sqlparse 0.5.5 has five, fixed in 0.6.0.
+  - `requirements/dev.txt` adds Werkzeug 3.0.6, with four Windows-only `safe_join` advisories.
+  - `requirements/testing.txt`: pytest 8.3.5 has one advisory, fixed in 9.0.3.
+  - `docs/requirements.txt`: no advisory. We did not audit `browser_tests/requirements.txt`, because it gives version ranges, not pins.
+- Two review agents read the tree. Their candidates are not verified. The next agent must check each one against the code before the report uses it:
+  - photologue's zip upload view in the admin checks staff status only, and it keeps any file name extension;
+  - the iframe loader's debug mode writes message data as HTML and does not check the message origin;
+  - the labels API checks staff status, not model permissions;
+  - the public observation, bed and species pages show records outside public beds;
+  - no setting limits Pillow's pixel count, and stored originals keep their EXIF location data;
+  - the label editor loads axios from a CDN without a version pin;
+  - the `Dockerfile` image runs `runserver` as root;
+  - the development image sets `KASVIMUSEO_DEBUG=1`.
+
+### Memory reports
+
+- History scan: started at once after a 0 s wait. Admission 56,635 MiB, final 56,667 MiB. Starting swap 1 MiB, growth 0 MiB. 8 s, exit 0.
+- History scan with the unreachable objects: started at once after a 0 s wait. Admission 56,673 MiB, final 56,389 MiB. Starting swap 1 MiB, growth 0 MiB. 9 s, exit 0.
+- pip-audit, first run: started at once after a 0 s wait. Admission 56,542 MiB, final 56,414 MiB. Starting swap 1 MiB, growth 0 MiB. 5 s, exit 0. Every audit exited 1 because pip-audit could not write its cache, so this run gave no result.
+- pip-audit, second run: started at once after a 0 s wait. Admission 56,618 MiB, final 56,585 MiB. Starting swap 1 MiB, growth 0 MiB. 16 s, exit 0.
+- Two smaller history commands ran without the guard: `git fsck --unreachable` and a per-path count of password-shaped lines. The guarded readings just before and after them were 56,673 MiB and 56,542 MiB, with no swap growth.
