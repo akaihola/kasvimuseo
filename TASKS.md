@@ -15,12 +15,12 @@ On 2026-10-07 the maintainer decided that the iframe loader deduces the catalogu
 
 ## Ordered backlog
 
+## Scheduled
+
 - [24] Strip location data from uploaded originals
     - Depends on: [21], [22]
 
-  <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T16:25:00.669Z"} -->
-
-## Scheduled
+  <!-- hai:{"id":"simple-647892a7-9c66-41f8-bdea-a096264e4054","labels":["steward","security"],"createdAt":"2026-10-25T16:25:00.669Z","updatedAt":"2026-10-25T17:10:40.327Z"} -->
 
 ## In Progress
 
