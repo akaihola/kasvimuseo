@@ -15,6 +15,7 @@ This index helps contributors find portable development guidance. Each note link
 - [Check container port forwarding](pasta-truncates-remote-responses.md).
 - [Check Photologue migration dependencies](photologue-phantom-makemigrations.md).
 - [Check development image builds](podman-builds-need-a-log-file.md).
+- [Regenerate the locks in the resolver image](regenerate-the-locks-in-the-resolver-image.md).
 - [Check renumbered issue titles](renumbered-issue-keeps-its-old-title.md).
 - [Repair commit pointers after rebasing](repoint-repairs-rebased-hashes.md).
 - [Fetch the clean history before the docs build](fetch-the-clean-history-before-the-docs-build.md).
