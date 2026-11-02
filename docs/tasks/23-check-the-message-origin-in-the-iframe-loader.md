@@ -106,5 +106,16 @@ The receipt is [23-check-the-message-origin-in-the-iframe-loader.evidence.json](
 
 ### Open, for the owner
 
-- Tell the operators of the museum's other site that the loader changed. The script address stays the same. A cached copy of the old script keeps the old behaviour until the cache expires. Nothing was sent.
 - The change takes effect on the live site only after a deployment. This issue made no deployment.
+- A notice to the operators of the museum's other site is optional (owner decision, 2026-11-02). Nothing was sent.
+
+### The museum's other site needs no change
+
+On 2026-11-02 the owner read the source of the other site's page with the species list. The page loads the loader from the catalogue's static host over `https`. A deployment therefore replaces the script at the address that the page already uses. The frame id, the frame address and the `?debug=1` switch did not change.
+
+The resize keeps working after the deployment on two conditions. Nobody checked them on the live site:
+
+- The catalogue address that the loader derives must answer without a redirect to another origin. Otherwise the loader rejects the catalogue's messages, and the frame stays 10000px tall.
+- The species list must stay below 100000px. At about 80px for each row, that is about 1,250 species.
+
+A browser that cached the old script keeps it until its copy expires. The static server's cache headers in the deployment configuration set that time.
